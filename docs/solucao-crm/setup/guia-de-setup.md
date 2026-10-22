@@ -348,8 +348,8 @@ cadastre-a pela tela do CRM, não no `.env`.
 Depois das etapas 1 a 3, abra o Claude Code na VPS e envie:
 
 ```
-Leia docs/specs/2026-10-21-crm-autonomos-design.md e docs/setup/guia-de-setup.md
-(copie-os da pasta que eu indicar). Instale a esteira SDD globalmente
+Leia docs/solucao-crm/LEIA-PRIMEIRO.md e, por ele, a spec e este guia
+(todos em docs/solucao-crm/). Instale a esteira SDD globalmente
 (claude plugin marketplace add DouglasDeCastroAlmeida/sddEsteiraPropria e
 claude plugin install sdd@sdd-esteira). Depois, vamos iniciar o subprojeto 0
 (Fundação) com /sdd:new, usando a spec como insumo do Grill.
