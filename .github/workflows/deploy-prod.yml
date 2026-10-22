@@ -1,0 +1,119 @@
+name: Deploy em produção
+
+# Só por disparo manual (workflow_dispatch), e só a partir da main. O environment
+# `producao` tem "Required reviewers" (o dono): o job fica PARADO até aprovação
+# (mudança SDD 001, AC-005.2). Nenhum gatilho de PR/fork (AC-005.4).
+#
+# O SHA padrão é o da main que disparou; pode-se informar outro SHA de 40 hex.
+# Antes de implantar, confere no GHCR que as três imagens com essa tag existem.
+#
+# INERTE sem configuração: sem SSH_* o primeiro passo falha com mensagem clara.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "SHA completo (40 hex) a implantar; vazio = commit da main que disparou"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: producao
+    env:
+      SHA_INFORMADO: ${{ github.event.inputs.sha }}
+      SHA_DA_MAIN: ${{ github.sha }}
+      DONO: ${{ github.repository_owner }}
+    steps:
+      - name: Conferir configuração e versão (inerte sem os Secrets)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          URL_PUBLICA: ${{ vars.URL_PUBLICA }}
+        run: |
+          faltam=""
+          [ -n "$SSH_HOST" ] || faltam="$faltam SSH_HOST"
+          [ -n "$SSH_PORT" ] || faltam="$faltam SSH_PORT"
+          [ -n "$SSH_USER" ] || faltam="$faltam SSH_USER"
+          [ -n "$SSH_PRIVATE_KEY" ] || faltam="$faltam SSH_PRIVATE_KEY"
+          [ -n "$SSH_KNOWN_HOSTS" ] || faltam="$faltam SSH_KNOWN_HOSTS"
+          [ -n "$URL_PUBLICA" ] || faltam="$faltam URL_PUBLICA(variável)"
+          if [ -n "$faltam" ]; then
+            echo "::error::Deploy de produção não configurado: configure SSH_* nos Secrets do environment producao (faltam:$faltam)."
+            exit 1
+          fi
+          SHA="${SHA_INFORMADO:-$SHA_DA_MAIN}"
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::SHA inválido: informe 40 caracteres hexadecimais minúsculos (tags móveis não são aceitas)."
+            exit 1
+          fi
+          echo "SHA=$SHA" >> "$GITHUB_ENV"
+
+      - name: Conferir que as imagens desta versão existem no GHCR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ATOR: ${{ github.actor }}
+        run: |
+          dono="$(printf '%s' "$DONO" | tr 'A-Z' 'a-z')"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$ATOR" --password-stdin >/dev/null
+          for img in deskcommcrm deskcomm-worker deskcomm-scheduler; do
+            if ! docker manifest inspect "ghcr.io/$dono/$img:$SHA" >/dev/null 2>&1; then
+              echo "::error::Imagem ghcr.io/$dono/$img:$SHA não existe. Aguarde o publish-image da main concluir ou informe outro SHA."
+              exit 1
+            fi
+          done
+          echo "As três imagens da versão existem no GHCR."
+
+      - name: Implantar (deploy.sh prod)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set +x
+          umask 077
+          chave="$RUNNER_TEMP/deploy_key"; conhecidos="$RUNNER_TEMP/known_hosts"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$chave"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$conhecidos"
+          chmod 600 "$chave" "$conhecidos"
+          ssh -i "$chave" -p "$SSH_PORT" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$conhecidos" \
+            "$SSH_USER@$SSH_HOST" deploy.sh prod "$SHA"
+
+      - name: Teste de fumaça (/ = 200 e /app = 307)
+        env:
+          URL_PUBLICA: ${{ vars.URL_PUBLICA }}
+        run: |
+          base="${URL_PUBLICA%/}"
+          for tentativa in $(seq 1 12); do
+            raiz="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base/" || true)"
+            app="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base/app" || true)"
+            if [ "$raiz" = 200 ] && [ "$app" = 307 ]; then
+              echo "Fumaça ok: / = 200 e /app = 307."
+              exit 0
+            fi
+            echo "Tentativa $tentativa: / = $raiz, /app = $app (esperado 200 e 307)."
+            sleep 5
+          done
+          echo "::error::Teste de fumaça falhou em produção."
+          exit 1
+
+      - name: Remover a chave do runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key" "$RUNNER_TEMP/known_hosts"
