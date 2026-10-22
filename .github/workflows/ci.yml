@@ -156,8 +156,26 @@ jobs:
       fail-fast: false
       matrix:
         parte: [1, 2, 3, 4]
+    # pull-requests: read serve ao gitleaks-action listar os commits do PR.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
+
+      # AC-012.1 (SolucaoCRM): varredura de segredos no diff. Roda numa parte só.
+      # Action fixada por COMMIT (v2.3.9), nunca por tag móvel. Config:
+      # .gitleaks.toml. Reprova o verify se achar chave, token ou senha.
+      - name: Varredura de segredos (gitleaks)
+        if: matrix.parte == 1
+        run: git fetch --no-tags --unshallow origin || git fetch --no-tags --depth=200 origin
+      - name: gitleaks
+        if: matrix.parte == 1
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
 
       - name: Marcar o início (o orçamento de tempo mede no fim do job)
         run: echo "VERIFY_INICIO=$(date +%s)" >> "$GITHUB_ENV"
@@ -562,8 +580,9 @@ jobs:
           set -uo pipefail
           responde() {
             echo "piso=$1" >> "$GITHUB_OUTPUT"
-            if [ "$1" = sim ]; then echo 'majors=["15","17"]' >> "$GITHUB_OUTPUT"
-            else echo 'majors=["17"]' >> "$GITHUB_OUTPUT"; fi
+            # SolucaoCRM (ADR-004/D-06): UMA major so, a 17 (supabase/postgres:17.x
+            # do single-server). O piso 15 era do upstream.
+            echo 'majors=["17"]' >> "$GITHUB_OUTPUT"
             echo "piso=$1 ($2)"
           }
           if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then

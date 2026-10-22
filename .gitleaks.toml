@@ -1,0 +1,12 @@
+# Configuração do gitleaks (AC-012.1). Parte das regras padrão e só abre exceção
+# para o que é, por construção, valor de exemplo ou fixture de teste.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exemplos e fixtures: nunca segredo real"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''^tests/(fixtures|unit|invariants|e2e)/.*''',
+  '''^pnpm-lock\.yaml$''',
+]

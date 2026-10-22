@@ -141,7 +141,8 @@ describe("toda imagem publicada é construída em PR", () => {
   it("o agente de voz é iniciado nos dois runners nativos, não somente construído", () => {
     const fundo = recorteDoJob(yml, "imagens-de-fundo-sobem").job;
     expect(fundo).toContain("arch: amd64");
-    expect(fundo).toContain("arch: arm64");
+    // ADR-004/D-06 (SolucaoCRM, DESVIO A REVISAR): so amd64; a perna arm64 saiu.
+    expect(fundo).not.toContain("arch: arm64");
     expect(fundo).toContain("bash scripts/sonda-voice-agent-na-imagem.sh deskcomm-voice-agent:pr");
   });
 
@@ -150,15 +151,15 @@ describe("toda imagem publicada é construída em PR", () => {
     const promover = recorteDoJob(yml, "promover-stable").job;
     expect(juntar).toContain("source hostgator-setup-kit/_manifestos.sh");
     expect(juntar).toContain('manifesto_tem_plataforma "$tag" linux/amd64');
-    expect(juntar).toContain('manifesto_tem_plataforma "$tag" linux/arm64');
+    expect(juntar).not.toContain('linux/arm64'); // ADR-004/D-06
     expect(promover).toContain("juntar-manifestos");
-    expect(promover).toContain('manifesto_tem_plataforma "${REGISTRY}/${dono}/${img}:${numero}" linux/arm64');
+    expect(promover).not.toContain("linux/arm64"); // ADR-004/D-06
   });
 
   it("a matriz gera um job por receita E por arquitetura — nenhum item do include engole o anterior", () => {
     const jobs = jobsDaMatriz();
     const pares = new Set(jobs.map((j) => `${j.dockerfile ?? "?"} ${j.arch ?? "?"}`));
-    const esperado = receitasPublicadas().flatMap((r) => ["amd64", "arm64"].map((a) => `${r} ${a}`));
+    const esperado = receitasPublicadas().flatMap((r) => ["amd64"].map((a) => `${r} ${a}`));
     expect(
       [...pares].sort(),
       "A matriz de build-and-push não gera todas as combinações imagem × arquitetura. Declare `name` e\n" +
@@ -182,7 +183,7 @@ describe("toda imagem publicada é construída em PR", () => {
     const sabotado = yml.replace(/^ {8}name: \[[^\n]*\]\n/m, "");
     expect(sabotado).not.toBe(yml);
     const jobs = jobsDaMatriz(sabotado);
-    expect(jobs).toHaveLength(2);
+    expect(jobs).toHaveLength(1); // ADR-004/D-06: 1 arquitetura (eram 2)
     expect(new Set(jobs.map((j) => j.name)).size).toBe(1);
   });
 });

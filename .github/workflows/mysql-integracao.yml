@@ -21,6 +21,8 @@ permissions:
 
 jobs:
   integracao-mysql:
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     concurrency:
@@ -50,6 +52,8 @@ jobs:
           MYSQL_TEST_ROOT_PASSWORD: raiz-de-teste
 
   standalone-leva-mysql2:
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     concurrency:

@@ -78,8 +78,9 @@ describe("a guarda da máquina", () => {
 
 const TODOS =
   "${{ vars.EXECUTOR_PROPRIO == 'ligado' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && 'deskcomm-proprio' || 'ubuntu-latest' }}";
+// ADR-004/D-06 (SolucaoCRM): sem perna arm64, o runner nativo arm some da expressao.
 const SO_PR =
-  "${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || (vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest') }}";
+  "${{ vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest' }}";
 
 const ESPERADO: Record<string, string> = {
   "ci.yml::verify-parte": TODOS,
@@ -121,9 +122,9 @@ describe("o roteamento dos workflows", () => {
     expect(naMaquina).toEqual(ESPERADO);
   });
 
-  it("publica cada arquitetura em runner nativo do GitHub", () => {
+  it("publica a arquitetura (so amd64, ADR-004/D-06) em runner do GitHub", () => {
     expect(mapa.get("publish-image.yml::build-and-push")).toBe(
-      "${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}",
+      "ubuntu-latest",
     );
   });
 
