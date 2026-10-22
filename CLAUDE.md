@@ -782,3 +782,7 @@ Antes de declarar uma task pronta:
     extensão não autoriza remover nem desligar o que já foi distribuído.
 
 Um staff engineer aprovaria? Se não, itera.
+
+## Esteira SDD
+Este projeto usa a esteira SDD (`.sdd/`). Toda mudança de comportamento passa por /sdd:new.
+Constituição: `.sdd/constitution.md`. Specs vivas: `.sdd/specs/`. Em conflito, este CLAUDE.md prevalece.
