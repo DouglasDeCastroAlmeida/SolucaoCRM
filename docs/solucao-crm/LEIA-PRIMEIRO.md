@@ -26,7 +26,7 @@ Do **restante** do repositório, leia apenas:
 6. Parar ao final de cada tarefa, mostrar o resultado e esperar o dono mandar seguir.
 
 ## Ambiente
-- Repositório privado: `DouglasDeCastroAlmeida/SolucaoCRM` (GitHub). Branch de trabalho dos docs: `docs/spec-e-guia-de-setup`. A `main` só recebe mudanças por PR.
+- Repositório privado: `DouglasDeCastroAlmeida/SolucaoCRM` (GitHub). Branches: `docs/spec-e-guia-de-setup` (documentos) e `chore/sdd-init` (parte do anterior e acrescenta a esteira `.sdd/`). Trabalho novo sai de `chore/sdd-init` em branch próprio. A `main` só recebe mudanças por PR.
 - Esteira SDD instalada globalmente (`sdd@sdd-esteira`). Os comandos `/sdd:*` só aparecem em sessão nova.
 - VPS Hostinger KVM4 (`srv2049015`), acesso por SSH com a chave do dono. O IP está no gerenciador de senhas e nos Secrets do GitHub, não neste arquivo.
 
@@ -37,7 +37,7 @@ Do **restante** do repositório, leia apenas:
 | 2 | Diagnóstico da VPS (somente leitura) | Concluída |
 | 3 | Limpeza dos projetos antigos (`botimobiliario`, `evo-crm-community`); `vava` e `portainer` intactos | Concluída em 2026-10-21 |
 | 4 | Cópia privada do DeskcommCRM, remoto `upstream`, docs em branch próprio | Concluída |
-| 5 | `/sdd:init`: projeto existente, `gate.mode` "warn", perfis `web-react` e `infra-hostinger`, convenções do `CLAUDE.md` prevalecem | **Próxima** |
-| 6 | `/sdd:new` do subprojeto 0 (Fundação, porte L): escopo = seção 12 da spec; resolver no Grill as validações V-4 e V-5 | Depois da 5, só quando o dono mandar |
+| 5 | `/sdd:init`: projeto existente, `gate.mode` "warn", perfis `web-react` e `infra-hostinger`, convenções do `CLAUDE.md` prevalecem | Concluída e revisada (branch `chore/sdd-init`, ainda sem PR para a `main`). Decisões de adoção da constituição usam IDs `A-xx`, para não colidir com as `D-xx` da spec |
+| 6 | `/sdd:new` do subprojeto 0 (Fundação, porte L): escopo = seção 12 da spec; resolver no Grill as validações V-4 e V-5 | **Próxima**, só quando o dono mandar |
 
-Não abrir `/sdd:new` de nenhum subprojeto antes de o `/sdd:init` terminar e o dono aprovar.
+Subprojetos seguintes: seção 12 da spec, um `/sdd:new` por vez, sempre com o dono aprovando o anterior.
