@@ -48,10 +48,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-020 [IMPL] admin/01-swap.sh, 02-firewall.sh, 03-usuarios.sh, 04-mover-vava.sh, 05-cron.sh e crm-status.sh, todos com --dry-run (~60 min) {AC-008.3, AC-008.4, AC-008.5} deps: T-017, T-018, T-019
 
 ### Fatia 5: reserva de memória, firewall e usuários na VPS (cada ação só com seu ok)
-- [ ] T-043 [TEST-INT] medir-memoria.sh com free/docker falsos: registra memória livre em arquivo, e abaixo de 2 GB por mais de um dia dispara o alerta (ALERTA_CMD) sem segredos (~40 min) {AC-009.3, AC-009.4}
-- [ ] T-044 [IMPL] infra/solucao/medir-memoria.sh (cron a cada 10 min; guarda série diária; alerta de VPS dedicada) (~40 min) {AC-009.3, AC-009.4} deps: T-043
-- [ ] T-021 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Medir a VPS antes de instalar: memória, CPU, disco e portas abertas, comparando com a estimativa de 9 a 11 GB (~40 min) {AC-009.5}
-- [ ] T-022 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Swap de 4 GB ativo e persistente após reinício (~40 min) {AC-009.1} deps: T-021, T-020
+- [x] T-043 [TEST-INT] medir-memoria.sh com free/docker falsos: registra memória livre em arquivo, e abaixo de 2 GB por mais de um dia dispara o alerta (ALERTA_CMD) sem segredos (~40 min) {AC-009.3, AC-009.4}
+- [x] T-044 [IMPL] infra/solucao/medir-memoria.sh (cron a cada 10 min; guarda série diária; alerta de VPS dedicada) (~40 min) {AC-009.3, AC-009.4} deps: T-043
+- [x] T-021 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Medir a VPS antes de instalar: memória, CPU, disco e portas abertas, comparando com a estimativa de 9 a 11 GB (~40 min) {AC-009.5}
+- [x] T-022 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Swap de 4 GB ativo e persistente após reinício (~40 min) {AC-009.1} deps: T-021, T-020
 - [ ] T-023 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: ufw só com 22, 80, 443/tcp e 443/udp; porta 8000 fechada (~40 min) {AC-010.2} deps: T-020
 - [ ] T-024 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Como dev: docker ps e leitura de /opt/crm-prod negados; crm-status funciona; deploy só roda o comando fixo (~40 min) {AC-008.1, AC-008.2, AC-008.4} deps: T-020
 

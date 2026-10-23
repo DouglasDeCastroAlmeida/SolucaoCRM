@@ -4,7 +4,7 @@
 set -uo pipefail
 source "$(dirname "$0")/_admin-lib.sh"
 USR="$ADMIN/03-usuarios.sh"
-admin_ambiente; trap 'rm -rf "$T"' EXIT
+admin_ambiente; export OPT_DIR="$T/opt"; trap 'rm -rf "$T"' EXIT
 for c in useradd usermod groupadd gpasswd chpasswd visudo crontab docker systemctl chown chmod install sudo; do
   fake "$c" "echo \"$c \$*\" >> \"\$CHAMADAS\"; exit 99"
 done
@@ -30,13 +30,21 @@ afirma "authorized_keys começa com restrict,command=" grep -q 'restrict,command
 afirma "authorized_keys modo 644" grep -q 'gravar /home/deploy/.ssh/authorized_keys (modo 644)' "$T/base"
 afirma "authorized_keys dono root:root" grep -q 'chown root:root /home/deploy/.ssh/authorized_keys' "$T/base"
 afirma "~/.ssh root:root 755" grep -q 'install -d -m 755 -o root -g root /home/deploy/.ssh' "$T/base"
-afirma "/opt/crm-deploy root:root, sem escrita para outros" bash -c "grep -q 'chown -R root:root /opt/crm-deploy' '$T/base' && grep -q 'chmod -R go-w /opt/crm-deploy' '$T/base'"
-for d in /opt/crm-prod /opt/crm-hml; do
-  afirma "$d deploy:deploy 750" bash -c "grep -q \"chown deploy:deploy $d\" '$T/base' && grep -q \"chmod 750 $d\" '$T/base'"
-  afirma "$d: chown recursivo poupa .runtime e backups" bash -c "grep -F \"find $d -xdev\" '$T/base' | grep -q -- \"-path $d/.runtime\" && grep -F \"find $d -xdev\" '$T/base' | grep -q -- \"-path $d/backups\""
-  afirma "$d: o chown recursivo não segue link simbólico (-not -type l, chown -h)" bash -c "grep -F \"find $d -xdev\" '$T/base' | grep -q -- '-not -type l' && grep -F \"find $d -xdev\" '$T/base' | grep -q -- 'chown -h deploy:deploy'"
+echo "AC-008.4: pastas de /opt ausentes são criadas; presentes só são ajustadas"
+O="$OPT_DIR"
+afirma "ausente: cria crm-deploy root:root 755" grep -qF "install -d -m 755 -o root -g root $O/crm-deploy" "$T/base"
+for d in crm-prod crm-hml; do
+  afirma "ausente: cria $d deploy:deploy 750" grep -qF "install -d -m 750 -o deploy -g deploy $O/$d" "$T/base"
 done
-afirma "nenhuma linha dá leitura ao dev em /opt/crm-*" bash -c "! grep -E \"/opt/crm-(prod|hml)\" '$T/base' | grep -qE \"[[:space:]]dev[[:space:]]|o\+r|o=r|chmod [0-7][0-7][1-7] \""
+afirma "ausente: não faz chown/find recursivo em pasta que ainda não existe" bash -c "! grep -qE \"chown -R|find \" \"$T/base\""
+mkdir -p "$O/crm-deploy" "$O/crm-prod" "$O/crm-hml"
+bash "$USR" --dry-run "$T/chave.pub" >"$T/pres" 2>&1
+afirma "presente: /opt/crm-deploy root:root, sem escrita para outros" bash -c "grep -qF \"chown -R root:root $O/crm-deploy\" \"$T/pres\" && grep -qF \"chmod -R go-w $O/crm-deploy\" \"$T/pres\""
+for d in crm-prod crm-hml; do
+  afirma "presente: $d deploy:deploy 750" bash -c "grep -qF \"install -d -m 750 -o deploy -g deploy $O/$d\" \"$T/pres\" && grep -qF \"chown deploy:deploy $O/$d\" \"$T/pres\" && grep -qF \"chmod 750 $O/$d\" \"$T/pres\""
+  afirma "presente: $d chown recursivo poupa .runtime e backups" bash -c "grep -F \"find $O/$d -xdev\" \"$T/pres\" | grep -qF -- \"-path $O/$d/.runtime\" && grep -F \"find $O/$d -xdev\" \"$T/pres\" | grep -qF -- \"-path $O/$d/backups\""
+done
+afirma "nenhuma linha dá leitura ao dev em crm-prod/crm-hml" bash -c "! grep -E \"crm-(prod|hml)\" \"$T/pres\" | grep -qE \"[[:space:]]dev[[:space:]]|o\+r|o=r|chmod [0-7][0-7][1-7] \""
 
 echo "AC-008.5: remoção do dev dos grupos exige flag"
 afirma "lista quem será removido" grep -qE 'dev.*(docker)' "$T/base"

@@ -76,10 +76,12 @@ printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' \
   '# SSH_ORIGINAL_COMMAND chega por ambiente; o deploy.sh a interpreta e recusa o que não conhece.' \
   'exec /opt/crm-deploy/deploy.sh "$@"' | grava /usr/local/bin/crm-deploy 755
 roda chown root:root /usr/local/bin/crm-deploy
-if [ "$DRY" = 1 ] || [ -d /opt/crm-deploy ]; then
-  roda chown -R root:root /opt/crm-deploy
-  roda chmod -R go-w /opt/crm-deploy
-  roda chmod 755 /opt/crm-deploy
+OPT_DIR="${OPT_DIR:-/opt}"
+roda install -d -m 755 -o root -g root "$OPT_DIR/crm-deploy"
+if [ -d "$OPT_DIR/crm-deploy" ]; then
+  roda chown -R root:root "$OPT_DIR/crm-deploy"
+  roda chmod -R go-w "$OPT_DIR/crm-deploy"
+  roda chmod 755 "$OPT_DIR/crm-deploy"
 fi
 
 # 4. dev: fora do docker e do grupo deploy. É DESTRUTIVO, então só age se for membro, mostra
@@ -98,8 +100,11 @@ else
     msg "NÃO removi: rode de novo com --confirmo-remover-dev-dos-grupos para executar a remoção. Sigo com o resto."
   fi
 fi
-for d in /opt/crm-prod /opt/crm-hml; do
-  if [ "$DRY" = 1 ] || [ -d "$d" ]; then
+for nome in crm-prod crm-hml; do
+  d="$OPT_DIR/$nome"
+  existia=0; [ ! -d "$d" ] || existia=1
+  roda install -d -m 750 -o deploy -g deploy "$d"   # cria se faltar; se existir, só acerta dono e modo
+  if [ "$existia" = 1 ]; then
     roda chown deploy:deploy "$d"
     roda find "$d" -xdev \( -path "$d/.runtime" -o -path "$d/backups" \) -prune -o -not -type l -exec chown -h deploy:deploy {} +
     roda chmod 750 "$d"

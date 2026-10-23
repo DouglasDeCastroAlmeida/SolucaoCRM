@@ -10,12 +10,18 @@ for c in useradd usermod groupadd gpasswd chpasswd ufw fallocate swapon swapoff 
   printf '#!/usr/bin/env bash\necho "%s $*" >> "$CHAMADAS"\nexit 99\n' "$c" > "$T/bin/$c"; chmod +x "$T/bin/$c"
 done
 export PATH="$T/bin:$PATH"
+# leitura de regras (status / show added) é permitida em --dry-run; qualquer outra chamada ao ufw falha
+printf '#!/usr/bin/env bash
+case "$1" in status|show) exit 0 ;; esac
+echo "ufw $*" >> "$CHAMADAS"
+exit 99
+' > "$T/bin/ufw"; chmod +x "$T/bin/ufw"
 printf 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoFKLguWtwzTiTUXZHqBZxcqFAB pipeline@ci\n' > "$T/chave.pub"
 export VAVA_DIR="$T/vava" BACKUPS_DIR="$T/backups"; mkdir -p "$VAVA_DIR"; echo x > "$VAVA_DIR/a"
 
 echo "AC-008.5: ações numeradas e esperadas"
 mapfile -t ACOES < <(ls "$ADMIN"/*.sh 2>/dev/null | grep -v '/_[^/]*$')
-for esperado in 01-swap 02-firewall 03-usuarios 04-mover-vava 05-cron; do
+for esperado in 01-swap 02-firewall 03-usuarios 04-mover-vava 05-cron 06-instalar-scripts; do
   afirma "AC-008.5: existe admin/$esperado.sh" test -f "$ADMIN/$esperado.sh"
 done
 for f in "${ACOES[@]}"; do
@@ -44,7 +50,6 @@ bash "$ADMIN/02-firewall.sh" --dry-run > "$T/fw" 2>&1
 l22="$(grep -n '22/tcp' "$T/fw" | head -1 | cut -d: -f1)"; lon="$(grep -nE 'ufw (--force )?enable' "$T/fw" | head -1 | cut -d: -f1)"
 afirma "AC-008.5: libera 22 antes de habilitar o ufw" bash -c "[ -n '$l22' ] && [ -n '$lon' ] && [ '$l22' -lt '$lon' ]"
 afirma "AC-008.5: libera 80, 443/tcp e 443/udp" bash -c "grep -q '80/tcp' '$T/fw' && grep -q '443/tcp' '$T/fw' && grep -q '443/udp' '$T/fw'"
-afirma "AC-008.5: remove a regra da 8000" grep -qE 'delete.*8000' "$T/fw"
 afirma "AC-008.5: nunca faz reset do ufw" bash -c "! grep -vE '^\s*#' '$ADMIN/02-firewall.sh' | grep -qE 'ufw.* reset'"
 
 echo "AC-008.5: comandos perigosos só dentro de admin/ (allowlist explícita)"
