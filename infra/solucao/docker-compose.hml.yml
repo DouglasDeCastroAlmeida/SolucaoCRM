@@ -1,0 +1,49 @@
+# Override NOSSO da HOMOLOGAÇÃO (/opt/crm-hml). O deploy.sh o inclui só quando o ambiente é hml,
+# depois do prod.yml e do docker-compose.solucao.yml. {AC-003.1, AC-003.2}
+#
+# - NÃO sobe Caddy: o Caddy do CRM de produção é o único dono de 80/443. A homologação é publicada
+#   por ele, em caddy-sites/hml.caddy, pelo nome `crm-hml-app` na rede compartilhada.
+# - Banco: Supabase Cloud Free (SUPABASE_DB_URL no .env da hml). Nada de banco, .env ou volume da produção.
+# - Limites <= os da produção e cpu_shares <= 256: sob pressão, a produção ganha CPU.
+#
+# Validar na VPS (nada sobe):
+#   cd /opt/crm-hml && docker compose -f docker-compose.prod.yml -f infra/solucao/docker-compose.solucao.yml \
+#     -f infra/solucao/docker-compose.hml.yml --env-file .env config --services
+#   (não deve listar caddy, wacalls, asterisk nem voice-agent)
+
+services:
+  caddy:
+    profiles: !override ["nunca"]
+  app:
+    networks: !override
+      internal: {}
+      caddy-sites:
+        aliases: [crm-hml-app]
+    mem_limit: 640m
+    cpus: 0.75
+    cpu_shares: 256
+  worker:
+    mem_limit: 384m
+    cpus: 0.5
+    cpu_shares: 128
+  scheduler:
+    mem_limit: 192m
+    cpus: 0.25
+    cpu_shares: 64
+  waha:
+    mem_limit: 768m
+    cpus: 0.75
+    cpu_shares: 128
+  redis:
+    mem_limit: 96m
+    cpus: 0.25
+    cpu_shares: 64
+  srh:
+    mem_limit: 48m
+    cpus: 0.25
+    cpu_shares: 32
+
+networks:
+  caddy-sites: !override
+    name: crm-prod_caddy-sites
+    external: true

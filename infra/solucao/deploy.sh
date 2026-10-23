@@ -143,6 +143,8 @@ tags_para() { local c; for c in "${CHAVES[@]}"; do echo "$c=ghcr.io/$OWNER/$(nom
 COMPOSE_ARGS=(-f docker-compose.prod.yml)
 [ "$AMB" != prod ] || COMPOSE_ARGS+=(-f docker-compose.single-server.yml)
 [ ! -f infra/solucao/docker-compose.solucao.yml ] || COMPOSE_ARGS+=(-f infra/solucao/docker-compose.solucao.yml)
+# a homologação NUNCA sobe um segundo Caddy (80/443 têm um dono só): sem este arquivo, aborta
+[ "$AMB" != hml ] || COMPOSE_ARGS+=(-f infra/solucao/docker-compose.hml.yml)
 for f in "${COMPOSE_ARGS[@]}"; do
   [ "$f" = "-f" ] || [ -f "$f" ] || { log "Arquivo de compose ausente: $f"; exit 2; }
 done

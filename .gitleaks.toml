@@ -9,7 +9,7 @@ paths = [
   '''(^|/)\.env\.example$''',
   '''^tests/(fixtures|unit|invariants|e2e)/.*''',
   # Segredos de MENTIRA plantados de propósito para provar o mascaramento do crm-status (AC-008.3).
-  # Isenção só deste arquivo, não de tests/infra inteiro.
-  '''^tests/infra/crm-status\.test\.sh$''',
+  # Isenção só destes dois arquivos, não de tests/infra inteiro.
+  '''^tests/infra/(crm-status|alerta)\.test\.sh$''',
   '''^pnpm-lock\.yaml$''',
 ]

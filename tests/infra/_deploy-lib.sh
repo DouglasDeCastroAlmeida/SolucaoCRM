@@ -28,7 +28,7 @@ afirma() { # afirma <descrição> <comando...>
 monta_ambiente() {
   T="$(mktemp -d)"
   CRM_DIR="$T/crm"; mkdir -p "$CRM_DIR/hostgator-setup-kit" "$T/bin" "$CRM_DIR/infra/solucao"
-  : > "$CRM_DIR/docker-compose.prod.yml"; : > "$CRM_DIR/docker-compose.single-server.yml"
+  : > "$CRM_DIR/docker-compose.prod.yml"; : > "$CRM_DIR/docker-compose.single-server.yml"; : > "$CRM_DIR/infra/solucao/docker-compose.hml.yml"
   FAKE_LOG="$T/docker.log"; : > "$FAKE_LOG"
   cat > "$CRM_DIR/.env" <<ENV
 APP_IMAGE=ghcr.io/$OWNER/deskcommcrm:$SHA_A

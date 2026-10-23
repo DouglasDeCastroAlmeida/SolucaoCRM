@@ -11,6 +11,7 @@ bash "$DEPLOY" hml "$SHA_B" >"$T/out" 2>&1; rc=$?
 afirma "AC-005.3: SHA válido sai 0" test "$rc" -eq 0
 afirma "AC-005.3: .env passou a apontar o SHA" test "$(env_tag)" = "$SHA_B"
 afirma "AC-005.3: as três imagens usam o SHA" bash -c "grep -c ':$SHA_B\$' '$CRM_DIR/.env' | grep -qx 3"
+afirma "AC-003.1: hml passa -f docker-compose.hml.yml (sem Caddy próprio)" grep -q "docker-compose.hml.yml" "$FAKE_LOG"
 
 echo "AC-005.3: recusa o que não é SHA de 40 hex"
 for ruim in latest stable main 1.2.3 abc123 "${SHA_B:0:39}" "${SHA_B}a" "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" "${SHA_B^^}"; do
