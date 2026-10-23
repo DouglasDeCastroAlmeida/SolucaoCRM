@@ -13,6 +13,10 @@
 #   BACKUP_CMD                  comando que gera o backup (padrão: hostgator-setup-kit/backup.sh)
 #   R2_RETENCAO_DIAS | BACKUP_RETENCAO_EXTERNA_DIAS   retenção externa, padrão 30 (regra de
 #                               ciclo de vida configurada NO bucket; aqui só é registrada)
+# TETO DE ESPAÇO (AC-007.7): BUCKET_TETO_GB (padrão 7) protege o plano gratuito de 10 GB. Antes de
+#   enviar, `rclone size --json` mede o bucket; uso + arquivos novos > teto, ou medição que falha,
+#   recusa, alerta e sai 1 sem enviar nada. CICLO DE VIDA: o bucket (painel do Cloudflare R2) deve
+#   ter regra que apaga objetos com mais de 14 dias. Este script NUNCA apaga nada do bucket sozinho.
 # Opção: --gerar  roda BACKUP_CMD antes de enviar.
 # Saídas: 0 ok; 1 falha de envio/verificação; 2 configuração/dependência ausente.
 #
@@ -106,6 +110,27 @@ for m in "$BACKUP_DIR"/*.enviado; do [ -e "$m" ] && [ ! -e "${m%.enviado}" ] && 
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/backup-externo.XXXXXX")"; chmod 700 "$TMP"
 trap 'rm -rf "$TMP" "${LOCKD:-}"' EXIT
+
+# TETO DE ESPAÇO (AC-007.7): mede o bucket ANTES de enviar e recusa se uso + novos > teto.
+# Medição que falha ou devolve lixo também recusa: nunca arrisca estourar a cota gratuita.
+TETO_GB="${BUCKET_TETO_GB:-7}"
+case "$TETO_GB" in ''|*[!0-9]*) config "BUCKET_TETO_GB deve ser um número inteiro de GB (recebido: $TETO_GB).";; esac
+TETO_BYTES=$((TETO_GB * 1000000000))
+gb() { printf '%d.%d' "$(($1 / 1000000000))" "$(($1 % 1000000000 / 100000000))"; }
+if ! medida="$(rclone size --json "dest:$BUCKET" 2>&1)"; then
+  alerta "Envio recusado: não foi possível medir o espaço usado no bucket (teto de ${TETO_GB} GB). Nada foi enviado."; exit 1; fi
+USADO="$(printf '%s' "$medida" | tr -d ' \n' | sed -n 's/.*"bytes":\([0-9][0-9]*\).*/\1/p')"
+case "$USADO" in ''|*[!0-9]*) alerta "Envio recusado: a medição do bucket devolveu um valor ilegível (teto de ${TETO_GB} GB). Nada foi enviado."; exit 1;; esac
+NOVOS=0
+for f in "$BACKUP_DIR"/db-*.sql.gz "$BACKUP_DIR"/waha-*.tgz "$BACKUP_DIR"/storage-*.tgz; do
+  [ -f "$f" ] && [ ! -e "$f.enviado" ] || continue
+  NOVOS=$((NOVOS + $(wc -c < "$f")))
+done
+if [ $((USADO + NOVOS)) -gt "$TETO_BYTES" ]; then
+  alerta "Envio recusado: bucket com $(gb "$USADO") GB usados + $(gb "$NOVOS") GB a enviar passa do teto de ${TETO_GB} GB (limite gratuito do provedor: 10 GB). Nada foi enviado; libere espaço ou ajuste o ciclo de vida do bucket."
+  exit 1
+fi
+log "Espaço no bucket: $(gb "$USADO") GB usados, $(gb "$NOVOS") GB a enviar, teto ${TETO_GB} GB."
 
 falhou=0; enviados=0
 for f in "$BACKUP_DIR"/db-*.sql.gz "$BACKUP_DIR"/waha-*.tgz "$BACKUP_DIR"/storage-*.tgz; do

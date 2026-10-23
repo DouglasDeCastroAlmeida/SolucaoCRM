@@ -43,6 +43,11 @@ case "$cmd" in
       *) mkdir -p "$(dirname "$(real "$dst")")"
          if [ -n "${FAKE_RCLONE_CORROMPE:-}" ]; then head -c 5 "$src" > "$(real "$dst")"; else cp "$src" "$(real "$dst")"; fi ;; esac ;;
   check) cmp -s "${pos[0]}/$inc" "$(real "${pos[1]}")/$inc" ;;
+  size)
+    if [ -n "${FAKE_RCLONE_SIZE_LIXO:-}" ]; then echo "isto nao e json"; exit 0; fi
+    if [ -n "${FAKE_BUCKET_BYTES:-}" ]; then b="$FAKE_BUCKET_BYTES"; else b=$(find "$FAKE_BUCKET" -type f -exec cat {} + 2>/dev/null | wc -c); fi
+    printf "{\"count\":1,\"bytes\":%s}
+" "$b" ;;
 esac
 E2
   chmod +x "$T/bin/"*

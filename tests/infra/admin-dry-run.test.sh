@@ -21,7 +21,7 @@ export VAVA_DIR="$T/vava" BACKUPS_DIR="$T/backups"; mkdir -p "$VAVA_DIR"; echo x
 
 echo "AC-008.5: ações numeradas e esperadas"
 mapfile -t ACOES < <(ls "$ADMIN"/*.sh 2>/dev/null | grep -v '/_[^/]*$')
-for esperado in 01-swap 02-firewall 03-usuarios 04-mover-vava 05-cron 06-instalar-scripts; do
+for esperado in 01-swap 02-firewall 03-usuarios 04-mover-vava 05-cron 06-instalar-scripts 07-ferramentas-backup; do
   afirma "AC-008.5: existe admin/$esperado.sh" test -f "$ADMIN/$esperado.sh"
 done
 for f in "${ACOES[@]}"; do

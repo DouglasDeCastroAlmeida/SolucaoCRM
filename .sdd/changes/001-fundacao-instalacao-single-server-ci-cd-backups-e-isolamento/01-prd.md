@@ -93,6 +93,7 @@ Como dono do produto, quero cópia externa diária do banco, das sessões do Wha
 - **AC-007.4** Dado um backup externo, quando se executa a restauração em ambiente descartável usando só a chave guardada no gerenciador de senhas, então o CRM sobe com os dados do backup.
 - **AC-007.5** QUANDO um backup ou envio falhar o sistema DEVE alertar o dono (Sentry ou e-mail) no mesmo dia.
 - **AC-007.6** Dado o histórico, quando passam 14 dias, então só os 14 backups mais recentes locais são mantidos; a retenção externa fica registrada.
+- **AC-007.7** Dado o limite gratuito do provedor (10 GB), quando o espaço usado no bucket passa de 7 GB, então o envio é recusado, o dono é alertado e nada é enviado além do teto; o ciclo de vida apaga objetos com mais de 14 dias, e o provedor nunca gera cobrança.
 
 ### REQ-008: Isolamento do Claude Code
 
