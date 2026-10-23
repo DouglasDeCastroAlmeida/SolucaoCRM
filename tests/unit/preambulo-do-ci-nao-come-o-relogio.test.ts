@@ -62,8 +62,9 @@ const TETOS: Record<string, { minutos: number; razao: string }> = {
   //     orçamento para 12. Medido antes da divisão, num verde do #1190: job
   //     866 s, `Unit tests` 649 s — cada parte roda metade.
   "ci.yml::verify-parte": {
-    minutos: 25,
+    minutos: 40,
     razao:
+      "ATUALIZAÇÃO 23/10/2026: 25 → 40. Em 4 rodadas seguidas as partes levaram 8–24 min no MESMO código (runner compartilhado do GitHub, sem executor próprio); 24 min com teto 25 estava a 1 min de virar cancelled mudo. " +
       "FORK SolucaoCRM (23/10/2026): o runner do GitHub comum leva 13–15 min por parte (4 partes), contra ~8 min no executor próprio do upstream; " +
       "com teto 15, a parte 2 chegou a 15 min: dado CENSURADO pelo teto (ver a lição de método no ORCAMENTOS). Teto subiu para 25 como torniquete, como o #1184 fez; " +
       "recalibrar só depois de medir ≥ 20 rodadas sob o teto novo e classificar os cancelled. " +
@@ -106,8 +107,9 @@ const ORCAMENTOS: Record<string, { minutos: number; razao: string }> = {
   // Que o passo não fique preso a uma delas é o que o caso
   // "o orçamento vale para TODAS as partes" abaixo guarda.
   "ci.yml::verify-parte": {
-    minutos: 20,
+    minutos: 35,
     razao:
+      "ATUALIZAÇÃO 23/10/2026: 20 → 35. Mesma medição acima (partes de 19, 19, 22 e 24 min sob orçamento 20, todas com testes verdes). Com tanta variância o detector de crescimento só gera falso alarme; fica como rede de segurança até o custo de CI do fork ser tratado (assunto do subprojeto de CI, não da fundação). " +
       "FORK SolucaoCRM (23/10/2026): 12 → 20 (provisório). Medido no runner do GitHub comum: partes de 13, 14 e 15 min (3 rodadas), censuradas pelo teto de 15; " +
       "o teto virou 25 e este orçamento 20 para o detector seguir disparando ANTES do corte. Recalibrar depois de ≥ 20 rodadas sob o teto de 25. Texto original do upstream abaixo. " +
       "MEDIDO em 19/09/2026 sobre todos os jobs `verify-parte` das 240 rodadas completas de " +

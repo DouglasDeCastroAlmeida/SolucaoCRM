@@ -54,8 +54,9 @@ afirma "AC-008.5: nunca faz reset do ufw" bash -c "! grep -vE '^\s*#' '$ADMIN/02
 
 echo "AC-008.5: comandos perigosos só dentro de admin/ (allowlist explícita)"
 # docker é legítimo onde o script É a operação com containers (deploy, backup, restauro, leitura de status).
-declare -A PERMITIDO=( [deploy.sh]=docker [backup-externo.sh]=docker [restaurar-backup.sh]=docker [crm-status.sh]=docker [medir-memoria.sh]=docker )
-PERIGO='\b(useradd|usermod|groupadd|gpasswd|chpasswd|ufw|swapon|swapoff|mkswap|fallocate|visudo|crontab|docker|systemctl)\b'
+# logger (alerta.sh) é legítimo: o script É o alerta e grava no syslog com `logger -t crm-alerta`; não altera o sistema.
+declare -A PERMITIDO=( [deploy.sh]=docker [backup-externo.sh]=docker [restaurar-backup.sh]=docker [crm-status.sh]=docker [medir-memoria.sh]=docker [alerta.sh]=logger )
+PERIGO='\b(useradd|usermod|groupadd|gpasswd|chpasswd|ufw|swapon|swapoff|mkswap|fallocate|visudo|crontab|docker|systemctl|logger)\b'
 for f in "$REPO_ROOT"/infra/solucao/*.sh; do
   n="$(basename "$f")"
   achados="$(grep -vE '^\s*#' "$f" | grep -oE "$PERIGO" | sort -u | grep -vxF "${PERMITIDO[$n]:-__nada__}" || true)"

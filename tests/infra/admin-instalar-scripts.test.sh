@@ -7,7 +7,7 @@ INST="$ADMIN/06-instalar-scripts.sh"
 admin_ambiente; trap 'rm -rf "$T"' EXIT
 fake install 'echo "install $*" >> "$CHAMADAS"'
 export INFRA_SRC="$T/src" CRM_DEPLOY_DIR="$T/dest"; mkdir -p "$INFRA_SRC"
-LISTA="deploy.sh backup-externo.sh restaurar-backup-externo.sh medir-memoria.sh"
+LISTA="deploy.sh backup-externo.sh restaurar-backup-externo.sh medir-memoria.sh alerta.sh"
 for f in $LISTA crm-status.sh extra-nao-listado.sh; do printf '#!/usr/bin/env bash\necho %s\n' "$f" > "$INFRA_SRC/$f"; done
 
 echo "AC-008.5: copia exatamente a lista, root:root 0755, com sha256"
@@ -17,7 +17,7 @@ for f in $LISTA; do
   afirma "instala $f com install -m 0755 -o root -g root" grep -qF "install -m 0755 -o root -g root $INFRA_SRC/$f $CRM_DEPLOY_DIR/$f" "$CHAMADAS"
   afirma "imprime o sha256 de $f" grep -qE "^[0-9a-f]{64}  *.*$f" "$T/o"
 done
-afirma "só 4 arquivos instalados (+ a pasta)" test "$(grep -c 'install -m 0755' "$CHAMADAS")" -eq 4
+afirma "só 5 arquivos instalados (+ a pasta)" test "$(grep -c 'install -m 0755' "$CHAMADAS")" -eq 5
 afirma "não copia o que não está na lista" bash -c "! grep -qE 'extra-nao-listado|crm-status' '$CHAMADAS'"
 afirma "cria a pasta root:root 755" grep -qF "install -d -m 755 -o root -g root $CRM_DEPLOY_DIR" "$CHAMADAS"
 

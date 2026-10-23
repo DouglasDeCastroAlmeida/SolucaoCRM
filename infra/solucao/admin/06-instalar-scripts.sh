@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Ação administrativa 06: instala os scripts do deploy em /opt/crm-deploy. {AC-008.4, AC-008.5}
 # Copia do checkout (infra/solucao) SÓ esta lista explícita, com `install -m 0755 -o root -g root`:
-#   deploy.sh, backup-externo.sh, restaurar-backup-externo.sh, medir-memoria.sh
+#   deploy.sh, backup-externo.sh, restaurar-backup-externo.sh, medir-memoria.sh, alerta.sh
 # Dono root:root: o usuário `deploy` EXECUTA mas não reescreve o que roda como ele.
 # Se qualquer um faltar no checkout, a execução real recusa (nada é copiado). Imprime o
 # sha256 de cada arquivo como evidência.
@@ -14,7 +14,7 @@ for a in "$@"; do case "$a" in --dry-run) DRY=1 ;; *) erro "argumento desconheci
 cabecalho; exige_root
 ORIGEM="${INFRA_SRC:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 DESTINO="${CRM_DEPLOY_DIR:-/opt/crm-deploy}"
-ARQUIVOS=(deploy.sh backup-externo.sh restaurar-backup-externo.sh medir-memoria.sh)
+ARQUIVOS=(deploy.sh backup-externo.sh restaurar-backup-externo.sh medir-memoria.sh alerta.sh)
 
 FALTAM=()
 for f in "${ARQUIVOS[@]}"; do [ -f "$ORIGEM/$f" ] || FALTAM+=("$f"); done

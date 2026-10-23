@@ -77,8 +77,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-046 [IMPL] Teto de tamanho (BUCKET_TETO_GB, padrão 7) no backup-externo.sh e regra de ciclo de vida de 14 dias documentada no runbook (~35 min) {AC-007.7} deps: T-045
 - [x] T-047 [TEST-INT] admin/07-ferramentas-backup.sh com apt falso: instala age e rclone só se faltarem, em --dry-run não executa nada, recusa fora de Debian/Ubuntu (~35 min) {AC-008.5}
 - [x] T-048 [IMPL] admin/07-ferramentas-backup.sh (apt-get install age rclone, idempotente, com --dry-run) (~25 min) {AC-008.5} deps: T-047
-- [ ] T-036 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada (~40 min) {AC-007.1, AC-007.2, AC-007.3} deps: T-016, T-031, T-046, T-048
-- [ ] T-037 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Restaurar um backup do R2 em ambiente descartável usando só a chave do gerenciador de senhas (~40 min) {AC-007.4} deps: T-036
+- [x] T-036 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada (~40 min) {AC-007.1, AC-007.2, AC-007.3} deps: T-016, T-031, T-046, T-048
+- [x] T-037 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Restaurar um backup do R2 em ambiente descartável usando só a chave do gerenciador de senhas (~40 min) {AC-007.4} deps: T-036
 - [ ] T-038 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis (~40 min) {AC-011.1, AC-011.2} deps: T-033
 - [ ] T-039 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar (~40 min) {AC-009.3, AC-009.4} deps: T-031, T-033, T-044
 
