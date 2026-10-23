@@ -74,6 +74,9 @@ esac
 export RCLONE_CONFIG_DEST_TYPE=s3 RCLONE_CONFIG_DEST_PROVIDER=Other \
   RCLONE_CONFIG_DEST_ENDPOINT="$ENDPOINT" RCLONE_CONFIG_DEST_ACCESS_KEY_ID="$AKID" \
   RCLONE_CONFIG_DEST_SECRET_ACCESS_KEY="$SECRET"
+# Token restrito a UM bucket (Object Read & Write) não pode criar bucket: sem `no_check_bucket` o rclone
+# tenta e recebe 403. A região `auto` é a que o R2 usa (S3_REGION permite trocar em outro provedor).
+export RCLONE_CONFIG_DEST_REGION="${S3_REGION:-auto}" RCLONE_CONFIG_DEST_NO_CHECK_BUCKET=true
 
 log "Política de retenção: local 14 por tipo; retenção externa ${RETENCAO_EXT} dias (regra de ciclo de vida do bucket, ajustável por R2_RETENCAO_DIAS)."
 
