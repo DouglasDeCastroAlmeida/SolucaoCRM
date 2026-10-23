@@ -225,7 +225,9 @@ describe("o baseline fica no piso de Postgres que dizemos suportar", () => {
     //    roda em PR que o alcança, e SEMPRE fora de pull_request. O que não pode
     //    mudar é o conjunto: a lista cheia tem as duas, e a reduzida é a major de
     //    CIMA — reduzir para o piso sozinho é o defeito da #422 de volta.
-    expect(ci).toMatch(/majors=\["15","17"\]/);
+    // ADR-004/D-06 (SolucaoCRM): a matriz cheia ["15","17"] foi reduzida de
+    // propósito a ["17"] (a major do supabase/postgres do single-server).
+    // DESVIO A REVISAR: o piso 15 deixa de ser medido pelo CI daqui.
     expect(ci).toMatch(/majors=\["17"\]/);
     expect(ci, "a forma reduzida não pode ser o piso sozinho (#422)").not.toMatch(/majors=\["15"\]/);
     expect(ci).toMatch(/^\s*pg:\s*\$\{\{\s*fromJSON\(needs\.invariants-alcance\.outputs\.majors\)\s*\}\}\s*$/m);

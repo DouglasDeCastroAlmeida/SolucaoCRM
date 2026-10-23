@@ -37,7 +37,8 @@ permissions:
 
 jobs:
   abrir-pr-de-release:
-    if: github.event_name == 'workflow_dispatch'
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,7 +99,8 @@ jobs:
             --title "Release ${VERSAO}" --body-file /tmp/corpo.md
 
   cortar-tag:
-    if: github.event_name == 'push'
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read

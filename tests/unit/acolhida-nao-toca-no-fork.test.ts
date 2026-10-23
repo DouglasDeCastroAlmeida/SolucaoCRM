@@ -206,6 +206,9 @@ describe("acolhida: um workflow privilegiado que não toca no código do fork", 
   });
 
   it("só acolhe PR de fork, e não fala pelos forks deste repositório", () => {
+    // DESVIO A REVISAR (ADR-004/D-06, SolucaoCRM): workflow do upstream desligado com `if: false`.
+    // A condição original sai de cena; o que se exige é o job desligado.
+    if (EFETIVAS.some((l) => /^ {4}if: false\s*$/.test(l))) return;
     const condicao = EFETIVAS.filter((l) => /^ {4}if:/.test(l)).join("");
     expect(condicao).toContain(
       "github.event.pull_request.head.repo.full_name != github.repository",

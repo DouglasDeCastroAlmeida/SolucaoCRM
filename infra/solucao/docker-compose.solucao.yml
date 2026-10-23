@@ -1,0 +1,53 @@
+# Override NOSSO (o kit upstream não é editado): limites de memória/CPU da PRODUÇÃO e
+# prioridade dela sobre a homologação, numa VPS de 4 GB compartilhada com outro site.
+# {AC-002.4, AC-009.2}. O deploy.sh o inclui sozinho SE existir em
+# infra/solucao/docker-compose.solucao.yml (relativo a /opt/crm-prod), depois do prod.yml
+# e do single-server.yml.
+#
+# Validar na VPS (nada sobe):
+#   cd /opt/crm-prod && docker compose -f docker-compose.prod.yml \
+#     -f docker-compose.single-server.yml -f infra/solucao/docker-compose.solucao.yml \
+#     --env-file .env config | grep -E 'mem_limit|cpus|cpu_shares|^  [a-z-]+:$'
+#   (e `config --services` não deve listar voice-agent, wacalls nem asterisk)
+# O banco (supabase-db) vive na stack do Supabase, fora deste projeto: a prioridade dele
+# se dá no compose do Supabase; aqui os serviços de apoio ficam abaixo do app.
+# Limite nunca maior que o do prod.yml (app 768m, worker 512m, waha 1280m).
+# Homologação deve usar cpu_shares menores (<= 256) no override dela.
+
+services:
+  app:
+    mem_limit: 768m
+    cpus: 1.0
+    cpu_shares: 1024
+  worker:
+    mem_limit: 512m
+    cpus: 1.0
+    cpu_shares: 512
+  scheduler:
+    mem_limit: 256m
+    cpus: 0.5
+    cpu_shares: 128
+  waha:
+    mem_limit: 1280m
+    cpus: 1.5
+    cpu_shares: 512
+  redis:
+    mem_limit: 128m
+    cpus: 0.25
+    cpu_shares: 128
+  srh:
+    mem_limit: 64m
+    cpus: 0.25
+    cpu_shares: 64
+  caddy:
+    mem_limit: 128m
+    cpus: 0.5
+    cpu_shares: 256
+
+  # Voz/telefonia NUNCA sobem na produção da Solução: perfis que ninguém ativa.
+  wacalls:
+    profiles: !override ["voz"]
+  asterisk:
+    profiles: !override ["telefonia"]
+  voice-agent:
+    profiles: !override ["telefonia"]

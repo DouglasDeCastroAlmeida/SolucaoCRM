@@ -1,0 +1,109 @@
+name: Deploy em homologação
+
+# Dispara SOZINHO depois que `Publicar imagem Docker (GHCR)` conclui com sucesso
+# num push na main (mudança SDD 001, AC-005.1). O SHA implantado é o do commit
+# que gerou as imagens (workflow_run.head_sha) — versão fixa, nunca a tag móvel.
+#
+# Segredos: moram no environment `homologacao` (Settings > Environments) e só
+# chegam a este job porque ele roda no código da main (workflow_run executa o
+# arquivo da branch padrão). Nenhum gatilho de PR/fork existe aqui (AC-005.4).
+#
+# INERTE sem configuração: se SSH_* não existirem, o primeiro passo falha com
+# mensagem clara e nada mais acontece.
+
+on:
+  workflow_run:
+    workflows: ["Publicar imagem Docker (GHCR)"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-hml
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: homologacao
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      DONO: ${{ github.repository_owner }}
+    steps:
+      - name: Conferir configuração (inerte sem os Secrets)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          URL_PUBLICA: ${{ vars.URL_PUBLICA }}
+        run: |
+          faltam=""
+          [ -n "$SSH_HOST" ] || faltam="$faltam SSH_HOST"
+          [ -n "$SSH_PORT" ] || faltam="$faltam SSH_PORT"
+          [ -n "$SSH_USER" ] || faltam="$faltam SSH_USER"
+          [ -n "$SSH_PRIVATE_KEY" ] || faltam="$faltam SSH_PRIVATE_KEY"
+          [ -n "$SSH_KNOWN_HOSTS" ] || faltam="$faltam SSH_KNOWN_HOSTS"
+          [ -n "$URL_PUBLICA" ] || faltam="$faltam URL_PUBLICA(variável)"
+          if [ -n "$faltam" ]; then
+            echo "::error::Deploy de homologação não configurado: configure SSH_* nos Secrets do environment homologacao (faltam:$faltam)."
+            exit 1
+          fi
+          if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::SHA inválido (esperado 40 caracteres hexadecimais)."
+            exit 1
+          fi
+          dono_min="$(printf '%s' "$DONO" | tr 'A-Z' 'a-z')"
+          if ! [[ "$dono_min" =~ ^[a-z0-9][a-z0-9-]{0,38}$ ]]; then
+            echo "::error::Dono do repositório inválido para nome de imagem."
+            exit 1
+          fi
+          echo "DONO_MIN=$dono_min" >> "$GITHUB_ENV"
+
+      - name: Implantar (deploy.sh hml)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set +x
+          umask 077
+          chave="$RUNNER_TEMP/deploy_key"; conhecidos="$RUNNER_TEMP/known_hosts"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$chave"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$conhecidos"
+          chmod 600 "$chave" "$conhecidos"
+          ssh -i "$chave" -p "$SSH_PORT" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$conhecidos" \
+            "$SSH_USER@$SSH_HOST" deploy.sh hml "$SHA" "$DONO_MIN"
+
+      - name: Teste de fumaça (/ = 200 e /app = 307)
+        env:
+          URL_PUBLICA: ${{ vars.URL_PUBLICA }}
+        run: |
+          base="${URL_PUBLICA%/}"
+          for tentativa in $(seq 1 12); do
+            raiz="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base/" || true)"
+            app="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$base/app" || true)"
+            if [ "$raiz" = 200 ] && [ "$app" = 307 ]; then
+              echo "Fumaça ok: / = 200 e /app = 307."
+              exit 0
+            fi
+            echo "Tentativa $tentativa: / = $raiz, /app = $app (esperado 200 e 307)."
+            sleep 5
+          done
+          echo "::error::Teste de fumaça falhou em homologação."
+          exit 1
+
+      - name: Remover a chave do runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key" "$RUNNER_TEMP/known_hosts"

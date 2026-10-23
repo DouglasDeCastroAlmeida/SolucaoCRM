@@ -41,3 +41,24 @@ Do **restante** do repositório, leia apenas:
 | 6 | `/sdd:new` do subprojeto 0 (Fundação, porte L): escopo = seção 12 da spec; resolver no Grill as validações V-4 e V-5 | **Próxima**, só quando o dono mandar |
 
 Subprojetos seguintes: seção 12 da spec, um `/sdd:new` por vez, sempre com o dono aprovando o anterior.
+
+## Mapa: onde está cada coisa do que é NOSSO (atualizado em 23/10/2026)
+
+O repositório tem milhares de arquivos do DeskcommCRM original. O que é nosso fica só nestes lugares:
+
+| Quero ver... | Onde |
+|---|---|
+| **O que vamos construir** (visão, decisões D-xx, subprojetos 0 a 9) | `docs/solucao-crm/specs/2026-10-21-crm-autonomos-design.md` |
+| **As etapas do subprojeto 0** (perguntas, requisitos, design, tarefas) | `.sdd/changes/001-fundacao-.../` → `00-grill.md`, `01-prd.md`, `02-design.md`, `03-tasks.md` |
+| **Quais tarefas estão feitas** (`[x]`) e quais faltam (`[ ]`) | `.sdd/changes/001-fundacao-.../03-tasks.md` |
+| **As regras do projeto** (constituição, decisões A-xx) | `.sdd/constitution.md` |
+| **Contas, chaves e passo a passo de painéis** | `docs/solucao-crm/setup/guia-de-setup.md` |
+| **Estado real da VPS** | `docs/solucao-crm/setup/diagnostico-vps-2026-10-21.md` e as evidências abaixo |
+| **Provas de que algo funciona** (sem segredos) | `docs/solucao-crm/evidencias/001-fundacao/` |
+| **Scripts da VPS** (deploy, backup, firewall, usuários, memória) | `infra/solucao/` e `infra/solucao/admin/` |
+| **Testes desses scripts** e **sondas contra a VPS** | `tests/infra/` e `tests/infra/vps/sondas.sh` |
+| **Automações do GitHub** (CI, deploy) | `.github/workflows/` (`deploy-hml.yml`, `deploy-prod.yml`, `ci.yml`) |
+
+Segredos **nunca** ficam no repositório: moram em `C:\Users\Douglas\.secrets\` (seu computador), nos Secrets do GitHub e nos `.env` da VPS.
+
+Comando para ver o andamento: `node .sdd/bin/sdd.mjs status`.

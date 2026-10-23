@@ -1,0 +1,15 @@
+# Backup real da produção e restauração de teste — 2026-10-23 (sem segredos)
+AC-007.1 (real): backup.sh do kit gerou db (376 KB), waha e storage da produção; backup-externo.sh criptografou (age) e enviou ao
+  bucket privado do Cloudflare R2: "Enviado e verificado" para db, waha e storage (9 arquivos), teto de espaço 7 GB respeitado.
+AC-007.2/.3: ver backup-r2.txt (objeto cifrado "age-encryption.org/v1"; sem credencial o acesso devolve HTTP 400).
+AC-007.4 (restauração em ambiente descartável, só com a chave guardada pelo dono):
+  1. O objeto db-*.sql.gz.age foi baixado do R2 e aberto com a chave PRIVADA do dono (copiada para /dev/shm só durante o teste e destruída).
+  2. Restaurado num Postgres descartável (container sem porta publicada, rede isolada), num banco VAZIO (template0).
+  3. Resultado: 0 erros; tabelas do schema public 197 = 197; usuários de login 1 = 1; organizações 1 = 1; políticas RLS 635 = 635;
+     o e-mail do administrador restaurado é idêntico ao da produção (comparado por hash md5).
+  4. Ambiente de teste destruído.
+  Lição registrada: o primeiro método testou a restauração dentro do banco "postgres" da imagem Supabase, que já nasce com um schema auth
+  incompleto; o COPY de auth.users falhou ali (usuários 0). Isso era defeito do método, não do backup: o dump contém auth.users, e num banco
+  vazio voltou 1 usuário. A restauração real deve ser feita em banco vazio (é o que hostgator-setup-kit/restore.sh exige).
+LIMITE DESTA PROVA: restaurou-se o BANCO. Não se subiu o app/CRM inteiro sobre o banco restaurado. Quem fecha isso é o ensaio de
+  "restaurar a VPS do zero em até 2 h" do runbook (camada 2 da spec 10.3), não coberto aqui.

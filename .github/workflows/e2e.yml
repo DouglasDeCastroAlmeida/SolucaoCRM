@@ -99,6 +99,10 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
             echo "e2e=sim" >> "$GITHUB_OUTPUT"; echo "evento ${GITHUB_EVENT_NAME}: roda"; exit 0
           fi
+          # SolucaoCRM (ADR-004/D-06): PR nao roda o e2e completo (cota de minutos);
+          # ele roda no push na `main`. O agregador `e2e` aceita as partes puladas
+          # em pull_request com e2e=nao, entao o check obrigatorio segue existindo.
+          echo "e2e=nao" >> "$GITHUB_OUTPUT"; echo "pull_request: e2e completo so na main"; exit 0
           if ! arquivos=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" --jq '.[].filename'); then
             echo "e2e=sim" >> "$GITHUB_OUTPUT"; echo "::warning::não consegui listar os arquivos do PR — roda"; exit 0
           fi

@@ -1,0 +1,15 @@
+# Configuração do gitleaks (AC-012.1). Parte das regras padrão e só abre exceção
+# para o que é, por construção, valor de exemplo ou fixture de teste.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Exemplos e fixtures: nunca segredo real"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''^tests/(fixtures|unit|invariants|e2e)/.*''',
+  # Segredos de MENTIRA plantados de propósito para provar o mascaramento do crm-status (AC-008.3).
+  # Isenção só destes dois arquivos, não de tests/infra inteiro.
+  '''^tests/infra/(crm-status|alerta)\.test\.sh$''',
+  '''^pnpm-lock\.yaml$''',
+]

@@ -171,7 +171,7 @@ jobs:
   build-and-push:
     needs: [a-tag-veio-da-main]
     if: github.event_name != 'pull_request'
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-build-and-push-${{ matrix.name }}-${{ matrix.arch }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'pull_request' && github.run_attempt != '1' && format('-reentrada-{0}', github.event.pull_request.head.sha) || '' }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
@@ -205,7 +205,7 @@ jobs:
             dockerfile: Dockerfile.voice-agent
             title: DeskcommCRM voice agent
         name: [deskcommcrm, deskcomm-worker, deskcomm-scheduler, deskcomm-voice-agent]
-        arch: [amd64, arm64]
+        arch: [amd64]
 
     steps:
       - uses: actions/checkout@v7
@@ -248,6 +248,7 @@ jobs:
             # inteira depende — `latest` = topo da main, `stable` = última
             # release — e fazia `latest` oscilar entre os dois.
             type=raw,value=latest,enable=${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
+            type=sha,format=long,prefix=,enable=${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
             # `stable` NÃO sai daqui, e a razão é a issue #488. Ele já saiu: era
             # mais um `type=raw` nesta lista, e por isso CADA imagem movia o
             # canal sozinha, ao terminar, sem saber se as irmãs conseguiram.
@@ -282,7 +283,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           # Cada arquitetura compila no runner nativo; o job abaixo une os manifests.
-          platforms: ${{ matrix.arch == 'arm64' && 'linux/arm64' || 'linux/amd64' }}
+          platforms: linux/amd64
           # PR de fork não tem permissão de escrita no GHCR, e publicar imagem
           # de código não revisado seria pior que não gatear. Em PR: constrói
           # (que é o gate) e descarta.
@@ -336,6 +337,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable=${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
+            type=sha,format=long,prefix=,enable=${{ github.ref_type == 'branch' && github.ref_name == 'main' }}
 
       - name: Unir AMD64 e ARM64 em cada tag
         env:
@@ -347,10 +349,8 @@ jobs:
             [ -n "$tag" ] || continue
             docker buildx imagetools create \
               --tag "$tag" \
-              "${tag}-amd64" \
-              "${tag}-arm64"
+              "${tag}-amd64"
             manifesto_tem_plataforma "$tag" linux/amd64
-            manifesto_tem_plataforma "$tag" linux/arm64
           done <<< "$TAGS"
 
   # A imagem do app CONSTRÓI e MORRE ao subir? Este job existe porque isso
@@ -375,15 +375,13 @@ jobs:
     # Na `main` e em tag esta imagem vira a que o parque instala: ela se constrói
     # nas máquinas do GitHub, nunca numa máquina nossa. Guarda contra fork:
     # comentário do e2e-parte no e2e.yml.
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || (vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest') }}
+    runs-on: ${{ vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: amd64
             platform: linux/amd64
-          - arch: arm64
-            platform: linux/arm64
     concurrency:
       group: ${{ github.workflow }}-imagem-do-app-sobe-${{ matrix.arch }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'pull_request' && github.run_attempt != '1' && format('-reentrada-{0}', github.event.pull_request.head.sha) || '' }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
@@ -560,7 +558,6 @@ jobs:
           # worker já em `stable` — o canal dividido da #488.
           for img in deskcommcrm deskcomm-worker deskcomm-scheduler deskcomm-voice-agent; do
             manifesto_tem_plataforma "${REGISTRY}/${dono}/${img}:${numero}" linux/amd64
-            manifesto_tem_plataforma "${REGISTRY}/${dono}/${img}:${numero}" linux/arm64
           done
           for img in deskcommcrm deskcomm-worker deskcomm-scheduler deskcomm-voice-agent; do
             echo "::group::${img}"
@@ -612,15 +609,13 @@ jobs:
     # Na `main` e em tag esta imagem vira a que o parque instala: ela se constrói
     # nas máquinas do GitHub, nunca numa máquina nossa. Guarda contra fork:
     # comentário do e2e-parte no e2e.yml.
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || (vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest') }}
+    runs-on: ${{ vars.EXECUTOR_PROPRIO == 'ligado' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'deskcomm-proprio' || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: amd64
             platform: linux/amd64
-          - arch: arm64
-            platform: linux/arm64
     concurrency:
       group: ${{ github.workflow }}-imagens-de-fundo-sobem-${{ matrix.arch }}-${{ github.event.pull_request.number || github.ref }}${{ github.event_name == 'pull_request' && github.run_attempt != '1' && format('-reentrada-{0}', github.event.pull_request.head.sha) || '' }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}

@@ -49,6 +49,7 @@
 - [ ] Zod valida todo input externo novo
 - [ ] Sem `console.log` esquecido
 - [ ] Mudança de schema saiu como migration versionada + apêndice no `baseline.sql` + linha `-- manifest:` no cabeçalho do `.sql`
+- [ ] Se há migration: ela é compatível com a versão anterior do app (só adiciona; apagar/renomear em deploy posterior)
 - [ ] Doc atualizada se mudou contrato (PRD/spec)
 
 Convenções completas em [`CLAUDE.md`](../CLAUDE.md) · fluxo em [`CONTRIBUTING.md`](../CONTRIBUTING.md).
