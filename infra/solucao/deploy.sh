@@ -12,8 +12,11 @@
 #   1   recusado antes de trocar as versões (backup, git ou baseline falhos)
 #   2   uso incorreto (ambiente, SHA ou variável faltando)
 #
-# Variáveis (todas opcionais, exceto GHCR_OWNER):
-#   GHCR_OWNER            dono das imagens em ghcr.io (obrigatória)
+# Uso: deploy.sh <hml|prod> <sha> [dono]  (ou SSH_ORIGINAL_COMMAND com o mesmo texto)
+#
+# Variáveis (todas opcionais):
+#   GHCR_OWNER            dono das imagens em ghcr.io (o 3º argumento vence; sem
+#                         nenhum dos dois, deriva da APP_IMAGE atual do .env)
 #   CRM_DIR               pasta do ambiente (padrão /opt/crm-prod ou /opt/crm-hml)
 #   HEALTH_BASE_URL       padrão http://localhost:3000
 #   HEALTH_TIMEOUT        segundos de espera pela saúde após o deploy (padrão 90)
@@ -31,15 +34,26 @@
 set +x
 set -uo pipefail
 
-AMB="${1:-}"; SHA="${2:-}"
-[ "$#" -eq 2 ] || { echo "uso: deploy.sh <hml|prod> <sha-de-40-hex>" >&2; exit 2; }
+# Argumentos: posicionais (<amb> <sha> [dono]) ou, quando vêm de uma chave SSH com
+# command=, em SSH_ORIGINAL_COMMAND ("deploy.sh <amb> <sha> [dono]"). O texto é
+# validado por inteiro contra uma regex estrita (nada de eval, aspas ou espaço extra).
+RE_DONO='^[a-z0-9][a-z0-9-]{0,38}$'
+if [ "$#" -eq 0 ] && [ -n "${SSH_ORIGINAL_COMMAND:-}" ]; then
+  RE_CMD='^(deploy.sh )?(hml|prod) [0-9a-f]{40}( [a-z0-9][a-z0-9-]{0,38})?$'
+  if ! [[ "$SSH_ORIGINAL_COMMAND" =~ $RE_CMD ]]; then
+    echo "comando remoto recusado: use exatamente 'deploy.sh <hml|prod> <sha-de-40-hex> [dono]'." >&2
+    exit 2
+  fi
+  read -r -a _partes <<< "${SSH_ORIGINAL_COMMAND#deploy.sh }"
+  set -- "${_partes[@]}"
+fi
+{ [ "$#" -eq 2 ] || [ "$#" -eq 3 ]; } || { echo "uso: deploy.sh <hml|prod> <sha-de-40-hex> [dono]" >&2; exit 2; }
+AMB="${1:-}"; SHA="${2:-}"; DONO_ARG="${3:-}"
 case "$AMB" in hml|prod) ;; *) echo "ambiente inválido: '$AMB' (use hml ou prod)" >&2; exit 2 ;; esac
 if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
   echo "versão recusada: use o SHA completo do commit (40 caracteres hexadecimais minúsculos); 'latest' e tags móveis não são aceitos." >&2
   exit 2
 fi
-[ -n "${GHCR_OWNER:-}" ] || { echo "GHCR_OWNER não definido (dono das imagens no ghcr.io)." >&2; exit 2; }
-OWNER="$(printf '%s' "$GHCR_OWNER" | tr 'A-Z' 'a-z')"
 
 CRM_DIR="${CRM_DIR:-/opt/crm-$AMB}"
 HEALTH_BASE_URL="${HEALTH_BASE_URL:-http://localhost:3000}"
@@ -53,6 +67,22 @@ ENV_FILE="$CRM_DIR/.env"
 [ -f "$ENV_FILE" ] || { echo "Falta o .env em $CRM_DIR." >&2; exit 2; }
 cd "$CRM_DIR" || exit 2
 
+# dono das imagens: argumento > GHCR_OWNER > derivado da APP_IMAGE atual do .env
+OWNER="$DONO_ARG"
+[ -n "$OWNER" ] || OWNER="$(printf '%s' "${GHCR_OWNER:-}" | tr 'A-Z' 'a-z')"
+if [ -z "$OWNER" ]; then
+  _img="$(awk 'index($0, "APP_IMAGE=") == 1 { print substr($0, 11); exit }' "$ENV_FILE" | tr -d '')"
+  case "$_img" in ghcr.io/*/*) _r="${_img#ghcr.io/}"; OWNER="${_r%%/*}" ;; esac
+fi
+if [ -z "$OWNER" ]; then
+  echo "dono das imagens não resolvido: passe-o como 3º argumento, defina GHCR_OWNER ou deixe APP_IMAGE=ghcr.io/<dono>/... no .env." >&2
+  exit 2
+fi
+if ! [[ "$OWNER" =~ $RE_DONO ]]; then
+  echo "dono das imagens inválido:  (use minúsculas, números e hífen)." >&2
+  exit 2
+fi
+
 # ── saída sem segredos ───────────────────────────────────────────────────────
 # Mascara, em qualquer texto, o valor de toda chave sensível do .env.
 redige() {
@@ -61,8 +91,8 @@ redige() {
       while ((getline l < envfile) > 0) {
         i = index(l, "="); if (i < 2) continue
         k = substr(l, 1, i - 1); v = substr(l, i + 1)
-        gsub(/^"|"$/, "", v); gsub("^" sq "|" sq "$", "", v)
-        if (toupper(k) ~ /(PASS|SECRET|TOKEN|KEY|JWT|DSN|URL|CREDENTIAL)/ && length(v) >= 4) segredos[++n] = v
+        gsub(//, "", v); gsub(/^"|"$/, "", v); gsub("^" sq "|" sq "$", "", v)
+        if (toupper(k) ~ /(PASS|SECRET|TOKEN|KEY|JWT|DSN|URL|CREDENTIAL|SALT|HASH|HMAC|AUTH|ENCRYPTION|COOKIE|PRIVATE|SIGNING|CERT)/ && length(v) >= 4) segredos[++n] = v
       }
     }
     { for (j = 1; j <= n; j++) { s = segredos[j]; out = ""; rest = $0
@@ -90,7 +120,7 @@ else
   LOCK_D="$LOCK_ARQ.d"; avisou=0
   until mkdir "$LOCK_D" 2>/dev/null; do
     dono="$(cat "$LOCK_D/pid" 2>/dev/null || true)"
-    if [ -n "$dono" ] && ! kill -0 "$dono" 2>/dev/null; then rm -rf "$LOCK_D"; continue; fi
+    if [ -n "$dono" ] && ! kill -0 "$dono" 2>/dev/null; then mv "$LOCK_D" "$LOCK_D.orfao.$$" 2>/dev/null && rm -rf "$LOCK_D.orfao.$$"; continue; fi
     [ "$avisou" = 1 ] || { log "Aguardando outro deploy de $AMB terminar..."; avisou=1; }
     sleep 0.2
   done
@@ -171,12 +201,21 @@ if [ -n "${APLICAR_BASELINE_CMD:-}" ] || [ -f supabase/baseline.sql ]; then
 fi
 
 aplica_tags() { local l; for l in "$@"; do grava_chave "${l%%=*}" "${l#*=}"; done; }
-sobe() { roda compose pull app worker scheduler && roda compose up -d; }
+# sobe [rollback]: no rollback um pull que falha não impede o up (imagens em cache local)
+sobe() {
+  if ! roda compose pull app worker scheduler; then
+    [ "${1:-}" = rollback ] || return 1
+    log "pull falhou durante o rollback — usando as imagens já presentes no servidor."
+  fi
+  roda compose up -d
+}
 
 INICIO=$SECONDS
+ENV_COPIA="$(mktemp)"; cat "$ENV_FILE" > "$ENV_COPIA"
 aplica_tags "${NOVO[@]}"
 log "Versões gravadas; subindo os serviços..."
 if sobe && espera_saude "$HEALTH_TIMEOUT"; then
+  rm -f "$ENV_COPIA"
   log "Deploy concluído: / = 200 e /app = 307 em $((SECONDS - INICIO)) s."
   exit 0
 fi
@@ -184,11 +223,9 @@ fi
 # ── rollback (AC-006.2 / AC-006.3) ───────────────────────────────────────────
 log "Saúde falhou após o deploy — voltando à versão anterior."
 RB=$SECONDS
-for l in "${ANTERIOR[@]}"; do
-  [ -n "${l#*=}" ] || { log "Não há versão anterior registrada para ${l%%=*}: rollback impossível."; exit 11; }
-done
-aplica_tags "${ANTERIOR[@]}"
-if sobe && espera_saude "$ROLLBACK_TIMEOUT"; then
+# restaura o .env original byte a byte (cobre o primeiro deploy, sem tags prévias)
+cat "$ENV_COPIA" > "$ENV_FILE"; rm -f "$ENV_COPIA"
+if sobe rollback && espera_saude "$ROLLBACK_TIMEOUT"; then
   log "Rollback concluído: voltou à versão anterior e responde (rollback levou $((SECONDS - RB)) s)."
   exit 10
 fi

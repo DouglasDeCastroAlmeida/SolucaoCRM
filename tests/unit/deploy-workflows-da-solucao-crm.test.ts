@@ -133,6 +133,20 @@ describe("deploy-prod.yml (gatilho)", () => {
     expect(prod).toMatch(/packages:\s*read/);
   });
 
+  it("AC-005.2: o único gatilho é workflow_dispatch e o job exige ref main", () => {
+    const gatilhos = [...prod.matchAll(/^ {2}([a-z_]+):\s*$/gm)].map((m) => m[1]);
+    expect(gatilhos.filter((g) => ["workflow_dispatch", "push", "pull_request", "schedule", "workflow_run", "release"].includes(g ?? ""))).toEqual(["workflow_dispatch"]);
+    expect(prod).toMatch(/^ {4}if: github\.ref == 'refs\/heads\/main'/m);
+  });
+
+  it("integração: o dono das imagens segue como 3º argumento, em minúsculas e validado", () => {
+    for (const y of [hml, prod]) {
+      expect(runs(y)).toMatch(/deploy\.sh \S+ "\$SHA" "\$DONO_MIN"/);
+      expect(runs(y)).toContain("tr 'A-Z' 'a-z'");
+      expect(runs(y)).toContain("^[a-z0-9][a-z0-9-]{0,38}$");
+    }
+  });
+
   it("AC-005.2: só a main pode disparar o deploy de produção", () => {
     expect(prod).toMatch(/github\.ref == 'refs\/heads\/main'/);
   });

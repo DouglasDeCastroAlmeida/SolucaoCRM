@@ -642,7 +642,14 @@ jobs:
         # consultas/hora por IP — o executor próprio é um IP só.
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm test:db
+        # Fork sem GitHub Releases: `gh release view` volta vazio e o gate reprova por
+        # "não sei qual é a última release". A referência passa a ser a maior tag de versão
+        # estável do próprio repositório (as tags v* vieram do upstream no espelhamento).
+        run: |
+          CONFERENCIA_KIT_RELEASE="$(git ls-remote --tags --refs origin 'v*' | sed 's#.*refs/tags/##' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
+          export CONFERENCIA_KIT_RELEASE
+          echo "release de referência: $CONFERENCIA_KIT_RELEASE"
+          pnpm test:db
 
       # O `update.sh` do cliente roda sobre um banco COM DADOS, e nenhum gate
       # exercitava isso: `test:db` aplica o baseline num banco VAZIO, então

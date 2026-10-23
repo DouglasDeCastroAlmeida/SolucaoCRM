@@ -41,6 +41,7 @@ ENV
 #!/usr/bin/env bash
 echo "docker $*" >> "$FAKE_LOG"
 case " $* " in
+  *" pull "*) [ -z "${FAKE_PULL_FALHA:-}" ] || exit 1 ;;
   *" up "*)
     echo "UP_INICIO $(date +%s%N)" >> "$FAKE_LOG"
     [ -z "${FAKE_UP_SLEEP:-}" ] || sleep "$FAKE_UP_SLEEP"
