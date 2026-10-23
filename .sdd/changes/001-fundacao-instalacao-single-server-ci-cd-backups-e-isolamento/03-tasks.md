@@ -28,26 +28,28 @@ Cada tarefa ocupa uma linha:
 - [x] T-006 [TEST-INT] Teste que confere o item de migration compatível no template de PR (~35 min) {AC-006.4} deps: T-005
 
 ### Fatia 2: deploy com versão fixa, trava e rollback automático (testado localmente)
-- [ ] T-007 [P] [TEST-INT] deploy.sh contra Docker local com imagens de mentira: aceita SHA de 40 caracteres, recusa latest, é idempotente (~40 min) {AC-005.3}
-- [ ] T-008 [P] [TEST-INT] Duas execuções simultâneas do deploy.sh no mesmo ambiente: a segunda espera (~35 min) {AC-005.5}
-- [ ] T-009 [TEST-INT] Imagem que não sobe: deploy volta às tags anteriores, sai com código 10 e mede o tempo (~45 min) {AC-006.2, AC-006.3}
-- [ ] T-010 [TEST-INT] Deploy de produção tira backup antes e registra o resultado; log sem valores de segredo (~40 min) {AC-006.1, AC-012.2}
-- [ ] T-011 [IMPL] infra/solucao/deploy.sh (backup, tags, baseline, up, saúde, rollback, flock), reaproveitando funções do _common.sh (~60 min) {AC-005.3, AC-005.5, AC-006.1, AC-006.2, AC-006.3, AC-012.2} deps: T-007, T-008, T-009, T-010
-- [ ] T-012 [TEST-INT] Teste do YAML: deploy-prod só em workflow_dispatch com ambiente producao e sem gatilho de PR; deploy-hml só após publish-image verde na main (~35 min) {AC-005.1, AC-005.2, AC-005.4}
-- [ ] T-013 [IMPL] Workflows deploy-hml.yml e deploy-prod.yml com concurrency por ambiente e smoke test (/ = 200, /app = 307) (~45 min) {AC-005.1, AC-005.2, AC-005.4} deps: T-012, T-011
+- [x] T-007 [P] [TEST-INT] deploy.sh contra Docker local com imagens de mentira: aceita SHA de 40 caracteres, recusa latest, é idempotente (~40 min) {AC-005.3}
+- [x] T-008 [P] [TEST-INT] Duas execuções simultâneas do deploy.sh no mesmo ambiente: a segunda espera (~35 min) {AC-005.5}
+- [x] T-009 [TEST-INT] Imagem que não sobe: deploy volta às tags anteriores, sai com código 10 e mede o tempo (~45 min) {AC-006.2, AC-006.3}
+- [x] T-010 [TEST-INT] Deploy de produção tira backup antes e registra o resultado; log sem valores de segredo (~40 min) {AC-006.1, AC-012.2}
+- [x] T-011 [IMPL] infra/solucao/deploy.sh (backup, tags, baseline, up, saúde, rollback, flock), reaproveitando funções do _common.sh (~60 min) {AC-005.3, AC-005.5, AC-006.1, AC-006.2, AC-006.3, AC-012.2} deps: T-007, T-008, T-009, T-010
+- [x] T-012 [TEST-INT] Teste do YAML: deploy-prod só em workflow_dispatch com ambiente producao e sem gatilho de PR; deploy-hml só após publish-image verde na main (~35 min) {AC-005.1, AC-005.2, AC-005.4}
+- [x] T-013 [IMPL] Workflows deploy-hml.yml e deploy-prod.yml com concurrency por ambiente e smoke test (/ = 200, /app = 307) (~45 min) {AC-005.1, AC-005.2, AC-005.4} deps: T-012, T-011
 
 ### Fatia 3: backup externo criptografado (testado localmente com MinIO)
-- [ ] T-014 [TEST-INT] backup-externo.sh contra MinIO: gera banco, WAHA e Storage, arquivos saem criptografados e a retenção local mantém 14 (~50 min) {AC-007.1, AC-007.2, AC-007.6}
-- [ ] T-015 [TEST-INT] Falha de envio gera alerta no mesmo dia e sai com código diferente de zero (~35 min) {AC-007.5}
-- [ ] T-016 [IMPL] infra/solucao/backup-externo.sh (age + rclone + alerta + verificação por hash) (~50 min) {AC-007.1, AC-007.2, AC-007.5, AC-007.6} deps: T-014, T-015
+- [x] T-014 [TEST-INT] backup-externo.sh contra MinIO: gera banco, WAHA e Storage, arquivos saem criptografados e a retenção local mantém 14 (~50 min) {AC-007.1, AC-007.2, AC-007.6}
+- [x] T-015 [TEST-INT] Falha de envio gera alerta no mesmo dia e sai com código diferente de zero (~35 min) {AC-007.5}
+- [x] T-016 [IMPL] infra/solucao/backup-externo.sh (age + rclone + alerta + verificação por hash) (~50 min) {AC-007.1, AC-007.2, AC-007.5, AC-007.6} deps: T-014, T-015
 
 ### Fatia 4: isolamento e atalho de leitura (scripts testados localmente)
-- [ ] T-017 [TEST-INT] Teste do authorized_keys gerado para o deploy: command=, sem pty, sem forwarding (~35 min) {AC-008.4}
-- [ ] T-018 [TEST-UNIT] Cada ação de infra/solucao/admin tem script numerado com --dry-run e nenhum comando administrativo fora deles (~25 min) {AC-008.5}
-- [ ] T-019 [TEST-INT] crm-status.sh não imprime padrões de segredo (chaves, tokens, linhas de .env) (~35 min) {AC-008.3}
-- [ ] T-020 [IMPL] admin/01-swap.sh, 02-firewall.sh, 03-usuarios.sh, 04-mover-vava.sh, 05-cron.sh e crm-status.sh, todos com --dry-run (~60 min) {AC-008.3, AC-008.4, AC-008.5} deps: T-017, T-018, T-019
+- [x] T-017 [TEST-INT] Teste do authorized_keys gerado para o deploy: command=, sem pty, sem forwarding (~35 min) {AC-008.4}
+- [x] T-018 [TEST-UNIT] Cada ação de infra/solucao/admin tem script numerado com --dry-run e nenhum comando administrativo fora deles (~25 min) {AC-008.5}
+- [x] T-019 [TEST-INT] crm-status.sh não imprime padrões de segredo (chaves, tokens, linhas de .env) (~35 min) {AC-008.3}
+- [x] T-020 [IMPL] admin/01-swap.sh, 02-firewall.sh, 03-usuarios.sh, 04-mover-vava.sh, 05-cron.sh e crm-status.sh, todos com --dry-run (~60 min) {AC-008.3, AC-008.4, AC-008.5} deps: T-017, T-018, T-019
 
 ### Fatia 5: reserva de memória, firewall e usuários na VPS (cada ação só com seu ok)
+- [ ] T-043 [TEST-INT] medir-memoria.sh com free/docker falsos: registra memória livre em arquivo, e abaixo de 2 GB por mais de um dia dispara o alerta (ALERTA_CMD) sem segredos (~40 min) {AC-009.3, AC-009.4}
+- [ ] T-044 [IMPL] infra/solucao/medir-memoria.sh (cron a cada 10 min; guarda série diária; alerta de VPS dedicada) (~40 min) {AC-009.3, AC-009.4} deps: T-043
 - [ ] T-021 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Medir a VPS antes de instalar: memória, CPU, disco e portas abertas, comparando com a estimativa de 9 a 11 GB (~40 min) {AC-009.5}
 - [ ] T-022 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Swap de 4 GB ativo e persistente após reinício (~40 min) {AC-009.1} deps: T-021, T-020
 - [ ] T-023 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: ufw só com 22, 80, 443/tcp e 443/udp; porta 8000 fechada (~40 min) {AC-010.2} deps: T-020
@@ -55,7 +57,7 @@ Cada tarefa ocupa uma linha:
 
 ### Fatia 6: DNS e troca do dono de 80/443 com o vava (janela combinada com o dono)
 - [ ] T-025 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: DNS na Hostinger: app, hml e curinga apontando para o IP da VPS; registros antigos revistos (~40 min) {AC-010.1, AC-010.4}
-- [ ] T-026 [TEST-INT] 04-mover-vava.sh em pasta de teste: cria a cópia dos arquivos (inclusive os locais) e --desfazer restaura byte a byte (~40 min) {AC-001.4}
+- [x] T-026 [TEST-INT] 04-mover-vava.sh em pasta de teste: cria a cópia dos arquivos (inclusive os locais) e --desfazer restaura byte a byte (~40 min) {AC-001.4}
 - [ ] T-027 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Troca real: só o Caddy do CRM em 80/443, valescaalmeida.com responde 200 e a porta interna do vava recusa de fora; indisponibilidade medida (~40 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.5} deps: T-025, T-026, T-022, T-023
 
 ### Fatia 7: produção no ar
@@ -74,7 +76,7 @@ Cada tarefa ocupa uma linha:
 - [ ] T-036 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada (~40 min) {AC-007.1, AC-007.2, AC-007.3} deps: T-016, T-031
 - [ ] T-037 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Restaurar um backup do R2 em ambiente descartável usando só a chave do gerenciador de senhas (~40 min) {AC-007.4} deps: T-036
 - [ ] T-038 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis (~40 min) {AC-011.1, AC-011.2} deps: T-033
-- [ ] T-039 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar (~40 min) {AC-009.3, AC-009.4} deps: T-031, T-033
+- [ ] T-039 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar (~40 min) {AC-009.3, AC-009.4} deps: T-031, T-033, T-044
 
 ### Fechamento
 - [ ] T-040 [DOCS] Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos (~40 min) {AC-004.5}
