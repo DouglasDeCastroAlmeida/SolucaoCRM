@@ -150,6 +150,23 @@ sonda_producao() {
   rssh 'docker ps --format "{{.Names}} {{.Status}}" | grep crm-prod | sort' | registra producao-containers.txt
 }
 
+sonda_homologacao() {
+  echo "== homologação (AC-003.1, .2, .3)"
+  local u="https://hml.${DOMINIO_CRM:-corretora.io}" c
+  c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$u/")";    [ "$c" = 200 ] && pass "AC-003.1: $u/ responde 200"    || fail "AC-003.1: $u/ respondeu $c"
+  c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 "$u/app")"; [ "$c" = 307 ] && pass "AC-003.1: $u/app responde 307" || fail "AC-003.1: $u/app respondeu $c"
+  [ "$(rssh 'docker ps --format "{{.Names}}" | grep -c "^crm-hml-caddy" || true' 2>/dev/null)" = "0" ] && pass "AC-003.1: a hml não tem Caddy próprio (80/443 com um dono só)" || fail "AC-003.1: existe Caddy da hml"
+  local redes; redes="$(rssh 'docker ps --filter name=crm-hml- --format "{{.Names}}" | xargs -r docker inspect --format "{{range \$k,\$v := .NetworkSettings.Networks}}{{\$k}} {{end}}" | tr " " "\n" | sort -u | tr "\n" " "' 2>/dev/null)"
+  case "$redes" in *crm-prod_supabase*|*crm-prod_internal*|*crm-prod_default*) fail "AC-003.2: a hml está em rede da produção ($redes)";; *crm-hml_internal*) pass "AC-003.2: redes da hml = $redes";; *) fail "AC-003.2: redes inesperadas ($redes)";; esac
+  local vols; vols="$(rssh 'docker ps --filter name=crm-hml- --format "{{.Names}}" | xargs -r docker inspect --format "{{range .Mounts}}{{.Name}} {{end}}" | tr " " "\n" | grep -v "^$" | sort -u' 2>/dev/null)"
+  # volume anônimo (64 hex) pertence só ao container que o criou; o resto precisa do prefixo crm-hml_
+  if [ -n "$vols" ] && ! printf '%s\n' "$vols" | grep -vE '^(crm-hml_|[0-9a-f]{64}$)' | grep -q .; then pass "AC-003.2: volumes só da hml ($(printf '%s' "$vols" | tr '\n' ' '))"; else fail "AC-003.2: volumes fora do prefixo crm-hml_ ($vols)"; fi
+  local seg; seg="$(rssh 'for k in $(grep -oE "^[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD|DB_URL|SUPABASE_URL)[A-Z0-9_]*" /opt/crm-hml/.env | sort -u); do a=$(grep -E "^$k=" /opt/crm-hml/.env | cut -d= -f2-); b=$(grep -E "^$k=" /opt/crm-prod/.env | cut -d= -f2-); [ -n "$a" ] && [ "$a" != "\"\"" ] && [ "$a" = "$b" ] && echo $k; done | tr "\n" " "' 2>/dev/null)"
+  [ -z "$seg" ] && pass "AC-003.2: nenhum segredo/URL de banco igual ao da produção" || fail "AC-003.2: valores iguais aos da produção: $seg"
+  [ "$(rssh 'grep -c "^SUPABASE_DB_URL=.*supabase.com" /opt/crm-hml/.env' 2>/dev/null)" = "1" ] && pass "AC-003.1: o banco da hml é o Supabase Cloud" || fail "AC-003.1: o banco da hml não é o Supabase Cloud"
+  rssh 'docker ps --format "{{.Names}} {{.Status}}" | grep crm-hml | sort' | registra homologacao-containers.txt
+}
+
 [ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev)"; exit 2; }
 for s in "$@"; do
   fn="sonda_${s//-/_}"

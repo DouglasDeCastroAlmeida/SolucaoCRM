@@ -15,10 +15,11 @@ echo "compose-hml: override da homologação"
 awk '/^  caddy:/{c=1;next} /^  [a-z]/{c=0} c && /profiles: !override/{f=1} END{exit !f}' "$HML" \
   && ok "AC-003.1 caddy desligado por profiles" || falha "AC-003.1 caddy não está desligado"
 
-# AC-003.1: publicada pelo Caddy da produção, na rede compartilhada
-grep -qE '^\s+name: crm-prod_caddy-sites$' "$HML" && grep -qE '^\s+external: true$' "$HML" \
-  && ok "AC-003.1 rede externa crm-prod_caddy-sites" || falha "AC-003.1 falta a rede externa crm-prod_caddy-sites"
-grep -q 'crm-hml-app' "$HML" && ok "AC-003.1 alias crm-hml-app para o Caddy" || falha "AC-003.1 falta o alias crm-hml-app"
+# AC-003.1: publicada pelo Caddy da produção SÓ pelo apelido crm-hml-app (ligação feita pelo deploy.sh).
+# Se o compose anexasse a rede caddy-sites, a hml ganharia o apelido `app` e roubaria tráfego da produção.
+if grep -vE '^\s*#' "$HML" | grep -q 'caddy-sites'; then falha "AC-003.1 o compose da hml anexa caddy-sites (o apelido app vazaria para a produção)"
+else ok "AC-003.1 o compose da hml não anexa a rede do Caddy"; fi
+grep -q 'network connect --alias crm-hml-app' "$DEPLOY" && ok "AC-003.1 deploy.sh liga a hml ao Caddy só com o alias crm-hml-app" || falha "AC-003.1 deploy.sh não liga a hml com o alias crm-hml-app"
 
 # AC-003.2: nada de rede/volume/banco compartilhado com a produção além da caddy-sites
 if grep -nE 'crm-prod_(supabase|internal)|supabase-db' "$HML" | grep -v '^\s*[0-9]*:\s*#' >/dev/null; then

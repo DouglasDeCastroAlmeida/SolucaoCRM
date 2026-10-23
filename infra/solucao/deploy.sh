@@ -203,13 +203,22 @@ if [ -n "${APLICAR_BASELINE_CMD:-}" ] || [ -f supabase/baseline.sql ]; then
 fi
 
 aplica_tags() { local l; for l in "$@"; do grava_chave "${l%%=*}" "${l#*=}"; done; }
+# A hml entra na rede do Caddy da produção SÓ com o apelido crm-hml-app. Pelo compose ela ganharia também
+# o apelido `app` (nome do serviço) e o Caddy da produção passaria a mandar parte do tráfego de
+# app.corretora.io para a homologação. Por isso a ligação é feita aqui, depois de cada `up`.
+REDE_CADDY="${REDE_CADDY:-crm-prod_caddy-sites}"
+publica_hml() {
+  local cid; cid="$(compose ps -q app 2>/dev/null | head -1)"
+  roda docker network connect --alias crm-hml-app "$REDE_CADDY" "$cid" || log "network connect: já conectada (ou falhou); a saúde decide."
+}
 # sobe [rollback]: no rollback um pull que falha não impede o up (imagens em cache local)
 sobe() {
   if ! roda compose pull app worker scheduler; then
     [ "${1:-}" = rollback ] || return 1
     log "pull falhou durante o rollback — usando as imagens já presentes no servidor."
   fi
-  roda compose up -d
+  roda compose up -d || return 1
+  [ "$AMB" != hml ] || publica_hml
 }
 
 INICIO=$SECONDS

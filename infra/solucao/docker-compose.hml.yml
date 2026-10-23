@@ -2,7 +2,10 @@
 # depois do prod.yml e do docker-compose.solucao.yml. {AC-003.1, AC-003.2}
 #
 # - NÃO sobe Caddy: o Caddy do CRM de produção é o único dono de 80/443. A homologação é publicada
-#   por ele, em caddy-sites/hml.caddy, pelo nome `crm-hml-app` na rede compartilhada.
+#   por ele, em caddy-sites/hml.caddy, pelo nome `crm-hml-app` na rede compartilhada. Essa ligação NÃO é
+#   feita aqui: o compose daria à hml o apelido `app` na rede do Caddy e o tráfego da PRODUÇÃO passaria a
+#   cair na homologação (medido em 23/10/2026). Quem liga é o `publica_hml` do deploy.sh, só com o apelido
+#   crm-hml-app.
 # - Banco: Supabase Cloud Free (SUPABASE_DB_URL no .env da hml). Nada de banco, .env ou volume da produção.
 # - Limites <= os da produção e cpu_shares <= 256: sob pressão, a produção ganha CPU.
 #
@@ -15,10 +18,6 @@ services:
   caddy:
     profiles: !override ["nunca"]
   app:
-    networks: !override
-      internal: {}
-      caddy-sites:
-        aliases: [crm-hml-app]
     mem_limit: 640m
     cpus: 0.75
     cpu_shares: 256
@@ -43,7 +42,3 @@ services:
     cpus: 0.25
     cpu_shares: 32
 
-networks:
-  caddy-sites: !override
-    name: crm-prod_caddy-sites
-    external: true
