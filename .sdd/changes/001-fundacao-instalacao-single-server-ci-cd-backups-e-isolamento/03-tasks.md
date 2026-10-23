@@ -68,7 +68,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-032 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker (~40 min) {AC-010.3} deps: T-031
 
 ### Fatia 8: homologação e primeiro deploy pelo pipeline
-- [ ] T-033 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção (~40 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-031
+- [x] T-033 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção (~40 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-031
 - [ ] T-034 [CHECK-SMOKE] Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos (~35 min) {AC-005.1, AC-006.3} deps: T-013, T-033
 - [ ] T-035 [CHECK-SMOKE] Deploy de produção parado esperando a aprovação do dono e concluído depois do clique (~25 min) {AC-005.2} deps: T-034
 
@@ -123,7 +123,7 @@ Cada tarefa ocupa uma linha:
 | T-030 | TEST-INT | Instalador com .env incompleto ou DNS errado falha com mensagem em português e sem instalação pela metade | ⬜ | 35min |
 | T-031 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-prod pelo instalador single-server e conferir /, /app, /api/v1/health e Studio e Postgres fechados | ⬜ | 40min |
 | T-032 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker | ⬜ | 40min |
-| T-033 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção | ⬜ | 40min |
+| T-033 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção | ✅ | 40min |
 | T-034 | CHECK-SMOKE | Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos | ⬜ | 35min |
 | T-035 | CHECK-SMOKE | Deploy de produção parado esperando a aprovação do dono e concluído depois do clique | ⬜ | 25min |
 | T-036 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada | ⬜ | 40min |

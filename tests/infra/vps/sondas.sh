@@ -164,6 +164,9 @@ sonda_homologacao() {
   local seg; seg="$(rssh 'for k in $(grep -oE "^[A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD|DB_URL|SUPABASE_URL)[A-Z0-9_]*" /opt/crm-hml/.env | sort -u); do a=$(grep -E "^$k=" /opt/crm-hml/.env | cut -d= -f2-); b=$(grep -E "^$k=" /opt/crm-prod/.env | cut -d= -f2-); [ -n "$a" ] && [ "$a" != "\"\"" ] && [ "$a" = "$b" ] && echo $k; done | tr "\n" " "' 2>/dev/null)"
   [ -z "$seg" ] && pass "AC-003.2: nenhum segredo/URL de banco igual ao da produção" || fail "AC-003.2: valores iguais aos da produção: $seg"
   [ "$(rssh 'grep -c "^SUPABASE_DB_URL=.*supabase.com" /opt/crm-hml/.env' 2>/dev/null)" = "1" ] && pass "AC-003.1: o banco da hml é o Supabase Cloud" || fail "AC-003.1: o banco da hml não é o Supabase Cloud"
+  local n; n="$(rssh 'docker exec crm-prod-caddy-1 nslookup app 2>&1 | grep -c "^Address: "' 2>/dev/null)"
+  [ "$n" = "1" ] && pass "AC-003.2: o nome 'app' vista pelo Caddy aponta para UM só container (a hml não rouba tráfego da produção)" || fail "AC-003.2: o nome 'app' aponta para $n containers na rede do Caddy"
+  c="$(curl -s --max-time 30 "https://app.${DOMINIO_CRM:-corretora.io}/api/v1/health" | grep -oE '"status":"[a-z]+"' | head -1)"; [ "$c" = '"status":"healthy"' ] && pass "AC-003.2: a produção segue $c com a hml no ar" || fail "AC-003.2: a produção respondeu $c com a hml no ar"
   rssh 'docker ps --format "{{.Names}} {{.Status}}" | grep crm-hml | sort' | registra homologacao-containers.txt
 }
 

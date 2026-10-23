@@ -1,19 +1,19 @@
-# producao-containers.txt — 2026-10-23T03:05Z
-crm-prod-app-1 Up 15 minutes (healthy)
-crm-prod-caddy-1 Up 7 minutes
-crm-prod-redis-1 Up 15 minutes (healthy)
-crm-prod-scheduler-1 Up 15 minutes (healthy)
-crm-prod-srh-1 Up 15 minutes
-crm-prod-supabase-api-gw-1 Up 18 minutes (healthy)
-crm-prod-supabase-auth-1 Up 18 minutes (healthy)
-crm-prod-supabase-db-1 Up 18 minutes (healthy)
-crm-prod-supabase-functions-1 Up 17 minutes (healthy)
-crm-prod-supabase-imgproxy-1 Up 18 minutes (healthy)
-crm-prod-supabase-meta-1 Up 18 minutes (healthy)
-crm-prod-supabase-realtime-1 Up 18 minutes (healthy)
-crm-prod-supabase-rest-1 Up 18 minutes (healthy)
-crm-prod-supabase-storage-1 Up 18 minutes (healthy)
-crm-prod-supabase-studio-1 Up 18 minutes (healthy)
-crm-prod-supabase-supavisor-1 Up 18 minutes (healthy)
-crm-prod-waha-1 Up 15 minutes
-crm-prod-worker-1 Up 15 minutes (healthy)
+# producao-containers.txt — 2026-10-23T22:51Z
+crm-prod-app-1 Up 4 hours (healthy)
+crm-prod-caddy-1 Up 4 hours
+crm-prod-redis-1 Up 4 hours (healthy)
+crm-prod-scheduler-1 Up 4 hours (healthy)
+crm-prod-srh-1 Up 4 hours
+crm-prod-supabase-api-gw-1 Up 4 hours (healthy)
+crm-prod-supabase-auth-1 Up 4 hours (healthy)
+crm-prod-supabase-db-1 Up 4 hours (healthy)
+crm-prod-supabase-functions-1 Up 4 hours (healthy)
+crm-prod-supabase-imgproxy-1 Up 4 hours (healthy)
+crm-prod-supabase-meta-1 Up 4 hours (healthy)
+crm-prod-supabase-realtime-1 Up 4 hours (healthy)
+crm-prod-supabase-rest-1 Up 4 hours (healthy)
+crm-prod-supabase-storage-1 Up 4 hours (healthy)
+crm-prod-supabase-studio-1 Up 4 hours (healthy)
+crm-prod-supabase-supavisor-1 Up 4 hours (healthy)
+crm-prod-waha-1 Up 4 hours
+crm-prod-worker-1 Up 4 hours (healthy)

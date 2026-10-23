@@ -1,0 +1,7 @@
+# homologacao-containers.txt — 2026-10-23T22:57Z
+crm-hml-app-1 Up 39 seconds (healthy)
+crm-hml-redis-1 Up 9 minutes (healthy)
+crm-hml-scheduler-1 Up 9 minutes (healthy)
+crm-hml-srh-1 Up 9 minutes
+crm-hml-waha-1 Up 9 minutes
+crm-hml-worker-1 Up About a minute (healthy)
