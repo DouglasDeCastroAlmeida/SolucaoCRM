@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "language": "pt-BR",
+  "gate": {
+    "mode": "warn",
+    "allow": [
+      ".sdd/**",
+      "**/*.md",
+      "docs/**",
+      ".claude/**",
+      ".github/**"
+    ]
+  },
+  "commands": {
+    "test": "pnpm test:unit",
+    "testFocused": "pnpm vitest run {files}",
+    "lint": "pnpm lint",
+    "typecheck": "pnpm typecheck",
+    "e2e": "pnpm test:e2e",
+    "coverage": "",
+    "security": "pnpm audit --audit-level=high"
+  },
+  "profiles": [
+    "web-react",
+    "infra-hostinger"
+  ],
+  "review": {
+    "mode": "auto"
+  },
+  "quality": {
+    "coverageMin": null
+  },
+  "run": {
+    "timeoutSeconds": 900,
+    "tailLines": 25,
+    "maxFailureLines": 60
+  },
+  "tests": {
+    "include": [
+      "**/*.test.*",
+      "**/*.spec.*",
+      "**/test_*.py",
+      "**/*_test.go",
+      "**/*Test.java",
+      "**/*Tests.cs",
+      "tests/**",
+      "test/**",
+      "e2e/**"
+    ],
+    "exclude": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".git/**",
+      ".sdd/**",
+      "vendor/**",
+      "coverage/**",
+      ".next/**"
+    ]
+  },
+  "estimates": {
+    "SETUP": 10,
+    "TEST-CONTRACT": 10,
+    "TEST-UNIT": 20,
+    "TEST-INT": 35,
+    "TEST-UI": 30,
+    "TEST-E2E": 50,
+    "CHECK-SMOKE": 15,
+    "IMPL": 20,
+    "REFACTOR": 15,
+    "DOCS": 10
+  }
+}

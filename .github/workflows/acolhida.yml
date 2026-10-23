@@ -121,7 +121,8 @@ jobs:
   # não é o dela. É `repository_owner` e não `repository` porque renomear o
   # repositório não deve calar a acolhida; mudar de dono deve.
   acolher:
-    if: github.repository_owner == 'melgarafael' && github.event.pull_request.head.repo.full_name != github.repository
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

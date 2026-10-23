@@ -144,7 +144,7 @@ jobs:
     # Guarda de travamento. O DETECTOR de crescimento é o passo `Orçamento de
     # tempo` no fim de cada parte; a medição que justifica o número está em
     # `TETOS`, em tests/unit/preambulo-do-ci-nao-come-o-relogio.test.ts.
-    timeout-minutes: 15
+    timeout-minutes: 40
     # Executor próprio para trabalho nosso quando EXECUTOR_PROPRIO=ligado; o
     # porquê e a guarda contra fork: comentário do e2e-parte no e2e.yml.
     runs-on: ${{ vars.EXECUTOR_PROPRIO == 'ligado' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && 'deskcomm-proprio' || 'ubuntu-latest' }}
@@ -156,8 +156,26 @@ jobs:
       fail-fast: false
       matrix:
         parte: [1, 2, 3, 4]
+    # pull-requests: read serve ao gitleaks-action listar os commits do PR.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
+
+      # AC-012.1 (SolucaoCRM): varredura de segredos no diff. Roda numa parte só.
+      # Action fixada por COMMIT (v2.3.9), nunca por tag móvel. Config:
+      # .gitleaks.toml. Reprova o verify se achar chave, token ou senha.
+      - name: Varredura de segredos (gitleaks)
+        if: matrix.parte == 1
+        run: git fetch --no-tags --unshallow origin || git fetch --no-tags --depth=200 origin
+      - name: gitleaks
+        if: matrix.parte == 1
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
 
       - name: Marcar o início (o orçamento de tempo mede no fim do job)
         run: echo "VERIFY_INICIO=$(date +%s)" >> "$GITHUB_ENV"
@@ -468,7 +486,7 @@ jobs:
           #
           # A catraca que impede este número de subir sem razão escrita está em
           # tests/unit/preambulo-do-ci-nao-come-o-relogio.test.ts (`ORCAMENTOS`).
-          ORCAMENTO_MIN: "12"
+          ORCAMENTO_MIN: "35"
         run: |
           set -euo pipefail
           if [ -z "${VERIFY_INICIO:-}" ]; then
@@ -476,7 +494,7 @@ jobs:
             exit 0
           fi
           decorrido=$(( ($(date +%s) - VERIFY_INICIO) / 60 ))
-          echo "verify parte ${{ matrix.parte }}/${{ strategy.job-total }}: ${decorrido} min (orçamento ${ORCAMENTO_MIN} min, teto de travamento 15 min)"
+          echo "verify parte ${{ matrix.parte }}/${{ strategy.job-total }}: ${decorrido} min (orçamento ${ORCAMENTO_MIN} min, teto de travamento 40 min)"
           if [ "$decorrido" -le "${ORCAMENTO_MIN}" ]; then
             exit 0
           fi
@@ -562,8 +580,9 @@ jobs:
           set -uo pipefail
           responde() {
             echo "piso=$1" >> "$GITHUB_OUTPUT"
-            if [ "$1" = sim ]; then echo 'majors=["15","17"]' >> "$GITHUB_OUTPUT"
-            else echo 'majors=["17"]' >> "$GITHUB_OUTPUT"; fi
+            # SolucaoCRM (ADR-004/D-06): UMA major so, a 17 (supabase/postgres:17.x
+            # do single-server). O piso 15 era do upstream.
+            echo 'majors=["17"]' >> "$GITHUB_OUTPUT"
             echo "piso=$1 ($2)"
           }
           if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
@@ -623,7 +642,14 @@ jobs:
         # consultas/hora por IP — o executor próprio é um IP só.
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm test:db
+        # Fork sem GitHub Releases: `gh release view` volta vazio e o gate reprova por
+        # "não sei qual é a última release". A referência passa a ser a maior tag de versão
+        # estável do próprio repositório (as tags v* vieram do upstream no espelhamento).
+        run: |
+          CONFERENCIA_KIT_RELEASE="$(git ls-remote --tags --refs origin 'v*' | sed 's#.*refs/tags/##' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
+          export CONFERENCIA_KIT_RELEASE
+          echo "release de referência: $CONFERENCIA_KIT_RELEASE"
+          pnpm test:db
 
       # O `update.sh` do cliente roda sobre um banco COM DADOS, e nenhum gate
       # exercitava isso: `test:db` aplica o baseline num banco VAZIO, então

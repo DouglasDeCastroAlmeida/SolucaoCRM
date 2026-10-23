@@ -63,16 +63,17 @@ const DIR = join(process.cwd(), ".github/workflows");
  * consciente: o teste reprova até alguém escrevê-la, e escrever uma condição
  * que desliga um job de entrega fica visível em code review.
  */
+// DESVIO A REVISAR (ADR-004/D-06, SolucaoCRM): workflow do upstream desligado com `if: false`.
 const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string }> = {
   // --- a cadeia que leva o conserto até a VPS ---------------------------------
   "release.yml::abrir-pr-de-release": {
-    condicao: "github.event_name == 'workflow_dispatch'",
+    condicao: "false",
     efeito:
       "Este job é quem monta o PR de release a partir dos fragmentos de `.changes/`. " +
       "Desligá-lo faz nenhuma versão ser fechada — sem erro em lugar nenhum.",
   },
   "release.yml::cortar-tag": {
-    condicao: "github.event_name == 'push'",
+    condicao: "false",
     efeito:
       "Este job é quem CRIA E EMPURRA a tag `vX.Y.Z`, que é o gatilho da atualização " +
       "do parque instalado inteiro. Desligá-lo faz a release parar em silêncio: nenhuma " +
@@ -235,24 +236,39 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
     efeito: "Este é o check obrigatório `build-and-size` (`pnpm build` em Node 22).",
   },
   "mysql-integracao.yml::integracao-mysql": {
-    condicao: null,
+    condicao: "false",
     efeito:
       "Este job roda o dialeto MySQL contra um MySQL 8 de verdade (somente-leitura, catálogo, TLS, " +
       "trava de metadados). É INFORMATIVO — não é check obrigatório. Se não rodar, o suporte a MySQL " +
       "volta a ser provado só por teste com driver simulado, sem nenhum erro visível.",
   },
   "mysql-integracao.yml::standalone-leva-mysql2": {
-    condicao: null,
+    condicao: "false",
     efeito:
       "Este job confere que o build `standalone` do app leva o `mysql2`. É INFORMATIVO — não é check " +
       "obrigatório. Se não rodar, uma imagem sem o driver só aparece quando alguém conecta um MySQL na VPS.",
   },
 
+  // --- os deploys da Solução CRM (subprojeto 0, fatia 2) -----------------------
+  "deploy-hml.yml::deploy": {
+    condicao:
+      ">- github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main'",
+    efeito:
+      "Este job leva a imagem recém-publicada da `main` à homologação. As três condições são " +
+      "deliberadas: sem `success` ele implantaria imagem que não construiu; sem `event == push` " +
+      "e `head_branch == main` um PR (inclusive de fork) acionaria um deploy com segredos de SSH.",
+  },
+  "deploy-prod.yml::deploy": {
+    condicao: "github.ref == 'refs/heads/main'",
+    efeito:
+      "Este job é o deploy de produção, disparado só à mão (`workflow_dispatch`). A condição " +
+      "impede que alguém rode o botão a partir de outra branch e implante código não revisado.",
+  },
+
   // --- e o que legitimamente tem interruptor -----------------------------------
   "acolhida.yml::acolher": {
     condicao:
-      "github.repository_owner == 'melgarafael' && " +
-      "github.event.pull_request.head.repo.full_name != github.repository",
+      "false",
     efeito:
       "Este job posta a acolhida automática em PR de fork — a resposta em minutos que existe " +
       "porque três contribuidores fecharam o próprio PR achando que tinham errado. As duas " +
@@ -261,7 +277,7 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "gente no repositório dele, prometendo um prazo que ninguém lá concordou em cumprir.",
   },
   "relogio.yml::tick": {
-    condicao: "vars.RELOGIO_LIGADO == '1' || github.event_name == 'workflow_dispatch'",
+    condicao: "false",
     efeito:
       "Este é o relógio que bate o cron. A condição aqui é um interruptor DELIBERADO " +
       "(`vars.RELOGIO_LIGADO`), não uma adaptação de fork — mas ela fica no mapa para " +

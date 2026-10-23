@@ -1,0 +1,2 @@
+# dns.txt — 2026-10-23T02:37Z
+resolucoes: app.corretora.io=179.199.155.156 hml.corretora.io=179.199.155.156 sorteado-608.corretora.io=179.199.155.156

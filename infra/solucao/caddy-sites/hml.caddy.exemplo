@@ -1,0 +1,8 @@
+# Modelo do que fica em /opt/crm-prod/caddy-sites/hml.caddy (o real não é versionado).
+# O Caddy do CRM de produção é o único dono de 80/443; a homologação (crm-hml) entra pela
+# rede crm-prod_caddy-sites com o nome crm-hml-app (ver infra/solucao/docker-compose.hml.yml).
+hml.corretora.io {
+	encode gzip
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy crm-hml-app:3000
+}

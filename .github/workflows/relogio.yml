@@ -39,10 +39,11 @@ concurrency:
 
 jobs:
   tick:
+    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    if: false
     # A variável é do REPOSITÓRIO de quem instalou, não deste. `workflow_dispatch`
     # passa mesmo sem ela para que o teste manual do runbook funcione antes de
     # alguém confiar no agendamento.
-    if: vars.RELOGIO_LIGADO == '1' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

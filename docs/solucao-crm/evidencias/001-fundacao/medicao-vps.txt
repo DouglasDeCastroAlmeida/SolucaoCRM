@@ -1,0 +1,5 @@
+# medicao-vps.txt — 2026-10-23T01:25Z
+total_mb=15987 usada_mb=1586 disponivel_mb=14400
+cpus=4
+disco_total_gb=193 disco_usado_gb=13
+containers=2

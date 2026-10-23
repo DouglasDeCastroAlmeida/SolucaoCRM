@@ -1,0 +1,8 @@
+# Backup externo no Cloudflare R2 — evidência (2026-10-23), sem segredos
+Teste com um arquivo de mentira (db-20990101-000000.sql.gz, ~20 KB), como usuário deploy, na VPS srv2049015.
+- AC-007.2 envio: "Enviado e verificado: db-20990101-000000.sql.gz.age" (exit 0). Bucket antes: 0.0 GB usados, teto 7 GB (AC-007.7).
+- AC-007.2 cifrado: o objeto no bucket começa com "age-encryption.org/v1" e não é um gzip legível.
+- AC-007.3 sem credencial: GET no bucket e no objeto devolve HTTP 400 (acesso negado, nunca 200).
+- AC-007.4 (parte): restaurado com a chave privada guardada pelo dono, resultado idêntico ao original (sha256 55d39536873177f3…). A chave privada existiu na VPS só em /dev/shm durante o teste e foi destruída (shred).
+- Limpeza: o objeto de teste foi apagado do bucket.
+Pendente para fechar AC-007.1/.4 por inteiro: backup REAL da produção (T-036) e restauração num ambiente descartável onde o CRM sobe (T-037).

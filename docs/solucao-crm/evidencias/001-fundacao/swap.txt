@@ -1,0 +1,2 @@
+# swap.txt — 2026-10-23T01:32Z
+swap_total_mb=4095 fstab_linhas_swap=1
