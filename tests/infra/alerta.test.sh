@@ -48,6 +48,40 @@ afirma "alerta gravado mesmo assim" bash -c "tail -1 '$LOG' | grep -q ' com ganc
 ALERTA_EXTRA_CMD="/nao/existe" bash "$AL" "gancho ausente" >/dev/null 2>&1; rc=$?
 afirma "gancho inexistente sai 0" test "$rc" -eq 0
 
+
+echo "AC-012.2: mascaramento reforçado"
+: > "$LOG"; : > "$CHAMADAS"
+JWT="eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.assinaturaZZZ"
+bash "$AL" "h Authorization: Bearer abc123SECRET fim" >/dev/null 2>&1
+bash "$AL" "db postgres://u:pw123@h/db ok" >/dev/null 2>&1
+bash "$AL" "aws_secret_access_key = zzz9 fim" >/dev/null 2>&1
+bash "$AL" "senha=\"com espaco SEGREDO_Q\" fim" >/dev/null 2>&1
+bash "$AL" "x ghp_abcdefghijklmnopqrstuvwxyz0123 y" >/dev/null 2>&1
+bash "$AL" "x sk-abcdefghijklmnop_qrstuv-12 y" >/dev/null 2>&1
+bash "$AL" "x AGE-SECRET-KEY-1QQQQQQQQQQQQQQQQQQQQQQQQQQ y" >/dev/null 2>&1
+bash "$AL" "x $JWT y" >/dev/null 2>&1
+bash "$AL" "pub age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq ok" >/dev/null 2>&1
+for s in abc123SECRET pw123 zzz9 SEGREDO_Q ghp_abcdefgh sk-abcdefghijklmnop AGE-SECRET-KEY-1QQQ assinaturaZZZ; do
+  afirma "log sem $s" bash -c "! grep -q '$s' '$LOG'"
+  afirma "logger sem $s" bash -c "! grep -q '$s' '$CHAMADAS'"
+done
+afirma "mantém usuário da URL" grep -q '://u:\*\*\*@h/db' "$LOG"
+afirma "age1 (chave pública) não é mascarada" grep -q 'age1qqqq' "$LOG"
+afirma "texto vizinho preservado" grep -q 'Authorization: \*\*\* fim' "$LOG"
+
+echo "AC-012.2: symlink e permissões"
+rm -rf "$T/d2"; mkdir "$T/d2"; : > "$T/alvo"; ln -s "$T/alvo" "$T/d2/alertas.log"
+: > "$CHAMADAS"
+DATA_DIR="$T/d2" bash "$AL" "nao escreva" >/dev/null 2>&1; rc=$?
+afirma "log symlink: sai 0" test "$rc" -eq 0
+afirma "log symlink: alvo intacto" test ! -s "$T/alvo"
+afirma "log symlink: avisa no logger" grep -qi 'symlink' "$CHAMADAS"
+rm -rf "$T/real" "$T/d3"; mkdir "$T/real"; ln -s "$T/real" "$T/d3"
+DATA_DIR="$T/d3" bash "$AL" "nao escreva" >/dev/null 2>&1; rc=$?
+afirma "dir symlink: sai 0" test "$rc" -eq 0
+afirma "dir symlink: nada escrito" test -z "$(ls -A "$T/real")"
+rm -rf "$T/d4"; DATA_DIR="$T/d4" bash "$AL" "perm" >/dev/null 2>&1
+afirma "log criado sem acesso a grupo/outros" bash -c "[ \"\$(stat -c %a '$T/d4/alertas.log')\" = 600 ]"
 echo "DATA_DIR impossível"
 DATA_DIR="/proc/nao/da" bash "$AL" "x" >/dev/null 2>&1; rc=$?
 afirma "ainda sai 0" test "$rc" -eq 0

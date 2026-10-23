@@ -20,9 +20,14 @@ case " $distro " in
   *) erro "esta ação só funciona em Debian/Ubuntu (distribuição detectada: ${distro:-desconhecida}). Instale age e rclone pelo gerenciador de pacotes da sua distribuição."; exit 1 ;;
 esac
 
+# FERRAMENTAS_BIN_DIR existe só para TESTE: procura e executa as ferramentas SÓ nessa pasta, para o age/rclone
+# que já estão instalados na máquina não interferirem. Em produção a variável fica vazia e vale o PATH.
+tem_ferramenta() { if [ -n "${FERRAMENTAS_BIN_DIR:-}" ]; then [ -x "$FERRAMENTAS_BIN_DIR/$1" ]; else command -v "$1" >/dev/null 2>&1; fi; }
+rodar_ferramenta() { local p="$1"; shift; if [ -n "${FERRAMENTAS_BIN_DIR:-}" ]; then "$FERRAMENTAS_BIN_DIR/$p" "$@"; else "$p" "$@"; fi; }
+
 FALTAM=()
 for p in age rclone; do
-  if command -v "$p" >/dev/null 2>&1; then msg "$p já está instalado; nada a fazer."; else FALTAM+=("$p"); fi
+  if tem_ferramenta "$p"; then msg "$p já está instalado; nada a fazer."; else FALTAM+=("$p"); fi
 done
 
 if [ "${#FALTAM[@]}" -gt 0 ]; then
@@ -37,7 +42,7 @@ if [ "${#FALTAM[@]}" -gt 0 ]; then
 fi
 
 if [ "$DRY" != 1 ]; then
-  age --version 2>&1 | head -n 1 || true
-  rclone version 2>&1 | head -n 1 || true
+  rodar_ferramenta age --version 2>&1 | head -n 1 || true
+  rodar_ferramenta rclone version 2>&1 | head -n 1 || true
 fi
 msg "ferramentas do backup externo garantidas (age, rclone)."

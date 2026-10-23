@@ -59,6 +59,7 @@ afirma "AC-001.4: pasta da cópia 700" test "$(stat -c %a "$COPIA")" = 700
 else echo "  (pulado: este sistema de arquivos não guarda modo POSIX; vale no CI/Linux)"; fi
 antes="$(ls "$BACKUPS_DIR" | wc -l)"
 printf '#!/usr/bin/env bash\nprintf "Filesystem 1024-blocks Used Available Capacity Mounted\\n/dev/x 100 1 1 1pct /\\n"\n' > "$T/bin/df"; chmod +x "$T/bin/df"
+sleep 1  # a pasta da cópia leva a hora no nome; sem isto, no Linux a 2ª execução cai no mesmo segundo e recusa por "já existe"
 bash "$MOVER" >"$T/out" 2>&1; rc=$?
 afirma "AC-001.4: espaço insuficiente aborta" test "$rc" -ne 0
 afirma "AC-001.4: aviso fala de espaço" grep -qi 'espa' "$T/out"

@@ -61,9 +61,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-027 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Troca real: só o Caddy do CRM em 80/443, valescaalmeida.com responde 200 e a porta interna do vava recusa de fora; indisponibilidade medida (~40 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.5} deps: T-025, T-026, T-022, T-023
 
 ### Fatia 7: produção no ar
-- [ ] T-028 [TEST-INT] docker compose config da produção não contém voice-agent e todos os serviços têm limite de memória e CPU (~35 min) {AC-002.4, AC-009.2}
-- [ ] T-029 [IMPL] docker-compose.solucao.yml (limites, prioridade da produção, voice-agent desligado) (~35 min) {AC-002.4, AC-009.2} deps: T-028
-- [ ] T-030 [TEST-INT] Instalador com .env incompleto ou DNS errado falha com mensagem em português e sem instalação pela metade (~35 min) {AC-002.5}
+- [x] T-028 [TEST-INT] docker compose config da produção não contém voice-agent e todos os serviços têm limite de memória e CPU (~35 min) {AC-002.4, AC-009.2}
+- [x] T-029 [IMPL] docker-compose.solucao.yml (limites, prioridade da produção, voice-agent desligado) (~35 min) {AC-002.4, AC-009.2} deps: T-028
+- [x] T-030 [TEST-INT] Instalador com .env incompleto ou DNS errado falha com mensagem em português e sem instalação pela metade (~35 min) {AC-002.5}
 - [x] T-031 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-prod pelo instalador single-server e conferir /, /app, /api/v1/health e Studio e Postgres fechados (~40 min) {AC-002.1, AC-002.2, AC-002.3} deps: T-027, T-029, T-030
 - [x] T-032 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker (~40 min) {AC-010.3} deps: T-031
 
@@ -83,7 +83,7 @@ Cada tarefa ocupa uma linha:
 - [ ] T-039 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar (~40 min) {AC-009.3, AC-009.4} deps: T-031, T-033, T-044
 
 ### Fechamento
-- [ ] T-040 [DOCS] Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos (~40 min) {AC-004.5}
+- [x] T-040 [DOCS] Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos (~40 min) {AC-004.5}
 - [ ] T-041 [TEST-INT] Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota (~40 min) {AC-004.5} deps: T-040
 - [ ] T-042 [REFACTOR] Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ (~20 min) deps: T-035, T-037, T-038, T-039
 

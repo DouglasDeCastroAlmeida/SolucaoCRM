@@ -4,13 +4,14 @@ set -uo pipefail
 source "$(dirname "$0")/_admin-lib.sh"
 AC="$ADMIN/07-ferramentas-backup.sh"
 admin_ambiente; export T; trap 'rm -rf "$T"' EXIT
-# (assume que age/rclone reais não estão instalados na máquina que roda o teste)
+# (hermético: usa FERRAMENTAS_BIN_DIR, então roda igual com ou sem age/rclone reais instalados)
 fake_registra apt-get apt dpkg
 fake apt-cache 'echo "apt-cache $*" >> "$CHAMADAS"; echo "$1 $2"; echo "  Candidate: ${FAKE_CANDIDATE:-1.2.3}"'
 instala_fake() { # o apt-get falso "instala" criando o binário
   fake apt-get 'echo "apt-get $*" >> "$CHAMADAS"; for p in "$@"; do case "$p" in age|rclone) printf "#!/usr/bin/env bash\necho \"%s v1.2.3\"\n" "$p" > "$T/bin/$p"; chmod +x "$T/bin/$p";; esac; done'
 }
 instala_fake
+export FERRAMENTAS_BIN_DIR="$T/bin"   # hermético: o age/rclone reais da máquina não contam
 export OS_RELEASE_FILE="$T/os-release"
 printf 'ID=ubuntu\nID_LIKE=debian\nVERSION_ID="26.04"\n' > "$OS_RELEASE_FILE"
 

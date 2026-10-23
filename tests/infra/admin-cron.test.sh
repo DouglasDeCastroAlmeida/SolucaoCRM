@@ -39,6 +39,18 @@ afirma "sai != 0" test "$rc" -ne 0
 afirma "não reescreveu o crontab" bash -c "! grep -q ESCREVEU '$CHAMADAS'"
 afirma "crontab intacto" cmp -s "$TAB" "$T/tab2"
 
+echo "AC-008.5: linhas de outros donos sobrevivem byte a byte"
+DRENO='* * * * * curl -fsS -H @"/opt/crm-prod/.env.cron-drain" "https://app.corretora.io/api/v1/cron/event-log-drain" >/dev/null 2>&1 # deskcomm:/opt/crm-prod:drain'
+AGENTE='*/5 * * * * cd /opt/crm-prod && bash hostgator-setup-kit/agent.sh >/dev/null 2>&1 # deskcomm:/opt/crm-prod:agent'
+printf '%s\n%s\n' "$DRENO" "$AGENTE" > "$TAB"
+bash "$CRON" >"$T/o" 2>&1
+afirma "dreno intacto após instalar" grep -qxF "$DRENO" "$TAB"
+afirma "agente intacto após instalar" grep -qxF "$AGENTE" "$TAB"
+bash "$CRON" >"$T/o" 2>&1
+afirma "dreno intacto após reinstalar" grep -qxF "$DRENO" "$TAB"
+afirma "agente intacto após reinstalar" grep -qxF "$AGENTE" "$TAB"
+afirma "sem duplicar as linhas alheias" test "$(grep -c 'deskcomm:' "$TAB")" -eq 2
+
 echo "AC-008.5: dry-run mostra o DATA_DIR e não instala"
 : > "$CHAMADAS"; cp "$TAB" "$T/tab3"
 bash "$CRON" --dry-run >"$T/o" 2>&1
