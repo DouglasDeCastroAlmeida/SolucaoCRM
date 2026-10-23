@@ -62,8 +62,11 @@ const TETOS: Record<string, { minutos: number; razao: string }> = {
   //     orçamento para 12. Medido antes da divisão, num verde do #1190: job
   //     866 s, `Unit tests` 649 s — cada parte roda metade.
   "ci.yml::verify-parte": {
-    minutos: 15,
+    minutos: 25,
     razao:
+      "FORK SolucaoCRM (23/10/2026): o runner do GitHub comum leva 13–15 min por parte (4 partes), contra ~8 min no executor próprio do upstream; " +
+      "com teto 15, a parte 2 chegou a 15 min: dado CENSURADO pelo teto (ver a lição de método no ORCAMENTOS). Teto subiu para 25 como torniquete, como o #1184 fez; " +
+      "recalibrar só depois de medir ≥ 20 rodadas sob o teto novo e classificar os cancelled. " +
       "a suíte foi repartida em partes (#1185 via #1190; três de unit desde 22/09/2026, e uma quarta só de cercas+kit desde 08/10/2026); cada parte roda uma fatia de uma suíte " +
       "que custava 649s de unit num verde. 15 é guarda de travamento; quem denuncia crescimento " +
       "é o passo `Orçamento de tempo do verify-parte` (12 min por parte, medido em 19/09)",
@@ -103,8 +106,10 @@ const ORCAMENTOS: Record<string, { minutos: number; razao: string }> = {
   // Que o passo não fique preso a uma delas é o que o caso
   // "o orçamento vale para TODAS as partes" abaixo guarda.
   "ci.yml::verify-parte": {
-    minutos: 12,
+    minutos: 20,
     razao:
+      "FORK SolucaoCRM (23/10/2026): 12 → 20 (provisório). Medido no runner do GitHub comum: partes de 13, 14 e 15 min (3 rodadas), censuradas pelo teto de 15; " +
+      "o teto virou 25 e este orçamento 20 para o detector seguir disparando ANTES do corte. Recalibrar depois de ≥ 20 rodadas sob o teto de 25. Texto original do upstream abaixo. " +
       "MEDIDO em 19/09/2026 sobre todos os jobs `verify-parte` das 240 rodadas completas de " +
       "ci.yml criadas depois de as partes entrarem na main (18/09 18:37Z): n=286 que EXECUTARAM " +
       "(260 success + 26 failure) — min 0,9 · mediana 7,2 · p90 8,6 · p95 8,8 · MÁX 9,6; ZERO " +
