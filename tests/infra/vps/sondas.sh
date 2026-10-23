@@ -62,7 +62,15 @@ sonda_firewall() {
   printf '  regras: %s\n' "$regras"
   local extra
   extra="$(printf '%s\n' $regras | grep -vxE '22/tcp|80/tcp|443/tcp|443/udp|22|80|443|22/tcp\(v6\)|80/tcp\(v6\)|443/tcp\(v6\)|443/udp\(v6\)' | tr '\n' ' ')"
-  [ -z "$extra" ] && pass "só 22, 80, 443/tcp e 443/udp liberadas" || fail "regras além do permitido: $extra"
+  # PORTAS_MANTIDAS: exceção DECLARADA pelo dono (ex.: 9000 do Portainer, decisão pendente). Aparece como AVISO,
+  # nunca some: a evidência registra a exceção em vez de fingir que o firewall está no estado ideal.
+  local mant="" restante=""
+  for p in $extra; do
+    case " ${PORTAS_MANTIDAS:-} " in *" ${p%%/*} "*) mant="$mant $p" ;; *) restante="$restante $p" ;; esac
+  done
+  [ -n "$mant" ] && printf '  AVISO exceção declarada pelo dono (decisão pendente):%s
+' "$mant"
+  [ -z "$restante" ] && pass "só 22, 80, 443/tcp e 443/udp liberadas (fora as exceções declaradas)" || fail "regras além do permitido:$restante"
   printf '%s' "$regras" | grep -q '8000' && fail "porta 8000 ainda liberada" || pass "porta 8000 fechada"
 }
 

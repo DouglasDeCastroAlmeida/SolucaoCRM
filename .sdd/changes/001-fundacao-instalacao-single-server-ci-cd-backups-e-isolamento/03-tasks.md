@@ -53,7 +53,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-021 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Medir a VPS antes de instalar: memória, CPU, disco e portas abertas, comparando com a estimativa de 9 a 11 GB (~40 min) {AC-009.5}
 - [x] T-022 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Swap de 4 GB ativo e persistente após reinício (~40 min) {AC-009.1} deps: T-021, T-020
 - [ ] T-023 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: ufw só com 22, 80, 443/tcp e 443/udp; porta 8000 fechada (~40 min) {AC-010.2} deps: T-020
-- [ ] T-024 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Como dev: docker ps e leitura de /opt/crm-prod negados; crm-status funciona; deploy só roda o comando fixo (~40 min) {AC-008.1, AC-008.2, AC-008.4} deps: T-020
+- [x] T-024 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Como dev: docker ps e leitura de /opt/crm-prod negados; crm-status funciona; deploy só roda o comando fixo (~40 min) {AC-008.1, AC-008.2, AC-008.4} deps: T-020
 
 ### Fatia 6: DNS e troca do dono de 80/443 com o vava (janela combinada com o dono)
 - [ ] T-025 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: DNS na Hostinger: app, hml e curinga apontando para o IP da VPS; registros antigos revistos (~40 min) {AC-010.1, AC-010.4}
