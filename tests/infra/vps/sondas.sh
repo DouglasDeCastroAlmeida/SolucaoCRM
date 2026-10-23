@@ -96,6 +96,60 @@ sonda_isolamento_dev() {
     && pass "AC-008.3: dev consegue 'crm-status ps' (sudo exato)" || fail "AC-008.3: dev NÃO consegue 'crm-status ps'"
 }
 
+# --- AC-010.1 / AC-010.4: DNS (consulta por HTTPS ao Google: independe do resolvedor local) ------
+sonda_dns() {
+  echo "== dns (AC-010.1, AC-010.4)"
+  local dom="${DOMINIO_CRM:-corretora.io}" h r st ip saida=""
+  for h in app hml sorteado-$RANDOM; do
+    r="$(curl -s --max-time 10 "https://dns.google/resolve?name=$h.$dom&type=A")"
+    ip="$(printf '%s' "$r" | grep -oE '"data":"[0-9.]+"' | head -1 | cut -d'"' -f4)"
+    saida="$saida $h.$dom=$ip"
+    [ "$ip" = "$VPS_HOST" ] && pass "AC-010.1: $h.$dom aponta para $VPS_HOST" || fail "AC-010.1: $h.$dom NÃO aponta para $VPS_HOST (lido: ${ip:-nada})"
+  done
+  # AC-010.4: nenhum registro antigo aponta para fora do novo Caddy; api vira só curinga (ou some)
+  ip="$(curl -s --max-time 10 "https://dns.google/resolve?name=api.$dom&type=A" | grep -oE '"data":"[0-9.]+"' | head -1 | cut -d'"' -f4)"
+  { [ -z "$ip" ] || [ "$ip" = "$VPS_HOST" ]; } && pass "AC-010.4: api.$dom some ou cai no curinga que aponta ao novo Caddy" || fail "AC-010.4: api.$dom aponta para $ip"
+  printf 'resolucoes:%s
+' "$saida" | registra dns.txt
+}
+
+# --- AC-001.1/.2/.3/.5 e AC-010.3: dono único de 80/443, vava no ar, nenhuma outra porta aberta ----
+aberta() { timeout 3 bash -c "exec 3<>/dev/tcp/$VPS_HOST/$1" 2>/dev/null; }   # a porta aceita conexão vinda de FORA? (3 s: o ufw descarta em silêncio)
+sonda_portas() {
+  echo "== portas e vava (AC-001.1, .2, .3, .5; AC-010.3)"
+  local pubs outros="" p fora total
+  pubs="$(rssh 'docker ps --format "{{.Names}} {{.Ports}}" | grep -E "0\.0\.0\.0:(80|443)->" | cut -d" " -f1 | sort -u | tr "\n" " "' 2>/dev/null)"
+  [ "$pubs" = "crm-prod-caddy-1 " ] && pass "AC-001.1: só crm-prod-caddy-1 publica 80/443" || fail "AC-001.1: donos de 80/443: $pubs"
+  [ "$(rssh 'docker port valesca_almeida_website | wc -l' 2>/dev/null)" = "0" ] && pass "AC-001.3: o container do vava não publica porta nenhuma" || fail "AC-001.3: o vava publica portas"
+  for p in 3000 3001 5432 6543 8000 8080 8081 8082 9000 9443 6379 54321 54322 54323; do aberta "$p" && outros="$outros $p"; done
+  [ -z "$outros" ] && pass "AC-010.3/AC-002.3: nenhuma porta de serviço (3000, 5432, 8000, 9000...) aceita conexão de fora" || fail "AC-010.3: portas ABERTAS de fora:$outros"
+  for u in https://valescaalmeida.com/ https://www.valescaalmeida.com/; do
+    [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$u")" = 200 ] && pass "AC-001.2: $u responde 200" || fail "AC-001.2: $u não respondeu 200"
+  done
+  local med="$EVID_DIR/janela-de-troca-medida-de-fora.log"
+  if [ -f "$med" ]; then
+    total="$(wc -l < "$med")"; fora="$(grep -vc 'vava=200' "$med" || true)"
+    echo "  info  AC-001.5: na janela real, $fora de $total consultas (1 por segundo) falharam, ~${fora} s fora do ar"
+    [ "$fora" -le 5 ] && pass "AC-001.5: indisponibilidade medida <= 5 s (o critério admite 300 s)" || fail "AC-001.5: $fora s fora do ar"
+  else
+    fail "AC-001.5: sem a medição da janela ($med)"
+  fi
+  rssh 'ss -ltnp | grep -E ":(80|443) " | cut -c1-110 | sort -u' | registra portas.txt
+}
+
+# --- AC-002.1/.2/.3/.4: produção no ar -------------------------------------------------------
+sonda_producao() {
+  echo "== produção (AC-002.1, .2, .3, .4)"
+  local u="https://app.${DOMINIO_CRM:-corretora.io}" c
+  c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$u/")";    [ "$c" = 200 ] && pass "AC-002.1: $u/ responde 200"    || fail "AC-002.1: $u/ respondeu $c"
+  c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$u/app")"; [ "$c" = 307 ] && pass "AC-002.1: $u/app responde 307" || fail "AC-002.1: $u/app respondeu $c"
+  c="$(curl -s --max-time 20 "$u/api/v1/health")"
+  printf '%s' "$c" | grep -qE '"status":"(healthy|degraded)"' && pass "AC-002.2: /api/v1/health = $(printf '%s' "$c" | grep -oE '"status":"[a-z]+"' | head -1)" || fail "AC-002.2: health inesperado: $(printf '%s' "$c" | cut -c1-80)"
+  if curl -s --max-time 20 "$u/studio" | grep -qi "supabase studio"; then fail "AC-002.3: Studio acessível em /studio"; else pass "AC-002.3: $u/studio não expõe o Studio"; fi
+  [ "$(rssh 'docker ps --format "{{.Names}}" | grep -c voice-agent || true' 2>/dev/null)" = "0" ] && pass "AC-002.4: voice-agent não está rodando" || fail "AC-002.4: voice-agent rodando"
+  rssh 'docker ps --format "{{.Names}} {{.Status}}" | grep crm-prod | sort' | registra producao-containers.txt
+}
+
 [ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev)"; exit 2; }
 for s in "$@"; do
   fn="sonda_${s//-/_}"

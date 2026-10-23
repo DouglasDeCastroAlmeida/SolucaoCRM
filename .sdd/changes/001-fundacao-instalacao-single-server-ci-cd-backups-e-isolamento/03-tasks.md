@@ -56,16 +56,16 @@ Cada tarefa ocupa uma linha:
 - [x] T-024 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Como dev: docker ps e leitura de /opt/crm-prod negados; crm-status funciona; deploy só roda o comando fixo (~40 min) {AC-008.1, AC-008.2, AC-008.4} deps: T-020
 
 ### Fatia 6: DNS e troca do dono de 80/443 com o vava (janela combinada com o dono)
-- [ ] T-025 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: DNS na Hostinger: app, hml e curinga apontando para o IP da VPS; registros antigos revistos (~40 min) {AC-010.1, AC-010.4}
+- [x] T-025 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: DNS na Hostinger: app, hml e curinga apontando para o IP da VPS; registros antigos revistos (~40 min) {AC-010.1, AC-010.4}
 - [x] T-026 [TEST-INT] 04-mover-vava.sh em pasta de teste: cria a cópia dos arquivos (inclusive os locais) e --desfazer restaura byte a byte (~40 min) {AC-001.4}
-- [ ] T-027 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Troca real: só o Caddy do CRM em 80/443, valescaalmeida.com responde 200 e a porta interna do vava recusa de fora; indisponibilidade medida (~40 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.5} deps: T-025, T-026, T-022, T-023
+- [x] T-027 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Troca real: só o Caddy do CRM em 80/443, valescaalmeida.com responde 200 e a porta interna do vava recusa de fora; indisponibilidade medida (~40 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.5} deps: T-025, T-026, T-022, T-023
 
 ### Fatia 7: produção no ar
 - [ ] T-028 [TEST-INT] docker compose config da produção não contém voice-agent e todos os serviços têm limite de memória e CPU (~35 min) {AC-002.4, AC-009.2}
 - [ ] T-029 [IMPL] docker-compose.solucao.yml (limites, prioridade da produção, voice-agent desligado) (~35 min) {AC-002.4, AC-009.2} deps: T-028
 - [ ] T-030 [TEST-INT] Instalador com .env incompleto ou DNS errado falha com mensagem em português e sem instalação pela metade (~35 min) {AC-002.5}
-- [ ] T-031 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-prod pelo instalador single-server e conferir /, /app, /api/v1/health e Studio e Postgres fechados (~40 min) {AC-002.1, AC-002.2, AC-002.3} deps: T-027, T-029, T-030
-- [ ] T-032 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker (~40 min) {AC-010.3} deps: T-031
+- [x] T-031 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-prod pelo instalador single-server e conferir /, /app, /api/v1/health e Studio e Postgres fechados (~40 min) {AC-002.1, AC-002.2, AC-002.3} deps: T-027, T-029, T-030
+- [x] T-032 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker (~40 min) {AC-010.3} deps: T-031
 
 ### Fatia 8: homologação e primeiro deploy pelo pipeline
 - [ ] T-033 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção (~40 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-031

@@ -1,0 +1,5 @@
+# portas.txt — 2026-10-23T03:05Z
+LISTEN 0      4096            [::]:443           [::]:*    users:(("docker-proxy",pid=3715855,fd=8))          
+LISTEN 0      4096            [::]:80            [::]:*    users:(("docker-proxy",pid=3715833,fd=8))          
+LISTEN 0      4096         0.0.0.0:443        0.0.0.0:*    users:(("docker-proxy",pid=3715848,fd=8))          
+LISTEN 0      4096         0.0.0.0:80         0.0.0.0:*    users:(("docker-proxy",pid=3715826,fd=8))          
