@@ -207,8 +207,17 @@ else
   baseline_cmd='set -e; source hostgator-setup-kit/_common.sh; enter_project; reaplicar_baseline "$PROJECT_DIR/supabase/baseline.sql" "$PROJECT_DIR/.deskcomm-banco.log"'
 fi
 if [ -n "${APLICAR_BASELINE_CMD:-}" ] || [ -f supabase/baseline.sql ]; then
-  log "Aplicando o baseline do banco..."
-  roda_sh "$baseline_cmd" || { log "Baseline do banco não fechou — deploy abortado antes de trocar as versões."; exit 1; }
+  # Só reaplica quando o arquivo MUDOU: na hml (Supabase Cloud, EUA) a aplicação leva ~12 min e a
+  # conexão SSH do pipeline caía no silêncio (24/10/2026). FORCAR_BASELINE=1 aplica de qualquer jeito.
+  MARCA_BASELINE="$CRM_DIR/.baseline-aplicado"; HASH_BASELINE=""
+  [ ! -f supabase/baseline.sql ] || HASH_BASELINE="$(sha256sum supabase/baseline.sql | cut -d' ' -f1)"
+  if [ -n "$HASH_BASELINE" ] && [ -z "${FORCAR_BASELINE:-}" ] && [ -f "$MARCA_BASELINE" ] && [ "$(cat "$MARCA_BASELINE")" = "$HASH_BASELINE" ]; then
+    log "Baseline inalterado desde o último deploy — pulando."
+  else
+    log "Aplicando o baseline do banco..."
+    roda_sh "$baseline_cmd" || { log "Baseline do banco não fechou — deploy abortado antes de trocar as versões."; exit 1; }
+    [ -z "$HASH_BASELINE" ] || printf '%s\n' "$HASH_BASELINE" > "$MARCA_BASELINE"
+  fi
 fi
 
 aplica_tags() { local l; for l in "$@"; do grava_chave "${l%%=*}" "${l#*=}"; done; }

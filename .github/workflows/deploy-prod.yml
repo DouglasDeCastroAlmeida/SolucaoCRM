@@ -103,6 +103,7 @@ jobs:
           chmod 600 "$chave" "$conhecidos"
           ssh -i "$chave" -p "$SSH_PORT" -o IdentitiesOnly=yes -o BatchMode=yes \
             -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$conhecidos" \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=60 \
             "$SSH_USER@$SSH_HOST" deploy.sh prod "$SHA" "$DONO_MIN"
 
       - name: Teste de fumaça (/ = 200 e /app = 307)
