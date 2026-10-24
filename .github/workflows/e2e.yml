@@ -32,10 +32,10 @@ name: e2e
 # job inteiro e reportou VERDE com o `supabase start` quebrado e zero teste
 # executado. Verde que não distingue "passou" de "nem rodou" é pior que vermelho.
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  # Decisão A-07 (23/10/2026): na Solução CRM o e2e roda só quando o dono manda
+  # (Actions > e2e > Run workflow), antes de entregas importantes. Em cada merge ele custava
+  # ~150 min da cota gratuita de 2.000 min/mês e o build estourava a memória do runner comum.
+  workflow_dispatch:
 
 # O GITHUB_TOKEN deste job serve a `actions/checkout` (clone) e a
 # `actions/setup-node` (manifest de `actions/node-versions`, repo público).

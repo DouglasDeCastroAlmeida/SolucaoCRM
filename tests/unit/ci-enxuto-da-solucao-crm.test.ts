@@ -4,7 +4,7 @@
  * Lê os YAML de `.github/workflows/` como texto (o repositório não tem parser
  * YAML como dependência) e prova a política de custo do CI:
  *  - PR: `verify` + `invariants` com UMA só major do Postgres, sem e2e completo;
- *  - push na `main`: e2e completo;
+ *  - e2e completo só por disparo manual (A-07), nunca em PR nem em push na `main`;
  *  - imagens só linux/amd64;
  *  - workflows do upstream que não servem ao fork ficam desligados.
  *
@@ -60,12 +60,16 @@ describe("CI enxuto", () => {
     expect(alcance).toMatch(/!= "pull_request" \]; then[\s\S]*?\n\s*fi\n[\s\S]*?echo "e2e=nao"/);
   });
 
-  it("AC-004.2: no push na main o e2e completo roda", () => {
+  it("AC-004.2: o e2e completo não roda sozinho na main, só por disparo manual (A-07)", () => {
     const e2e = semComentarios(lerWorkflow("e2e.yml"));
-    const alcance = job(e2e, "e2e-alcance");
-    // fora de pull_request a resposta é sempre "sim"
-    expect(alcance).toMatch(/!= "pull_request" \]; then\s*\n\s*echo "e2e=sim"/);
-    expect(e2e).toMatch(/\n {2}push:\n {4}branches: \[main\]/);
+    const ini = e2e.indexOf("\non:");
+    const fim = e2e.indexOf("\npermissions:");
+    const gatilhos = e2e.slice(ini, fim > ini ? fim : undefined);
+    expect(gatilhos).toMatch(/\n {2}workflow_dispatch:/);
+    expect(gatilhos).not.toMatch(/\n {2}push:/);
+    expect(gatilhos).not.toMatch(/\n {2}pull_request:/);
+    // disparado à mão, o alcance responde sempre "sim" (fora de pull_request)
+    expect(job(e2e, "e2e-alcance")).toMatch(/!= "pull_request" \]; then\s*\n\s*echo "e2e=sim"/);
     expect(job(e2e, "e2e-parte")).toContain("needs.e2e-alcance.outputs.e2e == 'sim'");
   });
 
