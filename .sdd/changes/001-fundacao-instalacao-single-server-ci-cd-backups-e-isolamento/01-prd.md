@@ -59,7 +59,7 @@ Como desenvolvedor, quero um ambiente de homologação isolado da produção par
 Como desenvolvedor, quero um CI que caiba na cota gratuita para não ficar sem minutos.
 
 - **AC-004.1** Dado um PR, quando o CI roda, então executa `verify` e `invariants` com uma só versão do Postgres e não executa o e2e completo nem a matriz cheia.
-- **AC-004.2** Dado um merge na `main`, quando o CI roda, então executa também o e2e completo.
+- **AC-004.2** Dado um merge na `main`, quando o CI roda, então NÃO executa o e2e completo sozinho (decisão A-07, 23/10/2026: custa ~150 min da cota gratuita por merge); o e2e completo roda só por disparo manual (`workflow_dispatch`) antes de entregas importantes.
 - **AC-004.3** Dado o repositório, quando se listam os workflows ativos, então `acolhida`, `relogio`, `mysql-integracao` e `release` do upstream estão desligados.
 - **AC-004.4** Dado o CI, quando publica imagens, então publica apenas linux/amd64 e a divergência da regra de packaging está registrada.
 - **AC-004.5** Dado um mês de uso, quando se mede o consumo de minutos, então fica registrado e comparado à cota (2.000/3.000 min).

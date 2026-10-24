@@ -1,0 +1,16 @@
+# T-034 — deploy na homologação e rollback (medido em 2026-10-24, VPS srv2049015)
+
+## Defeitos achados e corrigidos antes de provar
+1. deploy.sh checava a saúde em http://localhost:3000, mas a VPS não publica porta: todo deploy "falhava" e voltava
+   (1ª tentativa do pipeline, 23:56-00:12 UTC: "Saúde falhou ... Rollback FALHOU após 79 s"). Agora usa NEXT_PUBLIC_APP_URL do .env.
+   Teste: tests/infra/deploy-health-url.test.sh.
+2. O rollback devolvia imagens e .env mas não o código (o checkout do commit novo ficava). Agora devolve o commit anterior.
+   Teste: tests/infra/deploy-rollback-codigo.test.sh.
+3. A hml, ao entrar na rede do Caddy pelo compose, ganhava o apelido `app` e roubava tráfego da produção (health "unhealthy" em app.corretora.io).
+   Agora só liga com o apelido crm-hml-app (publica_hml no deploy.sh). Sonda: tests/infra/vps/sondas.sh homologacao.
+
+## Medições (deploy.sh na VPS, APLICAR_BASELINE_CMD=true para pular o baseline de 12 min)
+- Deploy da hml para f134fbedfef5 (imagens do nosso GHCR, tag = SHA): concluído em 20 s, "/" = 200 e "/app" = 307.
+- Rollback provocado (commit sem imagem publicada => pull falha depois do código ser posicionado):
+  saída 10 ("falhou e voltou"), duração total 7 s, "rollback levou 5 s", código devolvido ao commit anterior, hml respondendo 200/307.
+- AC-006.3 (< 2 min): atendido. Falha por saúde (imagem que sobe mas não responde) medida em 79 s na 1ª tentativa real.

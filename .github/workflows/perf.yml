@@ -37,6 +37,9 @@ jobs:
       - name: Build
         run: pnpm build
         env:
+          # O runner comum do GitHub tem ~7 GB; sem teto o `next build` morria com
+          # "heap out of memory" na checagem de tipos (main, 23/10/2026).
+          NODE_OPTIONS: --max-old-space-size=5120
           NEXT_TELEMETRY_DISABLED: "1"
           # "off", não vazio: vazio seleciona o Sentry DA COMUNIDADE
           # (lib/sentry/dsn.ts:8-10). A intenção aqui sempre foi desligar, e

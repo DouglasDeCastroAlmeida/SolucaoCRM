@@ -1,0 +1,4 @@
+# T-039 — memória da VPS por 24 h (medir-memoria.sh --resumo), fechado em 2026-10-24T03:46Z
+# produção (Supabase self-hosted) + homologação (Supabase Cloud) + vava no ar durante todo o período
+MemAvailable nas últimas 24 h (143 amostras): mínimo 11964 MB, média 12387 MB, máximo 15317 MB
+Veredito: ok (≥ 2048 MB)

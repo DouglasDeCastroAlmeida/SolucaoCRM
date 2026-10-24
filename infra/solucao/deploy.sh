@@ -18,7 +18,7 @@
 #   GHCR_OWNER            dono das imagens em ghcr.io (o 3º argumento vence; sem
 #                         nenhum dos dois, deriva da APP_IMAGE atual do .env)
 #   CRM_DIR               pasta do ambiente (padrão /opt/crm-prod ou /opt/crm-hml)
-#   HEALTH_BASE_URL       padrão http://localhost:3000
+#   HEALTH_BASE_URL       padrão: NEXT_PUBLIC_APP_URL do .env (ou http://localhost:3000 se ausente)
 #   HEALTH_TIMEOUT        segundos de espera pela saúde após o deploy (padrão 90)
 #   ROLLBACK_TIMEOUT      idem, após o rollback (padrão 60)
 #   HEALTH_INTERVAL       intervalo entre sondagens (padrão 3)
@@ -56,7 +56,7 @@ if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
 fi
 
 CRM_DIR="${CRM_DIR:-/opt/crm-$AMB}"
-HEALTH_BASE_URL="${HEALTH_BASE_URL:-http://localhost:3000}"
+HEALTH_BASE_URL="${HEALTH_BASE_URL:-}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"
 ROLLBACK_TIMEOUT="${ROLLBACK_TIMEOUT:-60}"
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-3}"
@@ -66,6 +66,13 @@ ENV_FILE="$CRM_DIR/.env"
 
 [ -f "$ENV_FILE" ] || { echo "Falta o .env em $CRM_DIR." >&2; exit 2; }
 cd "$CRM_DIR" || exit 2
+
+# Saúde: o endereço PÚBLICO do ambiente (NEXT_PUBLIC_APP_URL do .env). A VPS não publica porta
+# nenhuma, então localhost:3000 nunca responde e todo deploy "falhava" e voltava (hml, 24/10/2026).
+if [ -z "$HEALTH_BASE_URL" ]; then
+  HEALTH_BASE_URL="$(sed -n 's/^NEXT_PUBLIC_APP_URL=//p' "$ENV_FILE" | head -1 | tr -d "\"'\r" | sed 's#/*$##')"
+  HEALTH_BASE_URL="${HEALTH_BASE_URL:-http://localhost:3000}"
+fi
 
 # dono das imagens: argumento > GHCR_OWNER > derivado da APP_IMAGE atual do .env
 OWNER="$DONO_ARG"
@@ -185,7 +192,9 @@ if [ "$AMB" = prod ]; then
 fi
 
 # código do commit (só onde o ambiente é um checkout git); depois o baseline
+REV_ANTES=""
 if [ -d .git ]; then
+  REV_ANTES="$(git rev-parse HEAD 2>/dev/null || true)"
   if ! roda git fetch origin || ! roda git checkout --detach "$SHA"; then
     log "Não consegui posicionar o código em ${SHA:0:12} — deploy abortado."
     exit 1
@@ -236,6 +245,10 @@ log "Saúde falhou após o deploy — voltando à versão anterior."
 RB=$SECONDS
 # restaura o .env original byte a byte (cobre o primeiro deploy, sem tags prévias)
 cat "$ENV_COPIA" > "$ENV_FILE"; rm -f "$ENV_COPIA"
+# e o CÓDIGO também: os compose do commit antigo podem não existir mais no commit novo
+if [ -n "$REV_ANTES" ] && [ "$REV_ANTES" != "$(git rev-parse HEAD 2>/dev/null)" ]; then
+  roda git checkout --detach "$REV_ANTES" || log "Não consegui devolver o código ao commit anterior."
+fi
 if sobe rollback && espera_saude "$ROLLBACK_TIMEOUT"; then
   log "Rollback concluído: voltou à versão anterior e responde (rollback levou $((SECONDS - RB)) s)."
   exit 10
