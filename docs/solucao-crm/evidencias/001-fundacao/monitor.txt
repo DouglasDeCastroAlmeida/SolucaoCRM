@@ -1,0 +1,6 @@
+# T-038 / AC-011.1 — alerta de queda no celular (2026-10-25)
+Monitor: UptimeRobot (plano gratuito), monitores HTTP(s) para app.corretora.io e hml.corretora.io, intervalo de 5 min, alerta por e-mail e pelo app no celular do dono.
+Teste controlado (somente a homologação): `docker stop crm-hml-app-1` às 18:28 UTC (hml respondeu 502; produção seguiu 307).
+Resultado: o dono recebeu o alerta no celular dentro da janela, com a causa "Root cause: 502 Bad Gateway" (confirmado por ele na conversa, 25/10/2026).
+Recuperação: `docker start crm-hml-app-1` às 18:32 UTC; hml voltou a 200/307 em ~45 s, com o apelido de rede crm-hml-app preservado. Queda total ~4 min.
+Observação: o AC cita /api/v1/health de produção; o monitor da produção deve apontar para esse endereço (sugerido ao dono; hoje responde "status":"healthy").

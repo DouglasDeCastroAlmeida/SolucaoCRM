@@ -165,9 +165,45 @@ sonda_homologacao() {
   [ -z "$seg" ] && pass "AC-003.2: nenhum segredo/URL de banco igual ao da produção" || fail "AC-003.2: valores iguais aos da produção: $seg"
   [ "$(rssh 'grep -c "^SUPABASE_DB_URL=.*supabase.com" /opt/crm-hml/.env' 2>/dev/null)" = "1" ] && pass "AC-003.1: o banco da hml é o Supabase Cloud" || fail "AC-003.1: o banco da hml não é o Supabase Cloud"
   local n; n="$(rssh 'docker exec crm-prod-caddy-1 nslookup app 2>&1 | grep -c "^Address: "' 2>/dev/null)"
-  [ "$n" = "1" ] && pass "AC-003.2: o nome 'app' vista pelo Caddy aponta para UM só container (a hml não rouba tráfego da produção)" || fail "AC-003.2: o nome 'app' aponta para $n containers na rede do Caddy"
+  [ "$n" = "1" ] && pass "AC-003.3: o nome 'app' vista pelo Caddy aponta para UM só container (a hml não rouba tráfego da produção)" || fail "AC-003.3: o nome 'app' aponta para $n containers na rede do Caddy"
   c="$(curl -s --max-time 30 "https://app.${DOMINIO_CRM:-corretora.io}/api/v1/health" | grep -oE '"status":"[a-z]+"' | head -1)"; [ "$c" = '"status":"healthy"' ] && pass "AC-003.2: a produção segue $c com a hml no ar" || fail "AC-003.2: a produção respondeu $c com a hml no ar"
   rssh 'docker ps --format "{{.Names}} {{.Status}}" | grep crm-hml | sort' | registra homologacao-containers.txt
+}
+
+sonda_backup_privado() {
+  echo "== bucket de backup privado (AC-007.3)"
+  local ep bk c1 c2
+  ep="$(rssh 'grep -E "^S3_ENDPOINT=" /opt/crm-deploy/.env.backup | cut -d= -f2- | tr -d "\""' 2>/dev/null)"
+  bk="$(rssh 'grep -E "^S3_BUCKET=" /opt/crm-deploy/.env.backup | cut -d= -f2- | tr -d "\""' 2>/dev/null)"
+  [ -n "$ep" ] && [ -n "$bk" ] || { fail "AC-007.3: não achei S3_ENDPOINT/S3_BUCKET no .env.backup da VPS"; return; }
+  c1="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${ep%/}/$bk/")"
+  c2="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${ep%/}/$bk/objeto-que-nao-existe.age")"
+  case "$c1" in 400|401|403) pass "AC-007.3: listar o bucket sem credencial é negado (HTTP $c1)";; *) fail "AC-007.3: listar o bucket sem credencial deu HTTP $c1";; esac
+  case "$c2" in 400|401|403) pass "AC-007.3: ler objeto sem credencial é negado (HTTP $c2)";; *) fail "AC-007.3: ler objeto sem credencial deu HTTP $c2";; esac
+}
+
+sonda_sentry() {
+  echo "== Sentry (AC-011.2)"
+  local d v
+  for d in crm-hml crm-prod; do
+    v="$(rssh "grep -E '^SENTRY_DSN=' /opt/$d/.env | cut -d= -f2- | tr -d '\"'" 2>/dev/null)"
+    case "$v" in
+      "") fail "AC-011.2: $d com SENTRY_DSN vazio (mandaria erros ao Sentry da comunidade)";;
+      off) fail "AC-011.2: $d com Sentry desligado";;
+      *58fabf8ad54504863d404a3647ef3714*) fail "AC-011.2: $d aponta para o Sentry da comunidade";;
+      https://*@*sentry.io/*) pass "AC-011.2: $d envia erros ao Sentry do dono";;
+      *) fail "AC-011.2: $d com SENTRY_DSN em formato inesperado";;
+    esac
+  done
+  grep -q "CONFIRMADA" "$EVID_DIR/sentry.txt" 2>/dev/null && pass "AC-011.2: o erro de teste foi visto no painel (docs/.../sentry.txt)" || fail "AC-011.2: falta a confirmação visual em sentry.txt"
+}
+
+sonda_monitor() {
+  echo "== monitor de disponibilidade (AC-011.1)"
+  local c
+  c="$(curl -s --max-time 30 "https://app.${DOMINIO_CRM:-corretora.io}/api/v1/health" | grep -oE '"status":"[a-z]+"' | head -1)"
+  [ "$c" = '"status":"healthy"' ] && pass "AC-011.1: o endereço que o monitor vigia (/api/v1/health) responde $c" || fail "AC-011.1: /api/v1/health respondeu $c"
+  grep -q "Root cause: 502" "$EVID_DIR/monitor.txt" 2>/dev/null && pass "AC-011.1: o alerta de queda chegou ao celular do dono (docs/.../monitor.txt)" || fail "AC-011.1: falta a evidência do alerta em monitor.txt"
 }
 
 [ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev)"; exit 2; }

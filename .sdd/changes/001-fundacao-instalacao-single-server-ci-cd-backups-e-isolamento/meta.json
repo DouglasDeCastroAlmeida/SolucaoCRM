@@ -2,7 +2,7 @@
   "id": "001-fundacao-instalacao-single-server-ci-cd-backups-e-isolamento",
   "title": "Fundação: instalação single-server, CI/CD, backups e isolamento",
   "size": "L",
-  "stage": "implement",
+  "stage": "verify",
   "createdAt": "2026-10-22T03:11:37.634Z",
   "approvals": {
     "grill": {
@@ -22,6 +22,11 @@
     },
     "tasks": {
       "at": "2026-10-22T03:40:12.498Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "implement": {
+      "at": "2026-10-25T18:22:36.032Z",
       "by": "DouglasDeCastroAlmeida",
       "forced": false
     }
@@ -50,6 +55,11 @@
       "stage": "implement",
       "at": "2026-10-22T03:40:12.498Z",
       "from": "tasks"
+    },
+    {
+      "stage": "verify",
+      "at": "2026-10-25T18:22:36.032Z",
+      "from": "implement"
     }
   ]
 }

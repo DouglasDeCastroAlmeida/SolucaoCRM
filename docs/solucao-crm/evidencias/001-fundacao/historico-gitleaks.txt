@@ -1,0 +1,6 @@
+# Varredura do histórico inteiro do git com gitleaks (2026-10-25, repositório tornado público)
+Comando (na VPS, imagem zricethezav/gitleaks): detect --source <clone> --redact (13.650 commits, incluindo o histórico do projeto original).
+Resultado: 46 achados, todos em commits do projeto original (melgarafael, webtecnica, jmpo etc.) e em fixtures de teste/evidências dele
+(app/**/*.test.ts, tests/shell, hostgator-setup-kit/test-validators.sh, evidence/canais/**, MANIFEST.md): valores de exemplo, não segredos nossos.
+Achados em commits do dono ou em infra/solucao, docs/solucao-crm, .sdd, tests/infra: ZERO.
+Imagem e clone removidos da VPS depois da varredura.
