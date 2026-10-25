@@ -248,18 +248,32 @@ create policy partners_select on public.partners for select to authenticated
   using (public.fn_is_platform_admin() or id in (select public.fn_user_partner_ids()));
 
 drop policy if exists partners_write on public.partners;
-create policy partners_write on public.partners for all to authenticated
+drop policy if exists partners_insert on public.partners;
+drop policy if exists partners_update on public.partners;
+drop policy if exists partners_delete on public.partners;
+create policy partners_insert on public.partners for insert to authenticated
+  with check (public.fn_is_platform_admin_full());
+create policy partners_update on public.partners for update to authenticated
   using (public.fn_is_platform_admin_full())
   with check (public.fn_is_platform_admin_full());
+create policy partners_delete on public.partners for delete to authenticated
+  using (public.fn_is_platform_admin_full());
 
 drop policy if exists partner_members_select on public.partner_members;
 create policy partner_members_select on public.partner_members for select to authenticated
   using (public.fn_is_platform_admin() or partner_id in (select public.fn_user_partner_ids()));
 
 drop policy if exists partner_members_write on public.partner_members;
-create policy partner_members_write on public.partner_members for all to authenticated
+drop policy if exists partner_members_insert on public.partner_members;
+drop policy if exists partner_members_update on public.partner_members;
+drop policy if exists partner_members_delete on public.partner_members;
+create policy partner_members_insert on public.partner_members for insert to authenticated
+  with check (public.fn_is_platform_admin_full());
+create policy partner_members_update on public.partner_members for update to authenticated
   using (public.fn_is_platform_admin_full())
   with check (public.fn_is_platform_admin_full());
+create policy partner_members_delete on public.partner_members for delete to authenticated
+  using (public.fn_is_platform_admin_full());
 
 -- marcas: plataforma vê tudo; parceiro vê as suas; membro de organização só LÊ a
 -- marca da própria organização (NULL = a marca padrão).
@@ -279,9 +293,16 @@ create policy brands_select on public.brands for select to authenticated
   );
 
 drop policy if exists brands_write on public.brands;
-create policy brands_write on public.brands for all to authenticated
+drop policy if exists brands_insert on public.brands;
+drop policy if exists brands_update on public.brands;
+drop policy if exists brands_delete on public.brands;
+create policy brands_insert on public.brands for insert to authenticated
+  with check (public.fn_is_platform_admin_full() or public.fn_is_partner_admin(partner_id));
+create policy brands_update on public.brands for update to authenticated
   using (public.fn_is_platform_admin_full() or public.fn_is_partner_admin(partner_id))
   with check (public.fn_is_platform_admin_full() or public.fn_is_partner_admin(partner_id));
+create policy brands_delete on public.brands for delete to authenticated
+  using (public.fn_is_platform_admin_full() or public.fn_is_partner_admin(partner_id));
 
 -- domínios: organização comum NÃO lê (só plataforma e parceiro)
 drop policy if exists brand_domains_select on public.brand_domains;
@@ -293,13 +314,28 @@ create policy brand_domains_select on public.brand_domains for select to authent
   );
 
 drop policy if exists brand_domains_write on public.brand_domains;
-create policy brand_domains_write on public.brand_domains for all to authenticated
+drop policy if exists brand_domains_insert on public.brand_domains;
+drop policy if exists brand_domains_update on public.brand_domains;
+drop policy if exists brand_domains_delete on public.brand_domains;
+create policy brand_domains_insert on public.brand_domains for insert to authenticated
+  with check (
+    public.fn_is_platform_admin_full()
+    or exists (select 1 from public.brands b
+                where b.id = brand_domains.brand_id and public.fn_is_partner_admin(b.partner_id))
+  );
+create policy brand_domains_update on public.brand_domains for update to authenticated
   using (
     public.fn_is_platform_admin_full()
     or exists (select 1 from public.brands b
                 where b.id = brand_domains.brand_id and public.fn_is_partner_admin(b.partner_id))
   )
   with check (
+    public.fn_is_platform_admin_full()
+    or exists (select 1 from public.brands b
+                where b.id = brand_domains.brand_id and public.fn_is_partner_admin(b.partner_id))
+  );
+create policy brand_domains_delete on public.brand_domains for delete to authenticated
+  using (
     public.fn_is_platform_admin_full()
     or exists (select 1 from public.brands b
                 where b.id = brand_domains.brand_id and public.fn_is_partner_admin(b.partner_id))
@@ -311,13 +347,28 @@ create policy brand_plans_select on public.brand_plans for select to authenticat
   using (exists (select 1 from public.brands b where b.id = brand_plans.brand_id));
 
 drop policy if exists brand_plans_write on public.brand_plans;
-create policy brand_plans_write on public.brand_plans for all to authenticated
+drop policy if exists brand_plans_insert on public.brand_plans;
+drop policy if exists brand_plans_update on public.brand_plans;
+drop policy if exists brand_plans_delete on public.brand_plans;
+create policy brand_plans_insert on public.brand_plans for insert to authenticated
+  with check (
+    public.fn_is_platform_admin_full()
+    or exists (select 1 from public.brands b
+                where b.id = brand_plans.brand_id and public.fn_is_partner_admin(b.partner_id))
+  );
+create policy brand_plans_update on public.brand_plans for update to authenticated
   using (
     public.fn_is_platform_admin_full()
     or exists (select 1 from public.brands b
                 where b.id = brand_plans.brand_id and public.fn_is_partner_admin(b.partner_id))
   )
   with check (
+    public.fn_is_platform_admin_full()
+    or exists (select 1 from public.brands b
+                where b.id = brand_plans.brand_id and public.fn_is_partner_admin(b.partner_id))
+  );
+create policy brand_plans_delete on public.brand_plans for delete to authenticated
+  using (
     public.fn_is_platform_admin_full()
     or exists (select 1 from public.brands b
                 where b.id = brand_plans.brand_id and public.fn_is_partner_admin(b.partner_id))
@@ -332,9 +383,16 @@ create policy vertical_packs_select on public.vertical_packs for select to authe
   );
 
 drop policy if exists vertical_packs_write on public.vertical_packs;
-create policy vertical_packs_write on public.vertical_packs for all to authenticated
+drop policy if exists vertical_packs_insert on public.vertical_packs;
+drop policy if exists vertical_packs_update on public.vertical_packs;
+drop policy if exists vertical_packs_delete on public.vertical_packs;
+create policy vertical_packs_insert on public.vertical_packs for insert to authenticated
+  with check (public.fn_is_platform_admin_full());
+create policy vertical_packs_update on public.vertical_packs for update to authenticated
   using (public.fn_is_platform_admin_full())
   with check (public.fn_is_platform_admin_full());
+create policy vertical_packs_delete on public.vertical_packs for delete to authenticated
+  using (public.fn_is_platform_admin_full());
 
 -- só do servidor: RLS ligada e nenhuma policy; os papéis do PostgREST nem têm grant
 revoke all on table public.brand_email_context  from anon, authenticated;

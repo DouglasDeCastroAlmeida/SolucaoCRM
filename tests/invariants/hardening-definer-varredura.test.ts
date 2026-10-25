@@ -67,6 +67,13 @@ const ANON_PERMITIDO: readonly Excecao[] = [];
  */
 const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
   {
+    fn: "fn_set_org_brand(uuid,uuid)",
+    razao:
+      "Troca a marca de uma organização e só aceita o administrador da plataforma (escopo " +
+      "full), conferido DENTRO da função. Call site: a rota admin de organizações da fatia 3 " +
+      "(app/api/v1/admin/organizations), com a sessão do admin e requireSupportWrite.",
+  },
+  {
     fn: "encrypt_cpf(text)",
     razao:
       "POST/PATCH app/api/v1/contacts/route.ts e app/api/v1/contacts/[id]/route.ts, " +
