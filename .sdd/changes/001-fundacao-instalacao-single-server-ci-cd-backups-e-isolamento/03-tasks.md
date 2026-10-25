@@ -86,7 +86,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-040 [DOCS] Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos (~40 min) {AC-004.5}
 - [x] T-041 [TEST-INT] Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota (~40 min) {AC-004.5} deps: T-040
   - Nota (decisão do dono, 24/10/2026): a sonda e a evidência de outubro estão prontas; a medição do mês fechado (fim de novembro) vira acompanhamento de rotina, registrado no runbook, e não bloqueia o fechamento.
-- [ ] T-042 [REFACTOR] Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ (~20 min) deps: T-035, T-037, T-038, T-039
+- [x] T-042 [REFACTOR] Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ (~20 min) deps: T-035, T-037, T-038, T-039
 
 ## Estimativa
 
@@ -133,5 +133,5 @@ Cada tarefa ocupa uma linha:
 | T-039 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar | ✅ | 40min |
 | T-040 | DOCS | Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos | ⬜ | 40min |
 | T-041 | TEST-INT | Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota | ✅ | 40min |
-| T-042 | REFACTOR | Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ | ⬜ | 20min |
+| T-042 | REFACTOR | Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ | ✅ | 20min |
 | **TOTALIZADOR GERAL** | | **42 tarefas (0 concluídas, 0%)** | | **26h 50min** (restante: 26h 50min) |
