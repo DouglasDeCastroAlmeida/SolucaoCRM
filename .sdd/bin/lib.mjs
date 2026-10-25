@@ -907,7 +907,8 @@ function entryText(entry) {
 }
 
 function isApproveCommand(text) {
-  return /<command-name>\/?(?:[\w-]+:)?sdd:approve<\/command-name>/.test(text) || /^\s*\/sdd:approve\b/.test(text);
+  // aceita /sdd:approve (plugin) e /sdd-approve (cópia versionada em .claude/skills, usada na nuvem)
+  return /<command-name>\/?(?:[\w-]+:)?sdd[:-]approve<\/command-name>/.test(text) || /^\s*\/sdd[:-]approve\b/.test(text);
 }
 
 // Lê o transcript (JSONL) de trás para frente: pula a resposta do assistente e os
