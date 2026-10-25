@@ -89,6 +89,6 @@ describe("a casca das telas de acesso", () => {
     // `marcaDaSaida(orgId)` com um id monta a pilha da organização. Na tela de
     // login não existe organização resolvida (ninguém entrou), e passar
     // qualquer outra coisa aqui seria inventar um tenant para pintar a fachada.
-    expect(marcaDaSaida).toHaveBeenCalledWith(null);
+    expect(marcaDaSaida).toHaveBeenCalledWith(null, expect.anything());
   });
 });
