@@ -47,7 +47,10 @@ import { DEFAULT_APP_NAME } from "@/lib/branding";
 import { env } from "@/lib/env";
 import { valorDaInstalacao } from "@/lib/instalacao/config";
 import { logger } from "@/lib/logger";
+import type { Brand } from "@/lib/brands/tipos";
 import { createAdminClient } from "@/lib/supabase/admin";
+
+import { camadaDaMarca } from "./camada-de-marca";
 
 import { melhorFrenteSobre } from "./contraste";
 import { marcaDaInstalacao } from "./instalacao";
@@ -167,7 +170,7 @@ async function settingsDaOrganizacao(organizationId: string): Promise<unknown> {
  * → padrão). É a CLASSE A: o convite de time e o e-mail de LGPD dizem quem
  * atendeu, e no produto do revendedor quem atende é o cliente dele.
  *
- * `organizationId === null` → instalação → `.env` → padrão. É a CLASSE B: as
+ * `organizationId === null` → [marca do host, se houver] → instalação → `.env` → padrão. É a CLASSE B: as
  * saídas anteriores a qualquer organização (cadastro de MFA, e-mail de auth).
  * Passar `null` não é omissão — é a declaração de que ainda não há organização.
  *
@@ -181,13 +184,28 @@ async function settingsDaOrganizacao(organizationId: string): Promise<unknown> {
  * `app/api/v1/cron/event-log-drain/route.ts:21`; `Dockerfile.worker` roda
  * `workers/agent-worker/main.ts`, que não importa e-mail nenhum).
  */
-export async function marcaDaSaida(organizationId: string | null): Promise<MarcaDeSaida> {
+export async function marcaDaSaida(
+  organizationId: string | null,
+  marcaDoHost?: Brand | null,
+): Promise<MarcaDeSaida> {
   try {
     const linha = await marcaDaInstalacao();
     const marca =
       organizationId === null
-        ? resolverMarca([camadaDaInstalacao(linha), camadaDoAmbiente(env)], REGUA_DO_PRODUTO)
-        : resolverMarcaDaOrganizacao(await settingsDaOrganizacao(organizationId), linha, env);
+        ? resolverMarca(
+            [
+              ...(marcaDoHost ? [camadaDaMarca(marcaDoHost)] : []),
+              camadaDaInstalacao(linha),
+              camadaDoAmbiente(env),
+            ],
+            REGUA_DO_PRODUTO,
+          )
+        : resolverMarcaDaOrganizacao(
+            await settingsDaOrganizacao(organizationId),
+            linha,
+            env,
+            marcaDoHost,
+          );
 
     // `claro`, sempre — ver o cabeçalho. `derivada` é `null` quando a semente
     // não pinta (cor acromática, papel só de identidade, hex recusado): aí o

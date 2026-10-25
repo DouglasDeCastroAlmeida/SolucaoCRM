@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EntrarComGoogle } from "@/components/auth/EntrarComGoogle";
 import { SignupForm } from "@/components/auth/SignupForm";
 import { Button } from "@/components/ui/button";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { verifyInviteToken } from "@/lib/auth/invite-token";
 import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
@@ -57,7 +58,7 @@ export default async function SignupPage({
   // O nome da marca vem do resolvedor que LÊ O BANCO (`marcaDaSaida`: banco
   // acima do `.env`, e nunca lança) — `branding()` só veria a semente do `.env`,
   // e o convite não muda isso (#2511, mesmo defeito das páginas `/legal`).
-  const marca = await marcaDaSaida(null);
+  const marca = await marcaDaSaida(null, (await marcaDoPedido()).brand);
   // Com plano oferecido, o seletor aparece. O Google não leva a escolha: ele
   // some enquanto não há plano padrão — o gatilho recusaria a empresa —, e com
   // padrão a empresa dele nasce no padrão. Sem plano nenhum, nasce isenta e o

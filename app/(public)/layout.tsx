@@ -1,5 +1,6 @@
 import { LogotipoDoProduto } from "@/components/branding/MarcaDoProduto";
 import { marcaEhADoProduto } from "@/lib/branding";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { createClient } from "@/lib/supabase/server";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
@@ -43,7 +44,8 @@ import { idiomaDoVisitante } from "@/lib/i18n/idiomaAnonimo";
  * o confere no login de quem não entrou. Não apague um sem o outro.
  */
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const marca = await marcaDaSaida(null);
+  const { brand } = await marcaDoPedido();
+  const marca = await marcaDaSaida(null, brand);
   // A maioria destas telas roda ANTES do login (não há usuário nenhum), mas
   // duas — `/login/mfa` e, em parte, `/login/recovery` — rodam com uma sessão
   // parcial já criada (primeiro fator verificado, segundo pendente). Onde há

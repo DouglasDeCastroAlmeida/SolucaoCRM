@@ -123,6 +123,39 @@ describe("guarda de white-label (self-host)", () => {
   });
 });
 
+describe("a catraca conhece a camada de MARCA (spec 002)", () => {
+  const ler = (rel: string) => fs.readFileSync(path.join(RAIZ, rel), "utf8");
+
+  it("AC-010.5: o layout raiz põe a camada de marca entre a instalação e o topo da pilha", () => {
+    // A marca do host é uma camada NOVA da mesma pilha: sem ela no layout raiz
+    // o login de uma marca de vertical sairia com a cara da instalação.
+    const layoutRaiz = ler("app/layout.tsx");
+    expect(layoutRaiz).toMatch(/camadaDaMarca\(brand\),\s*camadaDaInstalacao\(linha\)/);
+    expect(layoutRaiz).toMatch(/marcaDoPedido\(\)/);
+  });
+
+  it("AC-010.5: a marca vem do host pelo resolvedor, nunca do corpo ou de um literal", () => {
+    expect(ler("lib/branding/marca-do-pedido.ts")).toMatch(/CABECALHO_BRAND_HOST/);
+    expect(ler("proxy.ts")).toMatch(/CABECALHO_BRAND_HOST/);
+  });
+
+  it("AC-010.5: os arquivos da camada de marca não carregam a marca do produto nem NEXT_PUBLIC_", () => {
+    for (const rel of [
+      "lib/branding/camada-de-marca.ts",
+      "lib/branding/marca-do-host.ts",
+      "lib/branding/marca-do-pedido.ts",
+      "lib/branding/host.ts",
+      "lib/brands/tipos.ts",
+      "lib/brands/repositorio.ts",
+    ]) {
+      const fonte = ler(rel);
+      expect(marcasNoTexto(fonte), rel).toEqual([]);
+      expect(fonte, rel).not.toMatch(/NEXT_PUBLIC_/);
+      expect(Object.keys(MARCA_CONGELADA), rel).not.toContain(rel);
+    }
+  });
+});
+
 describe("nome do arquivo de códigos de recuperação", () => {
   // Este arquivo fica anos na pasta de downloads do usuário: é o artefato de
   // marca mais duradouro que o produto entrega, e nenhuma atualização conserta
