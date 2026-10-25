@@ -92,6 +92,14 @@ interface Excecao {
  */
 const SEM_CONFERENCIA_PERMITIDO: readonly Excecao[] = [
   {
+    fn: "fn_set_org_brand(p_org_id uuid, p_brand_id uuid)",
+    razao:
+      "Ela não confere pertencimento à organização porque o autorizado NÃO é membro dela: " +
+      "só o administrador da plataforma (escopo full) pode trocar a marca de uma organização, " +
+      "e ela recusa qualquer outro com fn_is_platform_admin_full() no corpo. Conferir " +
+      "fn_user_org_ids() trancaria o próprio admin da plataforma para fora. Audita org.brand_changed.",
+  },
+  {
     fn: "fn_support_write_allowed(p_org uuid)",
     razao:
       "Ela não CONCEDE nada — só pode tirar. É usada exclusivamente como policy " +
