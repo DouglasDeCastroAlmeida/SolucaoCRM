@@ -2,7 +2,7 @@
   "id": "002-marcas-parceiros-e-dominios",
   "title": "Marcas, parceiros e domínios",
   "size": "L",
-  "stage": "design",
+  "stage": "tasks",
   "createdAt": "2026-10-25T19:24:03.134Z",
   "approvals": {
     "grill": {
@@ -12,6 +12,11 @@
     },
     "prd": {
       "at": "2026-10-25T19:37:13.664Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "design": {
+      "at": "2026-10-25T19:42:57.651Z",
       "by": "DouglasDeCastroAlmeida",
       "forced": false
     }
@@ -30,6 +35,11 @@
       "stage": "design",
       "at": "2026-10-25T19:37:13.664Z",
       "from": "prd"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-10-25T19:42:57.651Z",
+      "from": "design"
     }
   ]
 }
