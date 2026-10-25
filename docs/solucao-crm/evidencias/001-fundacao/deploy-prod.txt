@@ -1,0 +1,11 @@
+# T-035 / AC-005.2 — deploy de produção pelo pipeline (2026-10-25, workflow "Deploy em produção", run 40219761686)
+Disparo manual (workflow_dispatch, branch main) pelo dono; o ambiente `producao` só aceita a main e o GitHub Free não tem Required reviewers (A-06):
+o disparo manual é a aprovação.
+Linha do tempo (deploy.log da VPS, UTC):
+  18:08:03 Deploy de prod para adbdcc4d4ab6 (versão fixa)
+  18:08:06 Backup antes do deploy concluído (3 s)
+  18:08:08 Baseline do banco aplicado (self-hosted local)
+  18:08:36 Deploy concluído: / = 200 e /app = 307 em 20 s
+Depois: app/worker/scheduler com imagens do nosso GHCR (tag = SHA), todos healthy; /api/v1/health = healthy; hml e vava no ar.
+Observação: na véspera (24/10) o disparo falhou antes de iniciar porque a cota gratuita de minutos do GitHub tinha acabado
+("recent account payments have failed or your spending limit needs to be increased"); o dono deixou o repositório público (minutos ilimitados) e o disparo funcionou.

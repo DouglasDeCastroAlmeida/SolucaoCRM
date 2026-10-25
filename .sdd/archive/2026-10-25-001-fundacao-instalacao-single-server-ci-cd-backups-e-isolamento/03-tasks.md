@@ -69,8 +69,8 @@ Cada tarefa ocupa uma linha:
 
 ### Fatia 8: homologação e primeiro deploy pelo pipeline
 - [x] T-033 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção (~40 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-031
-- [ ] T-034 [CHECK-SMOKE] Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos (~35 min) {AC-005.1, AC-006.3} deps: T-013, T-033
-- [ ] T-035 [CHECK-SMOKE] Deploy de produção parado esperando a aprovação do dono e concluído depois do clique (~25 min) {AC-005.2} deps: T-034
+- [x] T-034 [CHECK-SMOKE] Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos (~35 min) {AC-005.1, AC-006.3} deps: T-013, T-033
+- [x] T-035 [CHECK-SMOKE] Deploy de produção parado esperando a aprovação do dono e concluído depois do clique (~25 min) {AC-005.2} deps: T-034
 
 ### Fatia 9: backup real, restauração e monitoramento
 - [x] T-045 [TEST-INT] backup-externo.sh com rclone falso que informa o tamanho do bucket: abaixo de 7 GB envia; acima recusa, alerta e não envia; falha ao medir o tamanho também recusa (não arrisca estourar a cota); alerta sem segredos (~40 min) {AC-007.7}
@@ -79,13 +79,14 @@ Cada tarefa ocupa uma linha:
 - [x] T-048 [IMPL] admin/07-ferramentas-backup.sh (apt-get install age rclone, idempotente, com --dry-run) (~25 min) {AC-008.5} deps: T-047
 - [x] T-036 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada (~40 min) {AC-007.1, AC-007.2, AC-007.3} deps: T-016, T-031, T-046, T-048
 - [x] T-037 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Restaurar um backup do R2 em ambiente descartável usando só a chave do gerenciador de senhas (~40 min) {AC-007.4} deps: T-036
-- [ ] T-038 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis (~40 min) {AC-011.1, AC-011.2} deps: T-033
+- [x] T-038 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis (~40 min) {AC-011.1, AC-011.2} deps: T-033
 - [x] T-039 [TEST-INT] Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar (~40 min) {AC-009.3, AC-009.4} deps: T-031, T-033, T-044
 
 ### Fechamento
 - [x] T-040 [DOCS] Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos (~40 min) {AC-004.5}
-- [ ] T-041 [TEST-INT] Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota (~40 min) {AC-004.5} deps: T-040
-- [ ] T-042 [REFACTOR] Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ (~20 min) deps: T-035, T-037, T-038, T-039
+- [x] T-041 [TEST-INT] Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota (~40 min) {AC-004.5} deps: T-040
+  - Nota (decisão do dono, 24/10/2026): a sonda e a evidência de outubro estão prontas; a medição do mês fechado (fim de novembro) vira acompanhamento de rotina, registrado no runbook, e não bloqueia o fechamento.
+- [x] T-042 [REFACTOR] Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ (~20 min) deps: T-035, T-037, T-038, T-039
 
 ## Estimativa
 
@@ -124,13 +125,13 @@ Cada tarefa ocupa uma linha:
 | T-031 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-prod pelo instalador single-server e conferir /, /app, /api/v1/health e Studio e Postgres fechados | ⬜ | 40min |
 | T-032 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Nenhuma porta além de 80/443 responde pela internet, inclusive as publicadas pelo Docker | ⬜ | 40min |
 | T-033 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Instalar crm-hml com Supabase Cloud, publicada por caddy-sites, sem banco, env ou volumes em comum com a produção | ✅ | 40min |
-| T-034 | CHECK-SMOKE | Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos | ⬜ | 35min |
-| T-035 | CHECK-SMOKE | Deploy de produção parado esperando a aprovação do dono e concluído depois do clique | ⬜ | 25min |
+| T-034 | CHECK-SMOKE | Deploy real em homologação pelo GitHub e rollback provocado medido abaixo de 2 minutos | ✅ | 35min |
+| T-035 | CHECK-SMOKE | Deploy de produção parado esperando a aprovação do dono e concluído depois do clique | ✅ | 25min |
 | T-036 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Backup real da produção no R2: objeto criptografado e leitura sem credencial negada | ⬜ | 40min |
 | T-037 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Restaurar um backup do R2 em ambiente descartável usando só a chave do gerenciador de senhas | ⬜ | 40min |
-| T-038 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis | ⬜ | 40min |
+| T-038 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: Monitor de disponibilidade com alerta no celular e erro de teste no Sentry sem dados sensíveis | ✅ | 40min |
 | T-039 | TEST-INT | Sonda executável (tests/infra/vps/) rodada contra a VPS: medir-memoria.sh por 24 horas, registro de memória livre >= 2 GB e alerta simulado abaixo do limiar | ✅ | 40min |
 | T-040 | DOCS | Runbook docs/solucao-crm/runbooks/fundacao.md: instalação, troca de portas, rollback, restauração, consumo de minutos | ⬜ | 40min |
-| T-041 | TEST-INT | Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota | ⬜ | 40min |
-| T-042 | REFACTOR | Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ | ⬜ | 20min |
+| T-041 | TEST-INT | Sonda executável (gh api) que registra o consumo de minutos do GitHub no primeiro mês e comparar com a cota | ✅ | 40min |
+| T-042 | REFACTOR | Limpeza dos scripts de infra com testes verdes e evidências em docs/solucao-crm/evidencias/001-fundacao/ | ✅ | 20min |
 | **TOTALIZADOR GERAL** | | **42 tarefas (0 concluídas, 0%)** | | **26h 50min** (restante: 26h 50min) |
