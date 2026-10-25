@@ -49,6 +49,10 @@
 #  29. cópia de PR em refs/remotes/*/pr/N (fetch de triagem) não traz fantasma de volta.
 #  30. mais de 30 PRs abertos: o gate pede --limit, senão o gh corta calado em 30.
 set -uo pipefail
+# O CI de um PR cujo numero coincide com um dos numeros FICTICIOS dos casos (ex.: #7) poe
+# GITHUB_REF=refs/pull/N/merge, e o script tira esse PR da populacao como "o proprio".
+# O teste mede o script em clones sinteticos: o ambiente do CI real nao pode vazar para dentro.
+unset GITHUB_REF
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 GATE_ORIGEM="$RAIZ/scripts/checar-colisao-de-migration.sh"
