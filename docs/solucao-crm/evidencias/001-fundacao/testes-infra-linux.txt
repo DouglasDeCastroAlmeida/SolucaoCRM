@@ -1,0 +1,29 @@
+# T-042 — suíte de infraestrutura no Linux da VPS (usuário dev, cópia limpa do git, 2026-10-25)
+OK      admin-cron
+OK      admin-dry-run
+OK      admin-ferramentas-backup
+OK      admin-firewall
+OK      admin-instalar-scripts
+OK      admin-swap
+OK      admin-usuarios
+OK      alerta
+OK      backup-externo-falha
+OK      backup-externo-teto
+OK      backup-externo
+OK      compose-hml
+OK      compose-solucao
+OK      crm-status
+OK      deploy-backup-segredos
+OK      deploy-baseline-pula
+OK      deploy-health-url
+OK      deploy-integracao
+OK      deploy-lock
+OK      deploy-rollback-codigo
+OK      deploy-rollback
+OK      deploy-sha
+OK      instalar-prod
+OK      isolamento-authorized-keys
+OK      medir-memoria
+OK      minutos-github
+OK      mover-vava
+Total: 27 de 27 passam.

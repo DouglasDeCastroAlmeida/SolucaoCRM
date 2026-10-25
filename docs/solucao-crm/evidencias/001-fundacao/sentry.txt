@@ -1,0 +1,8 @@
+# T-038 / AC-011.2 — Sentry (2026-10-24)
+- Conta gratuita do dono, projeto `solucao-crm` (Next.js). A DSN fica só no .env da VPS (SENTRY_DSN em /opt/crm-hml e /opt/crm-prod) e em C:\Users\Douglas\.secrets\sentry.env.
+- ACHADO: SENTRY_DSN vazio manda os erros ao Sentry DA COMUNIDADE do projeto original (lib/sentry/dsn.ts). A hml estava vazia (erro nosso ao montar o .env) e a produção em `off`.
+  Agora as duas apontam para o Sentry do dono.
+- Evento de teste sintético (sem dados pessoais) enviado da VPS para a DSN da hml: HTTP 200, id c6af2207d0c1ebdaf037b8373eebb017.
+  Conferência visual no painel: pendente do dono (Issues > mensagem "Teste de integracao Solucao CRM (T-038)").
+- Sanitização de dados sensíveis no cliente: prova automática em tests/unit (lib/sentry/privacidade.sdk.test.ts, roda no CI).
+- A produção recebe a DSN no primeiro deploy-prod (T-035): /opt/crm-prod ainda está no código antigo e o container sobe lendo o .env.

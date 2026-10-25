@@ -61,3 +61,12 @@ O plano gratuito dá 2.000 min/mês para repositório privado. Cada rodada compl
 
 ## 8. Onde estão as provas
 `docs/solucao-crm/evidencias/001-fundacao/` e as sondas em `tests/infra/vps/sondas.sh`. Tudo sem segredos.
+
+## 9. O que mudou na fase final (24–25/10/2026) e como operar
+- **Baseline do banco:** o `deploy.sh` só o reaplica quando `supabase/baseline.sql` muda (marca `.baseline-aplicado` na pasta do ambiente). Para forçar: `FORCAR_BASELINE=1` (com `sudo -u deploy env FORCAR_BASELINE=1 /opt/crm-deploy/deploy.sh <hml|prod> <sha> <dono>`). Na hml o baseline leva ~12 min (banco nos EUA); o SSH do pipeline tem keepalive para não cair.
+- **Saúde do deploy:** usa o endereço público (`NEXT_PUBLIC_APP_URL` do `.env`), não `localhost`. O rollback devolve imagens, `.env` **e o código**. Rollback medido: 5 s.
+- **Homologação:** `/opt/crm-hml`, publicada pelo Caddy da produção SÓ pelo apelido `crm-hml-app` (ligado pelo `deploy.sh`, `publica_hml`). Nunca anexe a rede `caddy-sites` pelo compose da hml: o apelido `app` vazaria tráfego da produção.
+- **e2e (decisão A-07):** só roda por disparo manual (Actions → e2e → Run workflow). Faça isso antes de entregas importantes.
+- **Sentry:** `SENTRY_DSN` no `.env` de prod e hml (do dono). Vazio = Sentry da comunidade do projeto original; `off` = desligado. Nunca deixe vazio.
+- **Custo do GitHub:** em repositório PRIVADO a cota gratuita (2.000 min/mês) acabou em 24/10 e os jobs param ("recent account payments have failed...", sem cobrança por falta de cartão). Em repositório PÚBLICO os minutos são ilimitados, mas o código e o histórico ficam visíveis a todos: nunca commite `.env`, tokens ou chaves. A sonda `infra/solucao/minutos-github.sh` mede o uso.
+- **Código na VPS:** `/opt/crm-prod` passa a seguir os commits da `main` a cada `deploy-prod` (`git checkout --detach <sha>`); não edite arquivos versionados lá.
