@@ -79,6 +79,7 @@ lib/agent-engine/golden-candidates/stage-divergence_*.json
 .claude/*
 !.claude/agents/
 !.claude/commands/
+!.claude/sdd-esteira/
 # settings.json: só o hook de início de sessão dos guias (fala apenas em clone de contribuidor)
 !.claude/settings.json
 # skills/: allowlist por PREFIXO — só as deste repo. Liberar a pasta inteira
