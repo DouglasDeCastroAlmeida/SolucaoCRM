@@ -18,12 +18,12 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Banco aditivo, marca padrão herdada e isolamento (REQ-002, REQ-003)
-- [ ] T-001 [TEST-INT] Invariante de migração: instalação nova e atualização com dados, idempotência, marca padrão com campos nulos que herda de platform_branding, organizações ligadas, imagem anterior segue funcionando (~45 min) {AC-002.2, AC-002.3, AC-002.4, AC-010.3}
-- [ ] T-002 [TEST-INT] Invariante de isolamento: 2 marcas, 2 organizações, 1 e-mail nas duas; organização comum não lê domínios nem tabelas de parceiro; admin do parceiro só alcança o parceiro dele; funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4}
-- [ ] T-003 [TEST-INT] Invariante da troca de marca de uma organização: só admin da plataforma, com linha de auditoria (~40 min) {AC-003.5}
-- [ ] T-004 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min)
-- [ ] T-005 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: partners, partner_members, brands, brand_domains, brand_plans, vertical_packs, brand_email_context, auth_hook_deliveries, organizations.brand_id, funções e políticas RLS (~60 min) {AC-002.2, AC-002.3, AC-002.4, AC-003.1, AC-003.2, AC-003.3, AC-003.4, AC-010.3} deps: T-001, T-002, T-004
-- [ ] T-006 [IMPL] RPC fn_set_org_brand (security definer, revogada de PUBLIC e anon) e ações novas em lib/audit/actions.ts (~35 min) {AC-003.5} deps: T-003, T-005
+- [x] T-001 [TEST-INT] Invariante de migração: instalação nova e atualização com dados, idempotência, marca padrão com campos nulos que herda de platform_branding, organizações ligadas, imagem anterior segue funcionando (~45 min) {AC-002.2, AC-002.3, AC-002.4, AC-010.3}
+- [x] T-002 [TEST-INT] Invariante de isolamento: 2 marcas, 2 organizações, 1 e-mail nas duas; organização comum não lê domínios nem tabelas de parceiro; admin do parceiro só alcança o parceiro dele; funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4}
+- [x] T-003 [TEST-INT] Invariante da troca de marca de uma organização: só admin da plataforma, com linha de auditoria (~40 min) {AC-003.5}
+- [x] T-004 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min)
+- [x] T-005 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: partners, partner_members, brands, brand_domains, brand_plans, vertical_packs, brand_email_context, auth_hook_deliveries, organizations.brand_id, funções e políticas RLS (~60 min) {AC-002.2, AC-002.3, AC-002.4, AC-003.1, AC-003.2, AC-003.3, AC-003.4, AC-010.3} deps: T-001, T-002, T-004
+- [x] T-006 [IMPL] RPC fn_set_org_brand (security definer, revogada de PUBLIC e anon) e ações novas em lib/audit/actions.ts (~35 min) {AC-003.5} deps: T-003, T-005
 - [ ] T-007 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-005, T-006
 
 ### Fatia 2: Resolver a marca pelo endereço, com chave de desligamento (REQ-001, REQ-002, REQ-005 parcial, REQ-010)

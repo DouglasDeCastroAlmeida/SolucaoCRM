@@ -1245,6 +1245,16 @@ export const AUDIT_ACTIONS = [
   "agenda.service_refresh",
   "agenda.service_resource",
   "agenda.service_unblock",
+  // Marcas, parceiros e domínios (mudança SDD 002).
+  "brand.created",
+  "brand.updated",
+  "brand.deactivated",
+  "brand_domain.added",
+  "brand_domain.removed",
+  "brand_plan.saved",
+  "vertical_pack.saved",
+  /** Troca de marca de uma organização (RPC `fn_set_org_brand`, só admin da plataforma). */
+  "org.brand_changed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
