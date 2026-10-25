@@ -34,6 +34,9 @@
  * dentro de `MarcaResolvida`, que é o que a tela mostra ao admin.
  */
 
+import type { Brand } from "@/lib/brands/tipos";
+
+import { camadaDaMarca } from "./camada-de-marca";
 import { REGUA_DO_PRODUTO } from "./regua-do-produto";
 import {
   camadaDaInstalacao,
@@ -93,7 +96,7 @@ export function marcaDaOrganizacaoDeSettings(settings: unknown): MarcaDaOrganiza
 }
 
 /**
- * A pilha inteira: ORGANIZAÇÃO acima, instalação no meio, `.env` embaixo.
+ * A pilha inteira: ORGANIZAÇÃO acima, MARCA, instalação no meio, `.env` embaixo.
  *
  * Precedência POR CAMPO (`primeiroDefinido`, em `resolve.ts`): a organização que
  * definiu só a cor continua com o nome E o logo do revendedor. Desde a onda do
@@ -104,10 +107,17 @@ export function resolverMarcaDaOrganizacao(
   settings: unknown,
   linha: LinhaDaInstalacao | null,
   ambiente: AmbienteDaMarca,
+  marca?: Brand | null,
 ): MarcaResolvida {
+  // Marca com `permite_personalizacao = false` vale por cima da organização
+  // (AC-005.5): a camada da organização simplesmente não entra na pilha.
+  const organizacaoPersonaliza = marca?.permite_personalizacao !== false;
   return resolverMarca(
     [
-      camadaDaOrganizacao(marcaDaOrganizacaoDeSettings(settings)),
+      ...(organizacaoPersonaliza
+        ? [camadaDaOrganizacao(marcaDaOrganizacaoDeSettings(settings))]
+        : []),
+      ...(marca ? [camadaDaMarca(marca)] : []),
       camadaDaInstalacao(linha),
       camadaDoAmbiente(ambiente),
     ],

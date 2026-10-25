@@ -634,6 +634,22 @@ const schema = z.object({
   APP_ACCENT_HEX: z.string().optional().default(""),
 
   /**
+   * Marcas por domínio (spec 002). `off` desliga a resolução da marca pelo host:
+   * o produto volta ao comportamento de antes, sem consultar `brand_domains`.
+   * Qualquer outro valor (inclusive vazio) = ligado.
+   *
+   * `z.string()` e não `z.enum`, pelo mesmo motivo de `APP_ACCENT_HEX`: valor
+   * irreconhecível não pode derrubar o import do módulo.
+   */
+  MARCAS_POR_DOMINIO: z.string().optional().default(""),
+  /** Segredo do gancho de e-mail do GoTrue (Standard Webhooks). Vazio = gancho desligado. */
+  AUTH_HOOK_SECRET: z.string().optional().default(""),
+  /** Token que o Caddy envia na pergunta `ask` do HTTPS sob demanda. Vazio = recusa tudo. */
+  TLS_ASK_TOKEN: z.string().optional().default(""),
+  /** IP público da VPS: o DNS de um domínio de marca precisa apontar para ele. */
+  VPS_PUBLIC_IP: z.string().optional().default(""),
+
+  /**
    * Com o que a instalação NASCE quanto a cadastro: `aberto` (padrão),
    * `com_aprovacao` ou `so_convite`. Vazio = `aberto`, que é como o produto
    * sempre funcionou.

@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { fetchDoServidor } from "@/lib/supabase/fetch-do-servidor";
 import { urlDoSupabaseNoServidor } from "@/lib/supabase/url-do-servidor";
 import { isPublicPath } from "@/lib/auth/public-paths";
+import { CABECALHO_BRAND_HOST, normalizarHost } from "@/lib/branding/host";
 import { CABECALHO_SEM_CSS, PARAMETRO_SEM_CSS } from "@/lib/branding/sem-css-personalizado";
 import {
   verifyImpersonateCookieEdge,
@@ -21,6 +22,13 @@ export async function proxy(request: NextRequest) {
   request.headers.set(
     CABECALHO_SEM_CSS,
     request.nextUrl.searchParams.has(PARAMETRO_SEM_CSS) ? "1" : "0",
+  );
+  // Marca por domínio: o host normalizado vai num cabeçalho para os Server
+  // Components (a consulta ao banco é do layout, Node — nunca do Edge). Sempre
+  // sobrescrito, para um `x-brand-host` forjado pelo cliente não valer.
+  request.headers.set(
+    CABECALHO_BRAND_HOST,
+    normalizarHost(request.headers.get("x-forwarded-host") ?? request.headers.get("host")),
   );
   const response = NextResponse.next({ request: { headers: request.headers } });
 

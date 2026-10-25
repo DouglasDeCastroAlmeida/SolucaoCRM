@@ -28,7 +28,7 @@ describe("marca da instalação na tela de login", () => {
 
     const html = renderToStaticMarkup(await LoginPage({ searchParams: Promise.resolve({}) }));
 
-    expect(mocks.marcaDaSaida).toHaveBeenCalledWith(null);
+    expect(mocks.marcaDaSaida).toHaveBeenCalledWith(null, expect.anything());
     expect(html).toContain(">Marca definida no painel</p>");
   });
 });

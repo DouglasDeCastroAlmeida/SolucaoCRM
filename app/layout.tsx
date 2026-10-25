@@ -21,6 +21,8 @@ import {
   resolverMarca,
   type MarcaResolvida,
 } from "@/lib/branding/resolve";
+import { camadaDaMarca } from "@/lib/branding/camada-de-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { ThemeProvider } from "@/lib/theme";
@@ -75,7 +77,13 @@ async function marcaResolvida(): Promise<{
   readonly marca: MarcaResolvida;
 }> {
   const linha = await marcaDaInstalacao();
-  const marca = resolverMarca([camadaDaInstalacao(linha), camadaDoAmbiente(env)], REGUA_DO_PRODUTO);
+  // Antes do login só a marca do endereço entra (organização > marca > plataforma > ambiente).
+  // `marcaDoPedido` nunca lança: banco fora ou chave `off` = marca padrão, toda nula.
+  const { brand } = await marcaDoPedido();
+  const marca = resolverMarca(
+    [camadaDaMarca(brand), camadaDaInstalacao(linha), camadaDoAmbiente(env)],
+    REGUA_DO_PRODUTO,
+  );
   return { linha, marca };
 }
 
@@ -222,7 +230,11 @@ async function EstiloDaMarca() {
   //
   // Sem `await`: gravar diagnóstico não pode atrasar — nem derrubar — a página
   // que o diagnóstico descreve. `registrarEstadoDaMarca` já não lança.
-  void registrarEstadoDaMarca(linha, motivoDoFallback([...marca.motivos, ...motivos]));
+  void registrarEstadoDaMarca(
+    linha,
+    // O estado gravado é o da INSTALAÇÃO: motivo da camada de marca não é dela.
+    motivoDoFallback([...marca.motivos.filter((m) => m.origem !== "marca"), ...motivos]),
+  );
 
   const avisos = [
     ...marca.motivos.map((m) => ({

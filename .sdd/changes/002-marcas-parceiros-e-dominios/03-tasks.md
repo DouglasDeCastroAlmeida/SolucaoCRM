@@ -27,14 +27,14 @@ Cada tarefa ocupa uma linha:
 - [x] T-007 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-005, T-006
 
 ### Fatia 2: Resolver a marca pelo endereço, com chave de desligamento (REQ-001, REQ-002, REQ-005 parcial, REQ-010)
-- [ ] T-008 [TEST-UNIT] Resolvedor host → marca: domínio ativo de marca ativa, host desconhecido, domínio removido, desativado ou de marca inativa (~30 min) {AC-001.1, AC-001.2, AC-001.3}
-- [ ] T-009 [TEST-UNIT] Degradação sem lançar (banco lento ou fora, cache corrompido) com motivo registrado; cache de 60 s e invalidação no CRUD (~35 min) {AC-001.4, AC-001.5}
-- [ ] T-010 [TEST-UNIT] MARCAS_POR_DOMINIO=off devolve a marca padrão sem consultar a tabela de domínios (~20 min) {AC-002.1}
-- [ ] T-011 [TEST-UNIT] Precedência organização > marca > plataforma > padrão; permite_personalizacao = false; antes do login só a marca; PDF de LGPD sem marca (~35 min) {AC-005.5, AC-005.6}
-- [ ] T-012 [TEST-UNIT] Desempenho do resolvedor (≤ 30 ms p95 com cache quente, ≤ 200 ms frio) e contraste de cor de marca pela régua existente (~30 min) {AC-010.1, AC-010.2}
-- [ ] T-013 [TEST-UNIT] Catraca de marca (tests/unit/branding.test.ts) passa a conhecer a camada de marca (~30 min) {AC-010.5}
-- [ ] T-014 [IMPL] lib/branding/marca-do-host.ts, repositório lib/brands com cliente admin, cache em memória, flag e variáveis em lib/env.ts e .env.example (~50 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.4, AC-001.5, AC-002.1} deps: T-008, T-009, T-010, T-005
-- [ ] T-015 [IMPL] Camada de marca em resolve.ts e saida.ts, header x-brand-host no proxy.ts, layout raiz e layout público usando a marca do host (~50 min) {AC-005.5, AC-005.6, AC-010.1, AC-010.2, AC-010.5} deps: T-011, T-012, T-013, T-014
+- [x] T-008 [TEST-UNIT] Resolvedor host → marca: domínio ativo de marca ativa, host desconhecido, domínio removido, desativado ou de marca inativa (~30 min) {AC-001.1, AC-001.2, AC-001.3}
+- [x] T-009 [TEST-UNIT] Degradação sem lançar (banco lento ou fora, cache corrompido) com motivo registrado; cache de 60 s e invalidação no CRUD (~35 min) {AC-001.4, AC-001.5}
+- [x] T-010 [TEST-UNIT] MARCAS_POR_DOMINIO=off devolve a marca padrão sem consultar a tabela de domínios (~20 min) {AC-002.1}
+- [x] T-011 [TEST-UNIT] Precedência organização > marca > plataforma > padrão; permite_personalizacao = false; antes do login só a marca; PDF de LGPD sem marca (~35 min) {AC-005.5, AC-005.6}
+- [x] T-012 [TEST-UNIT] Desempenho do resolvedor (≤ 30 ms p95 com cache quente, ≤ 200 ms frio) e contraste de cor de marca pela régua existente (~30 min) {AC-010.1, AC-010.2}
+- [x] T-013 [TEST-UNIT] Catraca de marca (tests/unit/branding.test.ts) passa a conhecer a camada de marca (~30 min) {AC-010.5}
+- [x] T-014 [IMPL] lib/branding/marca-do-host.ts, repositório lib/brands com cliente admin, cache em memória, flag e variáveis em lib/env.ts e .env.example (~50 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.4, AC-001.5, AC-002.1} deps: T-008, T-009, T-010, T-005
+- [x] T-015 [IMPL] Camada de marca em resolve.ts e saida.ts, header x-brand-host no proxy.ts, layout raiz e layout público usando a marca do host (~50 min) {AC-005.5, AC-005.6, AC-010.1, AC-010.2, AC-010.5} deps: T-011, T-012, T-013, T-014
 - [ ] T-016 [CHECK-SMOKE] pnpm typecheck, pnpm lint e pnpm test:unit verdes até aqui (~15 min) deps: T-015
 
 ### Fatia 3: Painel da plataforma — marcas, domínios, planos, pacotes e contas (REQ-008)

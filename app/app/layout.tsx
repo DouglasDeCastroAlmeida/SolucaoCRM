@@ -13,6 +13,7 @@ import { MfaEnrollGate } from "@/components/auth/MfaEnrollGate";
 import { cssDaMarca, ESCOPO_DA_ORGANIZACAO } from "@/lib/branding/css";
 import { cssDaExtensaoDeTema, linhaBrutaDeTema, temaAplicavel } from "@/lib/extensions/tema";
 import { marcaDaInstalacao } from "@/lib/branding/instalacao";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { resolverMarcaDaOrganizacao } from "@/lib/branding/organizacao";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -184,6 +185,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       orgRow?.settings ?? null,
       await marcaDaInstalacao(),
       env,
+      (await marcaDoPedido()).brand,
     );
 
     // SÓ quando a cor veio mesmo da organização. Se ela não configurou nada, a
