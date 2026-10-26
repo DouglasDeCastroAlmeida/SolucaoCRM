@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { verifyInviteToken } from "@/lib/auth/invite-token";
-import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
 import { createClient } from "@/lib/supabase/server";
 import { idiomaDoVisitante } from "@/lib/i18n/idiomaAnonimo";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -58,7 +58,8 @@ export default async function SignupPage({
   // O nome da marca vem do resolvedor que LÊ O BANCO (`marcaDaSaida`: banco
   // acima do `.env`, e nunca lança) — `branding()` só veria a semente do `.env`,
   // e o convite não muda isso (#2511, mesmo defeito das páginas `/legal`).
-  const marca = await marcaDaSaida(null, (await marcaDoPedido()).brand);
+  const { brand: marcaDoHost } = await marcaDoPedido();
+  const marca = await marcaDaSaida(null, marcaDoHost);
   // Com plano oferecido, o seletor aparece. O Google não leva a escolha: ele
   // some enquanto não há plano padrão — o gatilho recusaria a empresa —, e com
   // padrão a empresa dele nasce no padrão. Sem plano nenhum, nasce isenta e o
@@ -69,7 +70,8 @@ export default async function SignupPage({
   const googleSemPlano = cadastro?.exigeEscolha ?? false;
 
   // Convite VÁLIDO passa em qualquer modo — é o ponto inteiro do convite.
-  const modo = convite ? null : await modoDeCadastro();
+  // Política da instalação + chave `cadastro_aberto` da marca do endereço (REQ-005).
+  const modo = convite ? null : await modoDeCadastroDaMarca(marcaDoHost);
   const soPorConvite = modo === "so_convite";
 
   if (soPorConvite) {

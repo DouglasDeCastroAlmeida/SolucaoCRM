@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { RecoverOrganizationForm } from "@/components/auth/RecoverOrganizationForm";
 import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { estadoDoPedido } from "@/lib/auth/registration-requests";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
@@ -55,7 +57,31 @@ export default async function GetStartedPage() {
 
   // O nome em texto vem do resolvedor do BANCO (`marcaDaSaida`), não do
   // `branding()` — o banco vence e o `.env` é o piso.
-  const marca = await marcaDaSaida(null);
+  const { brand: marcaDoHost } = await marcaDoPedido();
+  const marca = await marcaDaSaida(null, marcaDoHost);
+
+  // Conta que existe mas não tem organização NESTA marca, num endereço de marca fechada:
+  // não há o que configurar aqui. A mensagem diz a verdade e não oferece formulário que
+  // só poderia recusar (e que, sem isto, parecia um beco).
+  if (!marcaDoHost.is_default && (await modoDeCadastroDaMarca(marcaDoHost)) === "so_convite") {
+    return (
+      <IdiomaProvider locale={user.idioma}>
+        <main className="bg-muted/40 flex min-h-screen items-center justify-center px-4 py-10">
+          <div className="w-full max-w-md space-y-4 rounded-lg border bg-background p-6 shadow-sm">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{marca.nome}</p>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {t("Sua conta não tem organização nesta marca")}
+            </h1>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {t(
+                "Sua conta não tem organização nesta marca. Entre pelo endereço da marca onde você já usa o sistema ou peça um convite a quem administra esta.",
+              )}
+            </p>
+          </div>
+        </main>
+      </IdiomaProvider>
+    );
+  }
 
   // Os planos do cadastro (#2846): quem chega aqui sem plano escolhido (conta
   // nova pelo Google, ou cadastro anterior à cobrança) escolhe agora. Vem

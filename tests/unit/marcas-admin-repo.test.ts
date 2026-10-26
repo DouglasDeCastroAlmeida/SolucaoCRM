@@ -19,8 +19,30 @@ const h = vi.hoisted(() => ({
 
 vi.mock("@/lib/branding/marca-do-host", () => ({ invalidarMarcaDoHost: h.invalidar }));
 vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: (t: string) => consulta(t) }),
+  createAdminClient: () => ({ from: (t: string) => consulta(t), rpc: rpcCopiarPacote }),
 }));
+
+/**
+ * Emula fn_copiar_pacote_para_org (migration 0718): UM único passo que só grava
+ * a chave quando ela ainda não existe. A atomicidade real é provada em
+ * tests/invariants/marcas-pacote-atomico.test.ts, contra o Postgres.
+ */
+async function rpcCopiarPacote(nome: string, args: { p_org_id: string; p_brand_id: string }) {
+  if (nome !== "fn_copiar_pacote_para_org") return { data: null, error: { code: "42883" } };
+  const marca = (h.tabelas.brands ?? []).find((b) => b.id === args.p_brand_id);
+  const pack = (h.tabelas.vertical_packs ?? []).find((p) => p.id === marca?.default_pack_id);
+  const org = (h.tabelas.organizations ?? []).find((o) => o.id === args.p_org_id);
+  if (!marca || !pack || pack.status !== "active" || !org) return { data: false, error: null };
+  const settings = (org.settings ?? {}) as Record<string, unknown>;
+  if ("vertical_pack" in settings) return { data: false, error: null };
+  org.settings = {
+    ...settings,
+    vertical_pack: JSON.parse(
+      JSON.stringify({ pack_id: pack.id, slug: pack.slug, version: pack.version, seed: pack.seed, copiado_em: "agora" }),
+    ),
+  };
+  return { data: true, error: null };
+}
 
 function consulta(tabela: string) {
   let op: "select" | "insert" | "update" | "delete" = "select";

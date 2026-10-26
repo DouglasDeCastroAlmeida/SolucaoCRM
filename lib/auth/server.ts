@@ -23,6 +23,8 @@ import {
 } from "@/lib/auth/politica-mfa";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
 import { STATUS_OPERANTE, ehOperante } from "@/lib/organizacao/operante";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
+import { filtrarOrgsDaMarca } from "@/lib/brands/visao";
 import type { AuthUser, Role, UserOrgMembership, ActiveOrg } from "./types";
 
 const ACTIVE_ORG_COOKIE = "active_org";
@@ -52,6 +54,8 @@ interface OrgJoin {
   country: string | null;
   status?: string;
   suspended_kind?: string | null;
+  /** Marca da organização (migration 0717); nulo = marca padrão. */
+  brand_id?: string | null;
 }
 
 /** O mesmo `organizations`, alcançado por outro embed: só as portas da EMPRESA. */
@@ -232,7 +236,7 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
           // issue #1341 acabou de engordar), e o alias traz só as portas da EMPRESA.
           // `timezone` veio do main (fuso da organização nas listas, #1290) e convive
           // com o alias: um embed por relação, sem renomear o que já existia.
-          "organization_id, role, interface_settings, accepted_at, organizations!user_organizations_organization_id_fkey(display_name, locale, timezone, currency, country, status, suspended_kind), interface_da_empresa:organizations!user_organizations_organization_id_fkey(interface_settings)",
+          "organization_id, role, interface_settings, accepted_at, organizations!user_organizations_organization_id_fkey(display_name, locale, timezone, currency, country, status, suspended_kind, brand_id), interface_da_empresa:organizations!user_organizations_organization_id_fkey(interface_settings)",
         )
         .eq("user_id", user.id)
         .is("revoked_at", null)
@@ -277,7 +281,7 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
   }
 
   const rows = (rawMemberships ?? []) as RawMembershipRow[];
-  const memberships: UserOrgMembership[] = rows.map((row) => {
+  const todasAsOrganizacoes: UserOrgMembership[] = rows.map((row) => {
     const orgs = row.organizations;
     const org = Array.isArray(orgs) ? (orgs[0] ?? null) : orgs;
     const empresas = row.interface_da_empresa;
@@ -296,7 +300,19 @@ export const loadAuthUser = cache(async (): Promise<AuthUser | null> => {
       country: org?.country ?? null,
       org_status: org?.status ?? null,
       suspended_kind: org?.suspended_kind ?? null,
+      brand_id: org?.brand_id ?? null,
     };
+  });
+
+  // VISÃO FILTRADA POR MARCA (REQ-004): a identidade é única, mas quem entra pelo
+  // endereço da marca A só vê as organizações de A. Filtrar AQUI, na origem da
+  // lista, faz o seletor, o cookie active_org e o idioma da organização ativa
+  // concordarem: um cookie que aponta para organização de outra marca não acha
+  // membro e cai na primeira da marca, sem revelar a outra. Admin da plataforma
+  // passa por todas. marcaDoPedido nunca lança.
+  const { brand: marcaDoHost } = await marcaDoPedido();
+  const memberships = filtrarOrgsDaMarca(todasAsOrganizacoes, marcaDoHost, {
+    is_platform_admin: !!paRow,
   });
 
   if (!leituraDoSuporte.ok) throw leituraDoSuporte.erro;

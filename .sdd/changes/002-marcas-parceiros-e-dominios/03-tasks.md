@@ -49,13 +49,13 @@ Cada tarefa ocupa uma linha:
 - [x] T-025 [IMPL] Páginas de /admin/marcas e item no menu do admin (components/admin/AdminShell.tsx) (~55 min) {AC-008.1, AC-008.2} deps: T-024, T-021, T-022, T-023
 
 ### Fatia 4: Cadastro, convite e visão filtrada por marca (REQ-004, REQ-005)
-- [ ] T-026 [TEST-UNIT] orgPertenceAMarca e filtro do seletor de organizações; link de organização de outra marca devolve 404 sem revelar existência (~35 min) {AC-004.1, AC-004.2}
-- [ ] T-027 [TEST-INT] Cadastro fechado responde "por convite" sem criar nada; cadastro aberto cria organização ligada à marca com planos e cópia do pacote; convite liga a marca do convite (~50 min) {AC-005.2, AC-005.3, AC-005.4}
-- [ ] T-028 [TEST-UI] Login, cadastro, recuperar senha e página de erro mostram nome, logo e cor da marca do host (~35 min) {AC-005.1}
-- [ ] T-029 [TEST-E2E] Sessão é do host: entrar na marca A e abrir a marca B pede novo login (~50 min) {AC-004.3}
-- [ ] T-030 [IMPL] Guarda orgPertenceAMarca e seletor/cookie de organização ativa filtrados pela marca (~45 min) {AC-004.1, AC-004.2} deps: T-026, T-014
-- [ ] T-031 [IMPL] signUp, convite e ensureTenantForUser ligando brand_id, honrando cadastro_aberto e copiando o pacote (~50 min) {AC-005.2, AC-005.3, AC-005.4} deps: T-027, T-022, T-030
-- [ ] T-032 [IMPL] Telas públicas com a marca do host e tela "cadastro por convite" (~40 min) {AC-005.1} deps: T-028, T-015
+- [x] T-026 [TEST-UNIT] orgPertenceAMarca e filtro do seletor de organizações; link de organização de outra marca devolve 404 sem revelar existência (~35 min) {AC-004.1, AC-004.2}
+- [x] T-027 [TEST-INT] Cadastro fechado responde "por convite" sem criar nada; cadastro aberto cria organização ligada à marca com planos e cópia do pacote; convite liga a marca do convite (~50 min) {AC-005.2, AC-005.3, AC-005.4}
+- [x] T-028 [TEST-UI] Login, cadastro, recuperar senha e página de erro mostram nome, logo e cor da marca do host (~35 min) {AC-005.1}
+- [x] T-029 [TEST-E2E] Sessão é do host: entrar na marca A e abrir a marca B pede novo login (~50 min) {AC-004.3}
+- [x] T-030 [IMPL] Guarda orgPertenceAMarca e seletor/cookie de organização ativa filtrados pela marca (~45 min) {AC-004.1, AC-004.2} deps: T-026, T-014
+- [x] T-031 [IMPL] signUp, convite e ensureTenantForUser ligando brand_id, honrando cadastro_aberto e copiando o pacote (~50 min) {AC-005.2, AC-005.3, AC-005.4} deps: T-027, T-022, T-030
+- [x] T-032 [IMPL] Telas públicas com a marca do host e tela "cadastro por convite" (~40 min) {AC-005.1} deps: T-028, T-015
 
 ### Fatia 5: E-mails de acesso com a marca (REQ-006, REQ-010)
 - [ ] T-033 [TEST-INT] Gancho de e-mail: assinatura inválida devolve 401 e não envia; reentrega com o mesmo webhook-id não duplica; sem contexto usa a marca padrão (~50 min) {AC-006.2, AC-006.5}

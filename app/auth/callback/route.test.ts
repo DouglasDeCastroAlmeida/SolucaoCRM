@@ -47,6 +47,14 @@ vi.mock("@/lib/branding/saida", () => ({
   marcaDaSaida: vi.fn(async () => ({ nome: "Central de Teste" })),
 }));
 vi.mock("@/lib/env", () => ({ env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" } }));
+// A marca do endereço (REQ-005). Por padrão, a padrão embutida.
+const marcaDoEndereco = vi.hoisted(() => ({ atual: null as unknown }));
+vi.mock("@/lib/branding/marca-do-pedido", async () => {
+  const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+  return {
+    marcaDoPedido: async () => ({ brand: marcaDoEndereco.atual ?? MARCA_PADRAO_EMBUTIDA, domainKind: "padrao" }),
+  };
+});
 
 const USUARIO = { id: "11111111-1111-4111-8111-111111111111", email: "convidado@example.com" };
 const PAYLOAD = {
@@ -109,6 +117,7 @@ async function comSupabase(c: Cenario) {
 describe("GET /auth/callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    marcaDoEndereco.atual = null;
     vi.mocked(aplicarConvite).mockResolvedValue({ ok: true, membershipId: "m1", mudou: true });
     vi.mocked(decidirConviteDoSignup).mockReturnValue({ tipo: "provisionar" });
     vi.mocked(vinculoAtivo).mockResolvedValue(null);
@@ -189,8 +198,35 @@ describe("GET /auth/callback", () => {
 
     const res = await GET(requisicao("code=abc"));
 
-    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO, { source: "signup" });
+    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO, { source: "signup", brand: expect.objectContaining({ is_default: true }) });
     expect(await destino(res)).toBe("/onboarding/welcome");
+  });
+
+  it("AC-004.1: conta só com organização na marca B abre o host da marca A (aberta): provisiona na marca A, sem loop", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    const marcaA = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-a", is_default: false, cadastro_aberto: true };
+    marcaDoEndereco.atual = marcaA;
+    // vinculoAtivo(id, marcaA) não vê a organização de B; só o vínculo sem filtro de marca a vê.
+    vi.mocked(vinculoAtivo).mockImplementation(async (_id: string, marca?: unknown) => (marca ? null : "org-b"));
+    const { GET } = await comSupabase({ troca: { data: { user: USUARIO }, error: null } });
+
+    const res = await GET(requisicao("code=abc"));
+
+    expect(vi.mocked(vinculoAtivo)).toHaveBeenCalledWith(USUARIO.id, marcaA);
+    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO, { source: "signup", brand: marcaA });
+    expect(await destino(res)).toBe("/onboarding/welcome");
+  });
+
+  it("AC-004.1: a mesma conta no host de marca fechada: aviso \"sem organização nesta marca\", nada é criado", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    marcaDoEndereco.atual = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-a", is_default: false, cadastro_aberto: false };
+    vi.mocked(vinculoAtivo).mockImplementation(async (_id: string, marca?: unknown) => (marca ? null : "org-b"));
+    const { GET } = await comSupabase({ troca: { data: { user: USUARIO }, error: null } });
+
+    const res = await GET(requisicao("code=abc"));
+
+    expect(vi.mocked(ensureTenantForUser)).not.toHaveBeenCalled();
+    expect(await destino(res)).toBe("/login?error=sem_organizacao_na_marca");
   });
 
   it("quem tem TOTP verificado não entra sem o segundo fator", async () => {

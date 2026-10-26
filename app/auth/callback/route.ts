@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureTenantForUser, vinculoAtivo } from "@/lib/auth/provision";
 import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
 import { decidirConviteDoSignup } from "@/lib/auth/convite-no-signup";
-import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { destinoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { aplicarConvite } from "@/lib/auth/aplicar-convite";
 import { respostaDePonte } from "@/lib/auth/ponte-de-volta";
 import { safeNext } from "@/lib/auth/safe-next";
@@ -160,9 +161,11 @@ export async function GET(request: NextRequest) {
   // leitura cai no mesmo `null` do primeiro acesso e o resto da rota provisiona
   // organização nova para quem já tinha uma. A sessão já está firme aqui, então
   // a saída é a tela de login com o motivo — não um 500.
+  // A marca do ENDEREÇO (REQ-004/005): só conta o vínculo de organização visível nela.
+  const { brand: marcaDoHost } = await marcaDoPedido();
   let organizacaoId: string | null;
   try {
-    organizacaoId = await vinculoAtivo(usuario.id);
+    organizacaoId = await vinculoAtivo(usuario.id, marcaDoHost);
   } catch (e) {
     await audit({
       action: "auth.google_signin_failed",
@@ -243,7 +246,8 @@ export async function GET(request: NextRequest) {
   // A trava da política de cadastro, depois de `decidirConviteDoSignup` de
   // propósito: quem tem convite válido já saiu acima, então esta guarda só
   // alcança quem chegou sem convite nenhum.
-  const modo = await modoDeCadastro();
+  const marcaDeOrigem = await marcaDeOrigemDoCadastro(usuario.user_metadata, marcaDoHost);
+  const modo = await modoDeCadastroDaMarca(marcaDeOrigem);
   if (modo === "so_convite") {
     await audit({
       action: "auth.signup_provision_recusado",
@@ -251,7 +255,7 @@ export async function GET(request: NextRequest) {
       metadata: { motivo: "somente_convite", provider: "google" },
       requestId,
     });
-    return redirectTo("/login?error=cadastro_por_convite");
+    return redirectTo(await destinoDaRecusaPorConvite(usuario.id));
   }
 
   // COM APROVAÇÃO (migration 0383): a empresa NÃO nasce aqui. O pedido é
@@ -263,7 +267,7 @@ export async function GET(request: NextRequest) {
   if (modo === "com_aprovacao") return await paraTelaAutenticada("/get-started");
 
   try {
-    await ensureTenantForUser(usuario, { source: "signup" });
+    await ensureTenantForUser(usuario, { source: "signup", brand: marcaDeOrigem });
   } catch (e) {
     await audit({
       action: "auth.signup_provision_failed",

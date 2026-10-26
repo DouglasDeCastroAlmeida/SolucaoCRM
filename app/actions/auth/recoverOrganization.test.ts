@@ -50,6 +50,13 @@ vi.mock("@/lib/auth/registration-requests", () => ({
   createRegistrationRequest: vi.fn(async () => ({ created: true, id: "pedido-1" })),
   estadoDoPedido: vi.fn(async () => null),
 }));
+const marcaDoEndereco = vi.hoisted(() => ({ atual: null as unknown }));
+vi.mock("@/lib/branding/marca-do-pedido", async () => {
+  const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+  return {
+    marcaDoPedido: async () => ({ brand: marcaDoEndereco.atual ?? MARCA_PADRAO_EMBUTIDA, domainKind: "padrao" }),
+  };
+});
 vi.mock("@/lib/audit", async (orig) => ({
   ...(await orig<Record<string, unknown>>()),
   audit: vi.fn(async () => undefined),
@@ -69,6 +76,7 @@ describe("recoverOrganization", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    marcaDoEndereco.atual = null;
     vi.mocked(headers).mockResolvedValue({
       // IP diferente por caso não é possível aqui, então o teto por IP (5) é
       // maior que o número de escritas de qualquer caso isolado.
@@ -97,6 +105,32 @@ describe("recoverOrganization", () => {
     const [usuario, opcoes] = vi.mocked(ensureTenantForUser).mock.calls[0]!;
     expect(usuario.user_metadata?.org_name).toBe("Clínica Boa Vista");
     expect(opcoes?.source).toBe("recovery");
+  });
+
+  it("AC-004.1: conta só com organização na marca B, no host da marca A aberta: cria a organização na marca A", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    const marcaA = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-a", is_default: false, cadastro_aberto: true };
+    marcaDoEndereco.atual = marcaA;
+    const { recoverOrganization } = await import("./recoverOrganization");
+
+    await expect(recoverOrganization("Empresa da Marca A")).rejects.toThrow("NEXT_REDIRECT:/onboarding/welcome");
+    expect(ensureTenantForUser).toHaveBeenCalledWith(expect.anything(), { source: "recovery", brand: marcaA });
+  });
+
+  it("AC-004.1: a mesma conta no host de marca fechada: recusa por convite e nada é criado", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    marcaDoEndereco.atual = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-a", is_default: false, cadastro_aberto: false };
+    const { recoverOrganization } = await import("./recoverOrganization");
+
+    expect(await recoverOrganization("Empresa da Marca A")).toEqual({ ok: false, error: "somente_convite" });
+    expect(ensureTenantForUser).not.toHaveBeenCalled();
+  });
+
+  it("AC-004.1: se o provisionamento não criou nada, não redireciona ao onboarding (sem loop)", async () => {
+    vi.mocked(ensureTenantForUser).mockResolvedValue({ provisioned: false, organizationId: "org-b" } as never);
+    const { recoverOrganization } = await import("./recoverOrganization");
+
+    expect(await recoverOrganization("Qualquer")).toEqual({ ok: false, error: "provision_failed" });
   });
 
   it("⭐ quem JÁ tem organização não ganha uma segunda", async () => {
@@ -239,6 +273,7 @@ describe("recoverOrganization — instalação que só aceita convidados", () =>
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    marcaDoEndereco.atual = null;
     vi.mocked(headers).mockResolvedValue({
       get: (k: string) => (k === "x-forwarded-for" ? "203.0.113.43" : null),
     } as never);
@@ -290,6 +325,7 @@ describe("recoverOrganization — instalação com aprovação", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    marcaDoEndereco.atual = null;
     vi.mocked(headers).mockResolvedValue({
       get: (k: string) => (k === "x-forwarded-for" ? "203.0.113.44" : null),
     } as never);

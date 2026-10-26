@@ -93,6 +93,8 @@ export type VisibilityMode = "all" | "own_and_unassigned" | "own";
 export const DEFAULT_VISIBILITY_MODE: VisibilityMode = "own_and_unassigned"; // G1-06a
 
 export interface UserOrgMembership {
+  /** Marca da organização (`organizations.brand_id`); nulo = marca padrão. */
+  brand_id?: string | null;
   interface_settings?: InterfaceSettings;
   organization_id: string;
   organization_name: string;

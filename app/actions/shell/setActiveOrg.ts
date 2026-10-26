@@ -12,6 +12,12 @@ export async function setActiveOrg(orgId: string): Promise<{ ok: boolean; error?
   if (!user) return { ok: false, error: "auth_required" };
   if (user.support) return { ok: false, error: "Encerre o acompanhamento antes de trocar de organização." };
   if (await mfaEmDivida()) return { ok: false, error: "mfa_required" };
+  // Visão filtrada por marca (AC-004.2): `user.organizations` já vem só com as
+  // organizações da marca do host. Organização de outra marca recebe a MESMA
+  // recusa de uma que não existe, para não revelar que ela existe.
+  if (!user.organizations.some((o) => o.organization_id === orgId)) {
+    return { ok: false, error: "forbidden" };
+  }
   // Consulta fresca: não usa status de membership serializado no browser.
   const db = await createClient();
   const { data: membership, error } = await db.from("user_organizations")

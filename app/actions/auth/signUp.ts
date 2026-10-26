@@ -15,7 +15,9 @@ import {
 } from "@/lib/auth/schemas";
 import { verifyInviteToken } from "@/lib/auth/invite-token";
 import { criarContaDeConvite, lerConfigPublicaDoGoTrue } from "@/lib/auth/convite-no-gotrue";
-import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
+import { MARCA_PADRAO_EMBUTIDA } from "@/lib/brands/tipos";
 import { audit, hashEmail } from "@/lib/audit";
 import { authRateLimited, AUTH_LIMITS } from "@/lib/auth/rate-limit";
 import { env } from "@/lib/env";
@@ -133,7 +135,11 @@ export async function signUp(
   // direto, e sem esta guarda o modo `so_convite` seria decoração. A ordem
   // importa — só se pergunta a política DEPOIS de o convite ter sido validado
   // acima, senão um convite legítimo seria barrado.
-  if (convite === null && (await modoDeCadastro()) === "so_convite") {
+  // A marca do ENDEREÇO também decide (REQ-005): marca de vertical nasce com
+  // `cadastro_aberto = false`, e aí só entra quem tem convite. Marca padrão segue
+  // só a política da instalação.
+  const { brand: marcaDoHost } = await marcaDoPedido();
+  if (convite === null && (await modoDeCadastroDaMarca(marcaDoHost)) === "so_convite") {
     await audit({
       action: "auth.signup_failed",
       metadata: { email_hash: hashEmail(parsed.data.email), reason: "somente_convite" },
@@ -238,7 +244,11 @@ export async function signUp(
             invite_token: convite,
             full_name: (parsed.data as SignupComConviteInput).full_name,
           }
-        : { org_name: (parsed.data as SignupInput).org_name, ...(planoEscolhido ? { cobranca_plan_id: planoEscolhido } : {}) },
+        : {
+            org_name: (parsed.data as SignupInput).org_name,
+            // A marca em que o cadastro foi iniciado: /auth/confirm a prefere ao host do link.
+            ...(marcaDoHost.id !== MARCA_PADRAO_EMBUTIDA.id ? { brand_id: marcaDoHost.id } : {}),
+            ...(planoEscolhido ? { cobranca_plan_id: planoEscolhido } : {}) },
     },
   });
 
