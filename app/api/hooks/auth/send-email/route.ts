@@ -13,6 +13,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
+import type { AuditAction } from "@/lib/audit/actions";
 import { lerCorpoLimitado } from "@/lib/auth/gancho-de-email/corpo-limitado";
 import { processarGanchoDeEmail } from "@/lib/auth/gancho-de-email/processar";
 import { repositorioDoGancho } from "@/lib/auth/gancho-de-email/repositorio";
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       marcaDeSaida: marcaDeSaidaDaMarca,
       enviar: sendEmail,
       reportar,
-      auditar: (entrada) => audit({ ...entrada, requestId: request.headers.get("x-request-id") }),
+      auditar: (entrada) => audit({ ...entrada, action: entrada.action as AuditAction, requestId: request.headers.get("x-request-id") }),
     },
   );
   return NextResponse.json(resposta.corpo, { status: resposta.status });
