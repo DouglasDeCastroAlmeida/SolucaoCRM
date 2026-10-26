@@ -1,0 +1,32 @@
+# HTTPS sob demanda para domínios de marcas (REQ-007) — MODELO, não é lido pelo Caddy.
+#
+# O Caddy só importa arquivos terminados em .caddy; este termina em .exemplo e
+# por isso NÃO publica nada. Só ative DEPOIS de a prova da homologação estar
+# registrada (AC-007.6), e só na VPS que deve atender domínios de marcas:
+#
+#   cp caddy-sites/marcas.caddy.exemplo caddy-sites/marcas.caddy
+#   (coloque TLS_ASK_TOKEN no .env, o mesmo valor que o app lê, e recrie o caddy)
+#
+# Antes de emitir cada certificado, o Caddy pergunta ao app (`on_demand_tls { ask }`
+# do Caddyfile). O app só diz "sim" para domínio ativo de marca ativa cujo DNS
+# aponta para esta VPS (VPS_PUBLIC_IP), com limite de emissões por hora.
+#
+# "https://" sem nome casa qualquer host que chegue; quem decide se o certificado
+# é emitido é o `ask`, e o app descobre a marca pelo host.
+
+https:// {
+	tls {
+		on_demand
+	}
+	encode gzip
+
+	route {
+		@interno path /api/internal/*
+		respond @interno 404
+
+		@waha_global path /api/v1/webhooks/waha
+		respond @waha_global 403
+
+		reverse_proxy app:3000
+	}
+}
