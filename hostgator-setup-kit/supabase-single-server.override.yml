@@ -86,6 +86,17 @@ services:
       GOTRUE_MAILER_TEMPLATES_CONFIRMATION: "${GOTRUE_MAILER_TEMPLATES_CONFIRMATION:-}"
       GOTRUE_MAILER_TEMPLATES_RECOVERY: "${GOTRUE_MAILER_TEMPLATES_RECOVERY:-}"
 
+      # REQ-006 — gancho "Send Email": com ele ligado o GoTrue deixa de enviar o
+      # e-mail de acesso e chama o app (`/api/hooks/auth/send-email`, assinado),
+      # que monta o e-mail com a marca do endereço. Os três valores moram no
+      # `.env` do Supabase; o segredo (formato do Supabase, prefixo `v1,`) é o MESMO `AUTH_HOOK_SECRET`
+      # do `.env` do app. Padrões desligados e vazios: um `.env` antigo continua
+      # válido e o GoTrue segue com o SMTP/molde de sempre. URI sugerida na rede
+      # privada: `http://app:3000/api/hooks/auth/send-email`.
+      GOTRUE_HOOK_SEND_EMAIL_ENABLED: "${GOTRUE_HOOK_SEND_EMAIL_ENABLED:-false}"
+      GOTRUE_HOOK_SEND_EMAIL_URI: "${GOTRUE_HOOK_SEND_EMAIL_URI:-}"
+      GOTRUE_HOOK_SEND_EMAIL_SECRETS: "${GOTRUE_HOOK_SEND_EMAIL_SECRETS:-}"
+
     # O Auth busca os modelos no app. No modo single-server, o app está na
     # rede privada `deskcomm_private`; sem esta ligação, a URL pública pode
     # dar timeout quando a VPS usa Traefik externo (hairpin inexistente).

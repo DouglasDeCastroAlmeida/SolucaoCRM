@@ -9852,6 +9852,12 @@ export const DICIONARIO: Traducoes = {
   "Não conseguimos enviar o e-mail de confirmação, porque o envio de e-mails desta instalação não está configurado. Tentar de novo não resolve: avise quem administra o sistema.": {
     es: "No pudimos enviar el correo de confirmación, porque el envío de correos de esta instalación no está configurado. Intentarlo de nuevo no lo resuelve: avisa a quien administra el sistema.",
   },
+  "Não conseguimos enviar o e-mail agora. Tente de novo em instantes.": {
+    es: "No pudimos enviar el correo ahora. Inténtalo de nuevo en unos instantes.",
+  },
+  "Já enviamos um e-mail há instantes. Aguarde cerca de um minuto antes de pedir outro.": {
+    es: "Ya enviamos un correo hace unos instantes. Espera cerca de un minuto antes de pedir otro.",
+  },
   "Esta instalação aceita cadastro apenas por convite. Se você foi convidado, use o link que chegou no seu e-mail.": {
     es: "Esta instalación solo permite el registro por invitación. Si te invitaron, usa el enlace que llegó a tu correo.",
   },

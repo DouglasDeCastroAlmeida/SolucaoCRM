@@ -111,4 +111,11 @@ describe("isPublicPath", () => {
   it("e não libera nenhum sub-path dela de carona", () => {
     expect(isPublicPath("/account-suspended/qualquer")).toBe(false);
   });
+
+  it("AC-006.2: libera o gancho de e-mail do GoTrue (assinado, sem cookie), e nenhum sub-path", () => {
+    expect(isPublicPath("/api/hooks/auth/send-email")).toBe(true);
+    expect(isPublicPath("/api/hooks/auth/send-email/x")).toBe(false);
+    expect(isPublicPath("/api/hooks/auth")).toBe(false);
+    expect(isPublicPath("/api/hooks")).toBe(false);
+  });
 });

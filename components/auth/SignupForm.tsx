@@ -147,6 +147,10 @@ export function SignupForm({
             "Esta instalação aceita cadastro apenas por convite. Se você foi convidado, use o link que chegou no seu e-mail.",
           ),
         );
+      } else if (res.error === "email_nao_enviado") {
+        setServerError(t("Não conseguimos enviar o e-mail agora. Tente de novo em instantes."));
+      } else if (res.error === "reenvio_bloqueado") {
+        setServerError(t("Já enviamos um e-mail há instantes. Aguarde cerca de um minuto antes de pedir outro."));
       } else if (res.error === "email_indisponivel") {
         // Sem "Tente novamente": o e-mail de confirmação não sai enquanto a
         // instalação não tiver e-mail configurado, e só quem administra resolve.

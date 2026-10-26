@@ -77,6 +77,11 @@ export const PUBLIC_PATHS: RegExp[] = [
   /^\/api\/v1\/plataformas-de-anuncio\/google\/callback$/,
   /^\/api\/v1\/integrations\/nuvemshop\/callback$/,
   /^\/api\/internal\//,
+  // GANCHO "Send Email" DO GOTRUE (REQ-006). Quem chama é o GoTrue, sem cookie;
+  // a autenticação é a assinatura Standard Webhooks, verificada DENTRO da rota
+  // (`app/api/hooks/auth/send-email`) antes de qualquer efeito. "Público" aqui
+  // quer dizer "o proxy não decide". Âncora `$`: nenhum sub-path nasce de carona.
+  /^\/api\/hooks\/auth\/send-email$/,
   /^\/api\/mcp(\/.*)?$/,
   // GET /api/v1/contacts aceita SESSÃO ou Bearer `dsk_...` (api_tokens) — a
   // MESMA dualidade de `/api/mcp` acima. Sem esta entrada, o proxy responde
