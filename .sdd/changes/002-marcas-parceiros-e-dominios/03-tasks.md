@@ -67,10 +67,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-039 [IMPL] Override do kit com as variáveis do gancho, AUTH_HOOK_SECRET em lib/env.ts e documentação da configuração no Supabase Cloud (~35 min) {AC-010.4} deps: T-036
 
 ### Fatia 6: HTTPS sob demanda controlado (REQ-007)
-- [ ] T-040 [TEST-INT] Rota tls-ask: sim só para domínio ativo de marca ativa com DNS na VPS; não para desconhecido, inativo, removido, marca inativa, sem DNS, sem token, com x-forwarded-for ou acima do limite por hora (~55 min) {AC-007.1, AC-007.2, AC-007.3, AC-007.4, AC-007.5}
-- [ ] T-041 [TEST-INT] Teste shell dos Caddyfiles: on_demand_tls com ask global, /api/internal/* bloqueado ao público, site com on_demand só via caddy-sites/marcas.caddy (opt-in) e ausente na produção (~45 min) {AC-007.6}
-- [ ] T-042 [IMPL] Rota /api/internal/tls-ask com token em tempo constante, conferência de DNS e limite por hora (~45 min) {AC-007.1, AC-007.2, AC-007.3, AC-007.4, AC-007.5} deps: T-040, T-014
-- [ ] T-043 [IMPL] Caddyfile e Caddyfile.single-server (ask global e bloqueio público), caddy-sites/marcas.caddy.exemplo e entradas em public-paths.ts (~40 min) {AC-007.6} deps: T-041, T-042
+- [x] T-040 [TEST-INT] Rota tls-ask: sim só para domínio ativo de marca ativa com DNS na VPS; não para desconhecido, inativo, removido, marca inativa, sem DNS, sem token, com x-forwarded-for ou acima do limite por hora (~55 min) {AC-007.1, AC-007.2, AC-007.3, AC-007.4, AC-007.5}
+- [x] T-041 [TEST-INT] Teste shell dos Caddyfiles: on_demand_tls com ask global, /api/internal/* bloqueado ao público, site com on_demand só via caddy-sites/marcas.caddy (opt-in) e ausente na produção (~45 min) {AC-007.6}
+- [x] T-042 [IMPL] Rota /api/internal/tls-ask com token em tempo constante, conferência de DNS e limite por hora (~45 min) {AC-007.1, AC-007.2, AC-007.3, AC-007.4, AC-007.5} deps: T-040, T-014
+- [x] T-043 [IMPL] Caddyfile e Caddyfile.single-server (ask global e bloqueio público), caddy-sites/marcas.caddy.exemplo e entradas em public-paths.ts (~40 min) {AC-007.6} deps: T-041, T-042
 
 ### Fatia 7: Prova pela tela e liberação segura (REQ-009, REQ-002)
 - [ ] T-044 [TEST-E2E] marcas.spec.ts em ambiente fresco: três hosts mostram login com a marca certa e e-mail capturado com o link no mesmo host (~60 min) {AC-009.1}

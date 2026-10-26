@@ -3,6 +3,13 @@
 
 {
 	email {$ACME_EMAIL}
+
+	# HTTPS sob demanda (REQ-007): só PERGUNTA ao app antes de emitir. Sozinho é
+	# inofensivo: nenhum site daqui usa `tls { on_demand }`; isso só existe em
+	# caddy-sites/marcas.caddy (opt-in do operador, ausente por padrão).
+	on_demand_tls {
+		ask http://app:3000/api/internal/tls-ask?token={$TLS_ASK_TOKEN}
+	}
 }
 
 {$DOMAIN} {
@@ -28,6 +35,11 @@
 		# continua pública — é a variante canônica para essa topologia.
 		@waha_global path /api/v1/webhooks/waha
 		respond @waha_global 403
+
+		# Rotas internas (ex.: o `ask` do HTTPS sob demanda) nunca saem para a internet;
+		# o Caddy fala com elas direto em app:3000, sem passar por este site.
+		@interno path /api/internal/*
+		respond @interno 404
 
 		# Todo o resto do app.
 		reverse_proxy app:3000

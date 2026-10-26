@@ -446,6 +446,9 @@ services:
     environment:
       DOMAIN: ${DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL}
+      # Segredo do `ask` do HTTPS sob demanda (inofensivo vazio: só vale com o
+      # site opt-in caddy-sites/marcas.caddy). Default vazio não quebra .env antigo.
+      TLS_ASK_TOKEN: ${TLS_ASK_TOKEN:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Ponto de extensão (#2724): arquivos .caddy soltos nesta pasta local são

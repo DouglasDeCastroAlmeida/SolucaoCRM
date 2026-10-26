@@ -4,6 +4,12 @@
 
 {
 	email {$ACME_EMAIL}
+
+	# HTTPS sob demanda (REQ-007): só PERGUNTA ao app antes de emitir. Inofensivo
+	# sozinho; o site com `tls { on_demand }` só vem de caddy-sites/marcas.caddy.
+	on_demand_tls {
+		ask http://app:3000/api/internal/tls-ask?token={$TLS_ASK_TOKEN}
+	}
 }
 
 {$DOMAIN} {
@@ -13,6 +19,10 @@
 		# O webhook global do WAHA só pode ser chamado pela rede interna.
 		@waha_global path /api/v1/webhooks/waha
 		respond @waha_global 403
+
+		# Rotas internas (ex.: o `ask` do HTTPS sob demanda) nunca saem para a internet.
+		@interno path /api/internal/*
+		respond @interno 404
 
 		# Superfícies públicas necessárias aos SDKs Supabase no navegador.
 		@supabase path /auth/v1* /rest/v1* /realtime/v1* /storage/v1* /functions/v1* /graphql/v1*
