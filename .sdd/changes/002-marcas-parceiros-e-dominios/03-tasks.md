@@ -35,18 +35,18 @@ Cada tarefa ocupa uma linha:
 - [x] T-013 [TEST-UNIT] Catraca de marca (tests/unit/branding.test.ts) passa a conhecer a camada de marca (~30 min) {AC-010.5}
 - [x] T-014 [IMPL] lib/branding/marca-do-host.ts, repositório lib/brands com cliente admin, cache em memória, flag e variáveis em lib/env.ts e .env.example (~50 min) {AC-001.1, AC-001.2, AC-001.3, AC-001.4, AC-001.5, AC-002.1} deps: T-008, T-009, T-010, T-005
 - [x] T-015 [IMPL] Camada de marca em resolve.ts e saida.ts, header x-brand-host no proxy.ts, layout raiz e layout público usando a marca do host (~50 min) {AC-005.5, AC-005.6, AC-010.1, AC-010.2, AC-010.5} deps: T-011, T-012, T-013, T-014
-- [ ] T-016 [CHECK-SMOKE] pnpm typecheck, pnpm lint e pnpm test:unit verdes até aqui (~15 min) deps: T-015
+- [x] T-016 [CHECK-SMOKE] pnpm typecheck, pnpm lint e pnpm test:unit verdes até aqui (~15 min) deps: T-015
 
 ### Fatia 3: Painel da plataforma — marcas, domínios, planos, pacotes e contas (REQ-008)
-- [ ] T-017 [TEST-INT] Rotas admin de marcas: criar, editar, desativar; 403 para quem não é admin da plataforma; auditoria e requireSupportWrite em toda mutação (~50 min) {AC-008.1, AC-008.6, AC-008.7}
-- [ ] T-018 [TEST-INT] Domínios: duplicado devolve 409 e repetir o clique não duplica; planos por marca sem acionar cobrança (~40 min) {AC-008.2, AC-008.3}
-- [ ] T-019 [TEST-INT] Pacotes verticais: cópia na criação da organização e independência nos dois sentidos (~45 min) {AC-008.4}
-- [ ] T-020 [TEST-INT] Lista de todas as contas com a marca de cada uma e acesso de suporte (impersonar) com guarda de efeito e auditoria (~40 min) {AC-008.5}
-- [ ] T-021 [IMPL] API admin de marcas e domínios (app/api/v1/admin/brands) com invalidação do cache (~55 min) {AC-008.1, AC-008.2, AC-008.6, AC-008.7} deps: T-017, T-018, T-014
-- [ ] T-022 [IMPL] API admin de planos e pacotes e função de cópia do pacote para a organização (~50 min) {AC-008.3, AC-008.4} deps: T-018, T-019, T-021
-- [ ] T-023 [IMPL] Lista de contas por marca e troca de marca da organização pela RPC (~35 min) {AC-008.5, AC-003.5} deps: T-020, T-006, T-021
-- [ ] T-024 [TEST-UI] Telas /admin/marcas (lista, formulário, domínios, planos) com Testing Library e verificação de acessibilidade (~45 min) {AC-008.1, AC-008.2}
-- [ ] T-025 [IMPL] Páginas de /admin/marcas e item no menu do admin (components/admin/AdminShell.tsx) (~55 min) {AC-008.1, AC-008.2} deps: T-024, T-021, T-022, T-023
+- [x] T-017 [TEST-INT] Rotas admin de marcas: criar, editar, desativar; 403 para quem não é admin da plataforma; auditoria e requireSupportWrite em toda mutação (~50 min) {AC-008.1, AC-008.6, AC-008.7}
+- [x] T-018 [TEST-INT] Domínios: duplicado devolve 409 e repetir o clique não duplica; planos por marca sem acionar cobrança (~40 min) {AC-008.2, AC-008.3}
+- [x] T-019 [TEST-INT] Pacotes verticais: cópia na criação da organização e independência nos dois sentidos (~45 min) {AC-008.4}
+- [x] T-020 [TEST-INT] Lista de todas as contas com a marca de cada uma e acesso de suporte (impersonar) com guarda de efeito e auditoria (~40 min) {AC-008.5}
+- [x] T-021 [IMPL] API admin de marcas e domínios (app/api/v1/admin/brands) com invalidação do cache (~55 min) {AC-008.1, AC-008.2, AC-008.6, AC-008.7} deps: T-017, T-018, T-014
+- [x] T-022 [IMPL] API admin de planos e pacotes e função de cópia do pacote para a organização (~50 min) {AC-008.3, AC-008.4} deps: T-018, T-019, T-021
+- [x] T-023 [IMPL] Lista de contas por marca e troca de marca da organização pela RPC (~35 min) {AC-008.5, AC-003.5} deps: T-020, T-006, T-021
+- [x] T-024 [TEST-UI] Telas /admin/marcas (lista, formulário, domínios, planos) com Testing Library e verificação de acessibilidade (~45 min) {AC-008.1, AC-008.2}
+- [x] T-025 [IMPL] Páginas de /admin/marcas e item no menu do admin (components/admin/AdminShell.tsx) (~55 min) {AC-008.1, AC-008.2} deps: T-024, T-021, T-022, T-023
 
 ### Fatia 4: Cadastro, convite e visão filtrada por marca (REQ-004, REQ-005)
 - [ ] T-026 [TEST-UNIT] orgPertenceAMarca e filtro do seletor de organizações; link de organização de outra marca devolve 404 sem revelar existência (~35 min) {AC-004.1, AC-004.2}
