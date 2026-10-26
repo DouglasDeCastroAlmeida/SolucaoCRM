@@ -31,11 +31,11 @@ function admin() {
   return createClient(c.url, c.serviceRole, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
-async function semErro<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>, onde: string): Promise<NonNullable<T>> {
+async function semErro(p: PromiseLike<{ data: unknown; error: { message: string } | null }>, onde: string): Promise<{ id: string }> {
   const { data, error } = await p;
   if (error) throw new Error(`${onde}: ${error.message}`);
-  if (data === null) throw new Error(`${onde}: nenhuma linha devolvida`);
-  return data as NonNullable<T>;
+  if (data === null || data === undefined) throw new Error(`${onde}: nenhuma linha devolvida`);
+  return data as { id: string };
 }
 
 async function semear(): Promise<void> {
