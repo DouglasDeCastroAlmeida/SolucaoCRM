@@ -1298,6 +1298,12 @@ jobs:
       # e2e disparado a mão); a receita é `pnpm e2e:env` + `pnpm playwright test
       # tests/e2e/marcas-sessao-por-host.spec.ts`.
       #
+      # `marcas` (SP1, mudança 002, T-044: três hosts com a marca certa e o e-mail do gancho com o
+      # link no mesmo host) está fora pelo mesmo motivo: escrita sem poder rodar na máquina do
+      # autor, ainda não medida. Pede o app com a Resend apontada a um receiver local e o
+      # `AUTH_HOOK_SECRET` de teste (cabeçalho da spec). Sobe para uma `SPECS_PARTE_*` depois de
+      # passar uma vez a mão (T-050).
+      #
       # A `vps-fresh-onboarding` saiu desta lista no PR da issue #179 (a infra
       # dela está no `SPECS_PARTE_4` logo acima). As de baixo continuam fora, e
       # o motivo de cada uma está escrito neste arquivo — no topo do workflow ou
@@ -1332,6 +1338,7 @@ jobs:
       FORA_DO_CI: >-
         cadastro-sem-confirmacao-de-email.spec.ts
         marcas-sessao-por-host.spec.ts
+        marcas.spec.ts
         aviso-de-caso-chega-no-whatsapp.spec.ts
         jev-chave-real.spec.ts
         modelos-do-parceiro-editar-apagar.spec.ts

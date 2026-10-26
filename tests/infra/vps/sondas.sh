@@ -206,7 +206,85 @@ sonda_monitor() {
   grep -q "Root cause: 502" "$EVID_DIR/monitor.txt" 2>/dev/null && pass "AC-011.1: o alerta de queda chegou ao celular do dono (docs/.../monitor.txt)" || fail "AC-011.1: falta a evidência do alerta em monitor.txt"
 }
 
-[ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev)"; exit 2; }
+# --- Mudança 002 (T-046): marcas por domínio. DESLIGADAS por padrão: PULAM sem as variáveis ----------
+# Variáveis (hosts de TESTE, nunca de cliente): MARCAS_HOST_A/B/C = três endereços com marcas distintas;
+# MARCAS_NOME_A/B/C = o nome (app_name) que o login de cada um deve mostrar; MARCAS_HOST_REMOVIDO = um
+# domínio que já esteve ligado a uma marca e foi removido (volta à marca padrão e NÃO tem certificado);
+# MARCAS_NOME_PADRAO = o nome da marca padrão; MARCAS_URL_BASE = endereço da instalação (padrão
+# https://app.$DOMINIO_CRM); MARCAS_PASTA_APP (padrão /opt/crm-hml) = pasta do compose onde o rollback é
+# exercitado. A sonda de rollback só roda com MARCAS_ROLLBACK=sim (ela ALTERA o .env e recria o app).
+# A evidência vai para evidencias/002-marcas/ (ou EVID_MARCAS_DIR).
+dir_marcas() { EVID_DIR="${EVID_MARCAS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/docs/solucao-crm/evidencias/002-marcas}"; mkdir -p "$EVID_DIR"; }
+pula() { printf '  PULA  %s\n' "$1"; }
+login_de() { curl -s --max-time 20 "https://$1/login"; } # login_de <host>: HTML do /login daquele endereço
+
+sonda_marcas_login() {
+  echo "== marcas: três endereços, três logins (AC-005.1)"
+  if [ -z "${MARCAS_HOST_A:-}" ] || [ -z "${MARCAS_HOST_B:-}" ] || [ -z "${MARCAS_HOST_C:-}" ] \
+     || [ -z "${MARCAS_NOME_A:-}" ] || [ -z "${MARCAS_NOME_B:-}" ] || [ -z "${MARCAS_NOME_C:-}" ]; then
+    pula "defina MARCAS_HOST_A/B/C e MARCAS_NOME_A/B/C (hosts de teste e o nome que cada login deve mostrar)"
+    return
+  fi
+  dir_marcas
+  local l o h n html saida=""
+  for l in A B C; do
+    eval "h=\${MARCAS_HOST_$l}; n=\${MARCAS_NOME_$l}"
+    html="$(login_de "$h")"
+    if printf '%s' "$html" | grep -qF "$n"; then pass "AC-005.1: $h mostra a marca \"$n\""; else fail "AC-005.1: $h NÃO mostra \"$n\""; fi
+    for o in A B C; do
+      [ "$o" = "$l" ] && continue
+      eval "n=\${MARCAS_NOME_$o}"
+      if printf '%s' "$html" | grep -qF "$n"; then fail "AC-005.1: $h mostra o nome da outra marca \"$n\""; fi
+    done
+    saida="$saida $h=$(printf '%s' "$html" | wc -c)bytes"
+  done
+  printf 'logins:%s\n' "$saida" | registra marcas-login.txt
+}
+
+sonda_marcas_removido() {
+  echo "== marcas: domínio removido volta à marca padrão, sem certificado"
+  if [ -z "${MARCAS_HOST_REMOVIDO:-}" ] || [ -z "${MARCAS_NOME_PADRAO:-}" ]; then
+    pula "defina MARCAS_HOST_REMOVIDO e MARCAS_NOME_PADRAO"
+    return
+  fi
+  dir_marcas
+  local h="$MARCAS_HOST_REMOVIDO" base="${MARCAS_URL_BASE:-https://app.${DOMINIO_CRM:-corretora.io}}" html
+  # Sem certificado: o HTTPS com verificação para esse nome tem de falhar (o Caddy recusa emitir).
+  if curl -s -o /dev/null --max-time 20 "https://$h/login"; then
+    fail "$h respondeu por HTTPS com certificado válido depois de removido"
+  else
+    pass "$h não tem certificado válido (HTTPS recusado)"
+  fi
+  # Marca padrão: o mesmo caminho pelo endereço da instalação.
+  html="$(curl -s --max-time 20 "$base/login")"
+  if printf '%s' "$html" | grep -qF "$MARCAS_NOME_PADRAO"; then pass "o login da instalação mostra a marca padrão \"$MARCAS_NOME_PADRAO\""; else fail "o login da instalação não mostra a marca padrão"; fi
+  printf 'host_removido=%s certificado=recusado login_padrao=conferido\n' "$h" | registra marcas-removido.txt
+}
+
+sonda_marcas_rollback() {
+  echo "== marcas: MARCAS_POR_DOMINIO=off + recriar só o app em < 2 min"
+  if [ "${MARCAS_ROLLBACK:-}" != "sim" ] || [ -z "${MARCAS_HOST_A:-}" ] || [ -z "${MARCAS_NOME_PADRAO:-}" ]; then
+    pula "defina MARCAS_ROLLBACK=sim, MARCAS_HOST_A e MARCAS_NOME_PADRAO (esta sonda ALTERA o .env e recria o app da pasta de teste)"
+    return
+  fi
+  dir_marcas
+  local pasta="${MARCAS_PASTA_APP:-/opt/crm-hml}" ini seg html=""
+  ini="$(date +%s)"
+  rssh "cd $pasta && cp .env .env.antes-marcas && { grep -q '^MARCAS_POR_DOMINIO=' .env && sed -i 's/^MARCAS_POR_DOMINIO=.*/MARCAS_POR_DOMINIO=off/' .env || echo 'MARCAS_POR_DOMINIO=off' >> .env; } \
+    && docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d --no-deps --force-recreate app" >/dev/null 2>&1 \
+    || { fail "não consegui recriar o app com MARCAS_POR_DOMINIO=off"; return; }
+  seg=0
+  until printf '%s' "$html" | grep -qF "$MARCAS_NOME_PADRAO"; do
+    seg=$(( $(date +%s) - ini ))
+    [ "$seg" -gt 120 ] && break
+    html="$(login_de "$MARCAS_HOST_A")"; sleep 3
+  done
+  seg=$(( $(date +%s) - ini ))
+  [ "$seg" -le 120 ] && pass "com MARCAS_POR_DOMINIO=off o login volta à marca padrão em ${seg}s (limite 120 s)" || fail "levou ${seg}s (limite 120 s)"
+  printf 'rollback_segundos=%s pasta=%s (o .env anterior ficou em .env.antes-marcas na VPS: restaure à mão para religar)\n' "$seg" "$pasta" | registra marcas-rollback.txt
+}
+
+[ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev marcas-login marcas-removido marcas-rollback)"; exit 2; }
 for s in "$@"; do
   fn="sonda_${s//-/_}"
   if declare -F "$fn" >/dev/null; then "$fn"; else echo "sonda desconhecida: $s"; falhas=$((falhas + 1)); fi
