@@ -21,6 +21,8 @@ import { MARCA_PADRAO_EMBUTIDA } from "@/lib/brands/tipos";
 import { audit, hashEmail } from "@/lib/audit";
 import { authRateLimited, AUTH_LIMITS } from "@/lib/auth/rate-limit";
 import { env } from "@/lib/env";
+import { reservarEnvioDeAcesso } from "@/lib/auth/contexto-de-email";
+import { MENSAGEM_DE_FALHA_DO_GANCHO } from "@/lib/auth/gancho-de-email/processar";
 
 export type SignUpResult =
   | {
@@ -67,7 +69,11 @@ export type SignUpResult =
         | "signup_failed"
         | "somente_convite"
         | "conta_ja_existe"
-        | "email_indisponivel";
+        | "email_indisponivel"
+        /** O gancho de e-mail falhou ao enviar: vale tentar de novo em instantes. */
+        | "email_nao_enviado"
+        /** Outro pedido igual saiu há menos de 60 s. */
+        | "reenvio_bloqueado";
       details?: Record<string, unknown>;
     };
 
@@ -223,6 +229,13 @@ export async function signUp(
     return { ok: true, sessao_ativa: criada.sessao_ativa };
   }
 
+  // REQ-006: contexto da marca + trava de reenvio (60 s) ANTES de pedir o e-mail.
+  if (env.AUTH_HOOK_SECRET) {
+    if ((await reservarEnvioDeAcesso({ email: parsed.data.email, acao: "signup", brandId: marcaDoHost.id })) === "travado") {
+      return { ok: false, error: "reenvio_bloqueado" };
+    }
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -303,6 +316,7 @@ export async function signUp(
     // confirmation email", e a tela mandava "Tente novamente" — seis vezes na
     // trilha, nenhuma podia dar certo. Não fura a anti-enumeração: conta que já
     // existe recebe sucesso ofuscado sem e-mail, então nunca chega aqui.
+    if (error.message.includes(MENSAGEM_DE_FALHA_DO_GANCHO)) return { ok: false, error: "email_nao_enviado" };
     if (/error sending/i.test(error.message)) return { ok: false, error: "email_indisponivel" };
     return { ok: false, error: "signup_failed" };
   }

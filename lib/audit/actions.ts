@@ -1255,6 +1255,8 @@ export const AUDIT_ACTIONS = [
   "vertical_pack.saved",
   /** Troca de marca de uma organização (RPC `fn_set_org_brand`, só admin da plataforma). */
   "org.brand_changed",
+  /** O gancho de e-mail de acesso não conseguiu enviar (só hash do e-mail e código fixo no metadata). */
+  "auth.email_hook_send_failed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

@@ -38,6 +38,10 @@ export function ForgotPasswordForm() {
         setServerError(t("Muitas tentativas. Aguarde alguns minutos."));
       } else if (res.error === "validation_error") {
         setServerError(t("Email inválido. Confira o campo."));
+      } else if (res.error === "email_nao_enviado") {
+        setServerError(t("Não conseguimos enviar o e-mail agora. Tente de novo em instantes."));
+      } else if (res.error === "reenvio_bloqueado") {
+        setServerError(t("Já enviamos um e-mail há instantes. Aguarde cerca de um minuto antes de pedir outro."));
       } else if (res.error === "smtp_not_configured") {
         // #2755 — sem SMTP a instalação não envia e-mail NENHUM: dizer
         // "tente novamente" mandava quem esqueceu a senha repetir um gesto que

@@ -9,12 +9,21 @@ import { audit, hashEmail } from "@/lib/audit";
 import { authRateLimited, AUTH_LIMITS } from "@/lib/auth/rate-limit";
 import { env } from "@/lib/env";
 import { semSmtpNaInstalacao } from "@/lib/email/estado";
+import { reservarEnvioDeAcesso } from "@/lib/auth/contexto-de-email";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
+import { MENSAGEM_DE_FALHA_DO_GANCHO } from "@/lib/auth/gancho-de-email/processar";
 
 export type RequestPasswordResetResult =
   | { ok: true }
   | {
       ok: false;
-      error: "validation_error" | "rate_limited" | "smtp_not_configured" | "request_failed";
+      error:
+        | "validation_error"
+        | "rate_limited"
+        | "smtp_not_configured"
+        | "request_failed"
+        | "reenvio_bloqueado"
+        | "email_nao_enviado";
       details?: Record<string, unknown>;
     };
 
@@ -53,6 +62,15 @@ export async function requestPasswordReset(
   // `lib/email/estado.ts`.
   if (await semSmtpNaInstalacao()) return { ok: false, error: "smtp_not_configured" };
 
+  // REQ-006: com o gancho de e-mail ligado, o app grava a marca do pedido ANTES de
+  // pedir o e-mail e trava o reenvio por 60 s (clique duplo não gera 2 e-mails).
+  if (env.AUTH_HOOK_SECRET) {
+    const { brand } = await marcaDoPedido();
+    if ((await reservarEnvioDeAcesso({ email: parsed.data.email, acao: "recovery", brandId: brand.id })) === "travado") {
+      return { ok: false, error: "reenvio_bloqueado" };
+    }
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     // ?type=recovery sobrevive ao redirect do GoTrue (preserva query string
@@ -74,6 +92,7 @@ export async function requestPasswordReset(
       ip,
       userAgent,
     });
+    if (error.message.includes(MENSAGEM_DE_FALHA_DO_GANCHO)) return { ok: false, error: "email_nao_enviado" };
     return { ok: false, error: "request_failed" };
   }
 

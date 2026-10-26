@@ -58,13 +58,13 @@ Cada tarefa ocupa uma linha:
 - [x] T-032 [IMPL] Telas públicas com a marca do host e tela "cadastro por convite" (~40 min) {AC-005.1} deps: T-028, T-015
 
 ### Fatia 5: E-mails de acesso com a marca (REQ-006, REQ-010)
-- [ ] T-033 [TEST-INT] Gancho de e-mail: assinatura inválida devolve 401 e não envia; reentrega com o mesmo webhook-id não duplica; sem contexto usa a marca padrão (~50 min) {AC-006.2, AC-006.5}
-- [ ] T-034 [TEST-UNIT] Moldes por marca (convite, confirmação, recuperação): remetente, logo, textos e link no domínio da marca; nunca nome ou domínio de outra marca (~40 min) {AC-006.1, AC-006.4}
-- [ ] T-035 [TEST-INT] Falha de envio: aviso "tente de novo", reenvio travado por 60 s, clique duplo sem e-mail duplicado, alerta no Sentry e linha no log de eventos (~45 min) {AC-006.3}
-- [ ] T-036 [TEST-INT] Teste shell do kit: variáveis GOTRUE_HOOK_SEND_EMAIL_* com padrão vazio no override, .env antigo continua válido, pnpm test:shell (~40 min) {AC-010.4}
-- [ ] T-037 [IMPL] brand_email_context, rota /api/hooks/auth/send-email (Standard Webhooks), montagem do e-mail por marca e envio pelo roteador existente (~60 min) {AC-006.1, AC-006.2, AC-006.4, AC-006.5} deps: T-033, T-034, T-005, T-031
-- [ ] T-038 [IMPL] Falha de envio visível ao usuário, trava de reenvio e alerta (~35 min) {AC-006.3} deps: T-035, T-037
-- [ ] T-039 [IMPL] Override do kit com as variáveis do gancho, AUTH_HOOK_SECRET em lib/env.ts e documentação da configuração no Supabase Cloud (~35 min) {AC-010.4} deps: T-036
+- [x] T-033 [TEST-INT] Gancho de e-mail: assinatura inválida devolve 401 e não envia; reentrega com o mesmo webhook-id não duplica; sem contexto usa a marca padrão (~50 min) {AC-006.2, AC-006.5}
+- [x] T-034 [TEST-UNIT] Moldes por marca (convite, confirmação, recuperação): remetente, logo, textos e link no domínio da marca; nunca nome ou domínio de outra marca (~40 min) {AC-006.1, AC-006.4}
+- [x] T-035 [TEST-INT] Falha de envio: aviso "tente de novo", reenvio travado por 60 s, clique duplo sem e-mail duplicado, alerta no Sentry e linha no log de eventos (~45 min) {AC-006.3}
+- [x] T-036 [TEST-INT] Teste shell do kit: variáveis GOTRUE_HOOK_SEND_EMAIL_* com padrão vazio no override, .env antigo continua válido, pnpm test:shell (~40 min) {AC-010.4}
+- [x] T-037 [IMPL] brand_email_context, rota /api/hooks/auth/send-email (Standard Webhooks), montagem do e-mail por marca e envio pelo roteador existente (~60 min) {AC-006.1, AC-006.2, AC-006.4, AC-006.5} deps: T-033, T-034, T-005, T-031
+- [x] T-038 [IMPL] Falha de envio visível ao usuário, trava de reenvio e alerta (~35 min) {AC-006.3} deps: T-035, T-037
+- [x] T-039 [IMPL] Override do kit com as variáveis do gancho, AUTH_HOOK_SECRET em lib/env.ts e documentação da configuração no Supabase Cloud (~35 min) {AC-010.4} deps: T-036
 
 ### Fatia 6: HTTPS sob demanda controlado (REQ-007)
 - [ ] T-040 [TEST-INT] Rota tls-ask: sim só para domínio ativo de marca ativa com DNS na VPS; não para desconhecido, inativo, removido, marca inativa, sem DNS, sem token, com x-forwarded-for ou acima do limite por hora (~55 min) {AC-007.1, AC-007.2, AC-007.3, AC-007.4, AC-007.5}
