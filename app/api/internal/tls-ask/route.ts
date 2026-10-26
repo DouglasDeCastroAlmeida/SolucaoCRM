@@ -65,7 +65,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const d = await obterDecisor()({
       domain: q.get("domain"),
       token: q.get("token"),
-      xff: request.headers.get("x-forwarded-for"),
+      // só a PRESENÇA importa (chegou por proxy externo); o valor nunca é lido, por isso não usa ipDoCliente
+      xff: request.headers.has("x-forwarded-for") ? "presente" : null,
     });
     return new NextResponse(null, { status: d.status });
   } catch {
