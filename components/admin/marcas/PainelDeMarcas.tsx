@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 
+import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,7 @@ function formatarPreco(cents: number, moeda: string): string {
 }
 
 function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
+  const t = useT();
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [host, setHost] = useState("");
   const [tipo, setTipo] = useState<"proprio" | "subdominio">("proprio");
@@ -108,7 +110,7 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
       <EditorDeMarca key={marca.id + marca.name} marca={marca} aoSalvar={aoMudar} />
 
       <div className="space-y-3">
-        <h3 className="font-medium">Endereços</h3>
+        <h3 className="font-medium">{t("Endereços")}</h3>
         <ul className="space-y-1">
           {(marca.brand_domains ?? []).map((d) => (
             <li key={d.id} className="flex items-center gap-2 text-sm">
@@ -121,23 +123,23 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
         </ul>
         <form onSubmit={adicionarHost} className="flex flex-wrap items-end gap-2">
           <div className="space-y-1">
-            <Label htmlFor={`novo-host-${marca.id}`}>Novo endereço</Label>
+            <Label htmlFor={`novo-host-${marca.id}`}>{t("Novo endereço")}</Label>
             <Input id={`novo-host-${marca.id}`} value={host} onChange={(e) => setHost(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`tipo-host-${marca.id}`}>Tipo do endereço</Label>
+            <Label htmlFor={`tipo-host-${marca.id}`}>{t("Tipo do endereço")}</Label>
             <select
               id={`tipo-host-${marca.id}`}
               value={tipo}
               onChange={(e) => setTipo(e.target.value as "proprio" | "subdominio")}
               className="h-9 rounded-md border bg-background px-2 text-sm"
             >
-              <option value="proprio">Domínio próprio</option>
-              <option value="subdominio">Subdomínio</option>
+              <option value="proprio">{t("Domínio próprio")}</option>
+              <option value="subdominio">{t("Subdomínio")}</option>
             </select>
           </div>
           <Button type="submit" disabled={enviandoHost || host.trim() === ""}>
-            Adicionar endereço
+            {t("Adicionar endereço")}
           </Button>
         </form>
         <Erro texto={erroHost} />
@@ -158,14 +160,14 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
             <Input id={`plano-nome-${marca.id}`} value={nomePlano} onChange={(e) => setNomePlano(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor={`plano-preco-${marca.id}`}>Preço (R$)</Label>
+            <Label htmlFor={`plano-preco-${marca.id}`}>{t("Preço (R$)")}</Label>
             <Input id={`plano-preco-${marca.id}`} value={preco} onChange={(e) => setPreco(e.target.value)} inputMode="decimal" />
           </div>
           <Button type="submit" disabled={enviandoPlano || nomePlano.trim() === ""}>
             Salvar plano
           </Button>
         </form>
-        <p className="text-xs text-muted-foreground">Salvar um plano não cria nenhuma cobrança.</p>
+        <p className="text-xs text-muted-foreground">{t("Salvar um plano não cria nenhuma cobrança.")}</p>
         <Erro texto={erroPlano} />
       </div>
     </section>
@@ -173,6 +175,7 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
 }
 
 function PainelDeMarcasLista() {
+  const t = useT();
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -223,13 +226,13 @@ function PainelDeMarcasLista() {
         <p role="status">Carregando marcas...</p>
       ) : (
         <table className="w-full text-sm">
-          <caption className="sr-only">Marcas da instalação</caption>
+          <caption className="sr-only">{t("Marcas da instalação")}</caption>
           <thead>
             <tr className="text-left">
               <th scope="col">Nome</th>
-              <th scope="col">Endereços</th>
+              <th scope="col">{t("Endereços")}</th>
               <th scope="col">Estado</th>
-              <th scope="col">Ações</th>
+              <th scope="col">{t("Ações")}</th>
             </tr>
           </thead>
           <tbody>
@@ -290,10 +293,11 @@ const ABAS: Array<{ id: Aba; rotulo: string }> = [
 ];
 
 export function PainelDeMarcas() {
+  const t = useT();
   const [aba, setAba] = useState<Aba>("marcas");
   return (
     <div className="space-y-6">
-      <div role="tablist" aria-label="Seções do painel de marcas" className="flex gap-2">
+      <div role="tablist" aria-label={t("Seções do painel de marcas")} className="flex gap-2">
         {ABAS.map((a) => (
           <Button
             key={a.id}

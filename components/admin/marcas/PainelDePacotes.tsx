@@ -3,6 +3,7 @@
 /** Pacotes verticais: listar, criar e editar (AC-008.4). */
 import { useCallback, useEffect, useState } from "react";
 
+import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { chamar, Erro, type PacoteVertical } from "./comum";
 const URL_PACOTES = "/api/v1/admin/vertical-packs";
 
 export function PainelDePacotes() {
+  const t = useT();
   const [pacotes, setPacotes] = useState<PacoteVertical[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [editando, setEditando] = useState<PacoteVertical | null>(null);
@@ -74,9 +76,9 @@ export function PainelDePacotes() {
           <tr className="text-left">
             <th scope="col">Nome</th>
             <th scope="col">Identificador</th>
-            <th scope="col">Versão</th>
+            <th scope="col">{t("Versão")}</th>
             <th scope="col">Estado</th>
-            <th scope="col">Ações</th>
+            <th scope="col">{t("Ações")}</th>
           </tr>
         </thead>
         <tbody>

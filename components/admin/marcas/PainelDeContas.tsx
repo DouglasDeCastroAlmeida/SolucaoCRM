@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ImpersonateButton } from "@/components/admin/ImpersonateButton";
+import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -28,6 +29,7 @@ function nomeDaMarca(c: Conta): string {
 }
 
 function LinhaDeConta({ conta, marcas, aoTrocar }: { conta: Conta; marcas: MarcaResumo[]; aoTrocar: (id: string, brandId: string) => Promise<void> }) {
+  const t = useT();
   const [destino, setDestino] = useState(conta.brand_id ?? "");
   return (
     <tr className="border-t">
@@ -43,7 +45,7 @@ function LinhaDeConta({ conta, marcas, aoTrocar }: { conta: Conta; marcas: Marca
           onChange={(e) => setDestino(e.target.value)}
           className="h-9 rounded-md border bg-background px-2 text-sm"
         >
-          <option value="">Escolha a marca</option>
+          <option value="">{t("Escolha a marca")}</option>
           {marcas.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}
@@ -69,6 +71,7 @@ function LinhaDeConta({ conta, marcas, aoTrocar }: { conta: Conta; marcas: Marca
 }
 
 export function PainelDeContas() {
+  const t = useT();
   const [contas, setContas] = useState<Conta[]>([]);
   const [marcas, setMarcas] = useState<MarcaResumo[]>([]);
   const [filtro, setFiltro] = useState("");
@@ -108,7 +111,7 @@ export function PainelDeContas() {
           onChange={(e) => setFiltro(e.target.value)}
           className="h-9 rounded-md border bg-background px-2 text-sm"
         >
-          <option value="">Todas as marcas</option>
+          <option value="">{t("Todas as marcas")}</option>
           {marcas.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}
@@ -118,7 +121,7 @@ export function PainelDeContas() {
       </div>
       <Erro texto={erro} />
       <table className="w-full text-sm">
-        <caption className="sr-only">Contas de todas as marcas</caption>
+        <caption className="sr-only">{t("Contas de todas as marcas")}</caption>
         <thead>
           <tr className="text-left">
             <th scope="col">Conta</th>

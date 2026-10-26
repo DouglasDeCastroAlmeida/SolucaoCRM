@@ -3,6 +3,7 @@
 /** Edição dos campos da marca (AC-008.1) via PATCH /api/v1/admin/brands/{id}. */
 import { useEffect, useState } from "react";
 
+import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ export type MarcaEditavel = {
 };
 
 export function EditorDeMarca({ marca, aoSalvar }: { marca: MarcaEditavel; aoSalvar: () => void }) {
+  const t = useT();
   const [nome, setNome] = useState(marca.name);
   const [cor, setCor] = useState(marca.accent_hex ?? "");
   const [logo, setLogo] = useState(marca.logo_path ?? "");
@@ -70,18 +72,18 @@ export function EditorDeMarca({ marca, aoSalvar }: { marca: MarcaEditavel; aoSal
         <Input id={id("ed-cor")} value={cor} onChange={(e) => setCor(e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label htmlFor={id("ed-logo")}>Caminho do logo</Label>
+        <Label htmlFor={id("ed-logo")}>{t("Caminho do logo")}</Label>
         <Input id={id("ed-logo")} value={logo} onChange={(e) => setLogo(e.target.value)} />
       </div>
       <div className="space-y-1">
-        <Label htmlFor={id("ed-pacote")}>Pacote padrão</Label>
+        <Label htmlFor={id("ed-pacote")}>{t("Pacote padrão")}</Label>
         <select
           id={id("ed-pacote")}
           value={pacote}
           onChange={(e) => setPacote(e.target.value)}
           className="h-9 rounded-md border bg-background px-2 text-sm"
         >
-          <option value="">Nenhum</option>
+          <option value="">{t("Nenhum")}</option>
           {pacotes.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -95,7 +97,7 @@ export function EditorDeMarca({ marca, aoSalvar }: { marca: MarcaEditavel; aoSal
       </div>
       <div className="flex items-center gap-2">
         <input id={id("ed-pers")} type="checkbox" checked={personaliza} onChange={(e) => setPersonaliza(e.target.checked)} />
-        <Label htmlFor={id("ed-pers")}>Permite personalização pela organização</Label>
+        <Label htmlFor={id("ed-pers")}>{t("Permite personalização pela organização")}</Label>
       </div>
       <Button type="submit" disabled={enviando || nome.trim() === ""}>
         Salvar marca
