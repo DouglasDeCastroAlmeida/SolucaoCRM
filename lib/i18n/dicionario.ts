@@ -9833,6 +9833,11 @@ export const DICIONARIO: Traducoes = {
   "Recebeu um convite novo? Abra o link que chegou no seu e-mail — ele funciona mesmo com esta tela aberta, e devolve o seu acesso.": {
     es: "¿Recibiste una invitación nueva? Abre el enlace que llegó a tu correo. Funciona incluso con esta pantalla abierta y te devuelve el acceso.",
   },
+  // ── Conta sem organização nesta marca (SP1, mudança 002) ───────────────────
+  "Sua conta não tem organização nesta marca": { es: "Tu cuenta no tiene una organización en esta marca" },
+  "Sua conta não tem organização nesta marca. Entre pelo endereço da marca onde você já usa o sistema ou peça um convite a quem administra esta.": {
+    es: "Tu cuenta no tiene una organización en esta marca. Entra por la dirección de la marca donde ya usas el sistema o pide una invitación a quien administra esta.",
+  },
   // ── Cadastro apenas por convite (migration 0253) ──────────────────────────
   "Cadastro apenas por convite": { es: "Registro solo por invitación" },
   "Esta instalação não aceita cadastro aberto. Se você foi convidado, use o link que chegou no seu e-mail — ele já vem com o convite.": {

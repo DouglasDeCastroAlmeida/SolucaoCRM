@@ -147,6 +147,8 @@ describe("loadAuthUser — falha de permissão não vira 'sem organização'", (
         org_status: null,
         suspended_kind: null,
         interface_settings: { preset: "completa" },
+        // Marca da organização (migration 0717): sem a coluna na consulta, `null` = marca padrão.
+        brand_id: null,
       },
     ]);
   });

@@ -49,3 +49,15 @@ export async function buscarMarcaDoHost(host: string): Promise<MarcaDoDominio> {
   }
   return { brand: await buscarMarcaPadrao(), domainKind: "padrao" };
 }
+
+/** Uma marca ATIVA pelo id; `null` se não existe ou está inativa. Lança em erro de banco. */
+export async function buscarMarcaAtivaPorId(id: string): Promise<Brand | null> {
+  const { data, error } = await createAdminClient()
+    .from("brands")
+    .select("*")
+    .eq("id", id)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) throw new Error(`marca por id: ${error.code ?? "erro"} ${error.message}`);
+  return data ? MarcaSchema.parse(data) : null;
+}

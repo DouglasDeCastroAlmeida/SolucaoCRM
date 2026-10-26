@@ -30,7 +30,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   h.guard.mockResolvedValue({ user: { id: actor, email: "owner@example.test", user_metadata: {} }, platformAdmin: { scope: "full" } });
   h.escrita.mockResolvedValue({ user: { id: actor, email: "owner@example.test", user_metadata: {} }, platformAdmin: { scope: "full" } });
-  h.user.mockResolvedValue({ id: actor, is_platform_admin: true, organizations: [] });
+  h.user.mockResolvedValue({ id: actor, is_platform_admin: true, organizations: [{ organization_id: org }] });
   h.mfa.mockResolvedValue(false);
   h.rpc.mockResolvedValue({ data: { id: org, display_name: "Minha organização", slug: "minha-org", created: true, invite_id: actor, issued_at: 12345 }, error: null });
   h.invite.mockResolvedValue({ accept_url: "http://localhost/invite", email_dispatched: false });

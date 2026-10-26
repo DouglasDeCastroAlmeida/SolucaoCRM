@@ -1291,6 +1291,13 @@ jobs:
 
       # ─── FORA_DO_CI — as que ficaram fora, e o motivo de cada uma ───
       #
+      # `marcas-sessao-por-host` entrou aqui em 2026-10-25 (SP1, mudança 002, AC-004.3): escrita
+      # sem poder rodar na máquina do autor (sem Docker/Supabase local). Ainda não foi medida
+      # num ambiente fresco, e um e2e obrigatório nunca medido reprovaria o merge por defeito
+      # da própria spec. Sobe para uma `SPECS_PARTE_*` assim que passar uma vez a mão (T-050:
+      # e2e disparado a mão); a receita é `pnpm e2e:env` + `pnpm playwright test
+      # tests/e2e/marcas-sessao-por-host.spec.ts`.
+      #
       # A `vps-fresh-onboarding` saiu desta lista no PR da issue #179 (a infra
       # dela está no `SPECS_PARTE_4` logo acima). As de baixo continuam fora, e
       # o motivo de cada uma está escrito neste arquivo — no topo do workflow ou
@@ -1324,6 +1331,7 @@ jobs:
       # versão fixada. Sem a chave, ela pula; o cabeçalho tem a receita.
       FORA_DO_CI: >-
         cadastro-sem-confirmacao-de-email.spec.ts
+        marcas-sessao-por-host.spec.ts
         aviso-de-caso-chega-no-whatsapp.spec.ts
         jev-chave-real.spec.ts
         modelos-do-parceiro-editar-apagar.spec.ts

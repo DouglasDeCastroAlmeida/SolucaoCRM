@@ -4,7 +4,8 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { ensureTenantForUser } from "@/lib/auth/provision";
 import { decidirConviteDoSignup } from "@/lib/auth/convite-no-signup";
-import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { motivoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { aplicarConvite } from "@/lib/auth/aplicar-convite";
 import { audit } from "@/lib/audit";
 import { env } from "@/lib/env";
@@ -256,7 +257,11 @@ async function confirmar({
   //
   // Depois de `decidirConviteDoSignup`, de propósito: quem tem convite válido já
   // saiu acima, então esta guarda só alcança quem chegou sem convite nenhum.
-  const modo = await modoDeCadastro();
+  // A marca do ENDEREÇO entra na decisão (REQ-005): marca de vertical nasce fechada.
+  // A marca em que o cadastro FOI INICIADO (user_metadata.brand_id) vale sobre o host do link.
+  const { brand: marcaDoLink } = await marcaDoPedido();
+  const marcaDoHost = await marcaDeOrigemDoCadastro(usuario.user_metadata, marcaDoLink);
+  const modo = await modoDeCadastroDaMarca(marcaDoHost);
   if (modo === "so_convite") {
     await audit({
       action: "auth.signup_provision_recusado",
@@ -264,7 +269,7 @@ async function confirmar({
       metadata: { motivo: "somente_convite" },
       requestId,
     });
-    return redirectTo("/login?error=cadastro_por_convite");
+    return redirectTo(`/login?error=${await motivoDaRecusaPorConvite(usuario.id)}`);
   }
 
   // COM APROVAÇÃO (migration 0383): a empresa NÃO nasce aqui. O pedido é
@@ -274,7 +279,7 @@ async function confirmar({
   if (modo === "com_aprovacao") return redirectTo("/get-started");
 
   try {
-    await ensureTenantForUser(usuario);
+    await ensureTenantForUser(usuario, { brand: marcaDoHost });
   } catch (e) {
     await audit({
       action: "auth.signup_provision_failed",

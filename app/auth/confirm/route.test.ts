@@ -42,6 +42,16 @@ vi.mock("@/lib/auth/convite-no-signup", () => ({ decidirConviteDoSignup: vi.fn()
 vi.mock("@/lib/auth/provision", () => ({ ensureTenantForUser: vi.fn(async () => undefined) }));
 vi.mock("@/lib/auth/politica-de-cadastro", () => ({ modoDeCadastro: vi.fn(async () => "aberto") }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
+const marcaDeOrigem = vi.hoisted(() => ({ buscar: vi.fn() }));
+vi.mock("@/lib/brands/repositorio", () => ({ buscarMarcaAtivaPorId: marcaDeOrigem.buscar }));
+// A marca do endereço (REQ-005). Por padrão, a padrão embutida: o comportamento de antes das marcas.
+const marcaDoEndereco = vi.hoisted(() => ({ atual: null as unknown }));
+vi.mock("@/lib/branding/marca-do-pedido", async () => {
+  const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+  return {
+    marcaDoPedido: async () => ({ brand: marcaDoEndereco.atual ?? MARCA_PADRAO_EMBUTIDA, domainKind: "padrao" }),
+  };
+});
 vi.mock("@/lib/env", () => ({ env: { NEXT_PUBLIC_APP_URL: "http://localhost:3000" } }));
 
 const USUARIO = { id: "11111111-1111-4111-8111-111111111111", email: "convidado@example.com" };
@@ -91,6 +101,7 @@ function destino(res: Response): string {
 describe("GET /auth/confirm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    marcaDoEndereco.atual = null;
     vi.mocked(aplicarConvite).mockResolvedValue({ ok: true, membershipId: "m1", mudou: true });
     vi.mocked(modoDeCadastro).mockResolvedValue("aberto");
   });
@@ -171,6 +182,51 @@ describe("GET /auth/confirm", () => {
     expect(vi.mocked(ensureTenantForUser)).not.toHaveBeenCalled();
   });
 
+  it("AC-005.4: convite aceito num endereço de marca fechada entra na organização do convite, sem criar outra", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    marcaDoEndereco.atual = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-x", is_default: false, cadastro_aberto: false };
+    comSupabase({ verifyOtp: { data: { user: USUARIO }, error: null }, getUser: { data: { user: null } } });
+    vi.mocked(decidirConviteDoSignup).mockReturnValue({ tipo: "convite", token: "tok", payload: PAYLOAD } as ReturnType<typeof decidirConviteDoSignup>);
+
+    const { POST } = await import("./route");
+    const res = await POST(envio("type=signup&token_hash=abc"));
+
+    expect(vi.mocked(aplicarConvite)).toHaveBeenCalledWith(
+      expect.objectContaining({ payload: expect.objectContaining({ organization_id: PAYLOAD.organization_id }) }),
+    );
+    expect(vi.mocked(ensureTenantForUser)).not.toHaveBeenCalled();
+    expect(destino(res)).toBe("/app");
+  });
+
+  it("AC-005.2: sem convite num endereço de marca fechada: recusa por convite e não cria organização", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    marcaDoEndereco.atual = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-x", is_default: false, cadastro_aberto: false };
+    comSupabase({ verifyOtp: { data: { user: USUARIO }, error: null }, getUser: { data: { user: null } } });
+    vi.mocked(decidirConviteDoSignup).mockReturnValue({ tipo: "provisionar" });
+
+    const { POST } = await import("./route");
+    const res = await POST(envio("type=signup&token_hash=abc"));
+
+    expect(vi.mocked(ensureTenantForUser)).not.toHaveBeenCalled();
+    expect(destino(res)).toBe("/login?error=cadastro_por_convite");
+  });
+
+  it("AC-005.3: confirmar o e-mail noutro host usa a marca de origem do cadastro (user_metadata.brand_id)", async () => {
+    const { MARCA_PADRAO_EMBUTIDA } = await import("@/lib/brands/tipos");
+    marcaDoEndereco.atual = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-b", is_default: false, cadastro_aberto: false };
+    const origem = { ...MARCA_PADRAO_EMBUTIDA, id: "marca-a", is_default: false, cadastro_aberto: true, status: "active" };
+    marcaDeOrigem.buscar.mockResolvedValue(origem);
+    const usuarioComOrigem = { ...USUARIO, user_metadata: { brand_id: "marca-a" } };
+    comSupabase({ verifyOtp: { data: { user: usuarioComOrigem }, error: null }, getUser: { data: { user: null } } });
+    vi.mocked(decidirConviteDoSignup).mockReturnValue({ tipo: "provisionar" });
+
+    const { POST } = await import("./route");
+    const res = await POST(envio("type=signup&token_hash=abc"));
+
+    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(usuarioComOrigem, { brand: origem });
+    expect(destino(res)).toBe("/onboarding/welcome");
+  });
+
   it("segundo clique no mesmo link: mantém quem já está logado, não manda pro login", async () => {
     comSupabase({
       verifyOtp: { data: { user: null }, error: { message: "Email link is invalid or has expired" } },
@@ -236,7 +292,7 @@ describe("GET /auth/confirm", () => {
     const { POST } = await import("./route");
     const res = await POST(envio("type=signup&token_hash=abc"));
 
-    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO);
+    expect(vi.mocked(ensureTenantForUser)).toHaveBeenCalledWith(USUARIO, { brand: expect.objectContaining({ is_default: true }) });
     expect(vi.mocked(aplicarConvite)).not.toHaveBeenCalled();
     expect(destino(res)).toBe("/onboarding/welcome");
   });

@@ -67,6 +67,16 @@ export default async function LoginPage({
           )}
         </div>
       )}
+      {error === "sem_organizacao_na_marca" && (
+        <div
+          className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          role="alert"
+        >
+          {t(
+            "Sua conta não tem organização nesta marca. Entre pelo endereço da marca onde você já usa o sistema ou peça um convite a quem administra esta.",
+          )}
+        </div>
+      )}
       {error === "cadastro_por_convite" && (
         <div
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"

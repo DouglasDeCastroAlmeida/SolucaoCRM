@@ -2,6 +2,10 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit";
+import { copiarPacoteParaOrganizacao } from "@/lib/brands/pacote";
+import { MARCA_PADRAO_EMBUTIDA, type Brand } from "@/lib/brands/tipos";
+import { orgPertenceAMarca } from "@/lib/brands/visao";
+import { logger } from "@/lib/logger";
 
 /** Normaliza o nome da empresa para um slug candidato (citext unique no DB). */
 export function slugify(name: string): string {
@@ -29,6 +33,13 @@ type ProvisionUser = {
  */
 type ProvisionOptions = {
   source?: "signup" | "recovery";
+  /**
+   * A marca do endereço em que o cadastro foi concluído (REQ-005). A organização
+   * nasce ligada a ela (`organizations.brand_id`) e recebe a cópia do pacote vertical
+   * padrão da marca. Ausente, ou a marca padrão EMBUTIDA (chave `off`, banco fora),
+   * o insert é exatamente o de antes das marcas.
+   */
+  brand?: Brand;
 };
 
 /**
@@ -46,8 +57,43 @@ type ProvisionOptions = {
  * organização nenhuma não enxerga `user_organizations` por RLS. O `user_id`
  * vem sempre do JWT já validado, nunca do corpo de uma requisição.
  */
-export async function vinculoAtivo(userId: string): Promise<string | null> {
+export async function vinculoAtivo(userId: string, brand?: Brand): Promise<string | null> {
   const admin = createAdminClient();
+
+  // Visão filtrada por marca (REQ-004): com a marca de um endereço real, só conta o
+  // vínculo de organização VISÍVEL nela (admin da plataforma enxerga todas). Sem isto,
+  // quem só tem organização na marca B passava por "já tem organização" no host da
+  // marca A e caía numa casca vazia. Sem marca, ou com a embutida, é o de antes.
+  if (brand && brand.id !== MARCA_PADRAO_EMBUTIDA.id) {
+    const { data: linhas, error: erroDasLinhas } = await admin
+      .from("user_organizations")
+      .select("organization_id, organizations!user_organizations_organization_id_fkey(brand_id)")
+      .eq("user_id", userId)
+      .is("revoked_at", null);
+    if (erroDasLinhas) {
+      throw new Error(`provisioning: leitura do vínculo ativo falhou: ${erroDasLinhas.message}`);
+    }
+    const vinculos = (linhas ?? []) as unknown as Array<{
+      organization_id: string;
+      organizations: { brand_id: string | null } | { brand_id: string | null }[] | null;
+    }>;
+    if (vinculos.length === 0) return null;
+    const { data: pa, error: erroDoPa } = await admin
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", userId)
+      .is("revoked_at", null)
+      .maybeSingle();
+    if (erroDoPa) {
+      throw new Error(`provisioning: leitura do vínculo ativo falhou: ${erroDoPa.message}`);
+    }
+    const usuario = { is_platform_admin: !!pa };
+    const visivel = vinculos.find((v) => {
+      const org = Array.isArray(v.organizations) ? (v.organizations[0] ?? null) : v.organizations;
+      return orgPertenceAMarca({ brand_id: org?.brand_id ?? null }, brand, usuario);
+    });
+    return visivel?.organization_id ?? null;
+  }
 
   const { data, error } = await admin
     .from("user_organizations")
@@ -89,7 +135,7 @@ export async function ensureTenantForUser(
 ): Promise<{ provisioned: boolean; organizationId?: string }> {
   const admin = createAdminClient();
 
-  const organizationId = await vinculoAtivo(user.id);
+  const organizationId = await vinculoAtivo(user.id, options.brand);
   if (organizationId) return { provisioned: false, organizationId };
 
   const orgName =
@@ -97,6 +143,8 @@ export async function ensureTenantForUser(
     user.email?.split("@")[0] ||
     "Minha empresa";
   const base = slugify(orgName);
+  const brandId =
+    options.brand && options.brand.id !== MARCA_PADRAO_EMBUTIDA.id ? options.brand.id : null;
 
   // ponytail: check-then-insert tem janela de corrida se o mesmo link for
   // confirmado 2x em paralelo (pior caso: org duplicada órfã). Advisory lock
@@ -112,6 +160,7 @@ export async function ensureTenantForUser(
         legal_name: orgName,
         status: "active",
         created_by: user.id,
+        ...(brandId ? { brand_id: brandId } : {}),
         ...(typeof user.user_metadata?.cobranca_plan_id === "string" ? { settings: { cobranca_signup_plan_id: user.user_metadata.cobranca_plan_id } } : {}),
       })
       .select("id, slug")
@@ -132,6 +181,21 @@ export async function ensureTenantForUser(
   });
   if (memberError && memberError.code !== "23505") {
     throw new Error(`signup provisioning: membership insert failed: ${memberError.message}`);
+  }
+
+  // Cópia do pacote vertical: atômica no banco (fn_copiar_pacote_para_org). Falha aqui
+  // NÃO desfaz a organização já criada: o administrador da plataforma pode refazer a
+  // cópia, e perder o cadastro de quem acabou de confirmar o e-mail seria pior.
+  if (brandId) {
+    try {
+      await copiarPacoteParaOrganizacao(org.id, brandId);
+    } catch (erro) {
+      logger.error("signup: cópia do pacote vertical falhou", {
+        organization_id: org.id,
+        brand_id: brandId,
+        detalhe: erro instanceof Error ? erro.message : String(erro),
+      });
+    }
   }
 
   void audit({

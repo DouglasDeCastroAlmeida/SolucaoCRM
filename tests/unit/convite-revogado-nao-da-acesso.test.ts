@@ -186,7 +186,7 @@ describe("porta 3 — recoverOrganization recusa quem teve o acesso revogado", (
     const { acessoFoiRevogado } = await import("@/lib/auth/vinculo-revogado");
     vi.mocked(acessoFoiRevogado).mockResolvedValue(false);
     const { ensureTenantForUser } = await import("@/lib/auth/provision");
-    vi.mocked(ensureTenantForUser).mockResolvedValue({ organizationId: ORG } as never);
+    vi.mocked(ensureTenantForUser).mockResolvedValue({ provisioned: true, organizationId: ORG } as never);
   });
 
   it("⭐ vínculo revogado não vira tenant novo pela tela de recuperação", async () => {
@@ -226,7 +226,7 @@ describe("porta 3 — recoverOrganization recusa quem teve o acesso revogado", (
     // Sem este caso, as duas recusas acima ficariam verdes num código que
     // recusasse TUDO, e a tela de recuperação estaria quebrada sem ninguém ver.
     const { ensureTenantForUser } = await import("@/lib/auth/provision");
-    vi.mocked(ensureTenantForUser).mockResolvedValue({ organizationId: ORG } as never);
+    vi.mocked(ensureTenantForUser).mockResolvedValue({ provisioned: true, organizationId: ORG } as never);
 
     const { recoverOrganization } = await import("@/app/actions/auth/recoverOrganization");
     await expect(recoverOrganization("Empresa Legítima")).rejects.toThrow(

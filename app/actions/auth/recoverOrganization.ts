@@ -8,7 +8,8 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
 import { ensureTenantForUser } from "@/lib/auth/provision";
 import { decidirConviteDoSignup } from "@/lib/auth/convite-no-signup";
-import { modoDeCadastro } from "@/lib/auth/politica-de-cadastro";
+import { modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { createRegistrationRequest, estadoDoPedido } from "@/lib/auth/registration-requests";
 import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
 import { organizationNameSchema } from "@/lib/auth/schemas";
@@ -121,7 +122,9 @@ export async function recoverOrganization(name: string, planoId?: string): Promi
   // `so_convite` ela seria a saída de emergência que reabre o que as outras
   // três fecharam: bastaria criar a conta por qualquer via, chegar sem vínculo,
   // e pedir a recuperação. Fechar só a tela de cadastro seria outro capacho.
-  const modo = await modoDeCadastro();
+  // A marca do ENDEREÇO entra na decisão (REQ-005): marca de vertical nasce fechada.
+  const { brand: marcaDoHost } = await marcaDoPedido();
+  const modo = await modoDeCadastroDaMarca(marcaDoHost);
   if (modo === "so_convite") {
     void audit({
       action: "auth.signup_provision_recusado",
@@ -180,9 +183,11 @@ export async function recoverOrganization(name: string, planoId?: string): Promi
         email: authUser.email,
         user_metadata: { ...authUser.user_metadata, org_name: parsed.data, ...comPlano },
       },
-      { source: "recovery" },
+      { source: "recovery", brand: marcaDoHost },
     );
-    if (!provisioned.organizationId) return { ok: false, error: "provision_failed" };
+    // `provisioned:false` aqui quer dizer que o vínculo que `ensureTenantForUser` achou NÃO é
+    // o que `resolveActiveOrg` enxerga: redirecionar ao onboarding seria o loop.
+    if (!provisioned.provisioned || !provisioned.organizationId) return { ok: false, error: "provision_failed" };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     void audit({
