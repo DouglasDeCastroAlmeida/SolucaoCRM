@@ -31,9 +31,10 @@ function admin() {
   return createClient(c.url, c.serviceRole, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
-async function semErro<T>(p: PromiseLike<{ data: T; error: { message: string } | null }>, onde: string): Promise<T> {
+async function semErro<T>(p: PromiseLike<{ data: T | null; error: { message: string } | null }>, onde: string): Promise<T> {
   const { data, error } = await p;
   if (error) throw new Error(`${onde}: ${error.message}`);
+  if (data === null) throw new Error(`${onde}: nenhuma linha devolvida`);
   return data;
 }
 

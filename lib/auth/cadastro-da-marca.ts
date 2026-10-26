@@ -27,18 +27,20 @@ export async function modoDeCadastroDaMarca(brand: Brand): Promise<ModoDeCadastr
 }
 
 /**
- * Para onde vai quem foi recusado por cadastro fechado. Quem JÁ tem organização em
+ * O código de `/login?error=` de quem foi recusado por cadastro fechado. Quem JÁ tem organização em
  * outra marca recebe o aviso específico ("sua conta não tem organização nesta
  * marca"); quem não tem nenhuma, o aviso de cadastro por convite. Leitura que falha
  * cai no aviso genérico, que também é verdadeiro.
  */
-export async function destinoDaRecusaPorConvite(userId: string): Promise<string> {
+export async function motivoDaRecusaPorConvite(
+  userId: string,
+): Promise<"sem_organizacao_na_marca" | "cadastro_por_convite"> {
   try {
-    if (await vinculoAtivo(userId)) return "/login?error=sem_organizacao_na_marca";
+    if (await vinculoAtivo(userId)) return "sem_organizacao_na_marca";
   } catch {
     // o aviso genérico abaixo vale
   }
-  return "/login?error=cadastro_por_convite";
+  return "cadastro_por_convite";
 }
 
 /**

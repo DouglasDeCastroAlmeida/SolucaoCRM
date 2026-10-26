@@ -4,7 +4,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { ensureTenantForUser } from "@/lib/auth/provision";
 import { decidirConviteDoSignup } from "@/lib/auth/convite-no-signup";
-import { destinoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { motivoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { aplicarConvite } from "@/lib/auth/aplicar-convite";
 import { audit } from "@/lib/audit";
@@ -269,7 +269,7 @@ async function confirmar({
       metadata: { motivo: "somente_convite" },
       requestId,
     });
-    return redirectTo(await destinoDaRecusaPorConvite(usuario.id));
+    return redirectTo(`/login?error=${await motivoDaRecusaPorConvite(usuario.id)}`);
   }
 
   // COM APROVAÇÃO (migration 0383): a empresa NÃO nasce aqui. O pedido é

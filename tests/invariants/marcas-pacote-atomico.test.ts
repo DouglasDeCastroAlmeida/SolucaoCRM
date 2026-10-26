@@ -40,7 +40,7 @@ beforeAll(() => {
       ('${BRAND_PACOTE_INATIVO}', '${PARTNER}', 'marcas-atomico-3', 'M3', '${PACK_INATIVO}')
     on conflict (id) do nothing;
     insert into public.organizations (id, slug, legal_name, display_name, settings) values
-      ('${ORG}', 'marcas-atomico-o1', 'O1', 'O1', '{"llm":"x"}'),
+      ('${ORG}', 'marcas-atomico-o1', 'O1', 'O1', '{"chave_propria":"x"}'),
       ('${ORG_JA_COPIADA}', 'marcas-atomico-o2', 'O2', 'O2', '{"vertical_pack":{"slug":"antigo"}}'),
       ('${ORG_2}', 'marcas-atomico-o3', 'O3', 'O3', '{}')
     on conflict (id) do update set settings = excluded.settings;
@@ -51,7 +51,7 @@ describe("AC-008.4: fn_copiar_pacote_para_org", () => {
   it("AC-008.4: copia o pacote e preserva as outras chaves de settings", () => {
     expect(copiar(ORG, BRAND)).toBe("t");
     const s = JSON.parse(settings(ORG));
-    expect(s.llm).toBe("x");
+    expect(s.chave_propria).toBe("x");
     expect(s.vertical_pack).toMatchObject({ slug: "marcas-atomico-ok", pack_id: PACK, version: 1 });
     expect(s.vertical_pack.seed).toEqual({ etapas: ["a", "b"] });
   });
@@ -70,7 +70,8 @@ describe("AC-008.4: fn_copiar_pacote_para_org", () => {
   it("AC-008.4: marca sem pacote ou com pacote inativo não copia nada", () => {
     expect(copiar(ORG_2, BRAND_SEM_PACOTE)).toBe("f");
     expect(copiar(ORG_2, BRAND_PACOTE_INATIVO)).toBe("f");
-    expect(JSON.parse(settings(ORG_2))).toEqual({});
+    // `settings` pode ter defaults de outras migrations: o que importa é a AUSÊNCIA da chave.
+    expect(JSON.parse(settings(ORG_2)).vertical_pack).toBeUndefined();
   });
 
   it("AC-008.4: mudar o pacote depois não altera a organização", () => {

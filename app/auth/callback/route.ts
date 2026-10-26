@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureTenantForUser, vinculoAtivo } from "@/lib/auth/provision";
 import { acessoFoiRevogado } from "@/lib/auth/vinculo-revogado";
 import { decidirConviteDoSignup } from "@/lib/auth/convite-no-signup";
-import { destinoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
+import { motivoDaRecusaPorConvite, marcaDeOrigemDoCadastro, modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { aplicarConvite } from "@/lib/auth/aplicar-convite";
 import { respostaDePonte } from "@/lib/auth/ponte-de-volta";
@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
       metadata: { motivo: "somente_convite", provider: "google" },
       requestId,
     });
-    return redirectTo(await destinoDaRecusaPorConvite(usuario.id));
+    return redirectTo(`/login?error=${await motivoDaRecusaPorConvite(usuario.id)}`);
   }
 
   // COM APROVAÇÃO (migration 0383): a empresa NÃO nasce aqui. O pedido é
