@@ -21,7 +21,7 @@ const aplicar = readFileSync(join(raiz, "lib/agenda/aplicar-confirmacao-do-clien
 function literalDe(nome: string): string {
   const m = new RegExp(`const ${nome} =\\s*\\n?\\s*"([^"]+)";`).exec(aplicar);
   if (!m) throw new Error(`constante ${nome} não encontrada`);
-  return m[1];
+  return m[1]!;
 }
 
 function ocorrenciasDaChave(chave: string): number {
