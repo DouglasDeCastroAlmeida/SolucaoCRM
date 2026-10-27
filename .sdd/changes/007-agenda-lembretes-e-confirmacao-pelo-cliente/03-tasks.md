@@ -49,11 +49,11 @@ Cada tarefa ocupa uma linha:
 - [x] T-021 [IMPL] Ações de auditoria novas e ajustes nas rotas (~35 min) {AC-005.4, AC-005.5} deps: T-020, T-009, T-015
 
 ### Fechamento
-- [ ] T-022 [TEST-UNIT] Textos novos (selos, respostas automáticas, texto padrão) em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-004.3, AC-006.4}
-- [ ] T-023 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-004.3, AC-006.4} deps: T-022, T-008, T-017
+- [x] T-022 [TEST-UNIT] Textos novos (selos, respostas automáticas, texto padrão) em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-004.3, AC-006.4}
+- [x] T-023 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-004.3, AC-006.4} deps: T-022, T-008, T-017
 - [ ] T-024 [TEST-E2E] Jornada pela tela na homologação com WhatsApp real (WAHA): tipo novo, lembrete chega, um cliente responde "1" e outro "2", selo e pendência na agenda (~60 min) {AC-006.2} deps: T-015, T-017, T-021
 - [ ] T-025 [TEST-E2E] Sonda de produção com os tipos existentes: resultado igual ao de antes e nenhum lembrete novo enviado (~30 min) {AC-006.3}
-- [ ] T-026 [DOCS] Runbook e roteiro do dono: lembretes padrão, confirmação do cliente, chaves, e a situação da verificação do Google Agenda (~35 min) deps: T-024
+- [x] T-026 [DOCS] Runbook e roteiro do dono: lembretes padrão, confirmação do cliente, chaves, e a situação da verificação do Google Agenda (~35 min) deps: T-024
 - [ ] T-027 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com WhatsApp real (~30 min) deps: T-024
 - [ ] T-028 [CHECK-SMOKE] Implantar em produção e rodar a sonda (~30 min) deps: T-027, T-025
 - [ ] T-029 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-028

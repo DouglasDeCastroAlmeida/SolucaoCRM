@@ -1304,6 +1304,14 @@ jobs:
       # `AUTH_HOOK_SECRET` de teste (cabeçalho da spec). Sobe para uma `SPECS_PARTE_*` depois de
       # passar uma vez a mão (T-050).
       #
+      # `agenda-confirmacao-cliente` (SP7, mudança 007, T-024: tipo novo com lembretes 24 h + 2 h,
+      # "Pedir confirmação ao cliente" ligado e a resposta "1"/"2" do cliente aparecendo como selo
+      # e pendência na agenda) está fora porque a prova de verdade da mudança é a ida e volta com o
+      # WAHA REAL (homologação, T-027 a T-029); aqui o inbound é simulado pelo webhook, e a spec foi
+      # escrita sem poder rodar na máquina do autor. Sobe para uma `SPECS_PARTE_*` depois de passar
+      # uma vez a mão; a receita é `pnpm e2e:env` + `pnpm playwright test
+      # tests/e2e/agenda-confirmacao-cliente.spec.ts`.
+      #
       # A `vps-fresh-onboarding` saiu desta lista no PR da issue #179 (a infra
       # dela está no `SPECS_PARTE_4` logo acima). As de baixo continuam fora, e
       # o motivo de cada uma está escrito neste arquivo — no topo do workflow ou
@@ -1339,6 +1347,7 @@ jobs:
         cadastro-sem-confirmacao-de-email.spec.ts
         marcas-sessao-por-host.spec.ts
         marcas.spec.ts
+        agenda-confirmacao-cliente.spec.ts
         aviso-de-caso-chega-no-whatsapp.spec.ts
         jev-chave-real.spec.ts
         modelos-do-parceiro-editar-apagar.spec.ts
