@@ -2,13 +2,47 @@
   "id": "005-canal-de-e-mail-imap-smtp",
   "title": "Canal de e-mail (IMAP/SMTP)",
   "size": "L",
-  "stage": "grill",
+  "stage": "tasks",
   "createdAt": "2026-10-27T11:02:18.874Z",
-  "approvals": {},
+  "approvals": {
+    "grill": {
+      "at": "2026-10-27T11:23:23.759Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Grill do e-mail aprovado pelo dono"
+    },
+    "prd": {
+      "at": "2026-10-27T12:07:21.071Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "PRD do e-mail aprovado pelo dono"
+    },
+    "design": {
+      "at": "2026-10-27T12:18:56.120Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Design do e-mail aprovado pelo dono"
+    }
+  },
   "history": [
     {
       "stage": "grill",
       "at": "2026-10-27T11:02:18.875Z"
+    },
+    {
+      "stage": "prd",
+      "at": "2026-10-27T11:23:23.759Z",
+      "from": "grill"
+    },
+    {
+      "stage": "design",
+      "at": "2026-10-27T12:07:21.071Z",
+      "from": "prd"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-10-27T12:18:56.120Z",
+      "from": "design"
     }
   ]
 }
