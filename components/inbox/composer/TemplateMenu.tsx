@@ -41,7 +41,14 @@ export function TemplateMenu({ open, query, templates, onPick, onClose: _onClose
             className="flex w-full flex-col items-start gap-0.5 rounded-md px-3 py-2 text-left hover:bg-muted"
             onClick={() => onPick(tpl)}
           >
-            <span className="text-sm font-medium">{tpl.title}</span>
+            <span className="flex w-full items-center justify-between gap-2">
+              <span className="truncate text-sm font-medium">{tpl.title}</span>
+              {tpl.shortcut ? (
+                <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  /{tpl.shortcut}
+                </span>
+              ) : null}
+            </span>
             <span className="line-clamp-1 text-xs text-muted-foreground">{tpl.body}</span>
           </button>
         ))

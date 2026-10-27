@@ -153,3 +153,17 @@ describe("ConversationListItem — seleção em lote", () => {
     expect(linha.className).not.toContain("bg-accent-50");
   });
 });
+
+describe("ConversationListItem - tema pela marca", () => {
+  it("AC-003.1: o contador de nao lidas usa a cor de destaque com o texto calculado da marca", () => {
+    render(
+      <ConversationListItem
+        conversation={{ ...conversaDeExemplo.conversation, unread_count_for_assignee: 3 }}
+        {...conversaDeExemplo.props}
+      />,
+    );
+    const contador = screen.getByText("3");
+    expect(contador.className).toContain("bg-accent");
+    expect(contador.className).toContain("text-accent-foreground");
+  });
+});

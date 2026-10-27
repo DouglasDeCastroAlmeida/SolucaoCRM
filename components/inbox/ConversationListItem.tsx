@@ -1,11 +1,27 @@
 "use client";
 
-import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
+import { useLocaleDeData, useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 
 import type { Locale } from "date-fns";
-import { format, formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { Check, Robot, Sparkle } from "@/lib/ui/icons";
+import {
+  Check,
+  FileText,
+  ImageIcon,
+  MapPin,
+  Microphone,
+  Robot,
+  Smiley,
+  Sparkle,
+  VideoCamera,
+} from "@/lib/ui/icons";
+import {
+  horarioCurtoDaLista,
+  previaDaLista,
+  ultimaFoiNossa,
+  type MidiaDaPrevia,
+} from "@/lib/inbox/formato-da-lista";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +103,13 @@ interface Props {
    * QueryClient set". Quem faz o `POST .../usable-for-rag` é a lista.
    */
   onAlternarExemplo?: (id: string, enabled: boolean) => void;
+  /**
+   * Fuso IANA da organização (`activeOrg.timezone`), para o horário da linha
+   * dizer o dia da empresa e não o do navegador. Por PROP, como
+   * `automaticoDaOrg`: o item é renderizado sem AuthProvider em vários testes.
+   * Ausente ou inválido cai no fuso padrão do produto.
+   */
+  fuso?: string | null;
 }
 
 /**
@@ -122,16 +145,14 @@ function initials(name: string | null | undefined, fallback: string): string {
   return (first + last).toUpperCase();
 }
 
-function relativeTime(iso: string | null, locale: Locale): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
-  if (sameDay) return format(d, "HH:mm");
-  const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
-  if (diff < 7) return formatDistanceToNowStrict(d, { addSuffix: false, locale: locale });
-  return format(d, "dd/MM");
-}
+const ICONE_DA_MIDIA: Record<MidiaDaPrevia, typeof ImageIcon> = {
+  image: ImageIcon,
+  audio: Microphone,
+  video: VideoCamera,
+  document: FileText,
+  sticker: Smiley,
+  location: MapPin,
+};
 
 /**
  * "Aguardando há 5 min" — desde quando o cliente ESPERA.
@@ -163,8 +184,10 @@ export function ConversationListItem({
   selecionado = false,
   onAlternarSelecao,
   onAlternarExemplo,
+  fuso,
 }: Props) {
   const localeDaData = useLocaleDeData();
+  const tagDeIdioma = useTagDeIdioma();
   const t = useT();
   const c = conversation.contacts ?? null;
   const displayName = rotuloParaAEquipe(c, t);
@@ -172,8 +195,9 @@ export function ConversationListItem({
   const tags = c?.tags ?? [];
   const visibleTags = tags.slice(0, 2);
   const overflow = tags.length - visibleTags.length;
-  const preview = conversation.last_message_preview?.trim() || t("Sem mensagens");
-  const truncated = preview.length > 60 ? `${preview.slice(0, 60)}…` : preview;
+  const previa = previaDaLista(conversation.last_message_preview, ultimaFoiNossa(conversation), t);
+  const truncated = previa.texto.length > 60 ? `${previa.texto.slice(0, 60)}…` : previa.texto;
+  const IconeDaMidia = previa.midia ? ICONE_DA_MIDIA[previa.midia] : null;
   const naFila = queuePosition !== undefined;
   /**
    * A HORA DO CANTO RESPONDE À MESMA PERGUNTA QUE ORDENA A LISTA.
@@ -195,7 +219,8 @@ export function ConversationListItem({
   const horaDaOrdem = naFila
     ? esperaDaConversa(conversation)
     : conversation.last_message_at;
-  const time = relativeTime(horaDaOrdem, localeDaData);
+  // O horário curto da linha, no fuso da organização (AC-001.5).
+  const time = horarioCurtoDaLista(horaDaOrdem, new Date(), fuso, tagDeIdioma, t);
   const unread = conversation.unread_count_for_assignee ?? 0;
 
 
@@ -309,6 +334,8 @@ export function ConversationListItem({
         className={cn(
           "group relative flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
           "focus-visible:outline-hidden focus-visible:bg-surface-elevated",
+          // Foco de teclado SE VÊ (AC-007.1): anel por dentro, que a lista rolável não corta.
+          "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
           // `accent-soft`, e não um degrau fixo da rampa: os degraus têm o MESMO
           // hex nos dois temas, e o `accent-50` (quase branco) no escuro deixava o
           // nome — `text-text`, claro no escuro — branco sobre branco.
@@ -417,6 +444,10 @@ export function ConversationListItem({
           >
             {isAi && mostrarAutomatico ? (
               <Robot size={12} weight="duotone" className="mr-1 inline align-[-2px]" aria-hidden />
+            ) : null}
+            {previa.prefixo ? <span className="mr-1">{previa.prefixo}</span> : null}
+            {IconeDaMidia ? (
+              <IconeDaMidia size={13} weight="fill" className="mr-1 inline align-[-2px]" aria-hidden />
             ) : null}
             {truncated}
           </p>

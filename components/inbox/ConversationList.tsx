@@ -49,6 +49,8 @@ interface Props {
    * controle: o leitor veria um botão que só devolve 403.
    */
   podeMarcarExemplo?: boolean;
+  /** Fuso IANA da organização, repassado ao horário de cada linha. */
+  fuso?: string | null;
 }
 
 export function ConversationList({
@@ -58,6 +60,7 @@ export function ConversationList({
   onSelect,
   onVisibleChange,
   onLimparFiltros,
+  fuso,
   selecionados,
   onAlternarSelecao,
   onSelecionarTodosVisiveis,
@@ -259,6 +262,7 @@ export function ConversationList({
             mostrarAtendente={mostrarAtendente}
             mostrarAutomatico={mostrarAutomatico}
             automaticoDaOrg={automaticoDaOrg.data}
+            fuso={fuso}
             selecionado={selecionados?.has(c.id)}
             onAlternarSelecao={onAlternarSelecao}
             onAlternarExemplo={podeMarcarExemplo ? alternarExemplo : undefined}

@@ -680,10 +680,22 @@ export function InboxFilters({ value, onChange }: Props) {
             {tabs.map((tab) => {
               const meta = INBOX_TABS.find((t) => t.value === tab)!;
               const count = countFor[tab];
+              // O nome da spec (AC-001.7) como dica, sem trocar o rótulo: "Fila" é
+              // contrato (posição "Nº na fila", ordem por espera, cinco arquivos de
+              // teste) e NÃO é sinônimo de "não atribuídas" — a Fila é quem espera
+              // um atendente; a conversa sem dono que o robô conduz está em
+              // "Automático". `title` não muda o nome acessível da aba.
+              const dica =
+                tab === "unassigned"
+                  ? t("Não atribuídas: esperando um atendente")
+                  : tab === "ai"
+                    ? t("IA: conduzidas pelo atendimento automático")
+                    : undefined;
               return (
                 <TabsTrigger
                   key={tab}
                   value={tab}
+                  title={dica}
                   className="shrink-0 gap-1 rounded-none border-b-2 border-transparent px-0 pb-2 pt-1 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none"
                 >
                   {t(meta.label)}
