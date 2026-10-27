@@ -18,10 +18,10 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Tema pela marca com contraste garantido (REQ-003)
-- [ ] T-001 [TEST-UNIT] Função de contraste: para qualquer cor de destaque (inclusive muito clara, muito escura e ausente) a cor do texto do balão tem pelo menos 4,5:1, nos temas claro e escuro, e a marca padrão não dá erro (~40 min) {AC-003.2, AC-003.4}
-- [ ] T-002 [IMPL] lib/inbox/tema-do-balao.ts: escolhe a cor do texto e expõe variáveis CSS a partir dos tokens da marca (~40 min) {AC-003.2, AC-003.4} deps: T-001
-- [ ] T-003 [TEST-UI] Balão enviado e contador na cor da marca, balão recebido neutro, fundo da conversa e lista seguindo o tema claro e escuro (~35 min) {AC-003.1, AC-003.3} deps: T-002
-- [ ] T-004 [IMPL] Aplicar o tema no inbox pelos tokens, sem cor ou nome de marca fixo (~45 min) {AC-003.1, AC-003.3} deps: T-003
+- [x] T-001 [TEST-UNIT] Função de contraste: para qualquer cor de destaque (inclusive muito clara, muito escura e ausente) a cor do texto do balão tem pelo menos 4,5:1, nos temas claro e escuro, e a marca padrão não dá erro (~40 min) {AC-003.2, AC-003.4}
+- [x] T-002 [IMPL] lib/inbox/tema-do-balao.ts: escolhe a cor do texto e expõe variáveis CSS a partir dos tokens da marca (~40 min) {AC-003.2, AC-003.4} deps: T-001
+- [x] T-003 [TEST-UI] Balão enviado e contador na cor da marca, balão recebido neutro, fundo da conversa e lista seguindo o tema claro e escuro (~35 min) {AC-003.1, AC-003.3} deps: T-002
+- [x] T-004 [IMPL] Aplicar o tema no inbox pelos tokens, sem cor ou nome de marca fixo (~45 min) {AC-003.1, AC-003.3} deps: T-003
 
 ### Fatia 2: Lista de conversas (REQ-001)
 - [ ] T-005 [TEST-UNIT] Formatadores: horário curto (hora, "Ontem", dia da semana, data, no fuso da organização) e prévia ("Você:", ícone e rótulo de mídia, nunca o endereço do arquivo) (~40 min) {AC-001.2, AC-001.3, AC-001.5}

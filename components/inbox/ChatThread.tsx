@@ -346,7 +346,7 @@ export function ChatThread({
           {t("Resultados nas mensagens carregadas")}: {resultados.size}
         </div>
       )}
-      <div ref={scrollerRef} className="min-w-0 flex-1 overflow-y-auto py-2">
+      <div ref={scrollerRef} className="min-w-0 flex-1 overflow-y-auto bg-muted/50 py-2">
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button
