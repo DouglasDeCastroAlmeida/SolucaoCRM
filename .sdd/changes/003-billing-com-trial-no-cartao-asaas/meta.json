@@ -1,0 +1,48 @@
+{
+  "id": "003-billing-com-trial-no-cartao-asaas",
+  "title": "Billing com trial no cartão (Asaas)",
+  "size": "L",
+  "stage": "tasks",
+  "createdAt": "2026-10-27T10:38:38.164Z",
+  "approvals": {
+    "grill": {
+      "at": "2026-10-27T10:46:23.670Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Grill aprovado pelo dono"
+    },
+    "prd": {
+      "at": "2026-10-27T10:48:23.868Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "PRD aprovado pelo dono"
+    },
+    "design": {
+      "at": "2026-10-27T10:54:50.812Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Design aprovado pelo dono"
+    }
+  },
+  "history": [
+    {
+      "stage": "grill",
+      "at": "2026-10-27T10:38:38.188Z"
+    },
+    {
+      "stage": "prd",
+      "at": "2026-10-27T10:46:23.670Z",
+      "from": "grill"
+    },
+    {
+      "stage": "design",
+      "at": "2026-10-27T10:48:23.868Z",
+      "from": "prd"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-10-27T10:54:50.812Z",
+      "from": "design"
+    }
+  ]
+}
