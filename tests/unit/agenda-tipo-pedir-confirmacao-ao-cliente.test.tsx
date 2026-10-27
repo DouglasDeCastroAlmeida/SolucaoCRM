@@ -87,7 +87,7 @@ describe("tela do tipo: Pedir confirmação ao cliente", () => {
     await userEvent.click(screen.getByTestId(`salvar-${ID}`));
 
     await waitFor(() => expect(patch).toHaveBeenCalled());
-    expect(patch.mock.calls[0]?.[1]).toMatchObject({ id: ID, client_confirmation_enabled: true });
+    expect((patch.mock.calls as unknown[][])[0]?.[1]).toMatchObject({ id: ID, client_confirmation_enabled: true });
   });
 
   it("AC-005.1: um tipo que já tinha a chave ligada abre marcado", async () => {

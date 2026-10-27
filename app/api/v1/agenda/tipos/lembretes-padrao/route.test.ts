@@ -7,7 +7,7 @@
  * filtros de verdade.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
@@ -207,7 +207,7 @@ describe("POST /api/v1/agenda/tipos/lembretes-padrao", () => {
 
   it("AC-001.3: modo suporte somente-leitura barra antes do efeito", async () => {
     authOk();
-    vi.mocked(requireSupportWrite).mockResolvedValue(new Response(null, { status: 403 }));
+    vi.mocked(requireSupportWrite).mockResolvedValue(new NextResponse(null, { status: 403 }));
     const db = makeAdmin([tipo({ id: TIPO, organization_id: ORG })]);
     const { POST } = await import("./route");
 

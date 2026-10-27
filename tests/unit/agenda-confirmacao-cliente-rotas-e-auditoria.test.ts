@@ -65,7 +65,7 @@ describe("AC-005.4: auditoria sem o texto do cliente", () => {
     const tratada = await tratarRespostaDoCliente(admin([linha()]), entrada(texto), deps);
 
     expect(tratada).toBe(true);
-    const cargas = auditMock.mock.calls.map((c) => c[0] as { action: string; metadata: Record<string, unknown> });
+    const cargas = (auditMock.mock.calls as unknown as Array<[{ action: string; metadata: Record<string, unknown> }]>).map((c) => c[0]);
     const dessa = cargas.find((c) => c.action === acao);
     expect(dessa).toBeDefined();
     const json = JSON.stringify(dessa).toLowerCase();
@@ -82,7 +82,7 @@ describe("AC-005.4: auditoria sem o texto do cliente", () => {
 
     expect(tratada).toBe(true);
     expect(auditMock).toHaveBeenCalledTimes(1);
-    const c = auditMock.mock.calls[0]![0] as { action: string; organizationId: string; metadata: Record<string, unknown> };
+    const c = (auditMock.mock.calls as unknown as Array<[{ action: string; organizationId: string; metadata: Record<string, unknown> }]>)[0]![0];
     expect(c.action).toBe(acao);
     expect(c.organizationId).toBe("org-a");
     expect(c.metadata).toMatchObject({ appointment_id: "ap-1", contact_id: "ct-1", message_id: "m-1" });

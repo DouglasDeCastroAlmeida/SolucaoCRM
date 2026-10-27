@@ -601,6 +601,7 @@ describe("GET /api/v1/agenda/tipos", () => {
           localKind: "in_person",
           localDetalhes: null,
           precisaConfirmacao: false,
+          confirmacaoDoCliente: false,
           ativo: true,
           donoPadraoId: USER,
           bufferAntesMin: 0,
