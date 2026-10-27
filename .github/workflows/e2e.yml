@@ -1318,6 +1318,14 @@ jobs:
       # logo abaixo. (Este parágrafo dizia "as duas" com três na lista: número
       # em prosa envelhece, e por isso ele saiu.)
       #
+      # `inbox-desempenho-e-celular` (SP4, mudança 004, T-025: 500 conversas rolando sem perder
+      # quadros, com p95 do intervalo entre quadros <= 50 ms, e 375x812 sem rolagem horizontal)
+      # está fora porque a medição de quadros só vale numa máquina de homologação/VPS fresca (o
+      # runner sem GPU, dividido com outras specs, deixaria o número ruidoso), o seed de 500
+      # contatos e conversas é grande, e a spec foi escrita sem poder rodar na máquina do autor.
+      # Sobe para uma `SPECS_PARTE_*` depois de passar uma vez a mão (T-026); a receita está no
+      # cabeçalho da spec.
+      #
       # `jev-chave-real` entrou aqui em 2026-09-23: EXIGE UMA CHAVE PAGA da
       # TypeSafe AI (`JEV_API_KEY`), e segredo de repositório público não é
       # lugar para ela. Não é o caso de ficar no CI e pular os casos pagos, como
@@ -1348,6 +1356,7 @@ jobs:
         marcas-sessao-por-host.spec.ts
         marcas.spec.ts
         agenda-confirmacao-cliente.spec.ts
+        inbox-desempenho-e-celular.spec.ts
         aviso-de-caso-chega-no-whatsapp.spec.ts
         jev-chave-real.spec.ts
         modelos-do-parceiro-editar-apagar.spec.ts

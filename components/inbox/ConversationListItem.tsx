@@ -334,6 +334,8 @@ export function ConversationListItem({
         className={cn(
           "group relative flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
           "focus-visible:outline-hidden focus-visible:bg-surface-elevated",
+          // Foco de teclado SE VÊ (AC-007.1): anel por dentro, que a lista rolável não corta.
+          "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
           // `accent-soft`, e não um degrau fixo da rampa: os degraus têm o MESMO
           // hex nos dois temas, e o `accent-50` (quase branco) no escuro deixava o
           // nome — `text-text`, claro no escuro — branco sobre branco.

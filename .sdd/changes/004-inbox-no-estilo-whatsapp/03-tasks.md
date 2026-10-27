@@ -47,10 +47,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-021 [IMPL] Acabamento visual do CRMSidePanel (~40 min) {AC-005.1, AC-005.2, AC-005.3} deps: T-004, T-020
 
 ### Fatia 5: Idiomas, teclado, desempenho e marca (REQ-007)
-- [ ] T-022 [TEST-UNIT] Textos novos do inbox existem em pt-BR, en e es no dicionário e a varredura de marca não acha cor ou nome fixo no código novo (~30 min) {AC-007.4, AC-007.5}
-- [ ] T-023 [IMPL] Entradas do dicionário (com a chave en/es) e ajustes até a varredura de marca passar (~30 min) {AC-007.4, AC-007.5} deps: T-022, T-015, T-019
-- [ ] T-024 [TEST-UI] Navegação só pelo teclado: percorrer a lista, abrir a conversa, enviar e usar os atalhos existentes, com foco visível (~40 min) {AC-007.1} deps: T-015, T-019
-- [ ] T-025 [TEST-E2E] Medição por ferramenta no navegador: 500 conversas rolam sem perder quadros e em largura de celular não há rolagem horizontal (~50 min) {AC-007.2, AC-007.3} deps: T-008, T-015
+- [x] T-022 [TEST-UNIT] Textos novos do inbox existem em pt-BR, en e es no dicionário e a varredura de marca não acha cor ou nome fixo no código novo (~30 min) {AC-007.4, AC-007.5}
+- [x] T-023 [IMPL] Entradas do dicionário (com a chave en/es) e ajustes até a varredura de marca passar (~30 min) {AC-007.4, AC-007.5} deps: T-022, T-015, T-019
+- [x] T-024 [TEST-UI] Navegação só pelo teclado: percorrer a lista, abrir a conversa, enviar e usar os atalhos existentes, com foco visível (~40 min) {AC-007.1} deps: T-015, T-019
+- [x] T-025 [TEST-E2E] Medição por ferramenta no navegador: 500 conversas rolam sem perder quadros e em largura de celular não há rolagem horizontal (~50 min) {AC-007.2, AC-007.3} deps: T-008, T-015
 
 ### Fechamento
 - [ ] T-026 [TEST-E2E] Jornada pela tela num ambiente fresco estilo VPS, com screenshots antes e depois e as medidas por ferramenta, em evidence/ (~50 min) {AC-001.1, AC-002.3, AC-003.2} deps: T-025
