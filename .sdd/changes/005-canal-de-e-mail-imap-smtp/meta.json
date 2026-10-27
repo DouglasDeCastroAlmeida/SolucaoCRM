@@ -1,0 +1,14 @@
+{
+  "id": "005-canal-de-e-mail-imap-smtp",
+  "title": "Canal de e-mail (IMAP/SMTP)",
+  "size": "L",
+  "stage": "grill",
+  "createdAt": "2026-10-27T11:02:18.874Z",
+  "approvals": {},
+  "history": [
+    {
+      "stage": "grill",
+      "at": "2026-10-27T11:02:18.875Z"
+    }
+  ]
+}
