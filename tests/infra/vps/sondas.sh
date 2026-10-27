@@ -293,7 +293,7 @@ sonda_marcas_rollback() {
 # --- Mudança 007 (T-025 / AC-006.3): agenda sem mudança para quem não ligou a confirmação -------------
 # Somente LEITURA. Prova, na produção: (1) as colunas novas existem; (2) NENHUM tipo de agendamento
 # tem client_confirmation_enabled ligado (a mudança nasce desligada); (3) `/`=200 e `/app`=307 como antes.
-# Variáveis: AGENDA_DB_CONTAINER (padrão supabase-db) = contêiner do Postgres na VPS;
+# Variáveis: AGENDA_DB_CONTAINER (padrão crm-prod-supabase-db-1) = contêiner do Postgres na VPS;
 # AGENDA_DB_USER (padrão postgres); AGENDA_DB_NAME (padrão postgres);
 # AGENDA_URL_BASE (padrão https://app.$DOMINIO_CRM) = endereço da instalação.
 # Rodar:  bash tests/infra/vps/sondas.sh agenda-tipos-inalterados   (evidência em evidencias/007-agenda/)
@@ -301,7 +301,7 @@ sonda_agenda_tipos_inalterados() {
   echo "== agenda: tipos inalterados e site de pé (AC-006.3)"
   EVID_DIR="${EVID_AGENDA_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/docs/solucao-crm/evidencias/007-agenda}"; mkdir -p "$EVID_DIR"
   local base="${AGENDA_URL_BASE:-https://app.${DOMINIO_CRM:-corretora.io}}"
-  local ctn="${AGENDA_DB_CONTAINER:-supabase-db}" usr="${AGENDA_DB_USER:-postgres}" db="${AGENDA_DB_NAME:-postgres}"
+  local ctn="${AGENDA_DB_CONTAINER:-crm-prod-supabase-db-1}" usr="${AGENDA_DB_USER:-postgres}" db="${AGENDA_DB_NAME:-postgres}"
   local colunas ligados raiz app
   colunas="$(rssh "docker exec $ctn psql -U $usr -d $db -At -c \"select count(*) from information_schema.columns where table_schema='public' and ((table_name='calendar_appointments' and column_name in ('client_confirmed_at','client_reschedule_requested_at')) or (table_name='calendar_event_types' and column_name='client_confirmation_enabled'))\"" 2>/dev/null)"
   ligados="$(rssh "docker exec $ctn psql -U $usr -d $db -At -c \"select count(*) from public.calendar_event_types where client_confirmation_enabled\"" 2>/dev/null)"

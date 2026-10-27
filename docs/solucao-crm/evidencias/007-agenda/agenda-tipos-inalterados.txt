@@ -1,0 +1,2 @@
+# agenda-tipos-inalterados.txt — 2026-10-27T18:19Z
+colunas_novas=3 tipos_com_confirmacao_ligada=0 raiz=200 app=307
