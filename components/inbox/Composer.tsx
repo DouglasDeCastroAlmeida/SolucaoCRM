@@ -214,7 +214,9 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   // (digitado ou escrito pelo `applyTemplate`, inclusive o clique da barra com o
   // campo vazio), o próximo `/` volta a abrir o menu.
   if (menuDismissed && !slash.open) setMenuDismissed(false);
-  const menuOpen = mode === "reply" && slash.open && !menuDismissed;
+  // `!== false`: só a ausência CONFIRMADA da permissão fecha o menu (AC-004.4).
+  const menuOpen =
+    mode === "reply" && slash.open && !menuDismissed && templates.podeConsultar !== false;
 
   /**
    * O contato da conversa, do jeito que a interpolação e o gate do curinga

@@ -22,11 +22,14 @@ export interface MessageTemplate {
 /** Onda 5: templates de script (pessoais + compartilhados) para o slash-menu do composer. */
 export function useMessageTemplates() {
   const podeConsultar = usePermission("message-templates.view");
-  return useQuery({
+  const consulta = useQuery({
     enabled: podeConsultar,
     queryKey: ["message-templates"],
     queryFn: async () => apiClient.get<{ data: MessageTemplate[] }>("/api/v1/message-templates"),
     staleTime: 60_000,
     select: (res) => res.data,
   });
+  // `podeConsultar` sai junto: o composer só abre o menu "/" para quem pode ver
+  // templates (AC-004.4); sem a permissão o "/" segue como texto.
+  return { ...consulta, podeConsultar };
 }

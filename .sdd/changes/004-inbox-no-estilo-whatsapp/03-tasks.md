@@ -41,10 +41,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-017 [IMPL] Reestilizar ConversationHeader sem mudar as ações (~40 min) {AC-002.6} deps: T-016
 
 ### Fatia 4: Campo de mensagem e painel do contato (REQ-004, REQ-005)
-- [ ] T-018 [TEST-UI] Composer: botão de gravar áudio com o campo vazio e de enviar com texto; "/" abre o menu com título, atalho e prévia, filtra ao digitar; escolher insere o texto para revisão; sem permissão o "/" segue como texto (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4}
-- [ ] T-019 [IMPL] Composer e TemplateMenu reestilizados, sem mudar a API de templates (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4} deps: T-004, T-018
-- [ ] T-020 [TEST-UI] Painel do contato: recolher mostra só o fio de reabrir, estado mantido ao trocar de conversa e ao recarregar, conteúdo (funil, tags, compromissos, notas) preservado (~40 min) {AC-005.1, AC-005.2, AC-005.3}
-- [ ] T-021 [IMPL] Acabamento visual do CRMSidePanel (~40 min) {AC-005.1, AC-005.2, AC-005.3} deps: T-004, T-020
+- [x] T-018 [TEST-UI] Composer: botão de gravar áudio com o campo vazio e de enviar com texto; "/" abre o menu com título, atalho e prévia, filtra ao digitar; escolher insere o texto para revisão; sem permissão o "/" segue como texto (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4}
+- [x] T-019 [IMPL] Composer e TemplateMenu reestilizados, sem mudar a API de templates (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4} deps: T-004, T-018
+- [x] T-020 [TEST-UI] Painel do contato: recolher mostra só o fio de reabrir, estado mantido ao trocar de conversa e ao recarregar, conteúdo (funil, tags, compromissos, notas) preservado (~40 min) {AC-005.1, AC-005.2, AC-005.3}
+- [x] T-021 [IMPL] Acabamento visual do CRMSidePanel (~40 min) {AC-005.1, AC-005.2, AC-005.3} deps: T-004, T-020
 
 ### Fatia 5: Idiomas, teclado, desempenho e marca (REQ-007)
 - [ ] T-022 [TEST-UNIT] Textos novos do inbox existem em pt-BR, en e es no dicionário e a varredura de marca não acha cor ou nome fixo no código novo (~30 min) {AC-007.4, AC-007.5}
