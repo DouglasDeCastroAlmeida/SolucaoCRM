@@ -495,6 +495,17 @@ const schema = z.object({
    */
   PASSAGEM_RETENTION_DAYS: z.string().optional().default(""),
   /**
+   * Chave de INSTALAÇÃO da confirmação do cliente pelo WhatsApp (mudança 007,
+   * REQ-005): "ligado" (padrão) ou "desligado". `z.string()` e não `z.enum`, pela
+   * MESMA razão das retenções acima: valor digitado errado não pode derrubar o
+   * produto com 500. Quem interpreta é `confirmacaoDoClienteLigadaNaInstalacao()`
+   * (`lib/agenda/aplicar-confirmacao-do-cliente.ts`), que lê `process.env` direto
+   * para o caminho quente de mensagens de entrada não importar este módulo; aqui
+   * fica a declaração. Valor que desliga: false, 0, off, no, desligado. Desligada,
+   * "1" e "2" seguem o fluxo normal e nenhum dado é apagado.
+   */
+  AGENDA_CONFIRMACAO_CLIENTE: z.string().optional().default(""),
+  /**
    * Registro de entrega do aviso de caso no WhatsApp da equipe (migration
    * 0292). `z.string()` pela MESMA razão das quatro acima — quem interpreta é
    * `lib/retencao/politica.ts`, onde lixo resolve para o lado seguro e o

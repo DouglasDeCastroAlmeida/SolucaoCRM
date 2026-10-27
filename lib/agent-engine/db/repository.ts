@@ -126,6 +126,9 @@ export type InboxKind =
   // dois dispara pela MESMA lista (`lib/tarefas/preferencia-de-lembrete.ts`).
   | 'task_due'
   | 'task_overdue'
+  // (migration 0719, mudança SDD 007) O cliente respondeu ao lembrete da agenda
+  // pedindo para remarcar ou cancelar; a equipe decide, nada muda sozinho.
+  | 'agenda_cliente_pediu_remarcar'
   | 'other';
 
 export interface InboxItemRow {

@@ -144,6 +144,15 @@ function makeAdmin(linhas: Linha[], canais: Array<Record<string, unknown>> = [])
         };
         return c;
       }
+      if (tabela === "organizations") {
+        // Só o idioma da organização: o texto padrão do lembrete sai nele.
+        const o = {
+          select: () => o,
+          eq: () => o,
+          maybeSingle: async () => ({ data: { locale: localeDaOrg }, error: null }),
+        };
+        return o;
+      }
       expect(tabela, "a rota mexeu em outra tabela").toBe("calendar_event_types");
       return builder();
     },
@@ -177,8 +186,11 @@ async function corpoDeErro(res: Response) {
   return (await res.json()) as { error: { code: string; message: string } };
 }
 
+let localeDaOrg: string | null = "pt-BR";
+
 beforeEach(() => {
   vi.clearAllMocks();
+  localeDaOrg = "pt-BR";
 });
 
 describe("POST /api/v1/agenda/tipos — o lembrete no nascimento do tipo", () => {
@@ -207,22 +219,17 @@ describe("POST /api/v1/agenda/tipos — o lembrete no nascimento do tipo", () =>
   });
 
   /**
-   * O DEFAULT DA 0194 CONTINUA VALENDO — e é isto que impede a entrega inteira
-   * de virar uma regressão: nenhuma instalação passa a mandar mensagem por ter
-   * atualizado.
-   *
-   * O que se prende é a AUSÊNCIA do campo no INSERT, não `reminder_enabled ===
-   * false` na linha: um `.default(false)` no Zod produziria a mesma linha e
-   * sobrescreveria a coluna do banco em toda criação, tirando do dono da
-   * instalação a única decisão que a 0194 deixou reservada para ele.
+   * AC-001.1 — o tipo CRIADO DEPOIS desta mudança nasce com lembretes de 24 h e
+   * 2 h ligados. A decisão mora no handler de criação; o default da coluna (0194)
+   * segue `false` e os tipos que já existem não mudam (AC-001.2).
    */
-  it("sem o campo, o INSERT não o menciona — quem decide segue sendo o default do banco", async () => {
+  it("AC-001.1: sem mencionar lembrete, o tipo novo nasce ligado com 24 h e 2 h e texto padrão", async () => {
     authOk();
     const linhas: Linha[] = [];
     const db = makeAdmin(linhas);
     const { POST } = await import("./route");
 
-    await POST(
+    const res = await POST(
       req("POST", {
         name: "Consulta",
         category: "consulta",
@@ -231,8 +238,143 @@ describe("POST /api/v1/agenda/tipos — o lembrete no nascimento do tipo", () =>
       }),
     );
 
-    expect(Object.keys(db.escritas[0]?.campos ?? {})).not.toContain("reminder_enabled");
-    expect(Object.keys(db.escritas[0]?.campos ?? {})).not.toContain("reminder_minutes_before");
+    expect(res.status).toBe(201);
+    const c = db.escritas[0]?.campos ?? {};
+    expect(c.reminder_enabled).toBe(true);
+    expect(c.reminder_minutes_before).toBe(1440);
+    expect(c.reminder_extra_offsets_minutes).toEqual([120]);
+    expect(String(c.reminder_body)).toContain("{{organizacao}}");
+    const extras = c.reminder_bodies as Record<string, string>;
+    expect(Object.keys(extras)).toEqual(["120"]);
+    expect(extras["120"]).toContain("{{hora}}");
+    // Confirmação do cliente não é ligada por esta mudança: sem a frase "Responda 1".
+    expect(String(c.reminder_body)).not.toMatch(/Responda 1/);
+  });
+
+  it("AC-001.4: o texto padrão sai no idioma da organização", async () => {
+    authOk();
+    localeDaOrg = "es";
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    await POST(
+      req("POST", { name: "Consulta", category: "consulta", duration_minutes: 30, location_kind: "in_person" }),
+    );
+
+    expect(String(db.escritas[0]?.campos.reminder_body)).toMatch(/Te recuerdo/);
+  });
+
+  it("AC-001.1: reminder_enabled=false explícito no corpo manda — nada de lembrete padrão", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    await POST(
+      req("POST", {
+        name: "Consulta",
+        category: "consulta",
+        duration_minutes: 30,
+        location_kind: "in_person",
+        reminder_enabled: false,
+      }),
+    );
+
+    const c = db.escritas[0]?.campos ?? {};
+    expect(c.reminder_enabled).toBe(false);
+    expect(Object.keys(c)).not.toContain("reminder_extra_offsets_minutes");
+    expect(Object.keys(c)).not.toContain("reminder_body");
+  });
+
+  it("AC-001.1: degraus próprios no corpo mandam — o padrão não os sobrescreve", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    await POST(
+      req("POST", {
+        name: "Retorno",
+        category: "retorno",
+        duration_minutes: 15,
+        location_kind: "in_person",
+        reminder_enabled: true,
+        reminder_minutes_before: 60,
+      }),
+    );
+
+    const c = db.escritas[0]?.campos ?? {};
+    expect(c.reminder_minutes_before).toBe(60);
+    expect(Object.keys(c)).not.toContain("reminder_extra_offsets_minutes");
+  });
+});
+
+describe("AC-005.1: a chave POR TIPO 'Pedir confirmação ao cliente'", () => {
+  const base = { name: "Consulta", category: "consulta", duration_minutes: 30, location_kind: "in_person" };
+
+  it("AC-005.1: o POST persiste client_confirmation_enabled e o texto padrão ganha a frase 1/2", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    const res = await POST(req("POST", { ...base, client_confirmation_enabled: true }));
+
+    expect(res.status).toBe(201);
+    const c = db.escritas[0]?.campos ?? {};
+    expect(c.client_confirmation_enabled).toBe(true);
+    expect(String(c.reminder_body)).toMatch(/Responda 1 para confirmar ou 2 para remarcar/);
+  });
+
+  it("AC-005.1: sem a chave por tipo o texto padrão NÃO promete resposta e a coluna não é escrita", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    await POST(req("POST", base));
+
+    const c = db.escritas[0]?.campos ?? {};
+    expect(Object.keys(c)).not.toContain("client_confirmation_enabled");
+    expect(String(c.reminder_body)).not.toMatch(/Responda 1/);
+  });
+
+  it("AC-005.2: com a chave de instalação desligada o texto padrão não promete resposta", async () => {
+    authOk();
+    const antes = process.env.AGENDA_CONFIRMACAO_CLIENTE;
+    process.env.AGENDA_CONFIRMACAO_CLIENTE = "desligado";
+    try {
+      const db = makeAdmin([]);
+      const { POST } = await import("./route");
+
+      await POST(req("POST", { ...base, client_confirmation_enabled: true }));
+
+      expect(String(db.escritas[0]?.campos.reminder_body)).not.toMatch(/Responda 1/);
+    } finally {
+      if (antes === undefined) delete process.env.AGENDA_CONFIRMACAO_CLIENTE;
+      else process.env.AGENDA_CONFIRMACAO_CLIENTE = antes;
+    }
+  });
+
+  it("AC-005.1: o PATCH liga e desliga a chave, e o valor CHEGA à linha", async () => {
+    authOk();
+    const linhas = [linha({ id: TIPO_DA_ORG, organization_id: ORG })];
+    makeAdmin(linhas);
+    const { PATCH } = await import("./route");
+
+    const ligou = await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: true }));
+    expect(ligou.status).toBe(200);
+    expect(linhas[0]?.client_confirmation_enabled).toBe(true);
+
+    await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: false }));
+    expect(linhas[0]?.client_confirmation_enabled).toBe(false);
+  });
+
+  it("AC-005.1: valor que não é booleano é recusado sem escrever", async () => {
+    authOk();
+    const db = makeAdmin([linha({ id: TIPO_DA_ORG, organization_id: ORG })]);
+    const { PATCH } = await import("./route");
+
+    const res = await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: "sim" }));
+
+    expect(res.status).toBe(422);
+    expect(db.escritas).toHaveLength(0);
   });
 });
 
@@ -459,6 +601,7 @@ describe("GET /api/v1/agenda/tipos", () => {
           localKind: "in_person",
           localDetalhes: null,
           precisaConfirmacao: false,
+          confirmacaoDoCliente: false,
           ativo: true,
           donoPadraoId: USER,
           bufferAntesMin: 0,

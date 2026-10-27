@@ -218,7 +218,7 @@ function tipoDe(linha: CompromissoAVencer): TipoDoCompromisso | null {
  *
  * Sem molde, sai a frase abaixo — o quê, quando e onde. Com molde, as
  * variáveis `{{nome}}`, `{{primeiro_nome}}`, `{{titulo}}`, `{{tipo}}`,
- * `{{dia}}`, `{{hora}}`, `{{endereco}}` e `{{quando}}` são preenchidas com
+ * `{{dia}}`, `{{hora}}`, `{{endereco}}`, `{{quando}}` e `{{organizacao}}` são preenchidas com
  * os mesmos dados; chave desconhecida fica no texto, para quem digitou
  * `{{foo}}` ver o erro em vez de uma mensagem manca.
  *
@@ -255,6 +255,8 @@ export function montarLembrete(input: {
   idioma?: Idioma;
   /** Texto próprio do tipo. Vazio/nulo = a frase padrão. */
   molde?: string | null;
+  /** Nome da organização, para `{{organizacao}}`. Vazio se não vier. */
+  organizacaoNome?: string | null;
   /** Nome do tipo de atendimento, para `{{tipo}}`. Cai no título se faltar. */
   tipoNome?: string | null;
 }): string {
@@ -285,10 +287,19 @@ export function montarLembrete(input: {
     hora,
     endereco: input.local?.trim() ?? "",
     quando: `${dia} ${t("às")} ${hora}`,
+    organizacao: input.organizacaoNome?.trim() ?? "",
   };
 
   const molde = input.molde?.trim();
-  if (molde) return aplicarMoldeDoLembrete(molde, pecas);
+  if (molde) {
+    const texto = aplicarMoldeDoLembrete(molde, pecas);
+    // Contato sem nome: "Oi {{primeiro_nome}}!" viraria "Oi !". O ajuste vale só
+    // quando o nome está vazio E o molde usa a variável do nome, para não mexer
+    // na pontuação que a pessoa escreveu em molde próprio.
+    return !nome && /\{\{\s*(primeiro_nome|nome)\s*\}\}/i.test(molde)
+      ? texto.replace(/\s+([!,.?])/g, "$1")
+      : texto;
+  }
 
   // Cada `t()` cobre só a parte FIXA da frase: nome, título, data e endereço
   // são dado do tenant e nunca passam por tradução.
@@ -582,12 +593,12 @@ async function handle(req: NextRequest): Promise<Response> {
 
   // Uma consulta por organização na rodada, não por compromisso: o fuso entra
   // em `degrausPendentes`, antes de qualquer outra leitura da linha.
-  const organizacoes = new Map<string, { timezone: string | null; locale: string | null } | null>();
+  const organizacoes = new Map<string, { timezone: string | null; locale: string | null; name: string | null } | null>();
   const organizacaoDe = async (id: string) => {
     if (!organizacoes.has(id)) {
       const { data: o } = await admin
         .from("organizations")
-        .select("timezone, locale")
+        .select("timezone, locale, name")
         .eq("id", id)
         .maybeSingle();
       organizacoes.set(id, o ?? null);
@@ -703,6 +714,7 @@ async function handle(req: NextRequest): Promise<Response> {
       idioma: normalizarIdioma(organizacao?.locale),
       molde,
       tipoNome: tipo.name,
+      organizacaoNome: organizacao?.name ?? null,
     });
 
     // ─── O CARIMBO ANTES DO ENVIO (issue #2223) ────────────────────────────

@@ -13081,6 +13081,28 @@ export const DICIONARIO: Traducoes = {
   "Oi!": { es: "¡Hola!" },
   "Passando pra lembrar do seu compromisso:": { es: "Te recuerdo tu cita:" },
   "Endereço": { es: "Dirección" },
+  // ─── lib/agenda/lembrete-padrao.ts (texto padrão do lembrete) ───
+  "Oi {{primeiro_nome}}! Passando para lembrar do seu {{tipo}} em {{organizacao}}: {{dia}} às {{hora}}.": {
+    es: "¡Hola {{primeiro_nome}}! Te recuerdo tu {{tipo}} en {{organizacao}}: {{dia}} a las {{hora}}.",
+  },
+  "Oi {{primeiro_nome}}! Seu {{tipo}} em {{organizacao}} é daqui a pouco, às {{hora}}. Até já!": {
+    es: "¡Hola {{primeiro_nome}}! Tu {{tipo}} en {{organizacao}} es en un rato, a las {{hora}}. ¡Hasta pronto!",
+  },
+  "Ativar lembretes padrão": { es: "Activar recordatorios predeterminados" },
+  "Lembretes padrão ativados.": { es: "Recordatorios predeterminados activados." },
+  "Este tipo já tem lembretes ligados.": { es: "Este tipo ya tiene recordatorios activados." },
+  "Responda 1 para confirmar ou 2 para remarcar.": {
+    es: "Responde 1 para confirmar o 2 para reagendar.",
+  },
+  "Obrigado pela confirmação! Seu {{tipo}} está confirmado para {{dia}} às {{hora}}.": {
+    es: "¡Gracias por confirmar! Tu {{tipo}} está confirmado para {{dia}} a las {{hora}}.",
+  },
+  "Entendido! Avisamos a nossa equipe e ela entrará em contato para combinar um novo horário para o seu {{tipo}} de {{dia}} às {{hora}}.": {
+    es: "¡Entendido! Avisamos a nuestro equipo y se pondrá en contacto contigo para acordar un nuevo horario para tu {{tipo}} del {{dia}} a las {{hora}}.",
+  },
+  "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar o {{tipo}} de {{dia}} às {{hora}}. Nada foi alterado: a conversa foi para a fila de atendimento.": {
+    es: "El cliente respondió al recordatorio pidiendo reagendar o cancelar el {{tipo}} del {{dia}} a las {{hora}}. No se cambió nada: la conversación pasó a la cola de atención.",
+  },
 
   // ─── lib/ai/pontos/resolver.ts (avisos do painel de Provedores de IA) ───
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {
@@ -16705,6 +16727,20 @@ export const DICIONARIO: Traducoes = {
   },
   "A tarefa venceu sem conclusão. Abra e conclua, ou reagende o prazo se ele não for mais possível.": {
     es: "La tarea venció sin terminarse. Ábrela y cúmplela, o reprograma el plazo si ya no es posible.",
+  },
+  "Um cliente pediu para remarcar um horário": {
+    es: "Un cliente pidió reprogramar un horario",
+  },
+  "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar. Nada foi alterado: abra o compromisso, combine o novo horário com ele e remarque ou cancele pela agenda.": {
+    es: "El cliente respondió al recordatorio pidiendo reprogramar o cancelar. No se cambió nada: abre la cita, acuerda el nuevo horario con él y reprograma o cancela desde la agenda.",
+  },
+
+  // Mudança 007: selos da resposta do cliente ao lembrete (agenda e histórico).
+  "Confirmado pelo cliente": { es: "Confirmado por el cliente" },
+  "Pediu para remarcar": { es: "Pidió reprogramar" },
+  "Pedir confirmação ao cliente": { es: "Pedir confirmación al cliente" },
+  "O lembrete passa a pedir: responda 1 para confirmar ou 2 para remarcar. Sem isto, o cliente não é convidado a responder e nada muda no fluxo.": {
+    es: "El recordatorio pasa a pedir: responde 1 para confirmar o 2 para reprogramar. Sin esto, no se invita al cliente a responder y el flujo no cambia.",
   },
 
   // ─── Contatos: lote por seleção múltipla (#2484, fatia F3) ───

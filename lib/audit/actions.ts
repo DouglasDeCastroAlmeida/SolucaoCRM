@@ -641,6 +641,9 @@ export const AUDIT_ACTIONS = [
   // próprio: como `agenda.tipo_alterado { campos: ["is_active"] }` ele seria,
   // na trilha, indistinguível de "mudaram a duração".
   "agenda.tipo_reativado",
+  // "Ativar lembretes padrão" num tipo que já existia: liga os degraus de 24 h e
+  // 2 h. Verbo próprio para a trilha distinguir de uma edição de campo qualquer.
+  "agenda.tipo_lembretes_padrao_ativados",
   // A opção da ORGANIZAÇÃO que decide se o Atendente mexe na agenda dos colegas
   // (issue #978, migration 0343). É ato de gestão como o dos tipos acima: muda o
   // que TODO Atendente pode fazer a partir dali, e sem esta linha a primeira
@@ -655,6 +658,12 @@ export const AUDIT_ACTIONS = [
   // telefone de um cliente é efeito, e efeito audita — mas só a rodada que
   // enviou: a que varreu e não achou ninguém a avisar não é mutação.
   "agenda.lembrete_enviado",
+  // O cliente respondeu "1" ao lembrete e o compromisso ficou confirmado POR ELE
+  // (mudança 007). Só a classificação e os ids: o texto da mensagem não entra.
+  "agenda.client_confirmed",
+  // O cliente respondeu "2" (remarcar/cancelar) ao lembrete: o pedido foi registrado
+  // e a equipe avisada, nada foi alterado (mudança 007). Sem o texto da mensagem.
+  "agenda.client_requested_reschedule",
   // Fechar ou abrir um dia muda quem consegue marcar, e a pergunta que aparece
   // depois é sempre "quem fechou esse dia?". O bloqueio em si pode ser apagado
   // (é regra vigente, não fato histórico); estas linhas é que guardam a autoria.

@@ -290,7 +290,31 @@ sonda_marcas_rollback() {
   printf 'rollback_segundos=%s pasta=%s (restaurado ao fim; o .env anterior segue em .env.antes-marcas na VPS)\n' "$seg" "$pasta" | registra marcas-rollback.txt
 }
 
-[ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev marcas-login marcas-removido marcas-rollback)"; exit 2; }
+# --- Mudança 007 (T-025 / AC-006.3): agenda sem mudança para quem não ligou a confirmação -------------
+# Somente LEITURA. Prova, na produção: (1) as colunas novas existem; (2) NENHUM tipo de agendamento
+# tem client_confirmation_enabled ligado (a mudança nasce desligada); (3) `/`=200 e `/app`=307 como antes.
+# Variáveis: AGENDA_DB_CONTAINER (padrão supabase-db) = contêiner do Postgres na VPS;
+# AGENDA_DB_USER (padrão postgres); AGENDA_DB_NAME (padrão postgres);
+# AGENDA_URL_BASE (padrão https://app.$DOMINIO_CRM) = endereço da instalação.
+# Rodar:  bash tests/infra/vps/sondas.sh agenda-tipos-inalterados   (evidência em evidencias/007-agenda/)
+sonda_agenda_tipos_inalterados() {
+  echo "== agenda: tipos inalterados e site de pé (AC-006.3)"
+  EVID_DIR="${EVID_AGENDA_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/docs/solucao-crm/evidencias/007-agenda}"; mkdir -p "$EVID_DIR"
+  local base="${AGENDA_URL_BASE:-https://app.${DOMINIO_CRM:-corretora.io}}"
+  local ctn="${AGENDA_DB_CONTAINER:-supabase-db}" usr="${AGENDA_DB_USER:-postgres}" db="${AGENDA_DB_NAME:-postgres}"
+  local colunas ligados raiz app
+  colunas="$(rssh "docker exec $ctn psql -U $usr -d $db -At -c \"select count(*) from information_schema.columns where table_schema='public' and ((table_name='calendar_appointments' and column_name in ('client_confirmed_at','client_reschedule_requested_at')) or (table_name='calendar_event_types' and column_name='client_confirmation_enabled'))\"" 2>/dev/null)"
+  ligados="$(rssh "docker exec $ctn psql -U $usr -d $db -At -c \"select count(*) from public.calendar_event_types where client_confirmation_enabled\"" 2>/dev/null)"
+  [ "${colunas:-0}" = "3" ] && pass "AC-006.3: as 3 colunas novas existem (${colunas})" || fail "AC-006.3: colunas novas encontradas: ${colunas:-?} (esperado 3)"
+  [ "${ligados:-x}" = "0" ] && pass "AC-006.3: nenhum tipo de agendamento tem a confirmação do cliente ligada" || fail "AC-006.3: tipos com a confirmação ligada: ${ligados:-?} (esperado 0)"
+  raiz="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$base/")"
+  app="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$base/app")"
+  [ "$raiz" = "200" ] && pass "AC-006.3: / responde 200" || fail "AC-006.3: / respondeu ${raiz:-?} (esperado 200)"
+  [ "$app" = "307" ] && pass "AC-006.3: /app responde 307" || fail "AC-006.3: /app respondeu ${app:-?} (esperado 307)"
+  printf 'colunas_novas=%s tipos_com_confirmacao_ligada=%s raiz=%s app=%s\n' "${colunas:-?}" "${ligados:-?}" "${raiz:-?}" "${app:-?}" | registra agenda-tipos-inalterados.txt
+}
+
+[ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev marcas-login marcas-removido marcas-rollback agenda-tipos-inalterados)"; exit 2; }
 for s in "$@"; do
   fn="sonda_${s//-/_}"
   if declare -F "$fn" >/dev/null; then "$fn"; else echo "sonda desconhecida: $s"; falhas=$((falhas + 1)); fi

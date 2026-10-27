@@ -424,6 +424,8 @@ function BlocoDeAgendamento({
         agendamento.quemSeraAtendido ? `, ${t("com")} ${agendamento.quemSeraAtendido}` : ""
       }${pessoa ? `, ${t("atendido por")} ${pessoa.nome}` : ""}${
         doGoogle ? `, ${t("ocupado na agenda do Google")}` : ""
+      }${agendamento.clienteConfirmouEm ? `, ${t("Confirmado pelo cliente")}` : ""}${
+        agendamento.clientePediuRemarcarEm ? `, ${t("Pediu para remarcar")}` : ""
       }`}
       className={cn(
         "absolute flex flex-col items-start overflow-hidden rounded-sm px-1.5 py-0.5 text-left",
@@ -485,6 +487,23 @@ function BlocoDeAgendamento({
           {agendamento.quemSeraAtendido ? ` · ${agendamento.quemSeraAtendido}` : ""}
         </span>
       )}
+      {/* Marca curta em texto (o selo completo vive no histórico e no detalhe): um
+          botão não pode conter papel `status`, e a cor sozinha não carrega o sentido. */}
+      {agendamento.clientePediuRemarcarEm ? (
+        <span
+          data-testid={`grade-pediu-remarcar-${agendamento.id}`}
+          className="ml-1 truncate text-[10px] font-semibold leading-3 text-text"
+        >
+          {t("Pediu para remarcar")}
+        </span>
+      ) : agendamento.clienteConfirmouEm ? (
+        <span
+          data-testid={`grade-confirmado-${agendamento.id}`}
+          className="ml-1 truncate text-[10px] leading-3 text-text-muted"
+        >
+          ✓ {t("Confirmado pelo cliente")}
+        </span>
+      ) : null}
     </button>
   );
 }

@@ -39,6 +39,7 @@
  * dentro, com log, e o seguinte roda mesmo assim.
  */
 import { audit } from "@/lib/audit";
+import { tratarRespostaDoCliente } from "@/lib/agenda/aplicar-confirmacao-do-cliente";
 import { idsDosCanaisDesativados } from "@/lib/channels/desativado";
 import { encerraDemanda } from "@/lib/leads/encerramento";
 import { garantirLeadDaConversa } from "@/lib/leads/nascimento-do-lead";
@@ -180,7 +181,11 @@ export async function aplicarEfeitosPosEntrada(
   // UMA VOZ: a resposta do cliente avança o follow-up DESTE contato antes de o
   // turno do agente ser pedido.
   await acelerarFollowupDoInbound(admin, sinal);
-  await pedirDespachoDoAgente(admin, entrada);
+  // Resposta do cliente a um lembrete de agenda ("1", "sim"...): grava a
+  // confirmação, agradece e a mensagem está TRATADA — o agente não a responde
+  // (mudança 007, AC-002.8). Nunca lança; roda com o agente ligado ou não.
+  const tratadaComoConfirmacao = await tratarRespostaDoCliente(admin, entrada);
+  if (!tratadaComoConfirmacao) await pedirDespachoDoAgente(admin, entrada);
   // O dreno do event_log vem DEPOIS do despacho: nenhum handler dele decide se
   // o agente fala (o "cliente voltou" é previsto por `deveCederTurnoAoRetorno`
   // nas duas ordens), e cada evento drenado aqui atrasava o pedido do turno.
