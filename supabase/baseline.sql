@@ -10199,6 +10199,11 @@ alter table public.agent_inbox_items
     -- lista pelas razões de sempre (bloco único por constraint, #159).
     'task_due',
     'task_overdue',
+    -- (migration 0719, mudança SDD 007) O cliente respondeu ao lembrete da
+    -- agenda pedindo para remarcar ou cancelar. A regra marca o compromisso e
+    -- avisa a Central; nada é remarcado nem cancelado sozinho. Entra NESTA
+    -- lista pelas razões de sempre (bloco único por constraint, #159).
+    'agenda_cliente_pediu_remarcar',
     'other'
   ));
 
@@ -58153,6 +58158,22 @@ $f$;
 
 revoke execute on function public.fn_copiar_pacote_para_org(uuid, uuid) from public, anon, authenticated;
 grant  execute on function public.fn_copiar_pacote_para_org(uuid, uuid) to service_role;
+
+-- ---- agenda: confirmação do cliente (migration 0719) ----
+-- manifest: Agenda: confirmação pelo cliente (colunas e índice; o kind da Central está no bloco único de agent_inbox_items_kind_check).
+
+alter table public.calendar_appointments
+  add column if not exists client_confirmed_at timestamptz,
+  add column if not exists client_reschedule_requested_at timestamptz;
+
+alter table public.calendar_event_types
+  add column if not exists client_confirmation_enabled boolean not null default false;
+
+-- Compromisso ainda aberto e sem confirmação do cliente: o conjunto que a regra
+-- consulta ao receber a resposta. Parcial, para não pesar na tabela inteira.
+create index if not exists calendar_appointments_client_pending_idx
+  on public.calendar_appointments (organization_id, contact_id, starts_at)
+  where client_confirmed_at is null and status in ('pending', 'confirmed');
 
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --

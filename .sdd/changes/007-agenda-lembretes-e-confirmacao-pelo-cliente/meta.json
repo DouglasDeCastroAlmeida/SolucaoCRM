@@ -2,7 +2,7 @@
   "id": "007-agenda-lembretes-e-confirmacao-pelo-cliente",
   "title": "Agenda: lembretes e confirmacao pelo cliente",
   "size": "M",
-  "stage": "tasks",
+  "stage": "implement",
   "createdAt": "2026-10-27T12:32:38.934Z",
   "approvals": {
     "grill": {
@@ -16,6 +16,12 @@
       "by": "DouglasDeCastroAlmeida",
       "forced": false,
       "note": "PRD da 007 aprovado pelo dono"
+    },
+    "tasks": {
+      "at": "2026-10-27T14:55:34.591Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Tarefas da 007 aprovadas pelo dono"
     }
   },
   "history": [
@@ -32,6 +38,11 @@
       "stage": "tasks",
       "at": "2026-10-27T14:28:26.581Z",
       "from": "prd"
+    },
+    {
+      "stage": "implement",
+      "at": "2026-10-27T14:55:34.591Z",
+      "from": "tasks"
     }
   ]
 }

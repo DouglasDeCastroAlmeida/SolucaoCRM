@@ -16706,6 +16706,12 @@ export const DICIONARIO: Traducoes = {
   "A tarefa venceu sem conclusão. Abra e conclua, ou reagende o prazo se ele não for mais possível.": {
     es: "La tarea venció sin terminarse. Ábrela y cúmplela, o reprograma el plazo si ya no es posible.",
   },
+  "Um cliente pediu para remarcar um horário": {
+    es: "Un cliente pidió reprogramar un horario",
+  },
+  "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar. Nada foi alterado: abra o compromisso, combine o novo horário com ele e remarque ou cancele pela agenda.": {
+    es: "El cliente respondió al recordatorio pidiendo reprogramar o cancelar. No se cambió nada: abre la cita, acuerda el nuevo horario con él y reprograma o cancela desde la agenda.",
+  },
 
   // ─── Contatos: lote por seleção múltipla (#2484, fatia F3) ───
   //

@@ -18,9 +18,9 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Banco aditivo e tipos existentes intactos (REQ-001, REQ-005, REQ-006)
-- [ ] T-001 [TEST-INT] Invariante: nenhum tipo de agendamento existente muda de lembrete nem de chave por causa da migration, campos novos de confirmação e de pedido de remarcar nulos nos compromissos existentes, isolamento entre 2 organizações, funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-001.2, AC-005.3, AC-006.1}
-- [ ] T-002 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min)
-- [ ] T-003 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: client_confirmed_at e client_reschedule_requested_at em calendar_appointments, chave por tipo da confirmação do cliente (desligada nos existentes), kinds novos da Central (~50 min) {AC-001.2, AC-005.3, AC-006.1} deps: T-001, T-002
+- [x] T-001 [TEST-INT] Invariante: nenhum tipo de agendamento existente muda de lembrete nem de chave por causa da migration, campos novos de confirmação e de pedido de remarcar nulos nos compromissos existentes, isolamento entre 2 organizações, funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-001.2, AC-005.3, AC-006.1}
+- [x] T-002 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min)
+- [x] T-003 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: client_confirmed_at e client_reschedule_requested_at em calendar_appointments, chave por tipo da confirmação do cliente (desligada nos existentes), kinds novos da Central (~50 min) {AC-001.2, AC-005.3, AC-006.1} deps: T-001, T-002
 - [ ] T-004 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-003
 
 ### Fatia 2: Lembretes padrão para tipos novos (REQ-001)
