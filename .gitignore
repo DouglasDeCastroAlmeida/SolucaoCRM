@@ -200,3 +200,6 @@ __pycache__/
 caddy-sites/*
 !caddy-sites/README.caddy
 !caddy-sites/marcas.caddy.exemplo
+
+# Cópias de segurança locais da ferramenta de edição
+.restauracao/
