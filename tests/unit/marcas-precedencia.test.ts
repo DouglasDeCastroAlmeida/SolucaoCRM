@@ -77,3 +77,29 @@ describe("PDF de LGPD sem marca", () => {
     expect(fonte).not.toMatch(/marcaDoHost|marcaDaSaida|camadaDaMarca/);
   });
 });
+
+describe("nome de exibição da marca (AC-002.1: o painel só preenche o nome da marca)", () => {
+  it("AC-002.1: marca sem app_name mostra o NOME da marca, não o da instalação", () => {
+    const m = resolverMarca(
+      [camadaDaMarca(marca({ app_name: null, name: "Marca A Teste" })), camadaDaInstalacao(instalacao), camadaDoAmbiente(ambiente)],
+      REGUA_DO_PRODUTO,
+    );
+    expect(m.name).toBe("Marca A Teste");
+  });
+
+  it("AC-002.2: a marca PADRÃO sem app_name continua herdando da instalação", () => {
+    const m = resolverMarca(
+      [camadaDaMarca(marca({ app_name: null, name: "padrao", is_default: true })), camadaDaInstalacao(instalacao), camadaDoAmbiente(ambiente)],
+      REGUA_DO_PRODUTO,
+    );
+    expect(m.name).toBe("Instalação");
+  });
+
+  it("AC-002.1: com app_name, ele vence o nome da marca", () => {
+    const m = resolverMarca(
+      [camadaDaMarca(marca({ app_name: "Corretor Pro", name: "Corretor" })), camadaDaInstalacao(instalacao)],
+      REGUA_DO_PRODUTO,
+    );
+    expect(m.name).toBe("Corretor Pro");
+  });
+});

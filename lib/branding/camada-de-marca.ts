@@ -16,7 +16,15 @@ export const ORIGEM_DA_MARCA = "marca";
 export type MarcaParaCamada = Pick<
   Brand,
   "app_name" | "logo_path" | "logo_dark_path" | "accent_hex" | "accent_dark_hex"
->;
+> & Partial<Pick<Brand, "name" | "is_default">>;
+
+function nomeDeExibicao(marca: MarcaParaCamada): string | null | undefined {
+  const proprio = (marca.app_name ?? "").trim();
+  if (proprio.length > 0) return proprio;
+  if (marca.is_default === true) return marca.app_name;
+  const nome = (marca.name ?? "").trim();
+  return nome.length > 0 ? nome : marca.app_name;
+}
 
 export function camadaDaMarca(marca: MarcaParaCamada | null | undefined): CamadaDeMarca {
   if (!marca) return { origem: ORIGEM_DA_MARCA };
@@ -26,7 +34,9 @@ export function camadaDaMarca(marca: MarcaParaCamada | null | undefined): Camada
   const logoDarkUrl = logoDaCamada(marca.logo_dark_path, null);
   const base = {
     origem: ORIGEM_DA_MARCA,
-    nome: marca.app_name,
+    // Nome de exibição: o `app_name` da marca; sem ele, o NOME da marca (é o que o painel preenche e
+    // o que o e-mail já usa). A marca padrão não tem nome próprio: herda da instalação.
+    nome: nomeDeExibicao(marca),
     logoUrl,
     ...(logoDarkUrl ? { logoDarkUrl } : {}),
   };
