@@ -22,6 +22,8 @@ const CHAMADORES: Record<string, string> = {
   "lib/campanhas/rodada.ts": TRATA, // registrarExcecaoDoEnvio, tests/unit/suspensao-nao-dispara-campanha.test.ts
   "lib/prospecting/worker.ts": TRATA, // tests/unit/prospecting-worker.test.ts
   "lib/followup/enviar-texto-fixo.ts": TRATA, // lib/followup/enviar-texto-fixo.test.ts
+  "lib/agenda/aplicar-confirmacao-do-cliente.ts":
+    "agradecimento a uma resposta que o cliente acabou de mandar: o envio nunca lança, a falha vira log e a confirmação já está gravada; não há fila nem retentativa",
   "lib/agent-engine/edge/crm/send-message.ts":
     "propaga o 403 como ApiError; sendWithLedger relança a suspensão e o agent-worker encerra o job terminal",
   "app/api/v1/messages/route.ts": "rota de API: o ApiError 403 org_suspended vira a resposta JSON de quem chamou",

@@ -292,7 +292,15 @@ async function registrarPedidoDeRemarcar(
       .eq("ref_id", alvo.id)
       .eq("status", "open")
       .maybeSingle();
-    if (!aberto) {
+    // LGPD: aviso novo apontando para o compromisso de quem foi anonimizado ressuscitaria o vínculo
+    // (cerca `aviso-de-compromisso-checa-anonimizacao`). Contato não localizado conta como não anonimizado.
+    const { data: contato } = await admin
+      .from("contacts")
+      .select("is_anonymized")
+      .eq("organization_id", entrada.organizationId)
+      .eq("id", entrada.contactId)
+      .maybeSingle();
+    if (!aberto && contato?.is_anonymized !== true) {
       const { error } = await admin.from("agent_inbox_items").insert({
         organization_id: entrada.organizationId,
         kind: "agenda_cliente_pediu_remarcar",

@@ -48,7 +48,7 @@ const TEXTOS_EN: Record<string, string> = {
 
 // Cada texto vai ao dicionário como constante, nunca como parâmetro livre: é o que a
 // cerca de i18n (`i18n-espanhol-cobre-a-tela`) exige para a tradução ser auditável.
-const EM_ESPANHOL: Record<string, (idioma: IdiomaDoTextoPadrao) => string> = {
+const EM_ESPANHOL: Record<string, (idioma: Exclude<IdiomaDoTextoPadrao, "en">) => string> = {
   [MOLDE_DIA_ANTES]: (idioma) => traduzir(MOLDE_DIA_ANTES, idioma),
   [MOLDE_HORAS_ANTES]: (idioma) => traduzir(MOLDE_HORAS_ANTES, idioma),
   [FRASE_DE_CONFIRMACAO_PT]: (idioma) => traduzir(FRASE_DE_CONFIRMACAO_PT, idioma),

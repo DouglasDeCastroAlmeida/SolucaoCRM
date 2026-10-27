@@ -132,18 +132,19 @@ describe("AC-001.2: o CHECK dos avisos da Central foi reconstruído sem perder v
   it("AC-001.2: o kind novo e kinds antigos continuam aceitos", () => {
     const kinds = ["agenda_cliente_pediu_remarcar", "task_overdue", "budget_warning", "other"];
     for (const kind of kinds) {
+      // O insert e a limpeza são comandos separados: um `delete` encadeado no mesmo comando não
+      // enxerga a linha que o `insert` acabou de criar (mesmo snapshot).
       expect(
         sql(`
           with ins as (
             insert into public.agent_inbox_items (organization_id, kind, ref_kind, ref_id, title)
             values ('${ORG_A}', '${kind}', 'appointment', gen_random_uuid(), 'caso-do-check')
             returning id
-          ), del as (
-            delete from public.agent_inbox_items where id in (select id from ins) returning 1
           )
-          select count(*) from del;
+          select count(*) from ins;
         `),
       ).toBe("1");
+      sql(`delete from public.agent_inbox_items where title = 'caso-do-check';`);
     }
   });
 
