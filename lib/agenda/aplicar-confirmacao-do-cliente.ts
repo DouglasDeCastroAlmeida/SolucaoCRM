@@ -4,8 +4,7 @@
  * ─── Onde isto roda, e por quê ──────────────────────────────────────────────
  *
  * Chamado por `aplicarEfeitosPosEntrada` (`lib/channels/pos-entrada.ts`), o
- * ponto ÚNICO por onde passa toda mensagem de ENTRADA do WhatsApp (WAHA), da
- * Meta e do Zernio, e que roda ANTES de `pedirDespachoDoAgente`. Plugar aqui
+ * ponto ÚNICO por onde passa toda mensagem de ENTRADA de todos os transportes de mensagem, e que roda ANTES de `pedirDespachoDoAgente`. Plugar aqui
  * (e não no ingest de cada canal, nem dentro do turno do agente) dá, de graça:
  * os três transportes, o "só inbound", o corte do número interno de avisos e do
  * contato pessoal — e funciona com o agente desligado, porque nada daqui

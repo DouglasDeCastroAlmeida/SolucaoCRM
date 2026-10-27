@@ -94,7 +94,7 @@ const ENTRADA = {
   conversationId: "cv-1",
   messageId: "m-1",
   texto: "2",
-  origem: "waha_webhook",
+  origem: "entrada_de_teste",
 };
 
 let enviar: ReturnType<typeof vi.fn>;
