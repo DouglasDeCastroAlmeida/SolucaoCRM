@@ -451,3 +451,71 @@ describe("a rota escolhe o canal ANTES do carimbo e registra o pulo (#2595)", ()
     for (const provider of PROVIDERS_DE_MENSAGEM) expect(fonte).not.toContain(`"${provider}"`);
   });
 });
+
+describe("AC-001.6: lembrete padrão não contorna nenhuma guarda do envio (regressão)", () => {
+  const fonte = readFileSync(join(__dirname, "route.ts"), "utf8");
+  const carimbo = fonte.indexOf("reminder_sent_at: new Date()");
+
+  // Cada guarda tem de pular COM `continue` e ANTES do carimbo/envio: depois,
+  // o degrau seria consumido sem ter saído, ou sairia mesmo assim.
+  it.each([
+    ["contato bloqueado", 'pular("contato_bloqueado")'],
+    ["sem telefone", 'pular("sem_telefone")'],
+    ["sem canal conectado", "pular(escolha.motivo)"],
+    ["fora da janela de horário do canal", 'pular("fora_da_janela")'],
+  ])("AC-001.6: %s pula antes do carimbo e do envio", (_nome, chamada) => {
+    const i = fonte.indexOf(chamada);
+    expect(i).toBeGreaterThan(-1);
+    expect(i).toBeLessThan(carimbo);
+    expect(fonte.slice(i, i + 80)).toContain("continue");
+  });
+
+  it("AC-001.6: o bloqueio olha is_blocked e o telefone olha phone_number do contato lido", () => {
+    expect(fonte).toContain("if (contato.is_blocked)");
+    expect(fonte).toContain("if (!contato.phone_number)");
+  });
+
+  it("AC-001.4: o molde padrão recebe o nome da organização em {{organizacao}}", () => {
+    const texto = montarLembrete({
+      nomeDoContato: "Maria Souza",
+      titulo: "Consulta",
+      quando: new Date("2026-09-03T17:30:00Z"),
+      timezone: "America/Sao_Paulo",
+      local: null,
+      molde: "Seu {{tipo}} em {{organizacao}} às {{hora}}.",
+      tipoNome: "Consulta",
+      organizacaoNome: "Clínica Sol",
+    });
+    expect(texto).toBe("Seu Consulta em Clínica Sol às 14:30.");
+  });
+});
+
+describe("AC-001.4: contato sem nome no texto padrão não deixa espaço órfão", () => {
+  const base = {
+    nomeDoContato: null,
+    titulo: "Consulta",
+    quando: new Date("2026-09-03T17:30:00Z"),
+    timezone: "America/Sao_Paulo",
+    local: null,
+    tipoNome: "Consulta",
+    organizacaoNome: "Clínica Sol",
+  };
+
+  it.each([
+    ["pt-BR", "Oi {{primeiro_nome}}! Passando para lembrar do seu {{tipo}} em {{organizacao}}: {{dia}} às {{hora}}.", /^Oi! Passando/],
+    ["es", "¡Hola {{primeiro_nome}}! Te recuerdo tu {{tipo}} en {{organizacao}}: {{dia}} a las {{hora}}.", /^¡Hola! Te recuerdo/],
+  ])("%s: sem nome sai 'Oi!' e não 'Oi !'", (_idioma, molde, esperado) => {
+    const texto = montarLembrete({ ...base, molde });
+    expect(texto).toMatch(esperado);
+    expect(texto).not.toMatch(/\s[!,.?]/);
+  });
+
+  it("com nome o molde não é alterado", () => {
+    const texto = montarLembrete({
+      ...base,
+      nomeDoContato: "Maria Souza",
+      molde: "Oi {{primeiro_nome}}! Até {{hora}} .",
+    });
+    expect(texto).toBe("Oi Maria! Até 14:30 .");
+  });
+});

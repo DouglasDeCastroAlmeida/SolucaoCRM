@@ -349,20 +349,27 @@ test("ligo o aviso do compromisso pela tela, e ele fica ligado", async ({ page }
   const linha = page.getByTestId("lista-de-tipos").getByRole("listitem").filter({ hasText: nome });
   await expect(linha).toBeVisible({ timeout: 20_000 });
 
-  // ── NASCE DESLIGADO. A migration 0194 é explícita: mandar mensagem para o
-  //    telefone de um cliente é irreversível, e ninguém é inscrito por default.
+  // ── NASCE LIGADO (mudança 007, AC-001.1). Tipo criado agora já sai com os
+  //    lembretes de 24 h e 2 h e o texto padrão; o default da coluna (0194)
+  //    segue desligado, e quem decide é o handler de criação. Tipos que já
+  //    existiam não mudam.
+  const ligado = linha.getByTestId(/^lembrete-ligado-/);
   await expect(
-    linha.getByTestId(/^lembrete-ligado-/),
-    "o tipo nasceu com o aviso LIGADO — ninguém escolheu isso",
-  ).toHaveCount(0);
+    ligado,
+    "o tipo novo deveria nascer com os lembretes padrão ligados",
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(ligado).toContainText("1440, 120");
 
   await linha.getByRole("button", { name: "Editar" }).click();
   const caixa = linha.getByTestId(/^editar-lembrete-[0-9a-f]/).first();
   const minutos = linha.getByTestId(/^editar-lembrete-minutos-/).first();
   await expect(caixa).toBeVisible({ timeout: 15_000 });
+  await expect(caixa).toBeChecked();
 
-  // ── O CAMPO DESLIGADO NÃO MENTE. Um campo de minutos editável ao lado de uma
-  //    caixa desmarcada faz quem digita 60 concluir que agendou alguma coisa.
+  // ── O CAMPO DESLIGADO NÃO MENTE. Desmarco o aviso para provar o caminho de
+  //    desligar: um campo de minutos editável ao lado de uma caixa desmarcada
+  //    faz quem digita 60 concluir que agendou alguma coisa.
+  await caixa.uncheck();
   await expect(
     minutos,
     "o campo de minutos está ativo com o aviso desligado — controle decorativo",

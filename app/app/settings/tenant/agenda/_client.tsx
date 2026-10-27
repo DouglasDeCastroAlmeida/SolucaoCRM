@@ -674,6 +674,27 @@ export function TiposDeAgendamentoClient({
                   >
                     {editandoId === tipo.id ? t("Fechar") : t("Editar")}
                   </Button>
+                  {tipo.is_active && !tipo.reminder_enabled ? (
+                    // Tipo que já existia e não avisa ninguém: um clique liga os
+                    // lembretes de 24 h e 2 h com o texto padrão (mudança 007).
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid={`lembretes-padrao-${tipo.id}`}
+                      disabled={salvando}
+                      onClick={() =>
+                        void comErro(
+                          () =>
+                            apiClient.post("/api/v1/agenda/tipos/lembretes-padrao", {
+                              id: tipo.id,
+                            }),
+                          t("Lembretes padrão ativados."),
+                        )
+                      }
+                    >
+                      {t("Ativar lembretes padrão")}
+                    </Button>
+                  ) : null}
                   {tipo.is_active ? (
                     <Button
                       variant="ghost"

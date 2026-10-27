@@ -24,11 +24,11 @@ Cada tarefa ocupa uma linha:
 - [ ] T-004 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-003
 
 ### Fatia 2: Lembretes padrão para tipos novos (REQ-001)
-- [ ] T-005 [TEST-UNIT] Texto padrão em pt-BR, en e es: nome do contato, serviço, data, hora e nome da organização, sem marca fixa, e a frase "Responda 1 ... 2 ..." só quando a confirmação do cliente está ligada no tipo (~35 min) {AC-001.4, AC-001.5}
-- [ ] T-006 [TEST-UNIT] Tipo novo nasce com lembretes de 24 h e 2 h ligados e texto editável; "ativar lembretes padrão" num tipo existente liga os dois e só isso (~40 min) {AC-001.1, AC-001.3}
-- [ ] T-007 [TEST-UNIT] Regressão do lembrete: sem telefone, sem canal conectado, contato bloqueado ou fora da janela de horário o lembrete não sai (~30 min) {AC-001.6}
-- [ ] T-008 [IMPL] Textos padrão com i18n e criação de tipo novo com os dois lembretes ligados (~45 min) {AC-001.1, AC-001.4, AC-001.5} deps: T-004, T-005, T-006
-- [ ] T-009 [IMPL] Rota e botão "ativar lembretes padrão" na tela do tipo existente, auditado (~40 min) {AC-001.3, AC-001.6} deps: T-007, T-008
+- [x] T-005 [TEST-UNIT] Texto padrão em pt-BR, en e es: nome do contato, serviço, data, hora e nome da organização, sem marca fixa, e a frase "Responda 1 ... 2 ..." só quando a confirmação do cliente está ligada no tipo (~35 min) {AC-001.4, AC-001.5}
+- [x] T-006 [TEST-UNIT] Tipo novo nasce com lembretes de 24 h e 2 h ligados e texto editável; "ativar lembretes padrão" num tipo existente liga os dois e só isso (~40 min) {AC-001.1, AC-001.3}
+- [x] T-007 [TEST-UNIT] Regressão do lembrete: sem telefone, sem canal conectado, contato bloqueado ou fora da janela de horário o lembrete não sai (~30 min) {AC-001.6}
+- [x] T-008 [IMPL] Textos padrão com i18n e criação de tipo novo com os dois lembretes ligados (~45 min) {AC-001.1, AC-001.4, AC-001.5} deps: T-004, T-005, T-006
+- [x] T-009 [IMPL] Rota e botão "ativar lembretes padrão" na tela do tipo existente, auditado (~40 min) {AC-001.3, AC-001.6} deps: T-007, T-008
 
 ### Fatia 3: Confirmação pelo cliente (REQ-002)
 - [ ] T-010 [TEST-UNIT] Regra pura com relógio injetado: "1", "sim", "confirmo", "ok", "confirmado" em qualquer caixa, com pontuação ou emoji; aceita só até 48 h depois do lembrete, compromisso futuro e pendente; tardia ou sem lembrete recente segue o fluxo normal; repetida não muda; dois compromissos valem para o mais próximo (~55 min) {AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6}

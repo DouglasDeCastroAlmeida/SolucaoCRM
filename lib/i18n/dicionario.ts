@@ -13081,6 +13081,19 @@ export const DICIONARIO: Traducoes = {
   "Oi!": { es: "¡Hola!" },
   "Passando pra lembrar do seu compromisso:": { es: "Te recuerdo tu cita:" },
   "Endereço": { es: "Dirección" },
+  // ─── lib/agenda/lembrete-padrao.ts (texto padrão do lembrete) ───
+  "Oi {{primeiro_nome}}! Passando para lembrar do seu {{tipo}} em {{organizacao}}: {{dia}} às {{hora}}.": {
+    es: "¡Hola {{primeiro_nome}}! Te recuerdo tu {{tipo}} en {{organizacao}}: {{dia}} a las {{hora}}.",
+  },
+  "Oi {{primeiro_nome}}! Seu {{tipo}} em {{organizacao}} é daqui a pouco, às {{hora}}. Até já!": {
+    es: "¡Hola {{primeiro_nome}}! Tu {{tipo}} en {{organizacao}} es en un rato, a las {{hora}}. ¡Hasta pronto!",
+  },
+  "Ativar lembretes padrão": { es: "Activar recordatorios predeterminados" },
+  "Lembretes padrão ativados.": { es: "Recordatorios predeterminados activados." },
+  "Este tipo já tem lembretes ligados.": { es: "Este tipo ya tiene recordatorios activados." },
+  "Responda 1 para confirmar ou 2 para remarcar.": {
+    es: "Responde 1 para confirmar o 2 para reagendar.",
+  },
 
   // ─── lib/ai/pontos/resolver.ts (avisos do painel de Provedores de IA) ───
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {

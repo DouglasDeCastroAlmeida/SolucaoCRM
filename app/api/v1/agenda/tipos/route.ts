@@ -46,6 +46,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listaTiposDeAtendimento } from "@/lib/agenda/consulta";
+import { camposDoLembretePadrao, idiomaDoTextoPadrao } from "@/lib/agenda/lembrete-padrao";
 import { TETO_DE_LEMBRETES_EXTRAS } from "@/lib/agenda/lembretes";
 import { transportaMensagem } from "@/lib/channels/capabilities";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -100,9 +101,10 @@ const camposDoTipo = {
    * a rodada do cron devolvia zero linhas em TODA instalação — capacidade que
    * existe e não tem como ser usada (invariante 6 do Sistema Vivo).
    *
-   * **Continua nascendo desligado.** Não há `.default(true)`: quem não manda o
-   * campo não liga nada, e o default da coluna segue sendo `false`. Mandar
-   * mensagem para o telefone de um cliente é irreversível.
+   * **Sem `.default()` no Zod, e o default da coluna segue `false`.** Desde a
+   * mudança 007 o POST liga os lembretes padrão (24 h e 2 h) quando o corpo não
+   * fala de lembrete — decisão do handler, mais abaixo, para que tipo que já
+   * existe nunca mude. Corpo com `reminder_enabled` ou degrau próprio manda.
    */
   reminder_enabled: z.boolean().optional(),
   reminder_channel_session_id: z.string().uuid().nullish(),
@@ -348,9 +350,27 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
   }
   const { service_draft, ...fields } = lido.data;
+
+  // AC-001.1: tipo CRIADO agora nasce com os lembretes padrão (24 h e 2 h). A
+  // decisão é daqui e não do default da coluna: tipos que já existem não mudam
+  // (AC-001.2). O corpo manda: quem pediu `reminder_enabled` ou escolheu degrau
+  // próprio não recebe o padrão por cima.
+  const pediuLembrete =
+    fields.reminder_enabled !== undefined ||
+    fields.reminder_minutes_before !== undefined ||
+    fields.reminder_extra_offsets_minutes !== undefined;
+  let lembretePadrao: ReturnType<typeof camposDoLembretePadrao> | null = null;
+  if (!pediuLembrete) {
+    const { data: org } = await admin
+      .from("organizations")
+      .select("locale")
+      .eq("id", authz.organizationId)
+      .maybeSingle();
+    lembretePadrao = camposDoLembretePadrao(idiomaDoTextoPadrao(org?.locale), false);
+  }
   const { data, error } = await admin
     .from("calendar_event_types")
-    .insert({ ...fields, ...(service_draft ? { service_enabled: true, is_active: false, default_owner_user_id: null } : {}), organization_id: authz.organizationId, slug: slugDe(lido.data.name) })
+    .insert({ ...(lembretePadrao ?? {}), ...fields, ...(service_draft ? { service_enabled: true, is_active: false, default_owner_user_id: null } : {}), organization_id: authz.organizationId, slug: slugDe(lido.data.name) })
     .select("id, slug")
     .single();
 
