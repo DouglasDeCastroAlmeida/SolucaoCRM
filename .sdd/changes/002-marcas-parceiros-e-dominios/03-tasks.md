@@ -81,7 +81,7 @@ Cada tarefa ocupa uma linha:
 
 ### Fechamento
 - [x] T-049 [DOCS] Runbook das marcas: criar marca e domínio, ligar o HTTPS sob demanda, configurar o gancho, desligar com MARCAS_POR_DOMINIO=off (~20 min) deps: T-046
-- [ ] T-050 [REFACTOR] Limpeza com pnpm typecheck, lint, test:unit, test:db e test:shell verdes e e2e disparado à mão (~30 min) deps: T-048, T-049
+- [x] T-050 [REFACTOR] Limpeza com pnpm typecheck, lint, test:unit, test:db e test:shell verdes e e2e disparado à mão (~30 min) deps: T-048, T-049
 
 ## Estimativa
 
