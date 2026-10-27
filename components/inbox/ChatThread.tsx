@@ -1,15 +1,12 @@
 "use client";
 
-import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
-
-import type { Locale } from "date-fns";
 import { useEffect, useMemo, useRef } from "react";
 import { useT } from "@/hooks/i18n/useT";
-import { format, isToday, isYesterday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageBubble } from "./MessageBubble";
 import { separarReacoes } from "@/lib/inbox/reacoes-no-fio";
+import { chaveDoDia, marcarGrupos, rotuloDoDia } from "@/lib/inbox/agrupar-mensagens";
 import { NoteCard } from "./NoteCard";
 import { PassagemCard } from "./PassagemCard";
 import { useMessagesRealtime } from "@/hooks/inbox/useMessagesRealtime";
@@ -76,12 +73,6 @@ export function mergeThreadItems(
   return items;
 }
 
-function dayLabel(d: Date, t: (texto: string) => string = (texto) => texto, locale: Locale): string {
-  if (isToday(d)) return t("Hoje");
-  if (isYesterday(d)) return t("Ontem");
-  return format(d, "dd/MM/yyyy", { locale: locale });
-}
-
 export function ChatThread({
   conversationId,
   provider,
@@ -90,7 +81,6 @@ export function ChatThread({
   contatoId,
   searchTerm = "",
 }: Props) {
-  const localeDaData = useLocaleDeData();
   const t = useT();
   const q = useMessagesRealtime(conversationId);
   const notes = useConversationNotes(conversationId);
@@ -329,14 +319,16 @@ export function ChatThread({
     );
   }
 
-  // Group by day for separators (usa o timestamp do item — sent_at pra mensagem, created_at pra nota).
-  const groups: { key: string; date: Date; items: ThreadItem[] }[] = [];
+  // Dia do calendário no FUSO DA ORGANIZAÇÃO (não o do navegador), pelo timestamp do
+  // item — sent_at pra mensagem, created_at pra nota.
+  const fuso = activeOrg?.timezone;
+  const agora = new Date();
+  const groups: { key: string; ts: string; items: ThreadItem[] }[] = [];
   for (const item of items) {
-    const d = new Date(item.ts);
-    const key = format(d, "yyyy-MM-dd");
+    const key = chaveDoDia(item.ts, fuso);
     const last = groups[groups.length - 1];
     if (last && last.key === key) last.items.push(item);
-    else groups.push({ key, date: d, items: [item] });
+    else groups.push({ key, ts: item.ts, items: [item] });
   }
 
   return (
@@ -360,14 +352,32 @@ export function ChatThread({
           </div>
         )}
 
-        {groups.map((g) => (
+        {groups.map((g) => {
+          // Balões seguidos do mesmo lado E do mesmo remetente em menos de 2 minutos formam um
+          // grupo (IA seguida de humano, ou dois participantes de um grupo, não se colam);
+          // nota e passagem (lado nulo) o interrompem.
+          const posicoes = marcarGrupos(
+            g.items.map((i) => ({
+              lado:
+                i.kind === "message"
+                  ? [
+                      i.data.direction,
+                      i.data.sent_via,
+                      i.data.sent_by_user_id ?? "",
+                      typeof i.data.metadata?.group_sender === "string" ? i.data.metadata.group_sender : "",
+                    ].join("|")
+                  : null,
+              ts: i.ts,
+            })),
+          );
+          return (
           <div key={g.key} className="space-y-1">
             <div className="sticky top-0 z-10 flex justify-center py-1">
               <span className="rounded-full bg-background/80 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground backdrop-blur">
-                {dayLabel(g.date, t, localeDaData)}
+                {rotuloDoDia(g.ts, agora, fuso, t)}
               </span>
             </div>
-            {g.items.map((item) =>
+            {g.items.map((item, idx) =>
               item.kind === "passagem" ? (
                 <PassagemCard
                   key={`passagem-${item.data.id}`}
@@ -414,6 +424,9 @@ export function ChatThread({
                   // CRM — inclusive nas do colega, porque `sent_via='user'` só
                   // registra que um humano digitou, nunca qual.
                   viewerUserId={currentUser.id}
+                  fuso={fuso}
+                  comCauda={posicoes[idx]?.comCauda ?? true}
+                  colada={posicoes[idx]?.colada ?? false}
                   onEditar={canalAlteraEnviada && item.data.sent_by_user_id === currentUser.id
                     ? (text) => editar.mutateAsync({ id: item.data.id, text }).then(() => undefined)
                     : undefined}
@@ -430,7 +443,8 @@ export function ChatThread({
               ),
             )}
           </div>
-        ))}
+          );
+        })}
 
         <div ref={bottomRef} />
       </div>

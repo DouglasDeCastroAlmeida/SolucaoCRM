@@ -19,7 +19,7 @@ type Traduz = (texto: string) => string;
 
 const DIA_EM_MS = 86_400_000;
 
-function numeroDoDia(instante: Date, fuso: string): number {
+export function numeroDoDia(instante: Date, fuso: string): number {
   const p = partesNoFuso(instante, fuso);
   return Date.UTC(p.ano, p.mes - 1, p.dia) / DIA_EM_MS;
 }

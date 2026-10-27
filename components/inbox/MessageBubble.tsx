@@ -1,9 +1,7 @@
 "use client";
 
-import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
-import { format } from "date-fns";
 import { useT } from "@/hooks/i18n/useT";
-import { ArrowBendUpLeft, CaretDown, Check, Checks, PencilSimple, Robot, Trash, WarningOctagon } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, CaretDown, Check, Checks, Clock, PencilSimple, Robot, Trash, WarningOctagon } from "@/lib/ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
+import { horaNoFuso } from "@/lib/inbox/agrupar-mensagens";
 import type { ReacaoNoBalao } from "@/lib/inbox/reacoes-no-fio";
 import { lerRemetenteDeGrupo, rotuloDoRemetente } from "@/lib/messaging/remetente-de-grupo";
 import { CitationButton } from "@/components/ai/CitationButton";
@@ -55,9 +54,20 @@ interface Props {
   onApagar?: () => Promise<void>;
   onOcultar?: () => Promise<void>;
   onRestaurar?: () => Promise<void>;
+  /** Fuso IANA da organização: o horário dentro do balão sai nele. */
+  fuso?: string | null;
+  /** Última do grupo de mensagens seguidas do mesmo lado: só ela leva a cauda. */
+  comCauda?: boolean;
+  /** Logo depois de outra do mesmo grupo: espaçamento menor. */
+  colada?: boolean;
 }
 
+// O recibo sai do status da própria mensagem: o canal que nunca informa
+// entrega/leitura fica em "Enviada", e nada além disso é inventado.
 function AckIndicator({ status, t }: { status: string; t: (texto: string) => string }) {
+  if (status === "queued" || status === "sending") {
+    return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
+  }
   if (status === "read") {
     return <Checks size={12} weight="bold" className="text-blue-400" aria-label={t("Lida")} />;
   }
@@ -82,6 +92,9 @@ export function MessageBubble({
   onApagar,
   onOcultar,
   onRestaurar,
+  fuso,
+  comCauda = true,
+  colada = false,
 }: Props) {
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(message.body ?? "");
@@ -102,10 +115,9 @@ export function MessageBubble({
     // ficam escondidos atrás da área de resposta até a pessoa usar o mouse.
     editorRef.current?.scrollIntoView?.({ behavior: "smooth", block: "nearest", inline: "nearest" });
   }, [editando]);
-  const localeDaData = useLocaleDeData();
   const t = useT();
   const isOutbound = message.direction === "outbound";
-  const time = format(new Date(message.sent_at), "HH:mm", { locale: localeDaData });
+  const time = horaNoFuso(message.sent_at, fuso);
   const isFailed = message.status === "failed";
   const hasMedia = Boolean(message.media_url || message.media_storage_path);
   // A retenção marcou `metadata.media_status = 'expired'` (migration 0557) e a
@@ -228,7 +240,9 @@ export function MessageBubble({
     <div
       data-search-match={searchMatch || undefined}
       className={cn(
-        "group flex w-full min-w-0 items-center gap-1 px-4 py-1",
+        "group flex w-full min-w-0 items-center gap-1 px-4",
+        // Mensagens seguidas do mesmo lado ficam coladas (AC-002.1).
+        colada ? "-mt-1 py-0.5" : "py-1",
         isOutbound ? "justify-end" : "justify-start",
       )}
     >
@@ -238,6 +252,7 @@ export function MessageBubble({
         // classe utilitária entrava na conta — foi assim que o painel flutuante
         // fez a spec achar que havia mensagem onde não havia (issue #1318).
         data-testid="message-bubble"
+        data-cauda={comCauda}
         className={cn(
           "relative max-w-[75%] min-w-0 text-sm",
           isBareSticker
@@ -246,8 +261,8 @@ export function MessageBubble({
                 "rounded-2xl px-3 py-2 shadow-sm",
                 temMenu && "pr-8",
                 isOutbound
-                  ? "rounded-br-sm bg-primary text-primary-foreground"
-                  : "rounded-bl-sm border border-border/60 bg-card text-foreground",
+                  ? cn("bg-primary text-primary-foreground", comCauda && "rounded-br-sm")
+                  : cn("border border-border/60 bg-card text-foreground", comCauda && "rounded-bl-sm"),
               ),
           isFailed && "border border-destructive",
           // A marca da busca é ANEL, não cor de fundo: o fundo já diz de quem é

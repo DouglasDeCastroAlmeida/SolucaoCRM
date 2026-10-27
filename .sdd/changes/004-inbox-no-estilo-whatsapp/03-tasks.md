@@ -32,13 +32,13 @@ Cada tarefa ocupa uma linha:
 - [x] T-010 [IMPL] Rótulos das abas em InboxFilters, depois de conferir a razão do nome "Fila" (se houver motivo, o rótulo da spec entra como subtítulo) (~30 min) {AC-001.7} deps: T-009
 
 ### Fatia 3: Conversa (REQ-002, REQ-006)
-- [ ] T-011 [TEST-UNIT] Agrupamento de mensagens seguidas do mesmo lado em menos de 2 minutos e separador de data ("Hoje", "Ontem", data) (~35 min) {AC-002.1, AC-002.2}
-- [ ] T-012 [IMPL] lib/inbox/agrupar-mensagens.ts (~35 min) {AC-002.1, AC-002.2} deps: T-011
-- [ ] T-013 [TEST-UI] MessageBubble: relógio, ✓, ✓✓ e ✓✓ lido conforme o que o canal informou, nada inventado quando o canal não informa, falha visível com tentar de novo, horário dentro do balão, canal sem recibo ou sem áudio sem esses ícones (~50 min) {AC-002.3, AC-002.4, AC-002.5, AC-006.1}
-- [ ] T-014 [TEST-UI] Mensagem longa com várias linhas quebra e rola sem estourar a coluna (~25 min) {AC-006.2}
-- [ ] T-015 [IMPL] MessageBubble e ChatThread: balões com cauda, agrupamento, separador de data, recibos e horário no balão (~60 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-006.1, AC-006.2} deps: T-004, T-012, T-013, T-014
-- [ ] T-016 [TEST-UI] Barra da conversa mantém "Assumir" e "Devolver para a IA" com o mesmo comportamento de hoje (~30 min) {AC-002.6}
-- [ ] T-017 [IMPL] Reestilizar ConversationHeader sem mudar as ações (~40 min) {AC-002.6} deps: T-016
+- [x] T-011 [TEST-UNIT] Agrupamento de mensagens seguidas do mesmo lado em menos de 2 minutos e separador de data ("Hoje", "Ontem", data) (~35 min) {AC-002.1, AC-002.2}
+- [x] T-012 [IMPL] lib/inbox/agrupar-mensagens.ts (~35 min) {AC-002.1, AC-002.2} deps: T-011
+- [x] T-013 [TEST-UI] MessageBubble: relógio, ✓, ✓✓ e ✓✓ lido conforme o que o canal informou, nada inventado quando o canal não informa, falha visível com tentar de novo, horário dentro do balão, canal sem recibo ou sem áudio sem esses ícones (~50 min) {AC-002.3, AC-002.4, AC-002.5, AC-006.1}
+- [x] T-014 [TEST-UI] Mensagem longa com várias linhas quebra e rola sem estourar a coluna (~25 min) {AC-006.2}
+- [x] T-015 [IMPL] MessageBubble e ChatThread: balões com cauda, agrupamento, separador de data, recibos e horário no balão (~60 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-006.1, AC-006.2} deps: T-004, T-012, T-013, T-014
+- [x] T-016 [TEST-UI] Barra da conversa mantém "Assumir" e "Devolver para a IA" com o mesmo comportamento de hoje (~30 min) {AC-002.6}
+- [x] T-017 [IMPL] Reestilizar ConversationHeader sem mudar as ações (~40 min) {AC-002.6} deps: T-016
 
 ### Fatia 4: Campo de mensagem e painel do contato (REQ-004, REQ-005)
 - [ ] T-018 [TEST-UI] Composer: botão de gravar áudio com o campo vazio e de enviar com texto; "/" abre o menu com título, atalho e prévia, filtra ao digitar; escolher insere o texto para revisão; sem permissão o "/" segue como texto (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4}
