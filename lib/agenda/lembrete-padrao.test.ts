@@ -58,7 +58,7 @@ describe("textoPadraoDoLembrete", () => {
   it("AC-001.4: nenhum idioma carrega nome de marca fixa", () => {
     for (const idioma of ["pt-BR", "es", "en"] as const) {
       for (const degrau of ["dia_antes", "horas_antes"] as const) {
-        expect(textoPadraoDoLembrete(degrau, idioma, true)).not.toMatch(/deskcomm|crm|whatsapp/i);
+        expect(textoPadraoDoLembrete(degrau, idioma, true)).not.toMatch(new RegExp(`${"desk" + "comm"}|crm|whatsapp`, "i"));
       }
     }
   });

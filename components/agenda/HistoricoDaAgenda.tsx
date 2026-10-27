@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { AvatarDaPessoa } from "./AvatarDaPessoa";
+import { SeloDaConfirmacaoDoCliente } from "./SeloDaConfirmacaoDoCliente";
 import { corDaTrilha } from "./paleta";
 import { ROTULO_DA_SITUACAO } from "@/lib/agenda/tipos";
 
@@ -242,6 +243,12 @@ export function HistoricoDaAgenda({
                       {pessoa ? ` · ${t("com")} ${pessoa.nome}` : ""}
                     </div>
                   </div>
+                  <SeloDaConfirmacaoDoCliente
+                    confirmadoEm={a.clienteConfirmouEm}
+                    pediuRemarcarEm={a.clientePediuRemarcarEm}
+                    fuso={fuso}
+                    className="shrink-0"
+                  />
                   {pessoa && <AvatarDaPessoa pessoa={pessoa} tamanho="sm" />}
                   <Badge variant={variante} className="shrink-0">
                     {t(ROTULO_DA_SITUACAO[a.situacao])}

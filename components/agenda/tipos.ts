@@ -68,6 +68,10 @@ export type Agendamento = {
   local?: string;
   origem: OrigemDoAgendamento;
   situacao: SituacaoDoAgendamento;
+  /** ISO de quando o cliente confirmou pelo WhatsApp (mudança 007). */
+  clienteConfirmouEm?: string | null;
+  /** ISO de quando o cliente pediu para remarcar — pendência da equipe (mudança 007). */
+  clientePediuRemarcarEm?: string | null;
 };
 
 /** Um horário oferecido pelo painel de marcação. */

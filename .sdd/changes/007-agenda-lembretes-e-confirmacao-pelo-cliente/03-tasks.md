@@ -41,12 +41,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-015 [IMPL] Pedido de remarcar na regra, na fila humana, na Central e na limpeza pela agenda (~60 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-013, T-014
 
 ### Fatia 5: Visibilidade, chaves e auditoria (REQ-004, REQ-005)
-- [ ] T-016 [TEST-UI] Selo "confirmado pelo cliente" com a hora e pendência "pediu para remarcar" destacada na agenda e no cartão do contato (~40 min) {AC-004.1, AC-004.2}
-- [ ] T-017 [IMPL] Selos na agenda e no cartão do contato (~50 min) {AC-004.1, AC-004.2} deps: T-016, T-013
-- [ ] T-018 [TEST-UNIT] Chave por tipo desligada ou chave de instalação AGENDA_CONFIRMACAO_CLIENTE desligada: "1" e "2" seguem o fluxo normal e nenhum dado é apagado (~35 min) {AC-005.1, AC-005.2}
-- [ ] T-019 [IMPL] Chave por tipo na tela e AGENDA_CONFIRMACAO_CLIENTE em lib/env.ts e .env.example (~40 min) {AC-005.1, AC-005.2} deps: T-018, T-013
-- [ ] T-020 [TEST-UNIT] Auditoria da confirmação e do pedido de remarcar sem o texto do cliente; rotas novas com Zod, papel e requireSupportWrite antes do efeito (~40 min) {AC-005.4, AC-005.5}
-- [ ] T-021 [IMPL] Ações de auditoria novas e ajustes nas rotas (~35 min) {AC-005.4, AC-005.5} deps: T-020, T-009, T-015
+- [x] T-016 [TEST-UI] Selo "confirmado pelo cliente" com a hora e pendência "pediu para remarcar" destacada na agenda e no cartão do contato (~40 min) {AC-004.1, AC-004.2}
+- [x] T-017 [IMPL] Selos na agenda e no cartão do contato (~50 min) {AC-004.1, AC-004.2} deps: T-016, T-013
+- [x] T-018 [TEST-UNIT] Chave por tipo desligada ou chave de instalação AGENDA_CONFIRMACAO_CLIENTE desligada: "1" e "2" seguem o fluxo normal e nenhum dado é apagado (~35 min) {AC-005.1, AC-005.2}
+- [x] T-019 [IMPL] Chave por tipo na tela e AGENDA_CONFIRMACAO_CLIENTE em lib/env.ts e .env.example (~40 min) {AC-005.1, AC-005.2} deps: T-018, T-013
+- [x] T-020 [TEST-UNIT] Auditoria da confirmação e do pedido de remarcar sem o texto do cliente; rotas novas com Zod, papel e requireSupportWrite antes do efeito (~40 min) {AC-005.4, AC-005.5}
+- [x] T-021 [IMPL] Ações de auditoria novas e ajustes nas rotas (~35 min) {AC-005.4, AC-005.5} deps: T-020, T-009, T-015
 
 ### Fechamento
 - [ ] T-022 [TEST-UNIT] Textos novos (selos, respostas automáticas, texto padrão) em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-004.3, AC-006.4}

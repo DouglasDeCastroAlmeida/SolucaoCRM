@@ -52,6 +52,7 @@ export interface TipoRow {
   reminder_body: string | null;
   reminder_bodies: Record<string, string> | null;
   default_price_cents: number | null;
+  client_confirmation_enabled?: boolean;
 }
 
 /**
@@ -783,6 +784,9 @@ export function TiposDeAgendamentoClient({
                           return cents === null ? null : cents;
                         })(),
                         reminder_enabled: dados.get("reminder_enabled") === "on",
+                        // Caixa desmarcada não vem no FormData: a comparação é a escolha.
+                        client_confirmation_enabled:
+                          dados.get("client_confirmation_enabled") === "on",
                         // O campo desabilitado também não aparece, e omitir é o
                         // certo: desligar o aviso não pode apagar a lista que
                         // alguém escolheu (ver `LembreteDoCompromisso`).
@@ -871,6 +875,23 @@ export function TiposDeAgendamentoClient({
                   </label>
                 </div>
                 <LembreteDoCompromisso tipo={tipo} canais={canais} erroCanais={erroCanais} />
+                <label className="flex items-start gap-2 text-sm text-text">
+                  <input
+                    type="checkbox"
+                    name="client_confirmation_enabled"
+                    defaultChecked={tipo.client_confirmation_enabled === true}
+                    data-testid={`editar-confirmacao-cliente-${tipo.id}`}
+                    className="mt-0.5"
+                  />
+                  <span className="flex flex-col">
+                    {t("Pedir confirmação ao cliente")}
+                    <span className="text-[11px] text-text-muted">
+                      {t(
+                        "O lembrete passa a pedir: responda 1 para confirmar ou 2 para remarcar. Sem isto, o cliente não é convidado a responder e nada muda no fluxo.",
+                      )}
+                    </span>
+                  </span>
+                </label>
                 <div className="flex justify-end">
                   <Button
                     type="submit"

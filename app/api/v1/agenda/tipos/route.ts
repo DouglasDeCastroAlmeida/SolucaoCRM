@@ -46,6 +46,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listaTiposDeAtendimento } from "@/lib/agenda/consulta";
+import { confirmacaoDoClienteLigadaNaInstalacao } from "@/lib/agenda/aplicar-confirmacao-do-cliente";
 import { camposDoLembretePadrao, idiomaDoTextoPadrao } from "@/lib/agenda/lembrete-padrao";
 import { TETO_DE_LEMBRETES_EXTRAS } from "@/lib/agenda/lembretes";
 import { transportaMensagem } from "@/lib/channels/capabilities";
@@ -86,6 +87,14 @@ const camposDoTipo = {
   location_details: z.string().trim().max(300).nullish(),
   default_owner_user_id: z.string().uuid().nullish(),
   requires_confirmation: z.boolean().optional(),
+  /**
+   * "Pedir confirmação ao cliente" (mudança 007, REQ-005): a chave POR TIPO. Sem
+   * `.default()`: o banco nasce `false` e o tipo que já existe nunca muda. Ligada,
+   * o texto padrão do lembrete criado agora inclui "Responda 1 ... ou 2 ...". No
+   * PATCH só persiste a chave: o texto do lembrete que alguém já editou não é
+   * reescrito (o botão "ativar lembretes padrão" regera o padrão com a frase).
+   */
+  client_confirmation_enabled: z.boolean().optional(),
   buffer_before_minutes: z.number().int().min(0).max(720).optional(),
   buffer_after_minutes: z.number().int().min(0).max(720).optional(),
   minimum_notice_minutes: z.number().int().min(0).max(43_200).optional(),
@@ -293,6 +302,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       reminder_body: t.lembreteMensagem,
       reminder_bodies: t.lembreteMensagens,
       default_price_cents: t.precoPadraoCents,
+      client_confirmation_enabled: t.confirmacaoDoCliente,
       ...(t.servico ? { service_enabled: true, booking_mode: t.servico.booking_mode, service_capacity: t.servico.capacity,
         service_revision: t.servico.revision, service_publication_mode: t.servico.publication_mode } : {}),
     })),
@@ -366,7 +376,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       .select("locale")
       .eq("id", authz.organizationId)
       .maybeSingle();
-    lembretePadrao = camposDoLembretePadrao(idiomaDoTextoPadrao(org?.locale), false);
+    // A frase "1/2" só entra quando as DUAS chaves valem: prometer resposta que
+    // ninguém vai ler (tipo desligado ou instalação desligada) é pior que calar.
+    lembretePadrao = camposDoLembretePadrao(
+      idiomaDoTextoPadrao(org?.locale),
+      fields.client_confirmation_enabled === true && confirmacaoDoClienteLigadaNaInstalacao(),
+    );
   }
   const { data, error } = await admin
     .from("calendar_event_types")

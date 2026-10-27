@@ -531,6 +531,10 @@ export interface AgendamentoListado {
   donoId: string | null;
   contatoId: string | null;
   contatoNome: string | null;
+  /** Quando o cliente confirmou pelo WhatsApp ("1"); `null` se não confirmou (007, AC-004.1). */
+  clienteConfirmouEm?: string | null;
+  /** Quando o cliente pediu para remarcar ("2"); `null` se não há pedido aberto (007, AC-004.2). */
+  clientePediuRemarcarEm?: string | null;
   /**
    * O TIPO DE ATENDIMENTO de que o compromisso nasceu (`calendar_event_types`).
    *
@@ -873,7 +877,7 @@ export async function listaAgendamentos(
   let q = supabase
     .from("calendar_appointments")
     .select(
-      "id, title, starts_at, ends_at, time_zone, status, revision, meeting_state, meeting_url, owner_user_id, contact_id, location_kind, location_details, calendar_event_types(id, name, slug), contacts(name, display_name), service_occurrence_id, participant_name, service_booking_mode, service_capacity_limit, service_publication_mode, google_event_id, google_local_revision, google_synced_local_revision, google_conflict, google_sync_error",
+      "id, title, starts_at, ends_at, time_zone, status, revision, meeting_state, meeting_url, owner_user_id, contact_id, location_kind, location_details, calendar_event_types(id, name, slug), contacts(name, display_name), service_occurrence_id, participant_name, service_booking_mode, service_capacity_limit, service_publication_mode, google_event_id, google_local_revision, google_synced_local_revision, google_conflict, google_sync_error, client_confirmed_at, client_reschedule_requested_at",
     )
     .eq("organization_id", organizationId)
     .order("starts_at", { ascending: true })
@@ -1021,6 +1025,8 @@ export async function listaAgendamentos(
         // produto lê, e a MESMA decisão de nome — `lib/contacts/rotulo-do-contato.ts`,
         // não um precedente copiado de outro arquivo.
         contatoNome: contatoDoEmbed(l.contacts),
+        clienteConfirmouEm: texto(l.client_confirmed_at),
+        clientePediuRemarcarEm: texto(l.client_reschedule_requested_at),
         tipo: tipo ? { slug: texto(tipo.slug) ?? "", nome: texto(tipo.name) ?? "" } : null,
         local: { tipo: texto(l.location_kind), descricao: texto(l.location_details) },
         leadIds: vinculosPorAlvo?.get(String(l.id)) ?? [],
@@ -1127,6 +1133,8 @@ export interface TipoDeAtendimento {
   lembreteMensagens: Record<string, string>;
   /** Preço padrão em centavos, ou null quando o negócio digita na hora. */
   precoPadraoCents: number | null;
+  /** A chave POR TIPO "Pedir confirmação ao cliente" (007, AC-005.1). Desligada de fábrica. */
+  confirmacaoDoCliente: boolean;
   servico?: { booking_mode: string; capacity: number | null; revision: number; publication_mode: string };
 }
 
@@ -1157,7 +1165,7 @@ export async function listaTiposDeAtendimento(
   let q = supabase
     .from("calendar_event_types")
     .select(
-        "id, name, slug, description, category, duration_minutes, location_kind, location_details, requires_confirmation, is_active, default_owner_user_id, buffer_before_minutes, buffer_after_minutes, minimum_notice_minutes, booking_window_days, reminder_channel_session_id, reminder_enabled, reminder_minutes_before, reminder_extra_offsets_minutes, reminder_body, reminder_bodies, default_price_cents, service_enabled, booking_mode, service_capacity, service_revision, service_publication_mode",
+        "id, name, slug, description, category, duration_minutes, location_kind, location_details, requires_confirmation, is_active, default_owner_user_id, buffer_before_minutes, buffer_after_minutes, minimum_notice_minutes, booking_window_days, reminder_channel_session_id, reminder_enabled, reminder_minutes_before, reminder_extra_offsets_minutes, reminder_body, reminder_bodies, default_price_cents, service_enabled, booking_mode, service_capacity, service_revision, service_publication_mode, client_confirmation_enabled",
     )
     // Service role bypassa a RLS: este filtro é a única proteção no caminho da
     // ferramenta MCP (ver o cabeçalho do arquivo).
@@ -1193,6 +1201,7 @@ export async function listaTiposDeAtendimento(
       bufferDepoisMin: Number(t.buffer_after_minutes),
       antecedenciaMinimaMin: Number(t.minimum_notice_minutes),
       janelaDeAgendamentoDias: Number(t.booking_window_days),
+      confirmacaoDoCliente: t.client_confirmation_enabled === true,
       lembreteLigado: Boolean(t.reminder_enabled),
       lembreteCanalId: t.reminder_channel_session_id ?? null,
       lembreteAntecedenciaMin: Number(t.reminder_minutes_before),

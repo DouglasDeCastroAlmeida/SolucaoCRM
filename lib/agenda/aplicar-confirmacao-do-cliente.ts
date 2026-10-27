@@ -80,8 +80,9 @@ export interface DependenciasDaConfirmacao {
 const VALORES_QUE_DESLIGAM = new Set(["false", "0", "off", "no", "desligado"]);
 
 /**
- * A chave de instalação `AGENDA_CONFIRMACAO_CLIENTE` (REQ-005). A declaração em
- * `lib/env.ts` e no `.env.example` é da Fatia 5; até lá, ausência = ligada.
+ * A chave de instalação `AGENDA_CONFIRMACAO_CLIENTE` (REQ-005), declarada em
+ * `lib/env.ts` e no `.env.example`; ausente ou vazia = ligada. Lê `process.env` direto de
+ * propósito: este é o caminho quente de toda mensagem de entrada e não importa o módulo de env.
  */
 export function confirmacaoDoClienteLigadaNaInstalacao(): boolean {
   const bruto = process.env.AGENDA_CONFIRMACAO_CLIENTE;
@@ -190,8 +191,13 @@ function diaEHora(quando: Date, timezone: string, idioma: IdiomaDoTextoPadrao) {
   return { dia, hora };
 }
 
-const dicionarioOuEn = (pt: string, en: string, idioma: IdiomaDoTextoPadrao) =>
-  idioma === "en" ? en : traduzir(pt, idioma);
+// Cada texto vai ao dicionário como CONSTANTE (a cerca de i18n não aceita parâmetro livre).
+const avisoTitulo = (idioma: IdiomaDoTextoPadrao) =>
+  idioma === "en" ? AVISO_TITULO_EN : traduzir(AVISO_TITULO_PT, idioma);
+const avisoCorpo = (idioma: IdiomaDoTextoPadrao) =>
+  idioma === "en" ? AVISO_CORPO_EN : traduzir(AVISO_CORPO_PT, idioma);
+const respostaRemarcar = (idioma: IdiomaDoTextoPadrao) =>
+  idioma === "en" ? RESPOSTA_REMARCAR_EN : traduzir(RESPOSTA_REMARCAR_PT, idioma);
 
 /**
  * "2"/"cancelar"/"não vou"/"remarcar" (AC-003.1 a AC-003.3). Só REGISTRA o pedido:
@@ -291,8 +297,8 @@ async function registrarPedidoDeRemarcar(
         organization_id: entrada.organizationId,
         kind: "agenda_cliente_pediu_remarcar",
         severity: "warn",
-        title: dicionarioOuEn(AVISO_TITULO_PT, AVISO_TITULO_EN, idioma),
-        body: preencher(dicionarioOuEn(AVISO_CORPO_PT, AVISO_CORPO_EN, idioma), pecas),
+        title: avisoTitulo(idioma),
+        body: preencher(avisoCorpo(idioma), pecas),
         ref_kind: "appointment",
         ref_id: alvo.id,
         status: "open",
@@ -329,7 +335,7 @@ async function registrarPedidoDeRemarcar(
       organizationId: entrada.organizationId,
       conversationId: entrada.conversationId,
       compromissoId: alvo.id,
-      corpo: preencher(dicionarioOuEn(RESPOSTA_REMARCAR_PT, RESPOSTA_REMARCAR_EN, idioma), pecas),
+      corpo: preencher(respostaRemarcar(idioma), pecas),
       requestId: `agenda-remarcar-cliente:${entrada.messageId}`,
     });
   } catch (err) {

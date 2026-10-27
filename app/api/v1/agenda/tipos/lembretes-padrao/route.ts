@@ -18,6 +18,7 @@ import { requireSupportWrite } from "@/lib/impersonate/support";
 import { type NextRequest } from "next/server";
 import { z } from "zod";
 
+import { confirmacaoDoClienteLigadaNaInstalacao } from "@/lib/agenda/aplicar-confirmacao-do-cliente";
 import { camposDoLembretePadrao, idiomaDoTextoPadrao } from "@/lib/agenda/lembrete-padrao";
 import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { data: o } = await admin.from("organizations").select("locale").eq("id", org).maybeSingle();
   const campos = camposDoLembretePadrao(
     idiomaDoTextoPadrao(o?.locale),
-    atual.client_confirmation_enabled === true,
+    atual.client_confirmation_enabled === true && confirmacaoDoClienteLigadaNaInstalacao(),
   );
 
   const { data, error } = await admin

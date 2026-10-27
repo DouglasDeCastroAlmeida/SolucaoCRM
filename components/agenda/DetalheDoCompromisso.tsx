@@ -11,6 +11,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { rotuloDoLocal } from "@/lib/agenda/locais";
+import { SeloDaConfirmacaoDoCliente } from "./SeloDaConfirmacaoDoCliente";
 
 type Detalhe = {
   meeting?: MeetingDetail | null;
@@ -36,6 +37,8 @@ type Detalhe = {
   conversation_id: string | null;
   outcome_source_kind: string | null;
   outcome_recorded_at: string | null;
+  client_confirmed_at?: string | null;
+  client_reschedule_requested_at?: string | null;
   recovery: {
     result: string;
     enrollment_id: string | null;
@@ -201,6 +204,11 @@ export function DetalheDoCompromisso({
                 )[a.status] ?? a.status,
               )}
             </p>
+            <SeloDaConfirmacaoDoCliente
+              confirmadoEm={a.client_confirmed_at}
+              pediuRemarcarEm={a.client_reschedule_requested_at}
+              fuso={a.time_zone}
+            />
             {a.contact_id ? (
               <Link href={`/app/contacts/${a.contact_id}`} className="underline">
                 {t("Ver contato")}

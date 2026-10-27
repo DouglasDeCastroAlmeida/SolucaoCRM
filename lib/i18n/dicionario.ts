@@ -16735,6 +16735,14 @@ export const DICIONARIO: Traducoes = {
     es: "El cliente respondió al recordatorio pidiendo reprogramar o cancelar. No se cambió nada: abre la cita, acuerda el nuevo horario con él y reprograma o cancela desde la agenda.",
   },
 
+  // Mudança 007: selos da resposta do cliente ao lembrete (agenda e histórico).
+  "Confirmado pelo cliente": { es: "Confirmado por el cliente" },
+  "Pediu para remarcar": { es: "Pidió reprogramar" },
+  "Pedir confirmação ao cliente": { es: "Pedir confirmación al cliente" },
+  "O lembrete passa a pedir: responda 1 para confirmar ou 2 para remarcar. Sem isto, o cliente não é convidado a responder e nada muda no fluxo.": {
+    es: "El recordatorio pasa a pedir: responde 1 para confirmar o 2 para reprogramar. Sin esto, no se invita al cliente a responder y el flujo no cambia.",
+  },
+
   // ─── Contatos: lote por seleção múltipla (#2484, fatia F3) ───
   //
   // As oito chaves comuns com a fatia F1 (#2909) — "Ações em lote", "Mais

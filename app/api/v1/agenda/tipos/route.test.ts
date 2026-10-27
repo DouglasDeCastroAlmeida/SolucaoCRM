@@ -307,6 +307,77 @@ describe("POST /api/v1/agenda/tipos — o lembrete no nascimento do tipo", () =>
   });
 });
 
+describe("AC-005.1: a chave POR TIPO 'Pedir confirmação ao cliente'", () => {
+  const base = { name: "Consulta", category: "consulta", duration_minutes: 30, location_kind: "in_person" };
+
+  it("AC-005.1: o POST persiste client_confirmation_enabled e o texto padrão ganha a frase 1/2", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    const res = await POST(req("POST", { ...base, client_confirmation_enabled: true }));
+
+    expect(res.status).toBe(201);
+    const c = db.escritas[0]?.campos ?? {};
+    expect(c.client_confirmation_enabled).toBe(true);
+    expect(String(c.reminder_body)).toMatch(/Responda 1 para confirmar ou 2 para remarcar/);
+  });
+
+  it("AC-005.1: sem a chave por tipo o texto padrão NÃO promete resposta e a coluna não é escrita", async () => {
+    authOk();
+    const db = makeAdmin([]);
+    const { POST } = await import("./route");
+
+    await POST(req("POST", base));
+
+    const c = db.escritas[0]?.campos ?? {};
+    expect(Object.keys(c)).not.toContain("client_confirmation_enabled");
+    expect(String(c.reminder_body)).not.toMatch(/Responda 1/);
+  });
+
+  it("AC-005.2: com a chave de instalação desligada o texto padrão não promete resposta", async () => {
+    authOk();
+    const antes = process.env.AGENDA_CONFIRMACAO_CLIENTE;
+    process.env.AGENDA_CONFIRMACAO_CLIENTE = "desligado";
+    try {
+      const db = makeAdmin([]);
+      const { POST } = await import("./route");
+
+      await POST(req("POST", { ...base, client_confirmation_enabled: true }));
+
+      expect(String(db.escritas[0]?.campos.reminder_body)).not.toMatch(/Responda 1/);
+    } finally {
+      if (antes === undefined) delete process.env.AGENDA_CONFIRMACAO_CLIENTE;
+      else process.env.AGENDA_CONFIRMACAO_CLIENTE = antes;
+    }
+  });
+
+  it("AC-005.1: o PATCH liga e desliga a chave, e o valor CHEGA à linha", async () => {
+    authOk();
+    const linhas = [linha({ id: TIPO_DA_ORG, organization_id: ORG })];
+    makeAdmin(linhas);
+    const { PATCH } = await import("./route");
+
+    const ligou = await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: true }));
+    expect(ligou.status).toBe(200);
+    expect(linhas[0]?.client_confirmation_enabled).toBe(true);
+
+    await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: false }));
+    expect(linhas[0]?.client_confirmation_enabled).toBe(false);
+  });
+
+  it("AC-005.1: valor que não é booleano é recusado sem escrever", async () => {
+    authOk();
+    const db = makeAdmin([linha({ id: TIPO_DA_ORG, organization_id: ORG })]);
+    const { PATCH } = await import("./route");
+
+    const res = await PATCH(req("PATCH", { id: TIPO_DA_ORG, client_confirmation_enabled: "sim" }));
+
+    expect(res.status).toBe(422);
+    expect(db.escritas).toHaveLength(0);
+  });
+});
+
 describe("PATCH /api/v1/agenda/tipos — ligar e desligar depois", () => {
   it("liga o lembrete de um tipo que já existia", async () => {
     authOk();
