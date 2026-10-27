@@ -658,6 +658,9 @@ export const AUDIT_ACTIONS = [
   // telefone de um cliente é efeito, e efeito audita — mas só a rodada que
   // enviou: a que varreu e não achou ninguém a avisar não é mutação.
   "agenda.lembrete_enviado",
+  // O cliente respondeu "1" ao lembrete e o compromisso ficou confirmado POR ELE
+  // (mudança 007). Só a classificação e os ids: o texto da mensagem não entra.
+  "agenda.client_confirmed",
   // Fechar ou abrir um dia muda quem consegue marcar, e a pergunta que aparece
   // depois é sempre "quem fechou esse dia?". O bloqueio em si pode ser apagado
   // (é regra vigente, não fato histórico); estas linhas é que guardam a autoria.

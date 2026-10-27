@@ -13094,6 +13094,9 @@ export const DICIONARIO: Traducoes = {
   "Responda 1 para confirmar ou 2 para remarcar.": {
     es: "Responde 1 para confirmar o 2 para reagendar.",
   },
+  "Obrigado pela confirmação! Seu {{tipo}} está confirmado para {{dia}} às {{hora}}.": {
+    es: "¡Gracias por confirmar! Tu {{tipo}} está confirmado para {{dia}} a las {{hora}}.",
+  },
 
   // ─── lib/ai/pontos/resolver.ts (avisos do painel de Provedores de IA) ───
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {

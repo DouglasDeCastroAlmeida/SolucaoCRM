@@ -31,10 +31,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-009 [IMPL] Rota e botão "ativar lembretes padrão" na tela do tipo existente, auditado (~40 min) {AC-001.3, AC-001.6} deps: T-007, T-008
 
 ### Fatia 3: Confirmação pelo cliente (REQ-002)
-- [ ] T-010 [TEST-UNIT] Regra pura com relógio injetado: "1", "sim", "confirmo", "ok", "confirmado" em qualquer caixa, com pontuação ou emoji; aceita só até 48 h depois do lembrete, compromisso futuro e pendente; tardia ou sem lembrete recente segue o fluxo normal; repetida não muda; dois compromissos valem para o mais próximo (~55 min) {AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6}
-- [ ] T-011 [IMPL] lib/agenda/confirmacao-do-cliente.ts, regra pura de classificação (~40 min) {AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6} deps: T-010
-- [ ] T-012 [TEST-INT] Aplicação: grava o campo próprio sem alterar o status nem a confirmação da equipe, agradece com data e hora, o agente de IA não responde à mensagem tratada, funciona com a IA desligada, só considera compromissos da organização do contato (~55 min) {AC-002.1, AC-002.7, AC-002.8, AC-002.9, AC-005.3} deps: T-004
-- [ ] T-013 [IMPL] Aplicar a regra no ponto de entrada de mensagens antes de acionar o agente, com resposta curta e idempotência por mensagem (~60 min) {AC-002.1, AC-002.7, AC-002.8, AC-002.9} deps: T-011, T-012
+- [x] T-010 [TEST-UNIT] Regra pura com relógio injetado: "1", "sim", "confirmo", "ok", "confirmado" em qualquer caixa, com pontuação ou emoji; aceita só até 48 h depois do lembrete, compromisso futuro e pendente; tardia ou sem lembrete recente segue o fluxo normal; repetida não muda; dois compromissos valem para o mais próximo (~55 min) {AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6}
+- [x] T-011 [IMPL] lib/agenda/confirmacao-do-cliente.ts, regra pura de classificação (~40 min) {AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6} deps: T-010
+- [x] T-012 [TEST-INT] Aplicação: grava o campo próprio sem alterar o status nem a confirmação da equipe, agradece com data e hora, o agente de IA não responde à mensagem tratada, funciona com a IA desligada, só considera compromissos da organização do contato (~55 min) {AC-002.1, AC-002.7, AC-002.8, AC-002.9, AC-005.3} deps: T-004
+- [x] T-013 [IMPL] Aplicar a regra no ponto de entrada de mensagens antes de acionar o agente, com resposta curta e idempotência por mensagem (~60 min) {AC-002.1, AC-002.7, AC-002.8, AC-002.9} deps: T-011, T-012
 
 ### Fatia 4: Pedido de remarcar (REQ-003)
 - [ ] T-014 [TEST-INT] "2", "cancelar", "não vou" e "remarcar" marcam o pedido, levam a conversa à fila humana, avisam a Central e respondem ao cliente; nada é cancelado ou remarcado sozinho; repetir não duplica; remarcar ou cancelar pela agenda limpa a pendência (~55 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-004
