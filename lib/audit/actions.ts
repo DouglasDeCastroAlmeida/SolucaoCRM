@@ -661,6 +661,9 @@ export const AUDIT_ACTIONS = [
   // O cliente respondeu "1" ao lembrete e o compromisso ficou confirmado POR ELE
   // (mudança 007). Só a classificação e os ids: o texto da mensagem não entra.
   "agenda.client_confirmed",
+  // O cliente respondeu "2" (remarcar/cancelar) ao lembrete: o pedido foi registrado
+  // e a equipe avisada, nada foi alterado (mudança 007). Sem o texto da mensagem.
+  "agenda.client_requested_reschedule",
   // Fechar ou abrir um dia muda quem consegue marcar, e a pergunta que aparece
   // depois é sempre "quem fechou esse dia?". O bloqueio em si pode ser apagado
   // (é regra vigente, não fato histórico); estas linhas é que guardam a autoria.

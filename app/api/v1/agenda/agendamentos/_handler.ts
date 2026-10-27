@@ -52,6 +52,7 @@ import { ApiError } from "@/lib/api/types";
 import { comIdempotencia, hashDoCorpo } from "@/lib/api/idempotency";
 import type { Actor, HandlerCtx } from "@/lib/api/handlers/types";
 import { audit } from "@/lib/audit";
+import { limparPedidoDeRemarcar } from "@/lib/agenda/limpar-pedido-de-remarcar";
 import { roleAtLeast } from "@/lib/auth/types";
 import { resolveActiveLeadForContact, type LeadCandidate } from "@/lib/leads/active-lead";
 import { emitLeadActivity } from "@/lib/leads/activity-emitter";
@@ -650,6 +651,15 @@ export async function alterarAgendamentoHandler(
 
   const salvo = await alteraComRevisao(supabase,ctx,input.id,input.revision ?? Number(atual.revision),mudanca);
 
+  // AC-003.4: remarcar o horário resolve o recado "o cliente pediu para remarcar".
+  if (transicao === "rescheduled") {
+    await limparPedidoDeRemarcar(() => createAdminClient(), {
+      organizationId: ctx.organization_id,
+      compromissoId: atual.id as string,
+      horarioMudou: true,
+    });
+  }
+
   if (transicao) {
     await fecharOLaco(supabase, ctx, {
       appointmentId: atual.id as string,
@@ -714,6 +724,13 @@ export async function cancelarAgendamentoHandler(
 
   const salvo = await alteraComRevisao(supabase,ctx,input.id,input.revision ?? Number(atual.revision),{
     status:"cancelled",cancellation_reason:input.reason,
+  });
+
+  // AC-003.4: cancelar também resolve o recado do cliente (o compromisso já não está aberto).
+  await limparPedidoDeRemarcar(() => createAdminClient(), {
+    organizationId: ctx.organization_id,
+    compromissoId: atual.id as string,
+    horarioMudou: false,
   });
 
   await fecharOLaco(supabase, ctx, {

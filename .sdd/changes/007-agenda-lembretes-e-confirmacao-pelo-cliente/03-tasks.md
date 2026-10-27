@@ -37,8 +37,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-013 [IMPL] Aplicar a regra no ponto de entrada de mensagens antes de acionar o agente, com resposta curta e idempotência por mensagem (~60 min) {AC-002.1, AC-002.7, AC-002.8, AC-002.9} deps: T-011, T-012
 
 ### Fatia 4: Pedido de remarcar (REQ-003)
-- [ ] T-014 [TEST-INT] "2", "cancelar", "não vou" e "remarcar" marcam o pedido, levam a conversa à fila humana, avisam a Central e respondem ao cliente; nada é cancelado ou remarcado sozinho; repetir não duplica; remarcar ou cancelar pela agenda limpa a pendência (~55 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-004
-- [ ] T-015 [IMPL] Pedido de remarcar na regra, na fila humana, na Central e na limpeza pela agenda (~60 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-013, T-014
+- [x] T-014 [TEST-INT] "2", "cancelar", "não vou" e "remarcar" marcam o pedido, levam a conversa à fila humana, avisam a Central e respondem ao cliente; nada é cancelado ou remarcado sozinho; repetir não duplica; remarcar ou cancelar pela agenda limpa a pendência (~55 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-004
+- [x] T-015 [IMPL] Pedido de remarcar na regra, na fila humana, na Central e na limpeza pela agenda (~60 min) {AC-003.1, AC-003.2, AC-003.3, AC-003.4} deps: T-013, T-014
 
 ### Fatia 5: Visibilidade, chaves e auditoria (REQ-004, REQ-005)
 - [ ] T-016 [TEST-UI] Selo "confirmado pelo cliente" com a hora e pendência "pediu para remarcar" destacada na agenda e no cartão do contato (~40 min) {AC-004.1, AC-004.2}

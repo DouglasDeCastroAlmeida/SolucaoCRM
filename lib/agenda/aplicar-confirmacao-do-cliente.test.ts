@@ -186,12 +186,6 @@ describe("AC-002.4, AC-002.5 e AC-005.1: quando NÃO trata", () => {
     expect(tratada).toBe(false);
     expect(chamadas).toHaveLength(0);
   });
-
-  it("AC-003.1: '2' ainda não tem efeito aqui (a ligação é da Fatia 4): segue o fluxo normal", async () => {
-    const { client, chamadas } = admin({ compromissos: [linha()], org: ORG_ROW });
-    expect(await tratarRespostaDoCliente(client, { ...ENTRADA, texto: "2" }, deps())).toBe(false);
-    expect(chamadas.some((c) => c.op === "update")).toBe(false);
-  });
 });
 
 describe("AC-002.6: dois compromissos", () => {

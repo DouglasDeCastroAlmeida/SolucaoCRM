@@ -13097,6 +13097,12 @@ export const DICIONARIO: Traducoes = {
   "Obrigado pela confirmação! Seu {{tipo}} está confirmado para {{dia}} às {{hora}}.": {
     es: "¡Gracias por confirmar! Tu {{tipo}} está confirmado para {{dia}} a las {{hora}}.",
   },
+  "Entendido! Avisamos a nossa equipe e ela entrará em contato para combinar um novo horário para o seu {{tipo}} de {{dia}} às {{hora}}.": {
+    es: "¡Entendido! Avisamos a nuestro equipo y se pondrá en contacto contigo para acordar un nuevo horario para tu {{tipo}} del {{dia}} a las {{hora}}.",
+  },
+  "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar o {{tipo}} de {{dia}} às {{hora}}. Nada foi alterado: a conversa foi para a fila de atendimento.": {
+    es: "El cliente respondió al recordatorio pidiendo reagendar o cancelar el {{tipo}} del {{dia}} a las {{hora}}. No se cambió nada: la conversación pasó a la cola de atención.",
+  },
 
   // ─── lib/ai/pontos/resolver.ts (avisos do painel de Provedores de IA) ───
   "Este ponto usa o modelo definido na versão publicada do agente; a escolha do painel não se aplica.": {
