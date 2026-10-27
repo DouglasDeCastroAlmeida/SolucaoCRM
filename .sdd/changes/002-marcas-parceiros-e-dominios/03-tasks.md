@@ -74,8 +74,8 @@ Cada tarefa ocupa uma linha:
 
 ### Fatia 7: Prova pela tela e liberação segura (REQ-009, REQ-002)
 - [x] T-044 [TEST-E2E] marcas.spec.ts em ambiente fresco: três hosts mostram login com a marca certa e e-mail capturado com o link no mesmo host (~60 min) {AC-009.1}
-- [ ] T-045 [CHECK-SMOKE] Implantar na homologação; criar marca de teste, subdomínio e domínio próprio de teste; configurar o gancho no Supabase Cloud e o Resend com o dono (~40 min) deps: T-025, T-032, T-038, T-039, T-043
-- [ ] T-046 [TEST-INT] Sondas na homologação (tests/infra/vps): três endereços com marcas distintas e e-mail recebido, domínio removido volta à marca padrão sem certificado, evidências em docs/solucao-crm/evidencias/002-marcas/, chave off e recriar o app em menos de 2 minutos (~50 min) {AC-002.5, AC-009.1, AC-009.2, AC-009.4} deps: T-044, T-045
+- [x] T-045 [CHECK-SMOKE] Implantar na homologação; criar marca de teste, subdomínio e domínio próprio de teste; configurar o gancho no Supabase Cloud e o Resend com o dono (~40 min) deps: T-025, T-032, T-038, T-039, T-043
+- [x] T-046 [TEST-INT] Sondas na homologação (tests/infra/vps): três endereços com marcas distintas e e-mail recebido, domínio removido volta à marca padrão sem certificado, evidências em docs/solucao-crm/evidencias/002-marcas/, chave off e recriar o app em menos de 2 minutos (~50 min) {AC-002.5, AC-009.1, AC-009.2, AC-009.4} deps: T-044, T-045
 - [ ] T-047 [CHECK-SMOKE] Implantar em produção só com a marca padrão (HTTPS sob demanda desligado) pelo clique do dono (~25 min) deps: T-046
 - [ ] T-048 [TEST-INT] Sonda em produção: app.corretora.io responde / = 200 e /app = 307 com a aparência de antes (~35 min) {AC-009.3} deps: T-047
 
