@@ -2,13 +2,36 @@
   "id": "007-agenda-lembretes-e-confirmacao-pelo-cliente",
   "title": "Agenda: lembretes e confirmacao pelo cliente",
   "size": "M",
-  "stage": "grill",
+  "stage": "tasks",
   "createdAt": "2026-10-27T12:32:38.934Z",
-  "approvals": {},
+  "approvals": {
+    "grill": {
+      "at": "2026-10-27T14:24:15.565Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Grill da 007 aprovado pelo dono"
+    },
+    "prd": {
+      "at": "2026-10-27T14:28:26.581Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "PRD da 007 aprovado pelo dono"
+    }
+  },
   "history": [
     {
       "stage": "grill",
       "at": "2026-10-27T12:32:38.935Z"
+    },
+    {
+      "stage": "prd",
+      "at": "2026-10-27T14:24:15.565Z",
+      "from": "grill"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-10-27T14:28:26.581Z",
+      "from": "prd"
     }
   ]
 }
