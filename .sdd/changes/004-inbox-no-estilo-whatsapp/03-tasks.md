@@ -24,12 +24,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-004 [IMPL] Aplicar o tema no inbox pelos tokens, sem cor ou nome de marca fixo (~45 min) {AC-003.1, AC-003.3} deps: T-003
 
 ### Fatia 2: Lista de conversas (REQ-001)
-- [ ] T-005 [TEST-UNIT] Formatadores: horário curto (hora, "Ontem", dia da semana, data, no fuso da organização) e prévia ("Você:", ícone e rótulo de mídia, nunca o endereço do arquivo) (~40 min) {AC-001.2, AC-001.3, AC-001.5}
-- [ ] T-006 [IMPL] lib/inbox/formato-da-lista.ts (~35 min) {AC-001.2, AC-001.3, AC-001.5} deps: T-005
-- [ ] T-007 [TEST-UI] ConversationListItem: foto ou iniciais, nome, prévia, horário, contador de não lidas que some ao abrir, ícone do canal, canal desconhecido com ícone genérico (~45 min) {AC-001.1, AC-001.4, AC-001.6, AC-006.3} deps: T-004, T-006
-- [ ] T-008 [IMPL] Reestilizar ConversationListItem com os formatadores e o tema (~50 min) {AC-001.1, AC-001.4, AC-001.6, AC-006.3} deps: T-007
-- [ ] T-009 [TEST-UI] Abas "Minhas", "Não atribuídas" e "IA" com contagem, cada uma listando só o que o nome diz (~30 min) {AC-001.7}
-- [ ] T-010 [IMPL] Rótulos das abas em InboxFilters, depois de conferir a razão do nome "Fila" (se houver motivo, o rótulo da spec entra como subtítulo) (~30 min) {AC-001.7} deps: T-009
+- [x] T-005 [TEST-UNIT] Formatadores: horário curto (hora, "Ontem", dia da semana, data, no fuso da organização) e prévia ("Você:", ícone e rótulo de mídia, nunca o endereço do arquivo) (~40 min) {AC-001.2, AC-001.3, AC-001.5}
+- [x] T-006 [IMPL] lib/inbox/formato-da-lista.ts (~35 min) {AC-001.2, AC-001.3, AC-001.5} deps: T-005
+- [x] T-007 [TEST-UI] ConversationListItem: foto ou iniciais, nome, prévia, horário, contador de não lidas que some ao abrir, ícone do canal, canal desconhecido com ícone genérico (~45 min) {AC-001.1, AC-001.4, AC-001.6, AC-006.3} deps: T-004, T-006
+- [x] T-008 [IMPL] Reestilizar ConversationListItem com os formatadores e o tema (~50 min) {AC-001.1, AC-001.4, AC-001.6, AC-006.3} deps: T-007
+- [x] T-009 [TEST-UI] Abas "Minhas", "Não atribuídas" e "IA" com contagem, cada uma listando só o que o nome diz (~30 min) {AC-001.7}
+- [x] T-010 [IMPL] Rótulos das abas em InboxFilters, depois de conferir a razão do nome "Fila" (se houver motivo, o rótulo da spec entra como subtítulo) (~30 min) {AC-001.7} deps: T-009
 
 ### Fatia 3: Conversa (REQ-002, REQ-006)
 - [ ] T-011 [TEST-UNIT] Agrupamento de mensagens seguidas do mesmo lado em menos de 2 minutos e separador de data ("Hoje", "Ontem", data) (~35 min) {AC-002.1, AC-002.2}

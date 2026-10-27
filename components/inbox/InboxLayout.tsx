@@ -783,6 +783,7 @@ export function InboxLayout({
                 : undefined
             }
             podeMarcarExemplo={podeMarcarExemplo}
+            fuso={activeOrg?.timezone}
           />
         </div>
       </div>
