@@ -1,0 +1,2 @@
+# marcas-removido.txt — 2026-10-27T01:19Z
+host_removido=teste.corretora.io certificado=recusado login_padrao=conferido

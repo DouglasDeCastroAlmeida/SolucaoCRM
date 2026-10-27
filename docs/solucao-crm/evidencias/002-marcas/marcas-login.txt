@@ -1,0 +1,2 @@
+# marcas-login.txt — 2026-10-27T01:19Z
+logins: marca-a.corretora.io=27839bytes marca-b.corretora.io=26703bytes hml.corretora.io=40360bytes

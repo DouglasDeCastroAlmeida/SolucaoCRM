@@ -270,8 +270,10 @@ sonda_marcas_rollback() {
   dir_marcas
   local pasta="${MARCAS_PASTA_APP:-/opt/crm-hml}" ini seg html=""
   ini="$(date +%s)"
-  rssh "cd $pasta && cp .env .env.antes-marcas && { grep -q '^MARCAS_POR_DOMINIO=' .env && sed -i 's/^MARCAS_POR_DOMINIO=.*/MARCAS_POR_DOMINIO=off/' .env || echo 'MARCAS_POR_DOMINIO=off' >> .env; } \
-    && docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d --no-deps --force-recreate app" >/dev/null 2>&1 \
+  # Mesmos arquivos de compose do deploy.sh da homologação (solucao + hml) e a religação do alias do Caddy:
+  # recriar o container derruba a conexão com a rede caddy-sites, e sem ela a homologação sai do ar.
+  local recria='A=(-f docker-compose.prod.yml); [ ! -f infra/solucao/docker-compose.solucao.yml ] || A+=(-f infra/solucao/docker-compose.solucao.yml); A+=(-f infra/solucao/docker-compose.hml.yml); docker compose "${A[@]}" --env-file .env up -d --no-deps --force-recreate app; docker network connect --alias crm-hml-app crm-prod_caddy-sites crm-hml-app-1 || true'
+  rssh "cd $pasta && cp -p .env .env.antes-marcas && { grep -q '^MARCAS_POR_DOMINIO=' .env && sed -i 's/^MARCAS_POR_DOMINIO=.*/MARCAS_POR_DOMINIO=off/' .env || echo 'MARCAS_POR_DOMINIO=off' >> .env; } && chown --reference=.env.antes-marcas .env && bash -c '$recria'" >/dev/null 2>&1 \
     || { fail "não consegui recriar o app com MARCAS_POR_DOMINIO=off"; return; }
   seg=0
   until printf '%s' "$html" | grep -qF "$MARCAS_NOME_PADRAO"; do
@@ -281,7 +283,11 @@ sonda_marcas_rollback() {
   done
   seg=$(( $(date +%s) - ini ))
   [ "$seg" -le 120 ] && pass "com MARCAS_POR_DOMINIO=off o login volta à marca padrão em ${seg}s (limite 120 s)" || fail "levou ${seg}s (limite 120 s)"
-  printf 'rollback_segundos=%s pasta=%s (o .env anterior ficou em .env.antes-marcas na VPS: restaure à mão para religar)\n' "$seg" "$pasta" | registra marcas-rollback.txt
+  # Religa: volta o .env anterior (mesmo dono) e recria, para a sonda não deixar a chave desligada.
+  rssh "cd $pasta && cat .env.antes-marcas > .env && bash -c '$recria'" >/dev/null 2>&1 \
+    && pass "o .env anterior foi restaurado e o app recriado (a chave volta a ligada)" \
+    || fail "não consegui restaurar o .env anterior: restaure à mão (.env.antes-marcas na VPS)"
+  printf 'rollback_segundos=%s pasta=%s (restaurado ao fim; o .env anterior segue em .env.antes-marcas na VPS)\n' "$seg" "$pasta" | registra marcas-rollback.txt
 }
 
 [ "$#" -ge 1 ] || { echo "uso: $0 <sonda>... (medicao swap firewall isolamento-dev marcas-login marcas-removido marcas-rollback)"; exit 2; }

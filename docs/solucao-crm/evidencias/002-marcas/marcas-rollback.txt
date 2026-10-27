@@ -1,0 +1,2 @@
+# marcas-rollback.txt — 2026-10-27T01:20Z
+rollback_segundos=15 pasta=/opt/crm-hml (restaurado ao fim; o .env anterior segue em .env.antes-marcas na VPS)
