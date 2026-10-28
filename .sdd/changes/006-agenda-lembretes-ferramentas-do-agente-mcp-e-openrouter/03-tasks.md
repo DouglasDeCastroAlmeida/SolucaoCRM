@@ -37,9 +37,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-013 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~20 min) deps: T-012 Provado pelo CI do PR #23 (invariants-majors verde, instalação nova e atualização, depois de corrigir o baseline e 4 invariantes que dependiam do padrão automatico).
 
 ### Fatia 4: Agente desligado de fábrica e automático com confirmação (REQ-003)
-- [ ] T-014 [TEST-UNIT] Caracterização: modo assistido redige e fica pendente, só sai após aprovação, texto mudado exige nova aprovação, desligar para o envio e preserva as respostas pendentes (~45 min) {AC-003.2, AC-003.3, AC-003.7}
-- [ ] T-015 [TEST-UNIT] Rota de confirmação do automático: exige confirmar_automatico, só admin, auditoria com quem, quando e qual agente, e diálogo na tela explicando o custo na chave da pessoa (~50 min) {AC-003.4, AC-003.5, AC-003.6}
-- [ ] T-016 [IMPL] Onboarding e primeira publicação nascem assisted; rota /ai/agents/[id]/automatico, diálogo em AgentOperation e PATCH que recusa trocar para automático sem a confirmação (~60 min) {AC-003.2, AC-003.4, AC-003.5, AC-003.6} deps: T-013, T-014, T-015
+- [x] T-014 [TEST-UNIT] Caracterização: modo assistido redige e fica pendente, só sai após aprovação, texto mudado exige nova aprovação, desligar para o envio e preserva as respostas pendentes (~45 min) {AC-003.2, AC-003.3, AC-003.7}
+- [x] T-015 [TEST-UNIT] Rota de confirmação do automático: exige confirmar_automatico, só admin, auditoria com quem, quando e qual agente, e diálogo na tela explicando o custo na chave da pessoa (~50 min) {AC-003.4, AC-003.5, AC-003.6}
+- [x] T-016 [IMPL] Onboarding e primeira publicação nascem assisted; rota /ai/agents/[id]/automatico, diálogo em AgentOperation e PATCH que recusa trocar para automático sem a confirmação (~60 min) {AC-003.2, AC-003.4, AC-003.5, AC-003.6} deps: T-013, T-014, T-015
 
 ### Fatia 5: Teto de custo que protege (REQ-004)
 - [ ] T-017 [TEST-UNIT] Preço estimado para modelo sem preço: conservador, sempre marcado como estimado, nunca inventa preço real (~35 min) {AC-004.6}

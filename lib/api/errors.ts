@@ -187,6 +187,9 @@ export const ApiErrorCodes = {
   // PATCH /api/v1/ai/jev pedindo `decidindo` numa tarefa que, nesta versão, só
   // observa (`soObserva` em lib/ai/decisao/tarefas.ts) — a do follow-up.
   jev_tarefa_so_observa: "jev_tarefa_so_observa",
+  // POST /api/v1/ai/agents/:id/automatico (e o PATCH que troca para `automatic`) sem
+  // `confirmar_automatico: true` no corpo. A tela abre o diálogo, mas quem exige é o servidor.
+  ai_confirmacao_exigida: "ai_confirmacao_exigida",
 
   // 415 — tipo de mídia
   unsupported_media_type: "unsupported_media_type",

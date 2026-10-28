@@ -1151,6 +1151,14 @@ export const DICIONARIO: Traducoes = {
   },
   "Retomar automático": { es: "Reanudar automático" },
   "Pausar automático": { es: "Pausar automático" },
+  "Ligar o modo automático?": { es: "¿Activar el modo automático?" },
+  "O agente vai passar a responder sozinho aos seus clientes, sem esperar a aprovação de uma pessoa. O custo de cada resposta vai na chave de IA da sua empresa.": {
+    es: "El agente pasará a responder solo a tus clientes, sin esperar la aprobación de una persona. El costo de cada respuesta va en la clave de IA de tu empresa.",
+  },
+  "Confirmar e ligar o automático": { es: "Confirmar y activar el automático" },
+  "Para ligar o modo automático é preciso confirmar. O agente passará a responder sozinho.": {
+    es: "Para activar el modo automático hay que confirmar. El agente pasará a responder solo.",
+  },
   "Automático pausado. A versão publicada foi preservada e a assistência continua disponível.": {
     es: "Automático pausado. La versión publicada se conservó y la asistencia sigue disponible.",
   },

@@ -208,6 +208,8 @@ export const AUDIT_ACTIONS = [
   "ai_agent.archived",
   "ai_agent.duplicated",
   "ai_agent.paused",
+  // O admin confirmou o modo automático (o agente passa a responder sozinho). Mudança 006.
+  "ai_agent.automatic_confirmed",
   "ai_agent.published",
   // A chave por ASSUNTO JURÍDICO por agente mudou de valor numa publicação
   // (#2156). À parte de `ai_agent.published`: este só emite quando o VALOR
