@@ -15637,7 +15637,6 @@ export const DICIONARIO: Traducoes = {
   "Pedida há {tempo}": { es: "Solicitada hace {tempo}" },
   "Aprovar {nome}": { es: "Aprobar {nome}" },
   "Recusar {nome}": { es: "Rechazar {nome}" },
-  "Aprovar": { es: "Aprobar" },
   "Essa ação já foi decidida por outra pessoa.": { es: "Esa acción ya fue decidida por otra persona." },
   "Essa ação não foi encontrada. Ela pode já ter sido decidida.": { es: "No se encontró esa acción. Puede que ya haya sido decidida." },
   "Só gerente ou administrador pode aprovar ou recusar.": { es: "Solo un gerente o administrador puede aprobar o rechazar." },
