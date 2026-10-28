@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.89.0] — 2026-10-28
+
+### Adicionado
+
+- **Cliente confirma ou pede para remarcar o horário pelo WhatsApp** Depois do lembrete, o cliente responde 1 para confirmar ou 2 para pedir remarcação. A Agenda mostra o selo "Confirmado pelo cliente" ou "Pediu para remarcar", o pedido de remarcar abre um aviso na Central e leva a conversa para uma pessoa, e nada é cancelado sozinho. Tipos de agendamento novos já nascem com os lembretes de 24 h e 2 h. A confirmação é opcional por tipo e a chave AGENDA_CONFIRMACAO_CLIENTE a desliga na instalação. Atenção: as respostas automáticas ao cliente só saem com o canal fora do modo de teste.
+
+### Alterado
+
+- **Inbox com o visual de mensageria** O inbox ganhou lista de conversas com prévia, horário e não lidas, conversa com balões agrupados, separador de dia e recibos de enviada, entregue e lida, e o atalho "/" para respostas prontas (só para quem tem permissão). As cores seguem a marca da organização com contraste legível nos temas claro e escuro. Nenhuma rota, tabela ou configuração mudou.
+
+- **Imagens, instalação e publicação passam a depender só do repositório do dono** As imagens, o instalador, o atualizador e a publicação das versões passam a apontar para o repositório do dono do produto, sem nenhuma dependência do repositório de origem. O `update.sh` leva as instalações existentes para as imagens novas sozinho, sem edição de arquivo. A publicação de uma versão agora é feita em dois passos manuais no GitHub (corte da versão e publicação da versão). Nenhuma tela, rota, tabela ou configuração mudou.
+
 ## [1.88.0] — 2026-10-27
 
 ### ⚠️ Requer atenção
@@ -12560,7 +12572,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.88.0...HEAD
+[Não lançado]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.89.0...HEAD
+[1.89.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.88.0...v1.89.0
 [1.88.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.87.0...v1.88.0
 [1.87.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.86.0...v1.87.0
 [1.86.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.85.0...v1.86.0
