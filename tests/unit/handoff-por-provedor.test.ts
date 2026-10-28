@@ -99,6 +99,20 @@ describe("AC-001.7: classificação da falha do provedor", () => {
     expect(classificarFalhaDoProvedor(embrulhado)).toMatchObject({ tipo: "permanente", causa: "chave_recusada" });
   });
 
+  it("AC-001.7: erro de ferramenta COM status 401/402/503 não é falha do provedor", () => {
+    const daFerramenta = Object.assign(new Error("x"), { statusCode: 401 });
+    expect(classificarFalhaDoProvedor(daFerramenta)).toEqual({ tipo: "transitoria" });
+    expect(classificarFalhaDoProvedor(Object.assign(new Error("x"), { status: 402 }))).toEqual({ tipo: "transitoria" });
+    expect(
+      classificarFalhaDoProvedor(Object.assign(new Error("x"), { statusCode: 503 }), { ultimaTentativa: true }),
+    ).toEqual({ tipo: "transitoria" });
+    const embrulhado = Object.assign(new Error("tool failed"), {
+      name: "AI_ToolExecutionError",
+      cause: Object.assign(new Error("agenda"), { statusCode: 401 }),
+    });
+    expect(classificarFalhaDoProvedor(embrulhado)).toEqual({ tipo: "transitoria" });
+  });
+
   it("AC-001.7: erro que não veio do provedor nunca é classificado (ferramenta com 401 própria)", () => {
     expect(classificarFalhaDoProvedor(new Error("401 unauthorized ao chamar a agenda"))).toEqual({
       tipo: "transitoria",

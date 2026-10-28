@@ -12,6 +12,11 @@
  * turno (agenda, MCP externo) não é "a chave de IA foi recusada", e tratá-lo
  * assim transferiria conversas por um defeito que não é do provedor.
  *
+ * Nenhum código resolve sozinho o item `ia_provedor_indisponivel` quando o provedor
+ * volta: quem corrigiu a chave ou recarregou o saldo resolve o item à mão. Este aviso
+ * cobre os turnos com escolta (inbound, follow-up e resposta de caso); o aviso antigo
+ * de falta de saldo (`espera-de-saldo.ts`) cobre os demais, como o do Operador.
+ *
  * Função pura: não lê banco, não lê relógio, não escreve o texto do provedor em
  * lugar nenhum (a mensagem crua pode ecoar a chave).
  */
@@ -58,7 +63,11 @@ export function classificarFalhaDoProvedor(
 ): VeredictoDaFalha {
   if (identificarConteudoBloqueado(err) !== null) return { tipo: 'transitoria' };
   const elos = cadeia(err);
-  const daApi = elos.find((e) => e.name === 'AI_APICallError' || statusDe(e) !== null);
+  // Erro de ferramenta (agenda, MCP externo) nunca é falha do provedor, mesmo com
+  // status numérico ou com uma chamada HTTP na causa. Só o elo da chamada ao modelo
+  // (`AI_APICallError`) vale, e só o status DELE.
+  if (elos.some((e) => e.name === 'AI_ToolExecutionError')) return { tipo: 'transitoria' };
+  const daApi = elos.find((e) => e.name === 'AI_APICallError');
   const status = daApi !== undefined ? statusDe(daApi) : null;
   const mensagens = elos.map((e) => (typeof e.message === 'string' ? e.message : ''));
   const semSaldoPelaFrase = provedorSemSaldo(err) !== null || mensagens.some((m) => SEM_SALDO.test(m));
