@@ -65,8 +65,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-033 [IMPL] aprovacao.ts, rota /api/v1/mcp-acoes/[id] e item da Central (~60 min) {AC-007.3, AC-007.4} deps: T-029, T-032
 - [x] T-034 [TEST-UNIT] Rotas de servidores: Zod, papel, requireSupportWrite antes do efeito, auditoria, isolamento entre organizações, credencial nunca em resposta, log ou auditoria (~55 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.4}
 - [x] T-035 [IMPL] Rotas /api/v1/mcp-servidores e chave MCP_EXTERNO_ADMIN_DA_ORG em lib/env.ts e .env.example (cadastro pelo admin da organização só se a T-003 foi confirmada) e atualização da cerca do platform admin (~60 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.4} deps: T-029, T-031, T-034, T-003
-- [ ] T-036 [TEST-UI] Tela de servidores e ferramentas por agente: cadastrar, listar ferramentas desligadas, ligar por agente, marcar "pode rodar sem aprovação" com aviso (~45 min) {AC-007.2, AC-007.4}
-- [ ] T-037 [IMPL] Tela em app/app/settings/servidor-mcp-externo e seleção por agente (~60 min) {AC-007.2, AC-007.4} deps: T-035, T-036
+- [x] T-036 [TEST-UI] Tela de servidores e ferramentas por agente: cadastrar, listar ferramentas desligadas, ligar por agente, marcar "pode rodar sem aprovação" com aviso (~45 min) {AC-007.2, AC-007.4}
+- [x] T-037 [IMPL] Tela em app/app/settings/servidor-mcp-externo e seleção por agente (~60 min) {AC-007.2, AC-007.4} deps: T-035, T-036
 
 ### Fechamento
 - [ ] T-038 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}

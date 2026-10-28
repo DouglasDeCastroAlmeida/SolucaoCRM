@@ -1,40 +1,36 @@
 import { redirect } from "next/navigation";
 
-import { requireAuth } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { ROLE_RANK } from "@/lib/auth/types";
+import { env } from "@/lib/env";
 import { traduzir } from "@/lib/i18n/dicionario";
-import { CadastroDoServidorMcpExterno } from "./_components/CadastroDoServidorMcpExterno";
+import { ServidoresMcpExternos } from "./_components/ServidoresMcpExternos";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Servidor MCP externo" };
 
 /**
- * A tela do servidor MCP externo da empresa (#2948).
+ * Os servidores MCP externos da empresa (#2948; mudança 006, REQ-007).
  *
  * ── Quem entra ──────────────────────────────────────────────────────────────
  *
- * O DONO DA INSTALAÇÃO — é a régua da action que grava
- * (`regraPlatformAdmin`, a mesma das extensões), e a tela não inventa uma
- * segunda: quem não é dono recebe `/403` aqui, exatamente como receberia
- * `forbidden_role` da Server Action. Sessão de suporte cai junto, pelo mesmo
- * motivo de sempre: o endereço e a chave de um sistema de fora não são dado
- * que uma sessão emprestada existe para enxergar.
- *
- * `/403` e não `notFound()` (o que a vizinha `/app/settings/atualizacao` faz)
- * porque esta tela TEM porta no registro de navegação — o dono da instalação
- * é, na instalação de um dono só, quem administra a empresa. Um 404 para quem
- * clicou num item do hub pareceria link quebrado; o 403 diz o que é: falta
- * permissão.
+ * A MESMA regra das rotas `/api/v1/mcp-servidores` (`exigirAdminDeServidoresMcp`), e a tela não
+ * inventa uma segunda: com `MCP_EXTERNO_ADMIN_DA_ORG` desligada (padrão) só o dono da instalação
+ * (platform admin, nunca sessão de suporte); ligada, também o administrador da organização ativa.
+ * Quem não passa recebe `/403`. A chave não vai para o navegador: só o resultado da conta.
  *
  * ── O que ela NÃO carrega ──────────────────────────────────────────────────
  *
- * Nada do banco no servidor. O que existe registrado não é legível por action
- * nenhuma (o endereço e a chave são lidos só pelo runtime), e é o TESTE que
- * conta o que está do outro lado — por isso a tela abre com o formulário
- * vazio e oferece "Testar conexão".
+ * Nada do banco no servidor: a lista vem da API, que devolve da credencial só os 4 últimos.
  */
 export default async function ServidorMcpExternoPage() {
   const user = await requireAuth();
-  if (!user.is_platform_admin || user.support) redirect("/403");
+  const donoDaInstalacao = user.is_platform_admin && !user.support;
+  if (!donoDaInstalacao) {
+    if (!env.MCP_EXTERNO_ADMIN_DA_ORG || user.support) redirect("/403");
+    const activeOrg = await resolveActiveOrg(user);
+    if (!activeOrg || ROLE_RANK[activeOrg.role] < ROLE_RANK.admin) redirect("/403");
+  }
 
   const idioma = user.idioma;
 
@@ -46,12 +42,12 @@ export default async function ServidorMcpExternoPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {traduzir(
-            "O endereço e a chave do sistema de fora que a IA desta empresa pode consultar. Só o dono da instalação vê esta tela.",
+            "Os sistemas de fora cujas ferramentas a IA desta empresa pode usar. Cada ferramenta nasce desligada e você a liga, agente por agente.",
             idioma,
           )}
         </p>
       </header>
-      <CadastroDoServidorMcpExterno />
+      <ServidoresMcpExternos />
     </div>
   );
 }
