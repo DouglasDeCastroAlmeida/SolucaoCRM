@@ -385,7 +385,10 @@ describe("invocação da ferramenta remota (#2147)", () => {
   it("o 403 do ERP sobe como erro — a permissão continua morando no servidor", async () => {
     await expect(
       chamarFerramentaRemota(servidor(), "erp_achar", { consulta: "comissao" }, { fetch: fetchDoStub() }),
-    ).rejects.toThrow(/403/);
+    ).rejects.toMatchObject({
+      name: "RecusaDoServidorMcp",
+      textoDoServidor: expect.stringContaining("403"),
+    });
   });
 });
 
@@ -558,9 +561,9 @@ describe("o turno do agente enxerga e chama a ferramenta remota (#2147)", () => 
     expect(auditoria.metadata?.args).toMatchObject({
       servidor: new URL(base).host,
       ferramenta: "erp_achar",
-      consulta: "pelicula iphone 15",
+      consulta: "[18 caracteres]",
     });
-    expect(String(auditoria.metadata?.result_summary)).toContain("Achei 5");
+    expect(String(auditoria.metadata?.result_summary)).toMatch(/^dado externo: \d+ caracteres/);
     expect(JSON.stringify(auditoria)).not.toContain(CHAVE);
   });
 

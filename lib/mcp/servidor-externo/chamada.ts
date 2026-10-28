@@ -31,6 +31,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { FetchLike } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { assertSafeOutboundUrl } from "@/lib/automation/outbound-url";
+import { logger } from "@/lib/logger";
 import { fetchComIpFixado, type DepsDeFetch } from "@/lib/net/destino-seguro";
 import { assertDestinoResolvidoSeguro } from "@/lib/automation/outbound-ip";
 import {
@@ -120,19 +121,44 @@ function nomeDoServidor(servidor: ServidorMcpExterno): string {
   return servidor.slug ?? hostDoEndpoint(servidor.endpoint);
 }
 
+/**
+ * A recusa que o PRÓPRIO servidor escreveu (`isError: true`). A `message` é fixa:
+ * o texto dele é conteúdo de terceiro e vai só em `textoDoServidor` (já sem a
+ * chave), para quem decide embrulhá-lo como dado externo antes de mostrar a
+ * alguém ou ao modelo.
+ */
+export class RecusaDoServidorMcp extends Error {
+  constructor(
+    servidor: ServidorMcpExterno,
+    readonly textoDoServidor: string,
+  ) {
+    super(`O servidor "${nomeDoServidor(servidor)}" recusou a chamada.`);
+    this.name = "RecusaDoServidorMcp";
+  }
+}
+
 function traduzirFalha(servidor: ServidorMcpExterno, timeoutMs: number, erro: unknown): ErroDeChamadaMcp {
   if (erro instanceof ErroDeChamadaMcp) return erro;
   const bruto = erro instanceof Error ? erro.message : String(erro);
   const motivo = servidor.chave.length >= 4 ? bruto.replaceAll(servidor.chave, "[chave]") : bruto;
+  if (!/timed out|timeout/i.test(motivo)) {
+    // O detalhe (que pode trazer o CORPO da resposta do servidor) vai só ao log.
+    logger.warn("falha ao falar com o servidor MCP externo", {
+      servidor: nomeDoServidor(servidor),
+      error: motivo.slice(0, 200),
+    });
+  }
   if (/timed out|timeout/i.test(motivo)) {
     return new ErroDeChamadaMcp(
       "timeout",
       `O servidor "${nomeDoServidor(servidor)}" não respondeu em ${Math.ceil(timeoutMs / 1000)} segundos. Siga sem esse dado.`,
     );
   }
+  // Só o código de bloqueio do NOSSO destino seguro (token curto e fixo) passa.
+  const bloqueio = /unsafe_url:[a-z_]+/.exec(motivo)?.[0];
   return new ErroDeChamadaMcp(
     "indisponivel",
-    `Não foi possível falar com o servidor "${nomeDoServidor(servidor)}": ${motivo}`,
+    `Não foi possível falar com o servidor "${nomeDoServidor(servidor)}" agora.${bloqueio ? ` (${bloqueio})` : ""}`,
   );
 }
 
@@ -346,7 +372,10 @@ export async function chamarFerramentaRemota(
 
   if (resposta.isError) {
     const recusa = texto || `o servidor MCP externo recusou "${nome}"`;
-    throw new Error(servidor.chave.length >= 4 ? recusa.replaceAll(servidor.chave, "[chave]") : recusa);
+    throw new RecusaDoServidorMcp(
+      servidor,
+      servidor.chave.length >= 4 ? recusa.replaceAll(servidor.chave, "[chave]") : recusa,
+    );
   }
 
   return resposta.structuredContent === undefined

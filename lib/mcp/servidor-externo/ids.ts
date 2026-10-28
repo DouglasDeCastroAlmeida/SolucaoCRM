@@ -52,6 +52,9 @@ export interface EscolhaRemota {
   leitura: boolean;
 }
 
+/** Limite de nome de ferramenta nos provedores de modelo. */
+export const LIMITE_DO_NOME_EXPOSTO = 64;
+
 const NOME_DE_PROTOCOLO = /^[A-Za-z0-9_-]{1,64}$/;
 /** Mesma régua do CHECK de `mcp_servidores_externos.slug` (sem ':' nem '_'). */
 const SLUG_DE_SERVIDOR = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -96,6 +99,8 @@ export function lerToolIdRemoto(id: string): EscolhaRemota | null {
   if (partes.length === 2) return { nome, leitura: marca === "leitura" };
   const servidor = partes[0];
   if (!ehSlugDeServidor(servidor)) return null;
+  // O nome exposto (`servidor__nome`) tem de caber no limite dos provedores.
+  if (servidor.length + 2 + nome.length > LIMITE_DO_NOME_EXPOSTO) return null;
   return { servidor, nome, leitura: marca === "leitura" };
 }
 

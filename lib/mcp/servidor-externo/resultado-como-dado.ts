@@ -36,6 +36,21 @@ export interface OpcoesDoEmbrulho {
   limite?: number;
 }
 
+/**
+ * Falha de ferramenta externa cuja `message` JÁ vai ao modelo (frase fixa +
+ * envelope de dado externo). `mensagemAuditavel` é o que a auditoria grava no
+ * lugar: nunca o texto do servidor.
+ */
+export class ErroDeFerramentaExterna extends Error {
+  constructor(
+    mensagem: string,
+    readonly mensagemAuditavel: string,
+  ) {
+    super(mensagem);
+    this.name = "ErroDeFerramentaExterna";
+  }
+}
+
 export interface DadoExterno {
   texto: string;
   dados?: unknown;
@@ -60,8 +75,12 @@ export function embrulharComoDadoExterno(
   const limite = opcoes.limite ?? LIMITE_DO_RESULTADO_CARACTERES;
   let truncado = false;
 
-  // O fechamento do servidor não pode encerrar o envelope antes da hora.
-  let conteudo = semChave(resultado.texto, opcoes.chave).replaceAll(FECHAMENTO, "[fim do dado externo]");
+  // Nem o fechamento nem a abertura do servidor (inclusive variantes com
+  // espaço, caixa ou largura diferentes: NFKC) podem passar por marca nossa.
+  let conteudo = semChave(resultado.texto, opcoes.chave)
+    .normalize("NFKC")
+    .replace(/\[\s*FIM\s+DO\s+DADO\s+EXTERNO\s*\]/gi, "(fim do dado externo)")
+    .replace(/\[\s*DADO\s+EXTERNO/gi, "(dado externo");
   if (conteudo.length > limite) {
     conteudo = `${conteudo.slice(0, limite)}\n[resultado cortado em ${limite} caracteres]`;
     truncado = true;
@@ -90,40 +109,38 @@ export function embrulharComoDadoExterno(
 }
 
 // ─── resumo para a auditoria (AC-007.7) ─────────────────────────────────────
+//
+// DECISÃO (revisão de segurança, I3/I4): a auditoria é append-only e guarda 5
+// anos. Valores de argumento e trechos do resultado podem ser dado pessoal do
+// cliente (telefone, e-mail, nome), então só vão NOMES de campo e TAMANHOS;
+// do resultado, só o tamanho e se foi cortado. "Resumido" aqui quer dizer isso.
 
 const CAMPOS_SENSIVEIS = /(authorization|api[_-]?key|token|senha|password|secret|chave|cpf)/i;
 const MAX_CAMPOS_NO_RESUMO = 20;
-const MAX_VALOR_NO_RESUMO = 200;
-const MAX_RESULTADO_NO_RESUMO = 280;
+const MAX_NOME_DO_CAMPO = 64;
 
 export function resumirArgumentosParaAuditoria(
   argumentos: Record<string, unknown>,
-  opcoes: { chave?: string } = {},
+  _opcoes: { chave?: string } = {},
 ): Record<string, unknown> {
   const saida: Record<string, unknown> = {};
   for (const [nome, valor] of Object.entries(argumentos).slice(0, MAX_CAMPOS_NO_RESUMO)) {
-    if (CAMPOS_SENSIVEIS.test(nome)) {
-      saida[nome] = "[redacted]";
-      continue;
-    }
-    const texto = typeof valor === "string" ? valor : JSON.stringify(valor) ?? "";
-    const limpo = semChave(texto, opcoes.chave);
-    if (typeof valor === "string" || limpo.length > MAX_VALOR_NO_RESUMO || limpo !== texto) {
-      saida[nome] =
-        limpo.length > MAX_VALOR_NO_RESUMO ? `${limpo.slice(0, MAX_VALOR_NO_RESUMO)}...[truncated]` : limpo;
-    } else {
-      saida[nome] = valor;
-    }
+    const campo = nome.slice(0, MAX_NOME_DO_CAMPO);
+    if (CAMPOS_SENSIVEIS.test(nome)) saida[campo] = "[redacted]";
+    else if (typeof valor === "string") saida[campo] = `[${valor.length} caracteres]`;
+    else if (valor === null || valor === undefined) saida[campo] = "[vazio]";
+    else if (Array.isArray(valor)) saida[campo] = `[lista de ${valor.length}]`;
+    else saida[campo] = `[${typeof valor}]`;
   }
   return saida;
 }
 
 export function resumirResultadoParaAuditoria(
   resultado: unknown,
-  opcoes: { chave?: string } = {},
+  _opcoes: { chave?: string } = {},
 ): string {
   if (resultado === null || typeof resultado !== "object") return "";
-  const texto = (resultado as { texto?: unknown }).texto;
+  const { texto, truncado } = resultado as { texto?: unknown; truncado?: unknown };
   if (typeof texto !== "string") return "";
-  return semChave(texto, opcoes.chave).slice(0, MAX_RESULTADO_NO_RESUMO);
+  return `dado externo: ${texto.length} caracteres${truncado === true ? ", cortado" : ""}`;
 }

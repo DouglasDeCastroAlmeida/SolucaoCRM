@@ -39,6 +39,7 @@ import { z } from "zod";
 
 import {
   chamarFerramentaRemota,
+  RecusaDoServidorMcp,
   type FerramentaRemota,
   type OpcoesDeChamada,
 } from "@/lib/mcp/servidor-externo/chamada";
@@ -48,6 +49,7 @@ import { decidirComoExecutar, type ModoDoAgente } from "@/lib/mcp/servidor-exter
 import type { FerramentaDoAgente } from "@/lib/mcp/servidor-externo/repositorio";
 import {
   embrulharComoDadoExterno,
+  ErroDeFerramentaExterna,
   resumirArgumentosParaAuditoria,
   resumirResultadoParaAuditoria,
 } from "@/lib/mcp/servidor-externo/resultado-como-dado";
@@ -100,13 +102,33 @@ function campoZod(bruto: unknown): z.ZodTypeAny {
   }
 }
 
+const MAX_CAMPOS_DO_ESQUEMA = 30;
+const PREFIXO_DA_DESCRICAO = "Ferramenta de servidor externo: ";
+const MAX_DESCRICAO = 300;
+
+/**
+ * A descrição vem do servidor (conteúdo de terceiro que o modelo lê como
+ * instrução de uso): sem controles nem quebras de linha, até 300 caracteres e
+ * sempre prefixada com a origem.
+ */
+function descricaoSegura(bruta: string | undefined, nome: string): string {
+  const limpa = (bruta ?? "")
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_DESCRICAO);
+  return PREFIXO_DA_DESCRICAO + (limpa === "" ? nome : limpa);
+}
+
 function shapeDaFerramenta(ferramenta: FerramentaRemota): Record<string, z.ZodTypeAny> {
   const propriedades = ferramenta.inputSchema?.properties;
   if (!propriedades || typeof propriedades !== "object") return {};
   const exigidos = new Set(ferramenta.inputSchema?.required ?? []);
 
   const shape: Record<string, z.ZodTypeAny> = {};
-  for (const [nome, bruto] of Object.entries(propriedades)) {
+  // Esquema vem do servidor: sem teto, centenas de campos inflariam o contexto.
+  for (const [nome, bruto] of Object.entries(propriedades).slice(0, MAX_CAMPOS_DO_ESQUEMA)) {
     // Nome que não é identificador nunca vira campo: o modelo só consegue
     // escrever o que o esquema nomeia.
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(nome)) continue;
@@ -186,7 +208,7 @@ function definicaoDaFerramenta(
     // O sufixo diz de ONDE o dado vem: o modelo não pode tratar preço vindo
     // do ERP como se viesse do catálogo do CRM, e o leitor do turno tem o
     // direito de saber que aquilo é consulta a outro sistema.
-    description: `${ferramenta.description ?? ferramenta.name} (servidor MCP externo)`,
+    description: descricaoSegura(ferramenta.description, ferramenta.name),
     inputSchema: shapeDaFerramenta(ferramenta),
     category: ehLeitura ? "read" : "write",
     requiresRole: "agent",
@@ -194,9 +216,9 @@ function definicaoDaFerramenta(
     // Com controle de aprovação, é o handler que pede aprovação (ver abaixo).
     ...(aprovacao ? { aprovacaoPropria: true as const } : {}),
     redigirParaAuditoria: (args) => ({
+      ...resumirArgumentosParaAuditoria(args, { chave: servidor.chave }),
       servidor: rotulo,
       ferramenta: ferramenta.name,
-      ...resumirArgumentosParaAuditoria(args, { chave: servidor.chave }),
     }),
     resumoParaAuditoria: (resultado) =>
       resumirResultadoParaAuditoria(resultado, { chave: servidor.chave }),
@@ -236,7 +258,22 @@ function definicaoDaFerramenta(
             "avise que ela será conferida e siga a conversa.",
         };
       }
-      const resultado = await chamarFerramentaRemota(servidor, ferramenta.name, argumentos, opcoes);
+      let resultado;
+      try {
+        resultado = await chamarFerramentaRemota(servidor, ferramenta.name, argumentos, opcoes);
+      } catch (err) {
+        // A recusa escrita pelo servidor volta ao modelo DENTRO do envelope de dado
+        // externo (e truncada); a auditoria recebe só um código fixo.
+        if (err instanceof RecusaDoServidorMcp) {
+          const dado = embrulharComoDadoExterno(
+            { texto: err.textoDoServidor },
+            { servidor: rotulo, ferramenta: ferramenta.name },
+            { chave: servidor.chave },
+          );
+          throw new ErroDeFerramentaExterna(`${err.message} ${dado.texto}`, "servidor_recusou_a_chamada");
+        }
+        throw err;
+      }
       return embrulharComoDadoExterno(
         resultado,
         { servidor: rotulo, ferramenta: ferramenta.name },
@@ -258,7 +295,17 @@ export function definirFerramentasDosServidores(
   aprovacao?: ControleDeAprovacao,
 ): McpToolDefinition[] {
   const definicoes: McpToolDefinition[] = [];
+  const usados = new Set<string>();
   for (const { servidor, ferramenta, escolha, nomeExposto } of ligadas) {
+    // Duas remotas com o mesmo nome exposto (ex.: `x__y` do formato antigo e
+    // servidor `x` + ferramenta `y`): a primeira vence, de forma determinística.
+    if (usados.has(nomeExposto)) {
+      logger.warn("duas ferramentas de servidores MCP externos com o mesmo nome — mantida a primeira", {
+        servidor: servidor.slug,
+        ferramenta: ferramenta.name,
+      });
+      continue;
+    }
     if (nomesOcupados.has(nomeExposto)) {
       logger.warn("ferramenta do servidor MCP externo colide com o catalogo compilado — mantida a compilada", {
         servidor: servidor.slug,
@@ -266,6 +313,7 @@ export function definirFerramentasDosServidores(
       });
       continue;
     }
+    usados.add(nomeExposto);
     definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes, aprovacao));
   }
   return definicoes;

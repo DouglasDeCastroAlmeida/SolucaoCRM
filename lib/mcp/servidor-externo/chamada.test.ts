@@ -66,7 +66,7 @@ describe("AC-007.6: prazo de 10 segundos com erro claro", () => {
 
     expect(erro).toBeInstanceOf(ErroDeChamadaMcp);
     expect((erro as ErroDeChamadaMcp).codigo).toBe("indisponivel");
-    expect((erro as Error).message).toContain("ECONNREFUSED");
+    expect((erro as Error).message).not.toContain("ECONNREFUSED");
     expect((erro as Error).message).not.toContain(CHAVE);
   });
 });
@@ -128,6 +128,22 @@ describe("AC-007.5: destino seguro com IP fixado e corpo com limite", () => {
 
     const res = await seguro(ENDPOINT, {});
     await expect(res.text()).rejects.toThrow(/response_too_large/);
+  });
+
+  it("AC-007.5: redirecionamento 3xx não é seguido", async () => {
+    let chamadas = 0;
+    const seguro = fetchDestinoSeguro(ENDPOINT, {
+      resolver: resolverPublico,
+      requisitar: async () => {
+        chamadas += 1;
+        return new Response(null, { status: 302, headers: { location: "https://interno.exemplo/x" } });
+      },
+    });
+
+    const res = await seguro(ENDPOINT, {});
+
+    expect(res.status).toBe(302);
+    expect(chamadas).toBe(1);
   });
 
   it("AC-007.5: o teto padrão do corpo é de 1 MiB", () => {

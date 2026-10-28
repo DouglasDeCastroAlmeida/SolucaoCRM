@@ -528,7 +528,8 @@ function wrapMcpTool(
           args: argsAudit,
           durationMs: Date.now() - startedAt,
           success: false,
-          errorMessage: message,
+          // Ferramenta externa: o texto do servidor não vai à auditoria (5 anos).
+          errorMessage: mensagemParaAuditoria(err, message),
         });
         if (err instanceof EscritaDoNegocioSemDesfechoError) {
           logger.error("escrita do negócio sem desfecho; novas escritas recusadas", {
@@ -572,6 +573,16 @@ function wrapMcpTool(
       }
     },
   });
+}
+
+/**
+ * O que a auditoria grava como erro. Falha de ferramenta de servidor externo
+ * declara um código fixo (`mensagemAuditavel`): o texto que o servidor escreveu
+ * vai ao modelo dentro do envelope de dado externo, nunca a `api_audit_log`.
+ */
+function mensagemParaAuditoria(err: unknown, padrao: string): string {
+  const fixa = (err as { mensagemAuditavel?: unknown } | null)?.mensagemAuditavel;
+  return typeof fixa === "string" ? fixa : padrao;
 }
 
 /** O `motivo` de uma recusa `{ permitido: false, motivo }` devolvida pelo handler, ou `null`. */

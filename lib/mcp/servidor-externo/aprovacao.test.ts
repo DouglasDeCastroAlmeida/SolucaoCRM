@@ -284,7 +284,7 @@ describe("AC-007.3: aprovar executa com os argumentos GUARDADOS, uma única vez"
     expect(r.tipo).toBe("executada");
     if (r.tipo !== "executada") return;
     expect(r.resumo).toMatchObject({ servidor: "loja", ferramenta: "cancelar_pedido" });
-    expect(r.resumo.argumentos).toMatchObject({ pedido_id: "P-123" });
+    expect(r.resumo.argumentos).toMatchObject({ pedido_id: "[5 caracteres]", motivo: "[16 caracteres]" });
     expect(JSON.stringify(r)).not.toContain(CHAVE);
   });
 

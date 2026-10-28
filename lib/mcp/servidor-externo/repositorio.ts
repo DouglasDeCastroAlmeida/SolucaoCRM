@@ -113,6 +113,12 @@ export interface DepsDoRepositorio {
   /** Lista as ferramentas do servidor (a rede). Default: cliente MCP com destino seguro. */
   listar?: (servidor: ServidorMcpExterno) => Promise<FerramentaRemota[]>;
   agora?: () => number;
+  /**
+   * O admin aceitou as mudanças que o servidor fez nas ferramentas já conhecidas
+   * (ex.: botão "atualizar ferramentas"). Sem isto, a renovação automática só
+   * APERTA e acrescenta: ver `mesclarFerramentas`.
+   */
+  aceitarMudancas?: boolean;
   /** Linhas já lidas (evita segunda consulta quando quem chama já as tem). */
   linhas?: readonly LinhaDeServidor[];
 }
@@ -203,7 +209,8 @@ export async function cadastrarServidor(
   const nome = entrada.nome.trim();
   const endpoint = entrada.endpoint.trim();
   const chave = entrada.chave.trim();
-  if (!ehSlugDeServidor(slug) || nome === "" || nome.length > 80 || chave === "") {
+  // Slug curto: `slug__ferramenta` precisa caber em 64 caracteres (ids.ts).
+  if (!ehSlugDeServidor(slug) || slug.length > 24 || nome === "" || nome.length > 80 || chave === "") {
     throw new ErroDeServidorMcp("mcp_servidor_invalido", "Informe um identificador, um nome e uma chave válidos.");
   }
 
@@ -272,6 +279,37 @@ export async function cadastrarServidor(
 }
 
 /**
+ * Renovação da lista SEM rug-pull (revisão de segurança, B2). O servidor é
+ * terceiro: depois que o admin viu e ligou uma ferramenta, ele não pode trocar
+ * descrição, esquema ou o aviso de somente-leitura por conta própria. Na
+ * renovação automática, ferramenta JÁ conhecida mantém o que foi guardado, e só
+ * muda no sentido mais restritivo (leitura vira escrita). Nome novo entra (o
+ * admin ainda tem de ligá-lo); nome que sumiu sai. Só `aceitar` (decisão
+ * explícita do admin) adota a versão nova do servidor.
+ *
+ * Sem schema novo: o "visto pelo admin" é a própria lista guardada em
+ * `mcp_servidores_externos.ferramentas`, que só muda por cadastro, por esta
+ * mesclagem ou por aceite.
+ */
+export function mesclarFerramentas(
+  guardadas: readonly FerramentaRemota[],
+  novas: readonly FerramentaRemota[],
+  aceitar: boolean,
+): FerramentaRemota[] {
+  if (aceitar) return [...novas];
+  const conhecidas = new Map(guardadas.map((f) => [f.name, f] as const));
+  return novas.map((nova) => {
+    const antiga = conhecidas.get(nova.name);
+    if (!antiga) return nova;
+    const { somenteLeitura: _lida, ...resto } = antiga;
+    void _lida;
+    return antiga.somenteLeitura === true && nova.somenteLeitura !== true
+      ? ({ ...resto } as FerramentaRemota)
+      : antiga;
+  });
+}
+
+/**
  * As ferramentas do servidor: a lista guardada se tem menos de 10 minutos; senão
  * refaz pela rede e regrava. Servidor fora do ar devolve a lista guardada (pode
  * ser vazia) em vez de lançar — o turno segue sem travar.
@@ -290,7 +328,8 @@ export async function obterFerramentasDoServidor(
   const chave = abrirChaveDaLinha(linha);
   if (chave === null) return guardadas;
   try {
-    const novas = await (deps.listar ?? listarPadrao)({ endpoint: linha.endpoint, chave });
+    const listadas = await (deps.listar ?? listarPadrao)({ endpoint: linha.endpoint, chave });
+    const novas = mesclarFerramentas(guardadas, listadas, deps.aceitarMudancas === true);
     const { error } = await supabase
       .from(TABELA)
       .update({ ferramentas: novas, ferramentas_em: new Date(agora).toISOString() })
