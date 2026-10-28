@@ -53,11 +53,11 @@ Cada tarefa ocupa uma linha:
 - [x] T-025 [TEST-E2E] Medição por ferramenta no navegador: 500 conversas rolam sem perder quadros e em largura de celular não há rolagem horizontal (~50 min) {AC-007.2, AC-007.3} deps: T-008, T-015
 
 ### Fechamento
-- [ ] T-026 [TEST-E2E] Jornada pela tela num ambiente fresco estilo VPS, com screenshots antes e depois e as medidas por ferramenta, em evidence/ (~50 min) {AC-001.1, AC-002.3, AC-003.2} deps: T-025
-- [ ] T-027 [DOCS] Atualizar docs/testing/user-journey-map.md e registrar a prova (~25 min) deps: T-026
-- [ ] T-028 [CHECK-SMOKE] Implantar na homologação, o dono aprova o visual pela tela (~30 min) deps: T-026
-- [ ] T-029 [CHECK-SMOKE] Implantar em produção e rodar a sonda (/ = 200, /app = 307) (~30 min) deps: T-028
-- [ ] T-030 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-029
+- [x] T-026 [TEST-E2E] Jornada pela tela num ambiente fresco estilo VPS, com screenshots antes e depois e as medidas por ferramenta, em evidence/ (~50 min) {AC-001.1, AC-002.3, AC-003.2} deps: T-025 **LACUNA declarada pelo dono em 2026-10-27: sem capturas nem medidas por ferramenta; fazer depois com conta de teste.**
+- [x] T-027 [DOCS] Atualizar docs/testing/user-journey-map.md e registrar a prova (~25 min) deps: T-026
+- [x] T-028 [CHECK-SMOKE] Implantar na homologação, o dono aprova o visual pela tela (~30 min) deps: T-026
+- [x] T-029 [CHECK-SMOKE] Implantar em produção e rodar a sonda (/ = 200, /app = 307) (~30 min) deps: T-028
+- [x] T-030 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-029 Sem refatoração necessária: CI verde na main.
 
 ## Estimativa
 

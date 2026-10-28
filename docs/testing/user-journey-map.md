@@ -3616,3 +3616,32 @@ do commit (resposta perdida, processo reiniciado) e retomada pela segunda tentat
 partir da lápide, com o 500 que não diz "nada foi apagado": medida por unidade em
 `lib/tenants/exclusao.test.ts` e `…/delete/route.test.ts`, e o inventário da lápide em
 `tests/invariants/gestao-de-tenants.test.ts`.
+
+## J36 — Inbox no estilo WhatsApp `[P0]` (2026-10-27, mudança 004)
+
+O inbox ganhou o visual de mensageria (lista, balões, recibos, menu "/", painel do contato) pelos tokens da marca.
+
+| Caso | O que prova | Resultado |
+| :-- | :-- | :-- |
+| J36.1 | Balão enviado e contador seguem a cor da marca com texto legível (≥ 4,5:1) nos temas claro e escuro | **PASS em unit**: `lib/branding/contraste-do-inbox.test.ts` |
+| J36.2 | Lista: iniciais, prévia com "Você:", horário no fuso da organização, não lidas que somem ao abrir, canal desconhecido com ícone genérico | **PASS em unit/jsdom**: `lib/inbox/formato-da-lista.test.ts`, `ConversationListItem` |
+| J36.3 | Conversa: agrupamento (< 2 min, mesmo remetente), separador de dia, ✓ ✓✓ guiados pelo dado, falha visível | **PASS em unit/jsdom**: `agrupar-mensagens.test.ts`, `MessageBubble.recibos.test.tsx` |
+| J36.4 | Menu "/" abre só com a permissão `message-templates.view`; sem template mostra "Nenhum template. Crie em Configurações" | **PASS em unit** + **PASS pela tela em produção** (dono, 2026-10-27) |
+| J36.5 | Foco do teclado visível na lista; textos em pt-BR, en e es | **PASS em unit/jsdom**: `inbox-so-pelo-teclado.test.tsx`, `textos-do-inbox-i18n.test.ts` |
+| J36.6 | 500 conversas rolam sem perder quadros e o celular não rola na horizontal | **ESCRITO, NÃO EXECUTADO**: `tests/e2e/inbox-desempenho-e-celular.spec.ts` (fora do CI, precisa de ambiente fresco) |
+| J36.7 | Aprovação do visual pela tela, com conversa real de WhatsApp | **PASS** (dono, produção, 2026-10-27): receber, responder, ✓, menu "/" |
+
+**Lacunas declaradas:** sem capturas de tela nem medidas por ferramenta (T-026, adiada pelo dono); ícone de status no "Você:" da lista (a listagem não traz o status da última mensagem); "tentar de novo" na mensagem que falhou não existe no código; lista com 500 conversas não é virtualizada.
+
+## J37 — Confirmação do cliente pelo WhatsApp `[P0]` (2026-10-27, mudança 007)
+
+Prova em **produção**, organização "Minha Empresa", WhatsApp real, com autorização escrita do dono. Detalhe e achados em `evidence/007-agenda/jornada-em-producao-2026-10-27.md`.
+
+| Caso | O que prova | Resultado |
+| :-- | :-- | :-- |
+| J37.1 | "1" depois do lembrete confirma o horário, audita `agenda.client_confirmed`, mostra o selo na Agenda | **PASS** (banco + tela) |
+| J37.2 | "1" repetido não muda nada nem manda mensagem | **PASS** |
+| J37.3 | "2" registra o pedido de remarcar sem cancelar, silencia o agente, abre UM aviso na Central | **PASS** (banco + tela) |
+| J37.4 | Remarcar pela equipe limpa o pedido e fecha só o aviso daquele horário | **PASS** |
+| J37.5 | Com a chave do tipo desligada o "1" não confirma nada | **PASS** |
+| J37.6 | As respostas automáticas chegam ao celular | **NÃO PROVADO**: o canal em modo de teste (`pre_go_live`) as barra |
