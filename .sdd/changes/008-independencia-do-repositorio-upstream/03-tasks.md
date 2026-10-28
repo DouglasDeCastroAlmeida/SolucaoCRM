@@ -22,7 +22,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-002 [TEST-UNIT] Âncora e testes de identidade esperam ghcr.io/douglasdecastroalmeida e DouglasDeCastroAlmeida/SolucaoCRM: compose sem variáveis resolve para o namespace do dono, .env de exemplo idem (~35 min) {AC-001.1, AC-001.4} deps: T-001
 - [x] T-003 [TEST-INT] Kit: IMG_NS, URL de clone e consulta da última versão usam o repositório do dono; .env fixado por SHA fica intacto quando o update.sh não aplica versão (nada a atualizar, recusa de anterior) e, com versão nova, as quatro imagens passam à tag dela no namespace do dono sem edição manual (caso novo em update-guard; check em test-validators cobrindo update.sh e diagnostico.sh) (~45 min) {AC-001.2, AC-001.3, AC-001.5} deps: T-001
 - [x] T-004 [IMPL] Trocar a âncora, docker-compose.prod.yml, .env.hostgator.example, Dockerfile*, _common.sh, install.sh, comecar.sh e diagnostico.sh numa única mudança coerente (~60 min) {AC-001.1, AC-001.2, AC-001.4, AC-001.5} deps: T-002, T-003
-- [ ] T-005 [CHECK-SMOKE] CI verde (verify, invariants, imagens-ok) e test:shell sem regressão; nenhuma imagem em execução na VPS mudou (~30 min) {AC-001.3} deps: T-004
+- [x] T-005 [CHECK-SMOKE] CI verde (verify, invariants, imagens-ok) e test:shell sem regressão; nenhuma imagem em execução na VPS mudou (~30 min) {AC-001.3} deps: T-004
 
 ### Fatia 2: Scripts e condições de workflow (REQ-002.1, .2)
 - [ ] T-006 [TEST-UNIT] Constantes de repositório de scripts/cortar-release.ts, instalar-guias.sh, vigia-colisao-de-migration.ts e migration-populacao.sh apontam para o dono (~35 min) {AC-002.1}
