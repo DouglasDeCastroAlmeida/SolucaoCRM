@@ -10,7 +10,7 @@ Este PC tem 6 GB de RAM; typecheck, lint, suíte e `test:db` rodam no CI, que é
 - `gh pr checks 18` (PR mesclado) → verify (partes 1 a 4), build-and-size, invariants, invariants-majors (17), invariants-alcance e imagens-ok **passaram**. É a prova do baseline em instalação nova e em atualização (T-004).
 - `npx vitest run lib/agenda/aplicar-confirmacao-do-cliente.test.ts` → 17 passed; `lib/agenda/limpar-pedido-de-remarcar.test.ts` → 3 passed (auditor).
 - Deploy em produção autorizado por escrito → sonda verde (`agenda-tipos-inalterados`, `/` = 200, `/app` = 307).
-- Jornada com WhatsApp real **em produção** (não em homologação), 2026-10-27, organização "Minha Empresa": `evidence/007-agenda/jornada-em-producao-2026-10-27.md` e J37 em `docs/testing/user-journey-map.md`. Registros de teste apagados ao fim.
+- Jornada com WhatsApp real **em produção** (não em homologação), 2026-10-27, organização "Minha Empresa": `evidence/007-agenda/jornada-em-producao-2026-10-27.md` e J50 em `docs/testing/user-journey-map.md`. Registros de teste apagados ao fim.
 - **Não verificado por mim:** o baseline aplicado num banco e o isolamento RLS entre duas organizações — só o resultado do CI.
 
 ## Rastreabilidade
