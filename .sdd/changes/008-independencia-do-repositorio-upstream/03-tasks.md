@@ -45,7 +45,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-015 [TEST-UNIT] O workflow de corte usa só GITHUB_TOKEN com permissões mínimas, sem aplicativo nem segredo de terceiro, e é disparável manualmente; testes de workflows-tem-permissions seguem verdes (~40 min) {AC-002.4}
 - [x] T-016 [TEST-UNIT] O corte consome os fragmentos antes de o changelog passar do limite de 30.000 bytes e o aviso de proximidade aparece antes do estouro (~35 min) {AC-002.5}
 - [x] T-017 [IMPL] .github/workflows/corte-de-versao.yml e comentário do porquê nos jobs desligados do upstream (~50 min) {AC-002.4, AC-002.5} deps: T-015, T-016
-- [ ] T-018 [CHECK-SMOKE] Disparar o corte manualmente e conferir o PR gerado, o CI dele e a tag depois do merge (~30 min) {AC-002.4} deps: T-017
+- [x] T-018 [CHECK-SMOKE] Disparar o corte manualmente e conferir o PR gerado, o CI dele e a tag depois do merge (~30 min) {AC-002.4} deps: T-017 **Provada em 2026-10-28: corte-de-versao gerou release/1.89.0 (PR #25, aberto à mão porque o Actions não pode criar PR no repositório), mesclado; publicar-versao criou a tag v1.89.0 e a publicação das 4 imagens concluiu verde (a-tag-veio-da-main, build-and-push, juntar-manifestos, imagens-ok). NÃO provado: a existência da tag no registro (o token do gh não tem read:packages).**
 - [x] T-025 [IMPL] Workflow manual publicar-versao.yml (valida CHANGELOG e tag, cria a tag anotada e dispara publish-image.yml na tag) com testes, mapa de gatilhos, escritas justificadas e doutrina atualizada (~40 min) {AC-002.4} deps: T-017
 
 ### Fatia 7: Executor de CI (REQ-002.3)
@@ -54,9 +54,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-021 [CHECK-SMOKE] PR de teste roda no executor próprio e um fork continua recusado (~30 min) {AC-002.3} deps: T-020 **NÃO APLICÁVEL (medido em 2026-10-28): o repositório do dono não tem a variável EXECUTOR_PROPRIO nem runner registrado (0 runners); não há executor para provar. Fazer quando o dono montar um executor próprio.**
 
 ### Fechamento
-- [ ] T-022 [CHECK-SMOKE] Deploy na homologação e sondas de / (200) e /app (307); produção só com autorização escrita do dono (~30 min) deps: T-021, T-018
+- [x] T-022 [CHECK-SMOKE] Deploy na homologação e sondas de / (200) e /app (307); produção só com autorização escrita do dono (~30 min) deps: T-021, T-018 **Provada: deploy automático na homologação verde no commit do merge; sondas hml / = 200 e /app = 307; produção não alterada (/ = 200, /app = 307).**
 - [x] T-023 [DOCS] Atualizar CLAUDE.md e AGENTS.md nos trechos que mandam executar algo do upstream, e o inventário de PI para a refatoração futura (~30 min) deps: T-022
-- [ ] T-024 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-023
+- [x] T-024 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-023 **Nada a limpar além dos ajustes já feitos nas revisões (nome do teste de fragmentos, endurecimento do publicar-versao).**
 
 ## Estimativa
 
