@@ -38,8 +38,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-012 [DOCS] Escrever a linha de copyright, o NOTICE e o parágrafo Origem em pt-BR, en e es (~30 min) {AC-004.1, AC-004.2, AC-004.3} deps: T-011
 
 ### Fatia 5: Cerca contra regressão (REQ-005)
-- [ ] T-013 [TEST-UNIT] nada-executa-contra-o-upstream: varre os caminhos que executam e reprova melgarafael ou deskcomm.com.br fora da lista de exceções, apontando arquivo e linha; a lista só pode encolher; sabotagem prova que reprova (~50 min) {AC-005.1, AC-005.2} deps: T-005, T-008, T-010, T-012
-- [ ] T-014 [IMPL] Montar a lista de exceções com motivo (só o que for legítimo) e o teto gravado (~30 min) {AC-005.1, AC-005.2} deps: T-013
+- [x] T-013 [TEST-UNIT] nada-executa-contra-o-upstream: varre os caminhos que executam e reprova melgarafael ou deskcomm.com.br fora da lista de exceções, apontando arquivo e linha; a lista só pode encolher; sabotagem prova que reprova (~50 min) {AC-005.1, AC-005.2} deps: T-005, T-008, T-010, T-012
+- [x] T-014 [IMPL] Montar a lista de exceções com motivo (só o que for legítimo) e o teto gravado (~30 min) {AC-005.1, AC-005.2} deps: T-013
 
 ### Fatia 6: Release próprio (REQ-002.4, .5)
 - [ ] T-015 [TEST-UNIT] O workflow de corte usa só GITHUB_TOKEN com permissões mínimas, sem aplicativo nem segredo de terceiro, e é disparável manualmente; testes de workflows-tem-permissions seguem verdes (~40 min) {AC-002.4}

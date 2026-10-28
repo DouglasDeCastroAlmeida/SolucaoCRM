@@ -13,7 +13,7 @@ item derruba PR** na triagem (medido nos relatos de triagem de agosto e setembro
 | `e2e` | ver `receita-e2e-local.md` | spec nova órfã, tela quebrada |
 | `imagens-ok` | (só no CI) as três imagens Docker constroem e o app **sobe** | `Dockerfile*`, `docker-compose*`, kit |
 
-A lista acima envelhece: confira com `gh api repos/melgarafael/DeskcommCRM/branches/main/protection --jq '.required_status_checks.contexts'`.
+A lista acima envelhece: confira com `gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection --jq '.required_status_checks.contexts'`.
 O `pre-voo.sh` faz isso quando o `gh` está logado.
 
 ## B. O que só a triagem vê (o `pre-voo.sh` mede)
@@ -55,7 +55,7 @@ A tripla é indivisível: arquivo em `supabase/migrations/`, apêndice **idempot
 O kit self-host aplica **só o baseline** — migration sem apêndice não existe para quem instalou.
 
 - `NNNN` e timestamp únicos contra a POPULAÇÃO da pergunta: a main do PRODUTO (o remoto que
-  aponta para `melgarafael/DeskcommCRM`, com qualquer nome — num fork, `origin/main` é a main do
+  aponta para `DouglasDeCastroAlmeida/SolucaoCRM`, com qualquer nome — num fork, `origin/main` é a main do
   fork) mais `refs/heads` e `refs/remotes`; os PRs abertos saem por fora, declarados, e quem os
   mede é `pnpm checar:colisao-de-migration` (issue #1273). O `NNNN` sai da posição do nome
   canônico (`^[0-9]{14}_([0-9]{4})_`), nunca de um `_NNNN_` do slug. Ao renumerar,

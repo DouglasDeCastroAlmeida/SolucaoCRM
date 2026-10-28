@@ -39,8 +39,7 @@ toca no link que você mesmo fez para o `deskcomm-*` de outro clone.
 
 ── Uso ───────────────────────────────────────────────────────────────────────
 
-  curl -fsSL https://raw.githubusercontent.com/DouglasDeCastroAlmeida/SolucaoCRM/main/scripts/instalar-guias.sh | bash
-  curl -fsSL https://raw.githubusercontent.com/DouglasDeCastroAlmeida/SolucaoCRM/main/scripts/instalar-guias.sh | bash -s -- --remover
+  # Repositório privado: não há curl público. Clone o repositório e rode a partir dele:
   bash scripts/instalar-guias.sh                 # instala ou atualiza (cópia da main)
   bash scripts/instalar-guias.sh --fonte .       # aponta para ESTE clone (quem edita os guias)
   bash scripts/instalar-guias.sh --remover       # desfaz

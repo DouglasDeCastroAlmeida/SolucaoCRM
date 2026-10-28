@@ -94,9 +94,9 @@ if [ -z "$REPO" ]; then
   echo "Alternativa remota:"
   if [ -n "$PALAVRAS" ]; then
     PRIMEIRA="$(printf '%s' "$PALAVRAS" | cut -d' ' -f1)"
-    echo "curl -s https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/CHANGELOG.md | grep -in \"$PRIMEIRA\""
+    echo "curl -s https://raw.githubusercontent.com/DouglasDeCastroAlmeida/SolucaoCRM/main/CHANGELOG.md | grep -in \"$PRIMEIRA\""
   else
-    echo "curl -s https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/CHANGELOG.md | grep -in \"<palavra>\""
+    echo "curl -s https://raw.githubusercontent.com/DouglasDeCastroAlmeida/SolucaoCRM/main/CHANGELOG.md | grep -in \"<palavra>\""
   fi
   exit 2
 fi

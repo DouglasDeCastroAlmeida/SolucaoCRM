@@ -174,7 +174,7 @@ O CI tem cinco checks obrigatórios na `main`: `verify`, `build-and-size`, `inva
 `imagens-ok`. Não confie nesta lista — reconte antes de citar:
 
 ```bash
-gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
+gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection \
   --jq '.required_status_checks.contexts|join(", ")'
 ```
 

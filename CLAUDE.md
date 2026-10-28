@@ -517,7 +517,7 @@ Checks **obrigatórios** na branch protection da `main` (verificado na configura
 Todos os **cinco** são **obrigatórios** — medido em 2026-08-14 na branch protection:
 
 ```console
-$ gh api repos/melgarafael/DeskcommCRM/branches/main/protection --jq '.required_status_checks.contexts|join(", ")'
+$ gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection --jq '.required_status_checks.contexts|join(", ")'
 verify, build-and-size, invariants, e2e, imagens-ok
 ```
 
@@ -595,7 +595,7 @@ Processo padrão (siga sempre):
 
    ```bash
    # A POPULAÇÃO da pergunta: main do PRODUTO (o remoto que aponta para
-   # melgarafael/DeskcommCRM, com qualquer nome) + TODO PR ABERTO, inclusive de
+   # DouglasDeCastroAlmeida/SolucaoCRM, com qualquer nome) + TODO PR ABERTO, inclusive de
    # fork. O `ls` abaixo mede o DISCO, que responde uma pergunta menor.
    pnpm checar:colisao-de-migration   # declara o que mediu e o que não mediu
    ```
