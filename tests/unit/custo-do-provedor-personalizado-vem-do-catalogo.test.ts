@@ -19,8 +19,9 @@
  *
  *  1. 🔴 com a linha de preço no banco (`ai_models`/`ai_pricing`), a chamada do
  *     provedor personalizado grava custo CALCULADO, em centavo fracionado;
- *  2. controle negativo: id em tabela nenhuma continua gravando `null` — e agora
- *     com aviso no log, uma vez por (provedor, modelo);
+ *  2. controle negativo: id em tabela nenhuma grava a ESTIMATIVA conservadora da
+ *     ADR-002 da 006 (marcada `custo_origem: 'estimado'`, nunca preço real) — com
+ *     aviso no log, uma vez por (provedor, modelo);
  *  3. recíproca: modelo que o motor JÁ sabe cobrar não consulta o banco e grava o
  *     mesmo número de antes — o caminho novo só existe atrás do `null`.
  *
@@ -233,14 +234,16 @@ describe("🔴 #3013 — provedor personalizado com o preço no catálogo da ins
 });
 
 describe("controle negativo pelo seam — id sem preço em tabela nenhuma", () => {
-  it("grava null (nunca um número inventado) E avisa no log", async () => {
+  it("grava a ESTIMATIVA conservadora (ADR-002), marcada como estimada, E avisa no log", async () => {
     const { inserts, log } = await rodar({
       modelo: "provedor-x/modelo-que-nao-existe",
       linhasDePreco: [PRECO_DO_GPT_OSS],
     });
 
-    expect(custoGravado(inserts)).toBeNull();
-    expect(typeof custoGravado(inserts)).not.toBe("number");
+    // ADR-002 da 006: modelo sem preço em tabela nenhuma passa a gravar uma ESTIMATIVA
+    // conservadora (US$ 20/M de entrada e US$ 100/M de saída; 2 MTok + 1 MTok = 14000
+    // centavos), nunca um preço apresentado como real — a origem fica no log abaixo.
+    expect(custoGravado(inserts)).toBeCloseTo(14_000, 6);
 
     // O que a issue cobra: o nulo passa a ser EXPLÍCITO.
     expect(log.warn).toHaveBeenCalledTimes(1);
@@ -250,14 +253,12 @@ describe("controle negativo pelo seam — id sem preço em tabela nenhuma", () =
       model: "provedor-x/modelo-que-nao-existe",
     });
 
-    // E a linha do log da chamada continua dizendo null — sem `custo_origem`,
-    // porque origem nenhuma cobrou este modelo.
+    // E a linha do log da chamada diz que o número é ESTIMADO, não preço real.
     const concluida = log.info.mock.calls.find(([msg]) => msg === "llm: chamada concluída");
-    expect(concluida![1]).toMatchObject({ cost_cents: null });
-    expect((concluida![1] as Record<string, unknown>).custo_origem).toBeUndefined();
+    expect(concluida![1]).toMatchObject({ cost_cents: 14_000, custo_origem: "estimado" });
   });
 
-  it("banco fora do ar no preço não derruba o turno: a resposta sai, o custo volta a ser desconhecido", async () => {
+  it("banco fora do ar no preço não derruba o turno: a resposta sai, com o custo ESTIMADO", async () => {
     // Só a consulta de preço estoura; todo o resto do pool segue de pé.
     const { pool, inserts, consultas } = poolFalso([PRECO_DO_GPT_OSS], { precoFalha: true });
     const { registry } = registryEspiao();
@@ -270,9 +271,9 @@ describe("controle negativo pelo seam — id sem preço em tabela nenhuma", () =
       { registry, log, agora: ANTES_DO_PRAZO },
     );
 
-    expect(resultado.costCents).toBeNull();
+    expect(resultado.costCents).toBeCloseTo(14_000, 6);
     expect(inserts).toHaveLength(1);
-    // A leitura foi TENTADA e falhou — e mesmo assim a chamada fechou com null.
+    // A leitura foi TENTADA e falhou — e mesmo assim a chamada fechou (com a estimativa).
     expect(consultouOpreco(consultas)).toBe(true);
   });
 });
