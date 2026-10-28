@@ -10,6 +10,7 @@ import {
   donoConfiavelDoRunner,
   donoDo,
   NAMESPACE_DESTE_REPO,
+  REPOSITORIO_DESTE_REPO,
 } from "./_identidade-deste-repo";
 
 /**
@@ -229,6 +230,22 @@ describe("o default do compose diz o mesmo que o kit", () => {
   });
 });
 
+describe("o compose sem variáveis resolve para o namespace do dono (AC-001.1)", () => {
+  it("AC-001.1: a voice-agent também usa o namespace de IMG_NS", () => {
+    const m = COMPOSE.match(/^\s*image: \$\{VOICE_AGENT_IMAGE:-([^}]+)\}/m);
+    expect(m, "não achei o default de VOICE_AGENT_IMAGE em docker-compose.prod.yml").not.toBeNull();
+    expect(m![1]).toBe(`${imgNs()}/${reposDoKit()[3]}:stable`);
+  });
+  it("AC-001.1: todo default de imagem nossa no compose aponta para o dono do produto", () => {
+    const defaults = [...COMPOSE.matchAll(/^\s*image: \$\{[A-Z_]+_IMAGE:-(ghcr\.io\/[^}]+)\}/gm)]
+      .map((m) => m[1]!)
+      // WAHA, Redis e afins são upstream licenciado: tag fixa, nunca nosso namespace.
+      .filter((d) => /\/deskcomm/.test(d));
+    expect(defaults.length).toBeGreaterThanOrEqual(4);
+    for (const d of defaults) expect(d.startsWith(`${NAMESPACE_DESTE_REPO}/`), d).toBe(true);
+  });
+});
+
 describe("o kit aponta para o que o CI realmente publica", () => {
   it("os defaults de código e os labels de origem apontam para este repositório", () => {
     // A URL DERIVA do namespace, e não é economia de digitação: é o que prende a
@@ -237,13 +254,14 @@ describe("o kit aponta para o que o CI realmente publica", () => {
     // SÓ aquele literal faria a âncora se calar contra o upstream. Derivando, o
     // mesmo commit fica vermelho AQUI, contra seis arquivos que ele não tocou.
     // Medido nos dois sentidos, com a URL fixa e com ela derivada (ver cabeçalho).
-    const repo = `https://github.com/${DONO_DESTE_REPO}/DeskcommCRM`;
+    expect(REPOSITORIO_DESTE_REPO.split("/")[0]!.toLowerCase()).toBe(DONO_DESTE_REPO.toLowerCase());
+    const repo = `https://github.com/${REPOSITORIO_DESTE_REPO}`;
     for (const script of ["install.sh", "comecar.sh"]) {
       const texto = fs.readFileSync(path.join(RAIZ, "hostgator-setup-kit", script), "utf8");
       expect(texto).toContain(`REPO_URL="\${REPO_URL:-${repo}.git}"`);
     }
     expect(COMUM).toContain(`local url="\${1:-${repo}.git}" ref`);
-    for (const dockerfile of ["Dockerfile", "Dockerfile.worker", "Dockerfile.scheduler"]) {
+    for (const dockerfile of ["Dockerfile", "Dockerfile.worker", "Dockerfile.scheduler", "Dockerfile.voice-agent"]) {
       expect(fs.readFileSync(path.join(RAIZ, dockerfile), "utf8")).toContain(
         `org.opencontainers.image.source="${repo}"`,
       );

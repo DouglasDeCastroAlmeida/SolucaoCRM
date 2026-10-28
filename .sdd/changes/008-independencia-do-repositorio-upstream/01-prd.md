@@ -28,7 +28,7 @@ Como dono do produto, quero que o padrão de toda imagem e de todo clone seja do
 
 - **AC-001.1** Dado o `docker-compose.prod.yml` sem `APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` e `VOICE_AGENT_IMAGE` no ambiente, quando a configuração é resolvida, então todas as imagens apontam para `ghcr.io/douglasdecastroalmeida/*`.
 - **AC-001.2** QUANDO o kit de instalação monta as imagens e a URL de clone, o sistema DEVE usar o namespace e o repositório do dono do produto, definidos em uma única fonte por camada (bash e TypeScript).
-- **AC-001.3** Dado um `.env` existente com as imagens fixadas por SHA, quando o `update.sh` roda, então nenhum valor é trocado nem exige edição manual.
+- **AC-001.3** Dado um `.env` existente com as imagens fixadas por SHA, quando o `update.sh` roda sem versão nova a aplicar (nada a atualizar, ou recusa de versão anterior), então nenhum valor é trocado; e, quando aplica uma versão nova, as imagens passam à tag dessa versão no namespace do dono, sem exigir edição manual. (Ajuste de 2026-10-28, decisão do dono: o texto original dizia "nenhum valor é trocado" também na atualização real, o que contradiz a doutrina de packaging; o pin por SHA é do `deploy-prod.yml`, não do `update.sh`.)
 - **AC-001.4** Dado o `.env.hostgator.example`, quando é lido, então as três imagens padrão apontam para o namespace do dono do produto.
 - **AC-001.5** QUANDO o kit consulta a última versão publicada, o sistema DEVE consultar o repositório do dono do produto.
 

@@ -89,7 +89,7 @@ N/A — sem banco, sem migration. Nada de tenant.
 | :-- | :-- | :-- |
 | AC-001.1, .4 | unitário (leitura de arquivo) | `namespace-das-imagens.test.ts` com a âncora nova |
 | AC-001.2, .5 | shell | `pnpm test:shell` (`test-validators.sh`, `update-guard.test.sh`) |
-| AC-001.3 | shell | caso novo em `update-guard.test.sh`: `.env` com SHA fixado não é alterado |
+| AC-001.3 | shell | caso 15 de `update-guard.test.sh`: `.env` com SHA fixado fica intacto quando não há versão a aplicar; com versão nova, as quatro imagens passam à tag dela no namespace do dono |
 | AC-002.1 | unitário | teste novo que lê as constantes dos scripts |
 | AC-002.2 | unitário | `release-chega-na-lp.test.ts` e `guarda-da-release-*` ajustados |
 | AC-002.3 | shell | caso novo em `tests/shell` para `so-o-que-e-nosso.sh` com o repositório do dono e com um alheio |

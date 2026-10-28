@@ -922,5 +922,51 @@ run_update --to v0.9.0
 check "recusa com o par já presente: não reinicia nada" bash -c "! grep -q 'up -d --no-deps app worker' '$DOCKER_LOG'"
 check "  e diz só 'Não mexi em nada', sem citar as chaves" bash -c "grep -q 'Não mexi em nada: nem no banco' '$OUTFILE' && ! grep -q 'além das chaves' '$OUTFILE'"
 
+echo "── 15. Independência do upstream: namespace do dono e .env fixado por SHA intocado (AC-001.2, .3, .5)"
+# O dono do produto é quem publica as imagens e hospeda o repositório. A fonte
+# do namespace é o IMG_NS (lido no topo deste arquivo); a do repositório é o
+# default de clone e de consulta de versão.
+check "AC-001.2: IMG_NS é o namespace do dono do produto" test "${NS#ghcr.io/}" = "douglasdecastroalmeida"
+REPO_DONO="https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git"
+check "AC-001.2: install.sh clona do repositório do dono" \
+  grep -qF "REPO_URL=\"\${REPO_URL:-${REPO_DONO}}\"" "$REPO_ROOT/hostgator-setup-kit/install.sh"
+check "AC-001.2: comecar.sh clona do repositório do dono" \
+  grep -qF "REPO_URL=\"\${REPO_URL:-${REPO_DONO}}\"" "$REPO_ROOT/hostgator-setup-kit/comecar.sh"
+check "AC-001.5: a consulta da última versão usa o repositório do dono" \
+  grep -qF "local url=\"\${1:-${REPO_DONO}}\" ref" "$REPO_ROOT/hostgator-setup-kit/_common.sh"
+check "AC-001.5: nenhum script do kit aponta para o upstream" \
+  bash -c "! grep -qi 'melgarafael' '$REPO_ROOT'/hostgator-setup-kit/{_common,install,comecar,update,diagnostico}.sh"
+# Instalação já fixada por SHA (como a de produção): as saídas do update.sh que
+# não atualizam nada não podem trocar um valor sequer, nem pedir edição à mão.
+SHA40="0123456789abcdef0123456789abcdef01234567"
+cat >> .env <<ENV
+WORKER_IMAGE=${NS}/deskcomm-worker:${SHA40}
+WORKER_PULL_POLICY=missing
+SCHEDULER_IMAGE=${NS}/deskcomm-scheduler:${SHA40}
+SCHEDULER_PULL_POLICY=missing
+ENV
+{ grep -v '^APP_IMAGE=\|^APP_PULL_POLICY=' .env || true; } > .env.t && mv .env.t .env
+printf 'APP_IMAGE=%s/deskcommcrm:%s\nAPP_PULL_POLICY=missing\n' "$NS" "$SHA40" >> .env
+cp .env .env.sha-antes; : > "$DOCKER_LOG"
+IMAGEM_EM_DIA=1 run_update --to v1.1.0
+check "AC-001.3: 'nada a atualizar' sai com sucesso" test "$RC" -eq 0
+check "AC-001.3:   e o .env fixado por SHA não muda um byte" cmp -s .env .env.sha-antes
+run_update --to v0.9.0
+check "AC-001.3: recusa de versão anterior também deixa o .env fixado por SHA intacto" cmp -s .env .env.sha-antes
+check "AC-001.3:   sem pedir edição manual do .env" bash -c "! grep -qi 'edite o .env' '$OUTFILE'"
+rm -f .env.sha-antes
+# O outro lado do AC-001.3: com versão NOVA a aplicar, a atualização troca os
+# pins por SHA pela tag da versão, no namespace do dono, sem edição manual.
+printf 'VOICE_AGENT_IMAGE=%s/deskcomm-voice-agent:%s\n' "$NS" "$SHA40" >> .env
+git checkout --quiet main 2>/dev/null || git checkout --quiet master
+echo v12 > v12.txt; git add -A; git commit --quiet -m "v1.2.0"; git tag v1.2.0
+git checkout --quiet v1.1.0
+run_update --to v1.2.0
+check "AC-001.3: a atualização real termina com sucesso" test "$RC" -eq 0
+for par in APP_IMAGE:deskcommcrm WORKER_IMAGE:deskcomm-worker SCHEDULER_IMAGE:deskcomm-scheduler VOICE_AGENT_IMAGE:deskcomm-voice-agent; do
+  check "AC-001.3:   ${par%%:*} passa a ${NS}/${par##*:}:1.2.0, sem edição manual" \
+    grep -qx "${par%%:*}=${NS}/${par##*:}:1.2.0" .env
+done
+
 if [ "$FAILS" -eq 0 ]; then echo "OK — todas as provas passaram."; else echo "FALHOU — $FAILS prova(s)."; fi
 exit $((FAILS > 0))
