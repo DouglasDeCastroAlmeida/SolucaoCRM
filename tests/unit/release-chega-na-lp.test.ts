@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { REPOSITORIO_DESTE_REPO } from "./_identidade-deste-repo";
 
 /**
  * TODA RELEASE APARECE NA PÁGINA DE CHANGELOG DA LP — E O CI CONFERE.
@@ -152,7 +153,7 @@ describe("a release chega à página de changelog da LP", () => {
     const bloco = passo(PASSO_LP);
     const condicao = /\n\s+if: (.+)/.exec(bloco)?.[1] ?? "";
     expect(condicao).toContain("steps.pendente.outputs.cortar == 'sim'");
-    expect(condicao).toContain("github.repository == 'melgarafael/DeskcommCRM'");
+    expect(condicao).toContain(`github.repository == '${REPOSITORIO_DESTE_REPO}'`);
     // `always()` rodaria depois de uma falha nas imagens e mascararia a causa.
     expect(condicao).not.toContain("always()");
   });

@@ -488,8 +488,11 @@ jobs:
       # Só no repositório oficial: um fork herda este workflow, e a LP dele não é
       # a nossa. A release em si já saiu quando este passo roda — vermelho aqui
       # quer dizer "a vitrine não mostra", não "a versão não existe".
+      # SDD 008: este passo vive no job `cortar-tag`, desligado (`if: false`) ate a fatia 6.
+      # A condicao ja compara com o repositorio do dono; a URL da LP abaixo e do upstream e
+      # nao e conferida aqui - nao religue este passo sem trocar ou remover a vitrine.
       - name: A versão aparece na página de changelog da LP?
-        if: steps.pendente.outputs.cortar == 'sim' && github.repository == 'melgarafael/DeskcommCRM'
+        if: steps.pendente.outputs.cortar == 'sim' && github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM'
         # O teto cobre o pior caso, para o diagnóstico rodar antes de o GitHub matar o passo:
         # 35 tentativas × (3 páginas × 10 s de curl + 50 s de espera) ≈ 47 min, mais o
         # diagnóstico e as páginas das versões. Com 40 min e curl de 30 s, um site que aceita a

@@ -48,6 +48,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { DONO_DESTE_REPO } from "./_identidade-deste-repo";
 
 const ARQUIVO = join(process.cwd(), ".github/workflows/acolhida.yml");
 const LINHAS = readFileSync(ARQUIVO, "utf8").split("\n");
@@ -215,7 +216,7 @@ describe("acolhida: um workflow privilegiado que não toca no código do fork", 
     );
     // Este arquivo vai para a `main` de um produto self-host: sem a guarda de dono,
     // o fork de cada pessoa herda um bot que fala pela gente no repositório dela.
-    expect(condicao).toContain("github.repository_owner == 'melgarafael'");
+    expect(condicao).toContain(`github.repository_owner == '${DONO_DESTE_REPO}'`);
   });
 
   it("lê os comentários e desiste se a conversa já começou — ANTES de postar", () => {

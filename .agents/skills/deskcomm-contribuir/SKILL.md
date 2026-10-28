@@ -41,7 +41,7 @@ for g in ${r:+"$r/.agents/skills"} ~/.claude/skills ~/.agents/skills ~/.gemini/c
 done
 if [ -n "$s" ]; then bash "$s"; else
   echo "NÃO MEDIDO — não achei o quem-sou.sh ${r:+no clone $r }nem nas pastas globais dos guias." >&2
-  echo "Instale os guias pelo comando de uma linha do README (https://github.com/melgarafael/DeskcommCRM#readme) e rode de novo." >&2
+  echo "Instale os guias pelo comando de uma linha do README (https://github.com/DouglasDeCastroAlmeida/SolucaoCRM#readme) e rode de novo." >&2
   false
 fi
 ```
@@ -93,7 +93,7 @@ bash .agents/skills/deskcomm-contribuir/scripts/armar-hooks.sh
 
 Três guardas, e só isso: `pre-commit` reprova migration nova sem apêndice no `baseline.sql` e sem
 linha `-- manifest: <descrição>` no cabeçalho do `.sql` no mesmo commit, e número (`NNNN`) ou timestamp já usado na **população da
-pergunta** — a main do PRODUTO (o remoto que aponta para `melgarafael/DeskcommCRM`, com qualquer
+pergunta** — a main do PRODUTO (o remoto que aponta para `DouglasDeCastroAlmeida/SolucaoCRM`, com qualquer
 nome; num fork, a sua `origin/main` é a main do fork e não vale) mais `refs/heads` e `refs/remotes`.
 O que essa população não cobre são os PRs abertos, e a mensagem do hook diz isso e aponta
 `pnpm checar:colisao-de-migration`, que mede também eles. O `NNNN` sai da posição do nome canônico

@@ -25,9 +25,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-005 [CHECK-SMOKE] CI verde (verify, invariants, imagens-ok) e test:shell sem regressão; nenhuma imagem em execução na VPS mudou (~30 min) {AC-001.3} deps: T-004
 
 ### Fatia 2: Scripts e condições de workflow (REQ-002.1, .2)
-- [ ] T-006 [TEST-UNIT] Constantes de repositório de scripts/cortar-release.ts, instalar-guias.sh, vigia-colisao-de-migration.ts e migration-populacao.sh apontam para o dono (~35 min) {AC-002.1}
-- [ ] T-007 [TEST-UNIT] Condições github.repository dos workflows e testes de guarda da release leem o dono do repositório e continuam vigiando o mesmo comportamento (~40 min) {AC-002.2, AC-005.3} deps: T-005
-- [ ] T-008 [IMPL] Trocar scripts, loop/hooks, release.yml, e2e.yml, acolhida.yml e testes de identidade (guarda-da-release-*, release-chega-na-lp, populacao-do-proximo-nnnn, deskcomm-contribuir) (~50 min) {AC-002.1, AC-002.2, AC-005.3} deps: T-006, T-007
+- [x] T-006 [TEST-UNIT] Constantes de repositório de scripts/cortar-release.ts, instalar-guias.sh, vigia-colisao-de-migration.ts e migration-populacao.sh apontam para o dono (~35 min) {AC-002.1}
+- [x] T-007 [TEST-UNIT] Condições github.repository dos workflows e testes de guarda da release leem o dono do repositório e continuam vigiando o mesmo comportamento (~40 min) {AC-002.2, AC-005.3} deps: T-005
+- [x] T-008 [IMPL] Trocar scripts, loop/hooks, release.yml, e2e.yml, acolhida.yml e testes de identidade (guarda-da-release-*, release-chega-na-lp, populacao-do-proximo-nnnn, deskcomm-contribuir) (~50 min) {AC-002.1, AC-002.2, AC-005.3} deps: T-006, T-007
 
 ### Fatia 3: Catálogo de extensões sem servidor de terceiro (REQ-003)
 - [ ] T-009 [TEST-INT] extensao.sh e gerar-catalogo-de-extensoes sem origem não fazem consulta de rede e avisam; com origem informada funcionam; extensão já instalada continua instalada (~45 min) {AC-003.1, AC-003.2, AC-003.3}

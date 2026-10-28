@@ -29,7 +29,7 @@
 # medição em vez de confiar nesta linha:
 #
 #   gh pr list --state all --limit 60 --json number,createdAt,author,headRepositoryOwner
-#   (filtre headRepositoryOwner != melgarafael, pegue o 1º comentário não-bot)
+#   (filtre headRepositoryOwner != DouglasDeCastroAlmeida, pegue o 1º comentário não-bot)
 #
 # veredito. O molde é `triagem/references/resposta-ao-contribuidor.md`, seção
 # "Acolhida" — mudar o texto lá sem mudar aqui faz a versão humana e a
