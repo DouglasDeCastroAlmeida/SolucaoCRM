@@ -36,6 +36,8 @@ export interface UsoDoPeriodo {
   tetoCents: number | null;
   total: LinhaDeUsoDoPeriodo;
   porAgente: LinhaDeUsoDoPeriodo[];
+  /** A leitura dos modelos usados não esgotou o mês: o selo é conservador. */
+  possivelmenteEstimado: boolean;
 }
 
 export interface EntradaDoUso {
@@ -44,24 +46,27 @@ export interface EntradaDoUso {
   agentes: Array<{ id: string; nome: string; uso: AgregadoDeUso }>;
   agentesComModeloSemPreco: ReadonlySet<string>;
   algumModeloSemPreco: boolean;
+  possivelmenteEstimado?: boolean;
 }
 
 export function montarUsoDoPeriodo(e: EntradaDoUso): UsoDoPeriodo {
+  const duvida = e.possivelmenteEstimado === true;
   return {
+    possivelmenteEstimado: duvida,
     tetoCents: e.tetoCents > 0 ? e.tetoCents : null,
     total: {
       agentId: null,
       nome: "",
       tokens: e.total.input_tokens + e.total.output_tokens,
       custoCents: e.total.custo_cents,
-      estimado: e.algumModeloSemPreco,
+      estimado: e.algumModeloSemPreco || duvida,
     },
     porAgente: e.agentes.map((a) => ({
       agentId: a.id,
       nome: a.nome,
       tokens: a.uso.input_tokens + a.uso.output_tokens,
       custoCents: a.uso.custo_cents,
-      estimado: e.agentesComModeloSemPreco.has(a.id),
+      estimado: e.agentesComModeloSemPreco.has(a.id) || (duvida && a.uso.custo_cents > 0),
     })),
   };
 }

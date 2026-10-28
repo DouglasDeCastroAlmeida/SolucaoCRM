@@ -23,7 +23,9 @@ const corpo = (custo: number, entrada: number, saida: number) => ({
   handoffs: {},
 });
 
-function clienteFalso(opcoes: { rpcFalha?: boolean } = {}) {
+type Chamada = { agent_id: string; model: string };
+
+function clienteFalso(opcoes: { rpcFalha?: boolean; pagina?: (n: number) => Chamada[] } = {}) {
   const rpc = vi.fn(async (_nome: string, args: Record<string, unknown>) => {
     if (opcoes.rpcFalha) return { data: null, error: { message: "boom" } };
     if (args.p_agent_id === "a1") return { data: corpo(900, 3000, 500), error: null };
@@ -39,16 +41,17 @@ function clienteFalso(opcoes: { rpcFalha?: boolean } = {}) {
     b.gte = (c: string, v: unknown) => (filtros.push([`${tabela}.${c}`, v]), b);
     b.in = encadear;
     b.order = encadear;
-    b.limit = async () =>
-      tabela === "llm_calls"
-        ? {
-            data: [
-              { agent_id: "a1", model: "claude-sonnet-5" },
-              { agent_id: "a2", model: "modelo-que-ninguem-precifica" },
-            ],
-            error: null,
-          }
-        : { data: [], error: null };
+    const padrao = (n: number): Chamada[] =>
+      n === 0
+        ? [
+            { agent_id: "a1", model: "claude-sonnet-5" },
+            { agent_id: "a2", model: "modelo-que-ninguem-precifica" },
+          ]
+        : [];
+    const pagina = opcoes.pagina ?? padrao;
+    b.limit = async () => (tabela === "llm_calls" ? { data: pagina(0), error: null } : { data: [], error: null });
+    b.range = async (de: number) =>
+      tabela === "llm_calls" ? { data: pagina(Math.floor(de / 1000)), error: null } : { data: [], error: null };
     b.then = undefined;
     return b;
   };
@@ -109,5 +112,44 @@ describe("AC-004.4: carregar o uso do mês por agente e total", () => {
     });
 
     expect(uso).toBeNull();
+  });
+
+  it("AC-004.6: mês com mais de 1000 chamadas é lido por páginas até esgotar, e acha o modelo sem preço da segunda página", async () => {
+    const cheia = Array.from({ length: 1000 }, () => ({ agent_id: "a1", model: "claude-sonnet-5" }));
+    const { cliente } = clienteFalso({
+      pagina: (n) => (n === 0 ? cheia : n === 1 ? [{ agent_id: "a2", model: "modelo-que-ninguem-precifica" }] : []),
+    });
+
+    const uso = await carregarUsoDoPeriodo(cliente, {
+      organizationId: ORG,
+      agentes: [
+        { id: "a1", name: "Atendimento" },
+        { id: "a2", name: "Vendas" },
+      ],
+      tetoCents: 5000,
+      agora: AGORA,
+    });
+
+    expect(uso?.porAgente.map((a) => a.estimado)).toEqual([false, true]);
+    expect(uso?.possivelmenteEstimado).toBe(false);
+  });
+
+  it("AC-004.6: se a leitura das chamadas não esgota o mês, total e agentes com custo levam o selo estimado e a nota de dúvida", async () => {
+    const cheia = Array.from({ length: 1000 }, () => ({ agent_id: "a1", model: "claude-sonnet-5" }));
+    const { cliente } = clienteFalso({ pagina: () => cheia });
+
+    const uso = await carregarUsoDoPeriodo(cliente, {
+      organizationId: ORG,
+      agentes: [
+        { id: "a1", name: "Atendimento" },
+        { id: "a2", name: "Vendas" },
+      ],
+      tetoCents: 5000,
+      agora: AGORA,
+    });
+
+    expect(uso?.possivelmenteEstimado).toBe(true);
+    expect(uso?.total.estimado).toBe(true);
+    expect(uso?.porAgente.map((a) => a.estimado)).toEqual([true, true]);
   });
 });

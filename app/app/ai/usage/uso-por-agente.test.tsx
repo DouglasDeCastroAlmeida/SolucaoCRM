@@ -8,6 +8,7 @@ import { UsoPorAgente } from "./_uso-por-agente";
 function uso(sobre: Partial<UsoDoPeriodo> = {}): UsoDoPeriodo {
   return {
     tetoCents: 5000,
+    possivelmenteEstimado: false,
     total: { agentId: null, nome: "", tokens: 5000, custoCents: 1200, estimado: false },
     porAgente: [
       { agentId: "a1", nome: "Atendimento", tokens: 3500, custoCents: 900, estimado: false },
@@ -95,5 +96,18 @@ describe("AC-004.4: tela de uso por agente e total", () => {
     render(<UsoPorAgente uso={uso()} />);
 
     expect(screen.queryByTestId("uso-sem-teto")).toBeNull();
+  });
+
+  it("AC-004.6: leitura que pode ter sido incompleta mostra a nota 'pode incluir estimativa'", () => {
+    render(
+      <UsoPorAgente
+        uso={uso({
+          possivelmenteEstimado: true,
+          total: { agentId: null, nome: "", tokens: 5000, custoCents: 1200, estimado: true },
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId("uso-nota-estimado").textContent).toMatch(/pode incluir estimativa/iu);
   });
 });

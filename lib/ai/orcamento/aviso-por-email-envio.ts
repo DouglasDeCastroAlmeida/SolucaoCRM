@@ -24,7 +24,7 @@ export function textoDoAvisoDeOrcamento(d: {
   const t = (s: string) => traduzir(s, d.idioma);
   const pct = d.tetoCents > 0 ? Math.round((d.gastoCents / d.tetoCents) * 100) : 0;
   return {
-    titulo: t("O gasto com IA chegou a 80% do limite"),
+    titulo: `${t("O gasto com IA chegou a")} ${pct}% ${t("do limite")}`,
     corpo:
       `${t("Neste mês a IA já gastou")} ${emDolares(d.gastoCents)} ${t("de um limite de")} ${emDolares(d.tetoCents)} (${pct}%). ` +
       t(

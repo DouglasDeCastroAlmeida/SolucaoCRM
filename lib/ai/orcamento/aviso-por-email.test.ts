@@ -106,10 +106,20 @@ describe("AC-004.2: texto do e-mail em português simples e sem segredo", () => 
   it("AC-004.2: diz quanto gastou, qual o teto e o que acontece aos 100%, em dólar", () => {
     const t = textoDoAvisoDeOrcamento({ gastoCents: 4100, tetoCents: 5000, idioma: "pt-BR" });
 
-    expect(t.titulo).toContain("80%");
+    expect(t.titulo).toContain("82%");
     expect(t.corpo).toContain("US$ 41,00");
     expect(t.corpo).toContain("US$ 50,00");
     expect(t.corpo).toContain("pessoa");
+  });
+});
+
+describe("AC-004.2: o percentual do assunto é o real, também acima de 100%", () => {
+  it("AC-004.2: gasto de 120% do teto diz 120% no título e na primeira frase, não 80%", () => {
+    const t = textoDoAvisoDeOrcamento({ gastoCents: 6000, tetoCents: 5000, idioma: "pt-BR" });
+
+    expect(t.titulo).toContain("120%");
+    expect(t.titulo).not.toContain("80%");
+    expect(t.corpo).toContain("(120%)");
   });
 });
 

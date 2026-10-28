@@ -5,10 +5,12 @@
  * isola a organização; `p_org` é defesa em profundidade. Falha de leitura
  * devolve `null` e a tela omite a seção — número inventado é pior que ausência.
  *
- * Limite conhecido: a marca "estimado" olha as 1000 chamadas mais recentes do
- * mês (o teto de linhas do PostgREST), não todas. Em instalação de altíssimo
- * volume um modelo sem preço usado só no começo do mês pode não aparecer; o
- * conserto exato é uma função de agregação no banco (migration), item à parte.
+ * A marca "estimado" precisa saber QUAIS modelos o mês usou. As chamadas são lidas
+ * por páginas de 1000 (o teto de linhas do PostgREST) até esgotar o mês, com
+ * limite de `MAX_PAGINAS`. Se o limite for atingido sem esgotar, a leitura é
+ * incompleta e a tela NÃO omite o selo na dúvida: total e agentes com custo
+ * ficam "estimado" e `possivelmenteEstimado` pede a nota "pode incluir
+ * estimativa". Sem migration; a agregação exata no banco seria item à parte.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -22,6 +24,10 @@ import {
   type LinhaDoCatalogo,
   type UsoDoPeriodo,
 } from "./uso-por-agente";
+
+/** 10 páginas = 10 mil chamadas lidas no mês; acima disso vale o selo conservador. */
+const TAMANHO_DA_PAGINA = 1000;
+const MAX_PAGINAS = 10;
 
 export interface EntradaDaLeitura {
   organizationId: string;
@@ -55,15 +61,22 @@ export async function carregarUsoDoPeriodo(
     const [total, ...porAgente] = await Promise.all([ler(), ...e.agentes.map((a) => ler(a.id))]);
     if (total === undefined) return null;
 
-    const { data: chamadas, error: erroDasChamadas } = await supabase
-      .from("llm_calls")
-      .select("agent_id, model")
-      .eq("organization_id", e.organizationId)
-      .gte("created_at", desde)
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (erroDasChamadas) throw new Error(erroDasChamadas.message);
-    const linhas = (chamadas ?? []) as Array<{ agent_id: string | null; model: string }>;
+    const linhas: Array<{ agent_id: string | null; model: string }> = [];
+    let esgotou = false;
+    for (let pagina = 0; pagina < MAX_PAGINAS && !esgotou; pagina += 1) {
+      const { data, error } = await supabase
+        .from("llm_calls")
+        .select("agent_id, model")
+        .eq("organization_id", e.organizationId)
+        .gte("created_at", desde)
+        .order("created_at", { ascending: false })
+        .range(pagina * TAMANHO_DA_PAGINA, (pagina + 1) * TAMANHO_DA_PAGINA - 1);
+      if (error) throw new Error(error.message);
+      const lote = (data ?? []) as Array<{ agent_id: string | null; model: string }>;
+      linhas.push(...lote);
+      esgotou = lote.length < TAMANHO_DA_PAGINA;
+    }
+    const possivelmenteEstimado = !esgotou;
 
     const modelos = [...new Set(linhas.map((l) => l.model))];
     let catalogo: LinhaDoCatalogo[] = [];
@@ -91,6 +104,7 @@ export async function carregarUsoDoPeriodo(
       })),
       agentesComModeloSemPreco,
       algumModeloSemPreco: semPreco.size > 0,
+      possivelmenteEstimado,
     });
   } catch (err) {
     logger.warn("ai_usage.por_agente_falhou", {

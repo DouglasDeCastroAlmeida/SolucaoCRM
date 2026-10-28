@@ -125,7 +125,9 @@ export function UsoPorAgente({ uso, semProtecao = false }: { uso: UsoDoPeriodo; 
 
       {algumEstimado && (
         <p className="text-xs text-muted-foreground" data-testid="uso-nota-estimado">
-          {t(
+          {uso.possivelmenteEstimado
+            ? t("Pode incluir estimativa: não foi possível conferir todos os modelos usados neste mês, então o custo pode ter parte estimada. Estimado nunca é um preço real.")
+            : t(
             "Estimado: o provedor ou o modelo não informa o preço, então o custo é uma estimativa acima do provável, nunca um preço real.",
           )}
         </p>
