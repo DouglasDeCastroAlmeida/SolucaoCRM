@@ -54,7 +54,7 @@ Cada tarefa ocupa uma linha:
 
 ### Fechamento
 - [ ] T-022 [CHECK-SMOKE] Deploy na homologação e sondas de / (200) e /app (307); produção só com autorização escrita do dono (~30 min) deps: T-021, T-018
-- [ ] T-023 [DOCS] Atualizar CLAUDE.md e AGENTS.md nos trechos que mandam executar algo do upstream, e o inventário de PI para a refatoração futura (~30 min) deps: T-022
+- [x] T-023 [DOCS] Atualizar CLAUDE.md e AGENTS.md nos trechos que mandam executar algo do upstream, e o inventário de PI para a refatoração futura (~30 min) deps: T-022
 - [ ] T-024 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-023
 
 ## Estimativa

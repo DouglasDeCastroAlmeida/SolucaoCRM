@@ -36,7 +36,7 @@ describe("corte consome os fragmentos antes do limite (AC-002.5)", () => {
     expect(trecho).toMatch(/continue-on-error:\s*true/);
   });
 
-  it("AC-002.5: o aviso aparece ANTES do estouro e o corte esvazia o acervo", () => {
+  it("AC-002.5: o aviso aparece ANTES do estouro e a seção montada cabe no teto", () => {
     // Acervo na faixa de aviso: cabe hoje, mas dobrá-lo não caberia.
     const fragmentos = Array.from({ length: 10 }, (_, i) => frag(i, 1200));
     let n = 10;
@@ -55,7 +55,9 @@ describe("corte consome os fragmentos antes do limite (AC-002.5)", () => {
     const secao = montarSecao(fragmentos, "9.9.9", "2099-01-01");
     const depois = aplicarNoChangelog(RAW, secao, RAW.match(/^##\s+\[(\d+\.\d+\.\d+)\]/m)![1]!, (a, b) => `x/${a}...${b}`);
     expect(depois).toContain("## [9.9.9]");
-    expect(candidataDoAcervo(depois, []), "sem fragmentos, o acervo não tem o que medir").toBeNull();
+    // Só confirma o contrato da função com lista vazia; NÃO prova que o corte apaga os arquivos
+    // de `.changes/` (isso é feito por `scripts/cortar-release.ts --escrever`, fora deste teste).
+    expect(candidataDoAcervo(depois, []), "lista vazia de fragmentos: nada a medir").toBeNull();
     expect(Buffer.byteLength(secao.texto, "utf8")).toBeLessThan(TETO);
   });
 });

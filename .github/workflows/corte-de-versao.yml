@@ -17,6 +17,11 @@ name: corte-de-versao
 # `gh workflow run` exigiria `workflow_dispatch` em `ci.yml`/`e2e.yml`/`perf.yml`, que
 # hoje não têm; fica como decisão do dono, não como mudança escondida.)
 #
+# ─── PRÉ-REQUISITO NAS CONFIGURAÇÕES DO REPOSITÓRIO ────────────────────────────
+# O `gh pr create` abaixo exige "Allow GitHub Actions to create and approve pull requests"
+# LIGADO em Settings > Actions > General. Desligado, o branch `release/X.Y.Z` é empurrado
+# e o PR NÃO abre (o passo falha no `gh pr create`).
+#
 # ─── A TAG ──────────────────────────────────────────────────────────────────────
 # Fica fora deste workflow. Tag empurrada com o `GITHUB_TOKEN` também não dispara o
 # `publish-image.yml` (gatilho `push: tags`), então criá-la aqui produziria tag sem
