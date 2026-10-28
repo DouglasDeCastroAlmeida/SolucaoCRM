@@ -65,6 +65,13 @@ import {
 } from '../edge/llm/run-model-call';
 import type { ProviderRegistry } from '../edge/llm/providers';
 import { HANDOFF_REASON_ORCAMENTO } from '../edge/llm/orcamento';
+import {
+  abrirAvisoDoProvedor,
+  classificarFalhaDoProvedor,
+  LlmProvedorIndisponivelError,
+  type VeredictoDaFalha,
+} from './falha-do-provedor';
+import type { MotivoDaPassagem } from '@/lib/escalacao/passagem';
 import { abreAvisoDoEspelhoRecusado, mirrorLeadStageToCrm } from '../edge/crm/move-lead-stage';
 import { insertInboxItem } from '../db/repository';
 import { criarConferidorDeAfirmacoes } from '@/lib/ai/decisao/afirmacao-de-fato';
@@ -716,6 +723,14 @@ export const RESUMO_DO_HANDOFF_POR_ORCAMENTO =
 /** Título do item da Central que este handoff abre — rótulo visível, logo constante. */
 export const TITULO_DO_HANDOFF_POR_ORCAMENTO = 'Teto de gasto com IA atingido — assumir a conversa';
 
+/** Primeira linha do resumo quando o PROVEDOR de IA para o turno (AC-001.7). Texto fixo: sem modelo. */
+export const RESUMO_DO_HANDOFF_POR_PROVEDOR =
+  'A IA parou de responder porque o serviço de IA falhou (chave recusada, conta sem saldo ou serviço fora do ar) — ' +
+  'o lead NÃO pediu atendimento humano. Assuma a conversa; para devolvê-la ao atendimento automático, ' +
+  'corrija a chave em Configurações › IA e use "Devolver ao automático" no cabeçalho da conversa.';
+
+export const TITULO_DO_HANDOFF_POR_PROVEDOR = 'O serviço de IA falhou — assumir a conversa';
+
 /**
  * ORÇAMENTO ESGOTADO NÃO PODE VIRAR SILÊNCIO PARA O LEAD.
  *
@@ -781,7 +796,13 @@ export async function comHandoffSeOrcamentoAcabar<T>(
      * guarda as quatro colunas que ele carrega. Um campo, um significado: "o
      * contexto que vai para quem assume".
      */
-    briefingDoCheckpoint: () => Promise<BriefingDaPassagem>;
+    briefingDoCheckpoint: (motivo: MotivoDaPassagem) => Promise<BriefingDaPassagem>;
+    /**
+     * Última tentativa do job na fila (`attempts >= max_attempts`). Só nela uma
+     * falha de rede/5xx do provedor deixa de ser passageira e leva a conversa a
+     * uma pessoa (AC-001.7); antes, o retry da fila resolve sozinho.
+     */
+    ultimaTentativa?: boolean;
     /**
      * Avisa o lead de que uma pessoa vai assumir, ANTES do handoff.
      *
@@ -798,8 +819,19 @@ export async function comHandoffSeOrcamentoAcabar<T>(
   try {
     return await chamada();
   } catch (err) {
-    if (!(err instanceof LlmBudgetExceededError)) throw err;
-    const doCheckpoint = await ctx.briefingDoCheckpoint();
+    // AC-001.7: o provedor de IA falhou de um jeito que não passa sozinho (chave
+    // recusada, sem saldo, fora do ar na última tentativa). Mesma escolta, outro
+    // motivo; falha passageira cai no `throw err` e segue o retry da fila.
+    let porProvedor: Extract<VeredictoDaFalha, { tipo: 'permanente' }> | null = null;
+    if (!(err instanceof LlmBudgetExceededError)) {
+      const veredito = classificarFalhaDoProvedor(err, {
+        ultimaTentativa: ctx.ultimaTentativa === true,
+      });
+      if (veredito.tipo !== 'permanente') throw err;
+      porProvedor = veredito;
+    }
+    const motivoCodigo: MotivoDaPassagem = porProvedor ? 'provedor_indisponivel' : 'orcamento_de_ia';
+    const doCheckpoint = await ctx.briefingDoCheckpoint(motivoCodigo);
     // AVISA antes de silenciar — ver a nota de ORDEM no gatilho determinístico:
     // `performHumanHandoff` arma a trava que o gate de envio lê, então a única
     // janela em que o aviso passa é ANTES dela.
@@ -826,20 +858,38 @@ export async function comHandoffSeOrcamentoAcabar<T>(
     // aqui, e é o ponto: o motivo do desvio é justamente não haver orçamento.
     const briefing: BriefingDaPassagem = {
       ...doCheckpoint,
-      body: `${RESUMO_DO_HANDOFF_POR_ORCAMENTO}\n\n${doCheckpoint.body}`,
+      body: `${porProvedor ? RESUMO_DO_HANDOFF_POR_PROVEDOR : RESUMO_DO_HANDOFF_POR_ORCAMENTO}\n\n${doCheckpoint.body}`,
     };
     await performHumanHandoff(
       ctx.pool,
       { tenantId: ctx.tenantId, leadId: ctx.leadId, conversationId: ctx.conversationId },
       {
-        reason: HANDOFF_REASON_ORCAMENTO,
+        reason: porProvedor ? motivoCodigo : HANDOFF_REASON_ORCAMENTO,
         conversationSummary: briefing.body,
-        inboxTitle: TITULO_DO_HANDOFF_POR_ORCAMENTO,
-        passagem: { origem: 'teto_de_gasto', motivoCodigo: 'orcamento_de_ia', briefing },
+        inboxTitle: porProvedor ? TITULO_DO_HANDOFF_POR_PROVEDOR : TITULO_DO_HANDOFF_POR_ORCAMENTO,
+        passagem: {
+          origem: porProvedor ? 'runtime_nativo' : 'teto_de_gasto',
+          motivoCodigo,
+          briefing,
+        },
         avisoAoLead: aviso,
         log: ctx.log,
       },
     );
+    if (porProvedor) {
+      // Um aviso por organização enquanto durar o problema; não lança.
+      await abrirAvisoDoProvedor(
+        ctx.pool,
+        { tenantId: ctx.tenantId, conversationId: ctx.conversationId, causa: porProvedor.causa },
+        ctx.log,
+      );
+      ctx.log.warn('provedor de IA indisponível — conversa devolvida à fila humana', {
+        causa: porProvedor.causa,
+        http_status: porProvedor.httpStatus,
+        lead_avisado: aviso.avisado,
+      });
+      throw new LlmProvedorIndisponivelError(porProvedor.causa, porProvedor.httpStatus);
+    }
     ctx.log.warn('turno interrompido pelo teto de gasto — conversa devolvida à fila humana', {
       lead_avisado: aviso.avisado,
     });
@@ -857,9 +907,10 @@ async function briefingDoCheckpointDuravel(
   tenantId: string,
   leadId: string,
   log: Logger,
+  motivo: MotivoDaPassagem = 'orcamento_de_ia',
 ): Promise<BriefingDaPassagem> {
   const montar = (checkpoint: Awaited<ReturnType<typeof latestCheckpoint>>) =>
-    montarBriefingDaPassagem({ checkpoint, motivo: { codigo: 'orcamento_de_ia' } });
+    montarBriefingDaPassagem({ checkpoint, motivo: { codigo: motivo } });
   try {
     return montar(await latestCheckpoint(pool, tenantId, leadId));
   } catch (err) {
@@ -1861,8 +1912,9 @@ export async function runAgentTurn(
       tenantId: job.organization_id,
       leadId: leadIdDoJob,
       conversationId: input.conversationId,
-      briefingDoCheckpoint: () =>
-        briefingDoCheckpointDuravel(pool, job.organization_id, leadIdDoJob, logDaEscolta),
+      ultimaTentativa: job.attempts >= job.max_attempts,
+      briefingDoCheckpoint: (motivo) =>
+        briefingDoCheckpointDuravel(pool, job.organization_id, leadIdDoJob, logDaEscolta, motivo),
       // O canal nasce DENTRO da closure: instanciá-lo aqui faria todo turno feliz
       // pagar por um adapter que só o caminho de erro usa. Sem `agentActorId` de
       // propósito — quando o teto estoura antes da primeira chamada, não houve
