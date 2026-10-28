@@ -57,6 +57,7 @@ import { finalizeHandoff } from "./handoff";
 import { loadHistoryWithBudget } from "./history";
 import { mintEphemeralToken, revokeEphemeralToken } from "./mcp_token";
 import { carregarFerramentasExternasDoTurno } from "@/lib/mcp/servidor-externo/carregar";
+import { nomesLiberadosParaOTurno } from "@/lib/mcp/servidor-externo/liberadas";
 import { pickToolsFromMcp, type RuntimeHandoffSignal } from "./tools";
 import { modulosLigados } from "@/lib/instalacao/modulos";
 import { capacidadesDaOrganizacao } from "@/lib/organizacao/capacidades";
@@ -131,7 +132,7 @@ interface AgentRow {
   id: string;
   organization_id: string;
   created_by: string | null;
-  config?: { mcp_externo_no_atendimento?: unknown } | null;
+  config?: { mcp_externo_no_atendimento?: unknown; mcp_externo_liberadas?: unknown } | null;
   operation_mode?: unknown;
 }
 
@@ -657,13 +658,14 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       handoffSignal,
       ...(ferramentasExternas ? { ferramentasExternas } : {}),
       // AC-007.3/007.4: a escrita de servidor externo depende do modo do agente.
-      // `liberadas` vazio: a marca "pode rodar sem aprovação" ainda não tem onde
-      // ser gravada, então toda escrita externa pede aprovação (falha fechada).
+      // `liberadas`: o que o admin marcou "pode rodar sem aprovação" para ESTE agente
+      // (`ai_agents.config.mcp_externo_liberadas`), só de ferramentas de escrita
+      // ligadas; sem marca, toda escrita externa pede aprovação (falha fechada).
       aprovacaoMcp: {
         ...(modoDoAgente ? { modo: modoDoAgente } : {}),
         agenteId: run.agent_id,
         conversaId: run.conversation_id ?? null,
-        liberadas: [],
+        liberadas: nomesLiberadosParaOTurno(ferramentasExternas?.ligadas, agent?.config),
       },
       ...(contatoDoTurno ? { contatoDoTurno } : {}),
     });

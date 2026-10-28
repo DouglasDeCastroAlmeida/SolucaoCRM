@@ -281,6 +281,12 @@ export async function decidirAcaoPendente(
   const servidor = await obterServidorResolvido(supabase, organizationId, acao.servidor_id);
 
   if (pedido.decisao === "recusar") {
+    await supabase
+      .from(TABELA)
+      .update({ argumentos: {} })
+      .eq("id", acao.id)
+      .eq("organization_id", organizationId)
+      .eq("estado", "recusada");
     await fecharItemDaCentral(supabase, organizationId, acao.conversa_id);
     return { tipo: "recusada", servidor: servidor?.slug ?? null, ferramenta: acao.ferramenta };
   }
@@ -288,7 +294,9 @@ export async function decidirAcaoPendente(
   const terminar = async (estado: "executada" | "falhou") => {
     await supabase
       .from(TABELA)
-      .update({ estado })
+      // LGPD: terminada, a ação não guarda mais os argumentos (podem ser dado do
+      // cliente); o hash fica para provar a que pedido ela se referia.
+      .update({ estado, argumentos: {} })
       .eq("id", acao.id)
       .eq("organization_id", organizationId)
       .eq("estado", "aprovada");

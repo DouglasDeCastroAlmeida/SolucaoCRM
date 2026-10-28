@@ -201,6 +201,15 @@ export const AUDIT_ACTIONS = [
   // Uma pessoa aprovou/recusou uma ação de escrita de servidor MCP externo (mudança 006).
   "mcp.action_approved",
   "mcp.action_rejected",
+  // Cadastro e manutenção de servidor MCP externo e das ferramentas por agente (mudança 006).
+  "mcp.server_added",
+  "mcp.server_updated",
+  "mcp.server_removed",
+  "mcp.tools_refreshed",
+  "mcp.tool_enabled",
+  "mcp.tool_disabled",
+  "mcp.tool_released_without_approval",
+  "mcp.tool_release_revoked",
   "ai.credential_created",
   "ai.credential_deleted",
   "ai.credential_revalidated",

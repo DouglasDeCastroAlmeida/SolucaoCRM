@@ -49,7 +49,8 @@ export const VALIDADE_DAS_FERRAMENTAS_MS = 10 * 60 * 1000;
 export type CodigoDeErroDeServidor =
   | "ai_destino_proibido"
   | "ai_http_nao_permitido"
-  | "mcp_servidor_invalido";
+  | "mcp_servidor_invalido"
+  | "mcp_servidor_duplicado";
 
 /** Erro com mensagem segura para a tela: nunca carrega a chave. */
 export class ErroDeServidorMcp extends Error {
@@ -267,7 +268,7 @@ export async function cadastrarServidor(
     .single();
   if (error || !data) {
     if (error?.code === "23505") {
-      throw new ErroDeServidorMcp("mcp_servidor_invalido", "Já existe um servidor com esse identificador.");
+      throw new ErroDeServidorMcp("mcp_servidor_duplicado", "Já existe um servidor com esse identificador.");
     }
     logger.warn("nao foi possivel gravar o servidor MCP externo", {
       organization_id: organizationId,
@@ -420,4 +421,118 @@ export async function obterServidorResolvido(
   const chave = abrirChaveDaLinha(linha);
   if (chave === null) return null;
   return { id: linha.id, slug: linha.slug, nome: linha.nome, endpoint: linha.endpoint, chave };
+}
+
+/** Uma linha do servidor (ativo ou não) da organização; `null` se não existe ou é de outra. */
+export async function obterLinhaDoServidor(
+  supabase: SupabaseClient,
+  organizationId: string,
+  servidorId: string,
+): Promise<LinhaDeServidor | null> {
+  const { data, error } = await supabase
+    .from(TABELA)
+    .select(COLUNAS)
+    .eq("organization_id", organizationId)
+    .eq("id", servidorId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as unknown as LinhaDeServidor;
+}
+
+/**
+ * Ativar ou desativar: é LÓGICO. A linha, a chave cifrada e a lista de
+ * ferramentas ficam; os agentes só deixam de enxergar o servidor
+ * (`resolverFerramentasDoAgente` ignora o que não está ativo).
+ */
+export async function definirServidorAtivo(
+  supabase: SupabaseClient,
+  organizationId: string,
+  servidorId: string,
+  ativo: boolean,
+): Promise<ServidorPublico | null> {
+  const { data, error } = await supabase
+    .from(TABELA)
+    .update({ ativo })
+    .eq("id", servidorId)
+    .eq("organization_id", organizationId)
+    .select(COLUNAS)
+    .maybeSingle();
+  if (error) {
+    logger.warn("nao foi possivel mudar o estado do servidor MCP externo", {
+      organization_id: organizationId,
+      error: error.message,
+    });
+    throw new ErroDeServidorMcp("mcp_servidor_invalido", "Não foi possível salvar o servidor agora.");
+  }
+  return data ? paraPublico(data as unknown as LinhaDeServidor) : null;
+}
+
+export interface MudancasDeFerramentas {
+  novas: string[];
+  removidas: string[];
+  alteradas: string[];
+}
+
+/**
+ * "Atualizar ferramentas": ação EXPLÍCITA do admin. Refaz a lista pela rede na
+ * hora (ignora a validade de 10 minutos) e ADOTA o que o servidor anuncia agora
+ * (`aceitarMudancas`), devolvendo o que mudou para a tela mostrar. Falha de rede
+ * lança e não toca na lista guardada. `null` para servidor inexistente ou de
+ * outra organização, sem rede.
+ */
+export async function atualizarFerramentasDoServidor(
+  supabase: SupabaseClient,
+  organizationId: string,
+  servidorId: string,
+  deps: DepsDoRepositorio = {},
+): Promise<{ servidor: ServidorPublico; mudancas: MudancasDeFerramentas } | null> {
+  const linha = await obterLinhaDoServidor(supabase, organizationId, servidorId);
+  if (!linha) return null;
+  const chave = abrirChaveDaLinha(linha);
+  if (chave === null) {
+    throw new ErroDeServidorMcp("mcp_servidor_invalido", "A chave deste servidor não pôde ser aberta. Cadastre-a de novo.");
+  }
+
+  let listadas: FerramentaRemota[];
+  try {
+    listadas = await (deps.listar ?? listarPadrao)({ endpoint: linha.endpoint, chave });
+  } catch (err) {
+    logger.warn("atualizar ferramentas: servidor MCP externo nao respondeu", {
+      organization_id: organizationId,
+      servidor: linha.slug,
+      endpoint: hostDoEndpoint(linha.endpoint),
+      error: err instanceof Error ? err.message.replaceAll(chave, "[chave]") : "erro",
+    });
+    throw new ErroDeServidorMcp(
+      "mcp_servidor_invalido",
+      "Não foi possível falar com o servidor agora. A lista de ferramentas continua a mesma.",
+    );
+  }
+
+  const guardadas = ferramentasGuardadas(linha.ferramentas);
+  const novas = mesclarFerramentas(guardadas, listadas, true);
+  const antes = new Map(guardadas.map((f) => [f.name, JSON.stringify(f)] as const));
+  const depois = new Map(novas.map((f) => [f.name, JSON.stringify(f)] as const));
+  const mudancas: MudancasDeFerramentas = {
+    novas: [...depois.keys()].filter((nome) => !antes.has(nome)),
+    removidas: [...antes.keys()].filter((nome) => !depois.has(nome)),
+    alteradas: [...depois.keys()].filter((nome) => antes.has(nome) && antes.get(nome) !== depois.get(nome)),
+  };
+
+  const agora = (deps.agora ?? Date.now)();
+  const { data, error } = await supabase
+    .from(TABELA)
+    .update({ ferramentas: novas, ferramentas_em: new Date(agora).toISOString() })
+    .eq("id", linha.id)
+    .eq("organization_id", organizationId)
+    .select(COLUNAS)
+    .maybeSingle();
+  if (error || !data) {
+    logger.warn("nao foi possivel guardar a lista atualizada do servidor MCP externo", {
+      organization_id: organizationId,
+      error: error?.message ?? "sem linha",
+    });
+    throw new ErroDeServidorMcp("mcp_servidor_invalido", "Não foi possível salvar a lista de ferramentas agora.");
+  }
+  return { servidor: paraPublico(data as unknown as LinhaDeServidor), mudancas };
 }

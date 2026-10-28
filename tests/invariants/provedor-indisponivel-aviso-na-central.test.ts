@@ -43,9 +43,10 @@ beforeAll(async () => {
     [ORG_B, "org-provedor-b"],
   ] as const) {
     await pool.query(
-      `insert into organizations (id, slug, legal_name, display_name) values ($1, $2, $2, $2)
+      `insert into organizations (id, slug, legal_name, display_name) values ($1, $2, $3, $3)
        on conflict (id) do nothing`,
-      [id, slug],
+      // $2 é o slug (citext) e $3 os nomes (text): um mesmo parâmetro em dois tipos dá 42P08.
+      [id, slug, slug],
     );
   }
 });

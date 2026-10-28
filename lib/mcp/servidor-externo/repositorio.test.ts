@@ -17,7 +17,9 @@ import type { FerramentaRemota } from "./chamada";
 import type { ServidorMcpExterno } from "./registro";
 import { escolhasRemotas, lerToolIdRemoto, toolIdAceito, toolIdRemoto } from "./ids";
 import {
+  atualizarFerramentasDoServidor,
   cadastrarServidor,
+  definirServidorAtivo,
   ErroDeServidorMcp,
   listarServidores,
   obterFerramentasDoServidor,
@@ -271,7 +273,7 @@ describe("AC-007.1: cadastrar valida o destino, testa e lista as ferramentas", (
         { slug: "loja", nome: "Outra", endpoint: "https://erp.exemplo/mcp", chave: CHAVE },
         { resolver: resolverPublico, listar },
       ),
-    ).rejects.toMatchObject({ codigo: "mcp_servidor_invalido" });
+    ).rejects.toMatchObject({ codigo: "mcp_servidor_duplicado" });
   });
 });
 
@@ -515,5 +517,65 @@ describe("B2: o servidor não afrouxa sozinho uma ferramenta já conhecida (rug-
     );
     expect(r.find((f) => f.name === "buscar_pedido")!.somenteLeitura).not.toBe(true);
     expect(r.map((f) => f.name)).toContain("nova");
+  });
+});
+
+// ─── T-035: atualizar ferramentas (ação explícita) e desativar ──────────────
+
+describe("AC-008.3/B2: 'atualizar ferramentas' adota o que o servidor anuncia e mostra o que mudou", () => {
+  it("refaz a lista na hora (mesmo com a guardada fresca), aceita as mudanças e devolve o diff", async () => {
+    const guardadas: FerramentaRemota[] = [
+      { name: "cancelar_pedido", description: "Cancela" },
+      { name: "antiga" },
+    ];
+    const l = linhaDeServidor("loja", { ferramentas: guardadas, ferramentas_em: new Date().toISOString() });
+    const banco = bancoFalso([l]);
+    listar.mockResolvedValueOnce([
+      { name: "cancelar_pedido", description: "Cancela e reembolsa", somenteLeitura: true },
+      { name: "nova" },
+    ]);
+
+    const r = await atualizarFerramentasDoServidor(banco.supabase, ORG, l.id, { listar });
+
+    expect(listar).toHaveBeenCalledTimes(1);
+    expect(r).not.toBeNull();
+    expect(r!.mudancas).toEqual({ novas: ["nova"], removidas: ["antiga"], alteradas: ["cancelar_pedido"] });
+    expect(r!.servidor.ferramentas.map((x) => x.nome).sort()).toEqual(["cancelar_pedido", "nova"]);
+    const gravadas = banco.linhas[0]!.ferramentas as FerramentaRemota[];
+    expect(gravadas.find((x) => x.name === "cancelar_pedido")).toMatchObject({ somenteLeitura: true });
+    expect(JSON.stringify(r)).not.toContain(CHAVE);
+  });
+
+  it("servidor fora do ar: erro claro e a lista guardada fica como estava", async () => {
+    const l = linhaDeServidor("loja", { ferramentas: [{ name: "a" }], ferramentas_em: "2026-10-28T00:00:00Z" });
+    const banco = bancoFalso([l]);
+    listar.mockRejectedValueOnce(new Error("timeout " + CHAVE));
+
+    await expect(atualizarFerramentasDoServidor(banco.supabase, ORG, l.id, { listar })).rejects.toBeInstanceOf(
+      ErroDeServidorMcp,
+    );
+    expect(banco.linhas[0]!.ferramentas).toEqual([{ name: "a" }]);
+  });
+
+  it("servidor de outra organização ou inexistente: null, e nada de rede", async () => {
+    const l = linhaDeServidor("loja", {}, OUTRA_ORG);
+    const banco = bancoFalso([l]);
+    expect(await atualizarFerramentasDoServidor(banco.supabase, ORG, l.id, { listar })).toBeNull();
+    expect(listar).not.toHaveBeenCalled();
+  });
+});
+
+describe("AC-008.3: desativar é lógico", () => {
+  it("troca só o ativo, na organização certa, e preserva a linha e a lista", async () => {
+    const l = linhaDeServidor("loja", { ferramentas: [{ name: "a" }] });
+    const banco = bancoFalso([l]);
+
+    const r = await definirServidorAtivo(banco.supabase, ORG, l.id, false);
+
+    expect(r?.ativo).toBe(false);
+    expect(banco.linhas).toHaveLength(1);
+    expect(banco.linhas[0]!.ferramentas).toEqual([{ name: "a" }]);
+    expect(await definirServidorAtivo(banco.supabase, OUTRA_ORG, l.id, true)).toBeNull();
+    expect(banco.linhas[0]!.ativo).toBe(false);
   });
 });

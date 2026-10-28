@@ -40,7 +40,7 @@ with reivindicado as (
   returning organization_id
 )
 insert into event_log (organization_id, event_type, entity_kind, entity_id, payload)
-select organization_id, $2, 'ai_budget', organization_id, $3::jsonb
+select organization_id, $2::text, 'ai_budget', organization_id, $3::jsonb
   from reivindicado
 returning id
 `;

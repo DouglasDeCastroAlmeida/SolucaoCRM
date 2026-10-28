@@ -8,57 +8,358 @@
     "quality_profile": "standard"
   },
   "lanes": [
-    { "id": "turno", "label": "O turno do agente" },
-    { "id": "regra", "label": "Regras do servidor MCP" },
-    { "id": "borda", "label": "Borda HTTP (gerente+)" },
-    { "id": "dados", "label": "Banco" },
-    { "id": "humano", "label": "O que a pessoa vê" }
+    {
+      "id": "turno",
+      "label": "O turno do agente"
+    },
+    {
+      "id": "regra",
+      "label": "Regras do servidor MCP"
+    },
+    {
+      "id": "borda",
+      "label": "Borda HTTP (gerente+)"
+    },
+    {
+      "id": "dados",
+      "label": "Banco"
+    },
+    {
+      "id": "humano",
+      "label": "O que a pessoa vê"
+    }
   ],
-  "mainPath": ["carga", "repositorio", "ferramenta", "aprovacao", "acoes", "central", "rota"],
+  "mainPath": [
+    "carga",
+    "repositorio",
+    "ferramenta",
+    "aprovacao",
+    "acoes",
+    "central",
+    "rota"
+  ],
   "nodes": [
-    { "id": "carga", "lane": "turno", "col": 1, "type": "lib", "label": "carregarFerramentasExternasDoTurno", "sublabel": "sem escolha remota: nem banco nem rede · turno com contato exige a opção do agente" },
-    { "id": "ferramenta", "lane": "turno", "col": 2, "type": "lib", "label": "definirFerramentasDosServidores", "sublabel": "passa pelo mesmo wrapMcpTool · o catálogo compilado vence na colisão" },
-    { "id": "turnoagente", "lane": "turno", "col": 3, "type": "lib", "label": "pickToolsFromMcp (runAgent e motor)", "sublabel": "contato do turno, modo do agente e conversa chegam à aprovação" },
-
-    { "id": "repositorio", "lane": "regra", "col": 1, "type": "lib", "label": "repositorio.ts", "sublabel": "cadastrar (destino seguro + teste) · só as ferramentas LIGADAS · lista guardada por 10 min · id antigo vai ao servidor padrao" },
-    { "id": "chamada", "lane": "regra", "col": 2, "type": "lib", "label": "chamada.ts", "sublabel": "https com IP fixado · prazo de 10 s · corpo com limite" },
-    { "id": "dadoexterno", "lane": "regra", "col": 3, "type": "lib", "label": "resultado-como-dado.ts", "sublabel": "retorno embrulhado como dado externo e cortado · resumo para a auditoria sem a chave" },
-    { "id": "aprovacao", "lane": "regra", "col": 4, "type": "lib", "label": "aprovacao.ts", "sublabel": "leitura roda · escrita no assistido vira pendente · no automático só com a marca do admin · decidir é troca atômica" },
-
-    { "id": "rota", "lane": "borda", "col": 1, "type": "api", "label": "POST /api/v1/mcp-acoes/[id]", "sublabel": "manager+ · corpo só com a decisão · executa os argumentos GUARDADOS · 404 igual para outra organização" },
-    { "id": "auditoria", "lane": "borda", "col": 2, "type": "lib", "label": "api_audit_log", "sublabel": "mcp.action_approved / mcp.action_rejected com quem decidiu" },
-
-    { "id": "servidores", "lane": "dados", "col": 1, "type": "table", "label": "mcp_servidores_externos", "sublabel": "chave cifrada · authenticated não lê o segredo · cópia do servidor atual como padrao" },
-    { "id": "acoes", "lane": "dados", "col": 2, "type": "table", "label": "mcp_acoes_pendentes", "sublabel": "argumentos só pelo servidor · única pendente por conversa + ferramenta + hash" },
-    { "id": "inbox", "lane": "dados", "col": 3, "type": "table", "label": "agent_inbox_items", "sublabel": "kind acao_mcp_pendente · fecha quando não sobra pendente da conversa" },
-
-    { "id": "central", "lane": "humano", "col": 1, "type": "route", "label": "Central de avisos", "sublabel": "\"Uma ação em um sistema externo espera a sua aprovação\" · abre a conversa" }
+    {
+      "id": "carga",
+      "lane": "turno",
+      "col": 1,
+      "type": "lib",
+      "label": "carregarFerramentasExternasDoTurno",
+      "sublabel": "sem escolha remota: nem banco nem rede · turno com contato exige a opção do agente"
+    },
+    {
+      "id": "ferramenta",
+      "lane": "turno",
+      "col": 2,
+      "type": "lib",
+      "label": "definirFerramentasDosServidores",
+      "sublabel": "passa pelo mesmo wrapMcpTool · o catálogo compilado vence na colisão"
+    },
+    {
+      "id": "turnoagente",
+      "lane": "turno",
+      "col": 3,
+      "type": "lib",
+      "label": "pickToolsFromMcp (runAgent e motor)",
+      "sublabel": "contato do turno, modo do agente e conversa chegam à aprovação"
+    },
+    {
+      "id": "repositorio",
+      "lane": "regra",
+      "col": 1,
+      "type": "lib",
+      "label": "repositorio.ts",
+      "sublabel": "cadastrar (destino seguro + teste) · só as ferramentas LIGADAS · lista guardada por 10 min · id antigo vai ao servidor padrao"
+    },
+    {
+      "id": "chamada",
+      "lane": "regra",
+      "col": 2,
+      "type": "lib",
+      "label": "chamada.ts",
+      "sublabel": "https com IP fixado · prazo de 10 s · corpo com limite"
+    },
+    {
+      "id": "dadoexterno",
+      "lane": "regra",
+      "col": 3,
+      "type": "lib",
+      "label": "resultado-como-dado.ts",
+      "sublabel": "retorno embrulhado como dado externo e cortado · resumo para a auditoria sem a chave"
+    },
+    {
+      "id": "aprovacao",
+      "lane": "regra",
+      "col": 4,
+      "type": "lib",
+      "label": "aprovacao.ts",
+      "sublabel": "leitura roda · escrita no assistido vira pendente · no automático só com a marca do admin · decidir é troca atômica"
+    },
+    {
+      "id": "rota",
+      "lane": "borda",
+      "col": 1,
+      "type": "api",
+      "label": "POST /api/v1/mcp-acoes/[id]",
+      "sublabel": "manager+ · corpo só com a decisão · executa os argumentos GUARDADOS · 404 igual para outra organização"
+    },
+    {
+      "id": "auditoria",
+      "lane": "borda",
+      "col": 2,
+      "type": "lib",
+      "label": "api_audit_log",
+      "sublabel": "mcp.action_approved / mcp.action_rejected com quem decidiu"
+    },
+    {
+      "id": "servidores",
+      "lane": "dados",
+      "col": 1,
+      "type": "table",
+      "label": "mcp_servidores_externos",
+      "sublabel": "chave cifrada · authenticated não lê o segredo · cópia do servidor atual como padrao"
+    },
+    {
+      "id": "acoes",
+      "lane": "dados",
+      "col": 2,
+      "type": "table",
+      "label": "mcp_acoes_pendentes",
+      "sublabel": "argumentos só pelo servidor · única pendente por conversa + ferramenta + hash"
+    },
+    {
+      "id": "inbox",
+      "lane": "dados",
+      "col": 3,
+      "type": "table",
+      "label": "agent_inbox_items",
+      "sublabel": "kind acao_mcp_pendente · fecha quando não sobra pendente da conversa"
+    },
+    {
+      "id": "central",
+      "lane": "humano",
+      "col": 1,
+      "type": "route",
+      "label": "Central de avisos",
+      "sublabel": "\"Uma ação em um sistema externo espera a sua aprovação\" · abre a conversa"
+    },
+    {
+      "id": "rotaservidores",
+      "lane": "borda",
+      "col": 3,
+      "type": "api",
+      "label": "/api/v1/mcp-servidores (GET, POST, PATCH, DELETE)",
+      "sublabel": "cadastrar com destino seguro e teste de conexão · listar com a chave só pelos 4 últimos · desativar é lógico · 404 igual para outra organização"
+    },
+    {
+      "id": "rotaferramentas",
+      "lane": "borda",
+      "col": 4,
+      "type": "api",
+      "label": "/api/v1/mcp-servidores/[id]/ferramentas e /atualizar-ferramentas",
+      "sublabel": "liga por agente (rascunho) · marca 'sem aprovação' com confirmação · atualizar adota as mudanças e mostra o diff"
+    },
+    {
+      "id": "quemadmin",
+      "lane": "regra",
+      "col": 5,
+      "type": "lib",
+      "label": "quem-administra.ts",
+      "sublabel": "chave MCP_EXTERNO_ADMIN_DA_ORG desligada: só o dono da instalação · ligada: admin da organização"
+    },
+    {
+      "id": "liberadas",
+      "lane": "regra",
+      "col": 6,
+      "type": "lib",
+      "label": "liberadas.ts + ferramentas-do-agente.ts",
+      "sublabel": "ai_agents.config.mcp_externo_liberadas · só ferramenta de escrita ligada · chega aos dois montadores de turno"
+    },
+    {
+      "id": "agentes",
+      "lane": "dados",
+      "col": 4,
+      "type": "table",
+      "label": "ai_agents.config e ai_agent_versions.tool_ids",
+      "sublabel": "a marca 'sem aprovação' e as ferramentas ligadas (rascunho) do agente"
+    }
   ],
   "edges": [
-    { "id": "e1", "from": "carga", "to": "repositorio", "label": "só as ligadas, da própria organização" },
-    { "id": "e2", "from": "repositorio", "to": "servidores", "label": "lê e guarda a lista" },
-    { "id": "e3", "from": "repositorio", "to": "chamada", "label": "lista as ferramentas" },
-    { "id": "e4", "from": "carga", "to": "ferramenta", "label": "ferramentas ligadas" },
-    { "id": "e5", "from": "ferramenta", "to": "turnoagente", "label": "monta no turno" },
-    { "id": "e6", "from": "ferramenta", "to": "chamada", "label": "leitura chama o servidor" },
-    { "id": "e7", "from": "chamada", "to": "dadoexterno", "label": "retorno como dado externo" },
-    { "id": "e8", "from": "ferramenta", "to": "aprovacao", "label": "escrita pede decisão" },
-    { "id": "e9", "from": "aprovacao", "to": "acoes", "label": "grava a ação pendente" },
-    { "id": "e10", "from": "aprovacao", "to": "inbox", "label": "abre o item" },
-    { "id": "e11", "from": "inbox", "to": "central", "label": "aparece para a equipe" },
-    { "id": "e12", "from": "central", "to": "rota", "label": "aprovar ou recusar" },
-    { "id": "e13", "from": "rota", "to": "aprovacao", "label": "decidirAcaoPendente" },
-    { "id": "e14", "from": "aprovacao", "to": "chamada", "label": "aprovada: executa com os argumentos guardados" },
-    { "id": "e15", "from": "rota", "to": "auditoria", "label": "audita quem decidiu" },
-    { "id": "e16", "from": "aprovacao", "to": "servidores", "label": "abre a chave do servidor da ação" },
-    { "id": "e17", "from": "aprovacao", "to": "dadoexterno", "label": "resumo da auditoria sem a chave" }
+    {
+      "id": "e1",
+      "from": "carga",
+      "to": "repositorio",
+      "label": "só as ligadas, da própria organização"
+    },
+    {
+      "id": "e2",
+      "from": "repositorio",
+      "to": "servidores",
+      "label": "lê e guarda a lista"
+    },
+    {
+      "id": "e3",
+      "from": "repositorio",
+      "to": "chamada",
+      "label": "lista as ferramentas"
+    },
+    {
+      "id": "e4",
+      "from": "carga",
+      "to": "ferramenta",
+      "label": "ferramentas ligadas"
+    },
+    {
+      "id": "e5",
+      "from": "ferramenta",
+      "to": "turnoagente",
+      "label": "monta no turno"
+    },
+    {
+      "id": "e6",
+      "from": "ferramenta",
+      "to": "chamada",
+      "label": "leitura chama o servidor"
+    },
+    {
+      "id": "e7",
+      "from": "chamada",
+      "to": "dadoexterno",
+      "label": "retorno como dado externo"
+    },
+    {
+      "id": "e8",
+      "from": "ferramenta",
+      "to": "aprovacao",
+      "label": "escrita pede decisão"
+    },
+    {
+      "id": "e9",
+      "from": "aprovacao",
+      "to": "acoes",
+      "label": "grava a ação pendente"
+    },
+    {
+      "id": "e10",
+      "from": "aprovacao",
+      "to": "inbox",
+      "label": "abre o item"
+    },
+    {
+      "id": "e11",
+      "from": "inbox",
+      "to": "central",
+      "label": "aparece para a equipe"
+    },
+    {
+      "id": "e12",
+      "from": "central",
+      "to": "rota",
+      "label": "aprovar ou recusar"
+    },
+    {
+      "id": "e13",
+      "from": "rota",
+      "to": "aprovacao",
+      "label": "decidirAcaoPendente"
+    },
+    {
+      "id": "e14",
+      "from": "aprovacao",
+      "to": "chamada",
+      "label": "aprovada: executa com os argumentos guardados"
+    },
+    {
+      "id": "e15",
+      "from": "rota",
+      "to": "auditoria",
+      "label": "audita quem decidiu"
+    },
+    {
+      "id": "e16",
+      "from": "aprovacao",
+      "to": "servidores",
+      "label": "abre a chave do servidor da ação"
+    },
+    {
+      "id": "e17",
+      "from": "aprovacao",
+      "to": "dadoexterno",
+      "label": "resumo da auditoria sem a chave"
+    },
+    {
+      "id": "e18",
+      "from": "rotaservidores",
+      "to": "quemadmin",
+      "label": "papel certo antes de qualquer efeito"
+    },
+    {
+      "id": "e19",
+      "from": "rotaservidores",
+      "to": "repositorio",
+      "label": "cadastrar, listar, desativar"
+    },
+    {
+      "id": "e20",
+      "from": "rotaservidores",
+      "to": "auditoria",
+      "label": "mcp.server_added / updated / removed"
+    },
+    {
+      "id": "e21",
+      "from": "rotaferramentas",
+      "to": "quemadmin",
+      "label": "mesmo guarda de papel"
+    },
+    {
+      "id": "e22",
+      "from": "rotaferramentas",
+      "to": "agentes",
+      "label": "liga na versão rascunho · grava a marca na config"
+    },
+    {
+      "id": "e23",
+      "from": "rotaferramentas",
+      "to": "repositorio",
+      "label": "atualizar ferramentas (aceitarMudancas)"
+    },
+    {
+      "id": "e24",
+      "from": "rotaferramentas",
+      "to": "auditoria",
+      "label": "mcp.tool_enabled / released_without_approval / tools_refreshed"
+    },
+    {
+      "id": "e25",
+      "from": "rotaferramentas",
+      "to": "liberadas",
+      "label": "alterna a marca"
+    },
+    {
+      "id": "e26",
+      "from": "turnoagente",
+      "to": "liberadas",
+      "label": "lê a marca do agente"
+    },
+    {
+      "id": "e27",
+      "from": "liberadas",
+      "to": "aprovacao",
+      "label": "nomes liberados: no automático, rodam sem aprovação"
+    },
+    {
+      "id": "e28",
+      "from": "liberadas",
+      "to": "agentes",
+      "label": "lê ai_agents.config"
+    }
   ],
   "cards": [
     {
-      "id": "card-lacuna",
-      "tone": "amber",
-      "title": "Ainda sem onde gravar: \"pode rodar sem aprovação\"",
-      "body": "No modo automático a escrita só roda sem aprovação se o admin marcou a ferramenta. O schema da migration 0724 não tem onde guardar essa marca, então hoje o turno recebe a lista vazia e toda escrita externa pede aprovação (falha fechada)."
+      "id": "card-liberada",
+      "tone": "green",
+      "title": "A marca 'pode rodar sem aprovação' agora tem onde morar",
+      "body": "Fica em ai_agents.config.mcp_externo_liberadas, por agente, sem migration. Só vale para ferramenta de escrita ligada, exige confirmação explícita na rota e só tem efeito no modo automático. Sem marca, toda escrita externa continua pedindo aprovação."
     }
   ]
 }

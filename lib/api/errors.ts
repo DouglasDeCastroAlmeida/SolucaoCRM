@@ -190,6 +190,13 @@ export const ApiErrorCodes = {
   // POST /api/v1/ai/agents/:id/automatico (e o PATCH que troca para `automatic`) sem
   // `confirmar_automatico: true` no corpo. A tela abre o diálogo, mas quem exige é o servidor.
   ai_confirmacao_exigida: "ai_confirmacao_exigida",
+  // Servidor MCP externo (mudança 006, ADR-004): destino recusado pelo núcleo de destino seguro,
+  // endereço sem https, servidor/ferramenta que não vale, e agente sem rascunho para ligar ferramenta.
+  ai_destino_proibido: "ai_destino_proibido",
+  ai_http_nao_permitido: "ai_http_nao_permitido",
+  mcp_servidor_invalido: "mcp_servidor_invalido",
+  mcp_servidor_duplicado: "mcp_servidor_duplicado",
+  mcp_sem_rascunho: "mcp_sem_rascunho",
 
   // 415 — tipo de mídia
   unsupported_media_type: "unsupported_media_type",

@@ -19,7 +19,7 @@ import type { McpAuthResult } from "@/lib/mcp/auth";
 import type { McpContext } from "@/lib/mcp/types";
 
 import { carregarFerramentasExternasDoTurno } from "./carregar";
-import type { FerramentaRemota } from "./chamada";
+import { CABECALHOS_DO_CONTATO, type FerramentaRemota } from "./chamada";
 import { toolIdRemoto } from "./ids";
 import { cifrarChaveMcpExterno } from "./segredo";
 
@@ -292,9 +292,9 @@ describe("cercas da conversa continuam valendo na carga nova", () => {
 
     expect(ferramentasExternas?.contato).toBe(CONTATO);
     expect(ferramentasExternas?.cabecalhos).toEqual({
-      "X-Deskcomm-Contato-Id": CONTATO,
-      "X-Deskcomm-Contato-Telefone": "5511987654321",
-      "X-Deskcomm-Canal": "whatsapp",
+      [CABECALHOS_DO_CONTATO.id]: CONTATO,
+      [CABECALHOS_DO_CONTATO.telefone]: "5511987654321",
+      [CABECALHOS_DO_CONTATO.canal]: "whatsapp",
     });
     expect(tools.loja__buscar_pedido).toBeDefined();
   });

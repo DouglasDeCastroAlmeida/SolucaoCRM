@@ -408,6 +408,15 @@ const schema = z.object({
     .default("false")
     .transform((v) => v === "true"),
 
+  // Quem pode cadastrar servidor MCP externo (mudança 006, ADR-004). Desligada
+  // (padrão): só o administrador da instalação cadastra. Ligada: o administrador
+  // de cada organização cadastra os servidores da própria organização.
+  MCP_EXTERNO_ADMIN_DA_ORG: z
+    .enum(["true", "false"])
+    .optional()
+    .default("false")
+    .transform((v) => v === "true"),
+
   // Sentry
   SENTRY_DSN: z.string().optional().default(""),
 

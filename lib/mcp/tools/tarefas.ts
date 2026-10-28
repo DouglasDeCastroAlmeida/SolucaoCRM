@@ -39,7 +39,7 @@ import { ApiError } from "@/lib/api/types";
 import { comIdempotencia, hashDoCorpo } from "@/lib/api/idempotency";
 import { resolveActiveLeadForContact, type LeadCandidate } from "@/lib/leads/active-lead";
 import { registraAtividadeDaTarefa } from "@/lib/tarefas/atividade";
-import { PRIORIDADES_DA_TAREFA } from "@/lib/tarefas/tipos";
+import { PRIORIDADES_DA_TAREFA, type Tarefa } from "@/lib/tarefas/tipos";
 
 import type { McpContext, McpToolDefinition } from "../types";
 
@@ -66,15 +66,10 @@ type EntradaDaTarefa = z.infer<z.ZodObject<typeof criarTarefaShape>>;
 
 const COLUNAS_DA_TAREFA = "id, title, due_date, priority, status, lead_id, contact_id";
 
-type TarefaGravada = {
-  id: string;
-  title: string;
-  due_date: string | null;
-  priority: string;
-  status: string;
-  lead_id: string | null;
-  contact_id: string | null;
-};
+type TarefaGravada = Pick<
+  Tarefa,
+  "id" | "title" | "due_date" | "priority" | "status" | "lead_id" | "contact_id"
+>;
 
 async function negocioAbertoDoContato(
   ctx: McpContext,

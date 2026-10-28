@@ -66,7 +66,7 @@ export function ServidorExternoNoAtendimento({ agentId, inicial, disabled }: Pro
       </div>
       <p className="text-xs text-muted-foreground">
         {t(
-          "O servidor recebe a identidade do cliente da conversa e deve filtrar os dados por ela.",
+          "Os dados do cliente da conversa vão a todos os servidores que tenham ferramenta ligada neste agente; cada servidor deve filtrar os dados por ele.",
         )}
       </p>
     </Card>

@@ -77,8 +77,12 @@ export function embrulharComoDadoExterno(
 
   // Nem o fechamento nem a abertura do servidor (inclusive variantes com
   // espaço, caixa ou largura diferentes: NFKC) podem passar por marca nossa.
+  // Caracteres de formatação invisíveis (zero-width, hífen suave, junção de
+  // palavras) saem ANTES: um fechamento com um deles no meio não pode escapar
+  // da regra.
   let conteudo = semChave(resultado.texto, opcoes.chave)
     .normalize("NFKC")
+    .replace(/\p{Cf}/gu, "")
     .replace(/\[\s*FIM\s+DO\s+DADO\s+EXTERNO\s*\]/gi, "(fim do dado externo)")
     .replace(/\[\s*DADO\s+EXTERNO/gi, "(dado externo");
   if (conteudo.length > limite) {

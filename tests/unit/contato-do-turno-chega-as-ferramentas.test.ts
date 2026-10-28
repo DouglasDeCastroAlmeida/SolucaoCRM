@@ -70,6 +70,27 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
+
+/** Uma ferramenta de escrita ligada, como a carga a devolve. */
+function ligadasDeEscrita() {
+  return {
+    ligadas: [
+      {
+        servidor: { id: "s1", slug: "loja", nome: "ERP", endpoint: "https://erp.exemplo/mcp", chave: "k" },
+        ferramenta: { name: "cancelar" },
+        escolha: { servidor: "loja", nome: "cancelar", leitura: false },
+        nomeExposto: "loja__cancelar",
+      },
+      {
+        servidor: { id: "s1", slug: "loja", nome: "ERP", endpoint: "https://erp.exemplo/mcp", chave: "k" },
+        ferramenta: { name: "estornar" },
+        escolha: { servidor: "loja", nome: "estornar", leitura: false },
+        nomeExposto: "loja__estornar",
+      },
+    ],
+  } as never;
+}
+
 const CONTATO = "11111111-1111-4111-8111-111111111111";
 const DONO_DA_CONVERSA = "22222222-2222-4222-8222-222222222222";
 
@@ -101,7 +122,7 @@ function toolIdsDaCarga() {
 }
 
 describe("motor: buildMcpTurnTools repassa o contato do turno", () => {
-  async function montar(contactId: string | null, mcpExternoNoAtendimento?: boolean) {
+  async function montar(contactId: string | null, mcpExternoNoAtendimento?: boolean, liberadas?: string[]) {
     pickToolsFromMcp.mockImplementationOnce(() => ({}));
     const { buildMcpTurnTools } = await import("@/lib/agent-engine/edge/crm/mcp-tools");
     await buildMcpTurnTools(
@@ -113,11 +134,24 @@ describe("motor: buildMcpTurnTools repassa o contato do turno", () => {
         pipelineIds: [],
         operationMode: "assisted",
         ...(mcpExternoNoAtendimento !== undefined ? { mcpExternoNoAtendimento } : {}),
+        ...(liberadas !== undefined ? { mcpExternoLiberadas: liberadas } : {}),
       } as never,
       { warn: vi.fn() } as never,
     );
     return entregue();
   }
+
+  it("AC-007.4: só o que o admin marcou chega como liberada (nome exposto ao modelo)", async () => {
+    carregarFerramentasExternasDoTurno.mockResolvedValueOnce(ligadasDeEscrita());
+    const entrada = await montar(CONTATO, true, ["mcp_externo:loja:escrita:cancelar"]);
+    expect((entrada.aprovacaoMcp as { liberadas: string[] }).liberadas).toEqual(["loja__cancelar"]);
+  });
+
+  it("AC-007.4: sem marca gravada, nada é liberado", async () => {
+    carregarFerramentasExternasDoTurno.mockResolvedValueOnce(ligadasDeEscrita());
+    const entrada = await montar(CONTATO, true);
+    expect((entrada.aprovacaoMcp as { liberadas: string[] }).liberadas).toEqual([]);
+  });
 
   it("turno com cliente: o contato chega como contatoDoTurno", async () => {
     expect((await montar(CONTATO)).contatoDoTurno).toBe(CONTATO);
@@ -212,6 +246,15 @@ describe("runtime antigo: runAgent repassa o contato do turno", () => {
     const { runAgent } = await import("@/lib/ai/runtime/agent");
     return runAgent({ runId: "run-1", override: { sampleMessage: "oi" } });
   }
+
+  it("AC-007.4: só o que o admin marcou em ai_agents.config chega como liberada", async () => {
+    carregarFerramentasExternasDoTurno.mockResolvedValueOnce(ligadasDeEscrita());
+    await rodar({ contact_id: CONTATO, conversation_id: "conv-1" }, undefined, {
+      mcp_externo_no_atendimento: true,
+      mcp_externo_liberadas: ["mcp_externo:loja:escrita:estornar", "mcp_externo:loja:leitura:cancelar"],
+    });
+    expect((entregue().aprovacaoMcp as { liberadas: string[] }).liberadas).toEqual(["loja__estornar"]);
+  });
 
   it("o contato da linha do run chega como contatoDoTurno", async () => {
     await rodar({ contact_id: CONTATO, conversation_id: "conv-1" });

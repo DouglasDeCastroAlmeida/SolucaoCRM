@@ -364,3 +364,51 @@ describe("AC-007.3: aprovar executa com os argumentos GUARDADOS, uma única vez"
     expect(banco.tabelas.mcp_acoes_pendentes![0]!.estado).toBe("falhou");
   });
 });
+
+// ─── LGPD: depois de terminar, os argumentos não ficam guardados ────────────
+
+describe("AC-007.3 (LGPD): ação terminada não guarda os argumentos", () => {
+  async function comPendente() {
+    const banco = bancoFalso();
+    servidorNoBanco(banco);
+    const r = await registrarAcaoPendente(banco.supabase, ORG, dadosDaAcao());
+    return { banco, acaoId: r!.id };
+  }
+  type Pendente = Awaited<ReturnType<typeof comPendente>>;
+  const aprovar = (c: Pendente) =>
+    decidirAcaoPendente(c.banco.supabase, ORG, { acaoId: c.acaoId, decisao: "aprovar", usuarioId: USUARIO }, { chamar });
+
+  it.each([
+    ["executada", (c: Pendente) => aprovar(c)],
+    [
+      "falhou",
+      (c: Pendente) => {
+        chamar.mockRejectedValueOnce(new Error("fora do ar"));
+        return aprovar(c);
+      },
+    ],
+    [
+      "recusada",
+      (c: Pendente) =>
+        decidirAcaoPendente(c.banco.supabase, ORG, { acaoId: c.acaoId, decisao: "recusar", usuarioId: USUARIO }, { chamar }),
+    ],
+  ])("estado %s: argumentos viram {} e o hash fica", async (estado, decidir) => {
+    const c = await comPendente();
+    const hashAntes = c.banco.tabelas.mcp_acoes_pendentes![0]!.argumentos_hash;
+    expect(hashAntes).toBeTruthy();
+
+    await decidir(c);
+
+    const acao = c.banco.tabelas.mcp_acoes_pendentes![0]!;
+    expect(acao.estado).toBe(estado);
+    expect(acao.argumentos).toEqual({});
+    expect(JSON.stringify(acao)).not.toContain("P-123");
+    expect(acao.argumentos_hash).toBe(hashAntes);
+  });
+
+  it("a execução usa os argumentos guardados antes de zerá-los", async () => {
+    const c = await comPendente();
+    await aprovar(c);
+    expect(chamar.mock.calls[0]![2]).toEqual(ARGS);
+  });
+});

@@ -20,6 +20,7 @@ import { claimOfJob } from '@/lib/agent-engine/queue/claim';
 import type { Tool } from 'ai';
 
 import { carregarFerramentasExternasDoTurno } from '@/lib/mcp/servidor-externo/carregar';
+import { CHAVE_DAS_LIBERADAS, nomesLiberadosParaOTurno } from '@/lib/mcp/servidor-externo/liberadas';
 import { pickToolsFromMcp, type RuntimeHandoffSignal } from '@/lib/ai/runtime/tools';
 import { mintEphemeralToken, revokeEphemeralToken } from '@/lib/ai/runtime/mcp_token';
 import { IDS_DO_HARNESS, motivoDoHarness } from '@/lib/mcp/tools/ferramentas-do-harness';
@@ -180,13 +181,16 @@ export async function buildMcpTurnTools(
     ...(ids.contactId ? { contatoDoTurno: ids.contactId } : {}),
     ...(ferramentasExternas ? { ferramentasExternas } : {}),
     // AC-007.3/007.4: a escrita de servidor externo depende do modo do agente.
-    // `liberadas` vazio: a marca "pode rodar sem aprovação" ainda não tem onde
-    // ser gravada, então toda escrita externa pede aprovação (falha fechada).
+    // `liberadas`: o que o admin marcou "pode rodar sem aprovação" para ESTE agente
+    // (`ai_agents.config.mcp_externo_liberadas`), só de ferramentas de escrita
+    // ligadas; sem marca, toda escrita externa pede aprovação (falha fechada).
     aprovacaoMcp: {
       ...(agentConfig.operationMode ? { modo: agentConfig.operationMode } : {}),
       agenteId: agentConfig.agentId,
       conversaId: ids.conversationId ?? null,
-      liberadas: [],
+      liberadas: nomesLiberadosParaOTurno(ferramentasExternas?.ligadas, {
+        [CHAVE_DAS_LIBERADAS]: agentConfig.mcpExternoLiberadas,
+      }),
     },
   });
 

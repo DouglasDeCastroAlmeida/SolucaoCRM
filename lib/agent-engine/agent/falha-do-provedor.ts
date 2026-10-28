@@ -136,10 +136,10 @@ export async function abrirAvisoDoProvedor(
   try {
     await db.query(
       `insert into agent_inbox_items (organization_id, kind, severity, title, body, ref_kind, ref_id)
-       select $1, 'ia_provedor_indisponivel', 'critical', $2, $3, 'conversation', $4
+       select $1::uuid, 'ia_provedor_indisponivel', 'critical', $2::text, $3::text, 'conversation', $4::uuid
         where not exists (
           select 1 from agent_inbox_items
-           where organization_id = $1
+           where organization_id = $1::uuid
              and kind = 'ia_provedor_indisponivel'
              and status in ('open', 'ack')
         )`,
