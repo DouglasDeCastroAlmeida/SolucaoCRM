@@ -2,7 +2,7 @@
   "id": "008-independencia-do-repositorio-upstream",
   "title": "Independência do repositório upstream",
   "size": "L",
-  "stage": "implement",
+  "stage": "done",
   "createdAt": "2026-10-28T01:29:08.055Z",
   "approvals": {
     "grill": {
@@ -22,6 +22,18 @@
     },
     "tasks": {
       "at": "2026-10-28T09:26:32.303Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "aprovado pelo dono"
+    },
+    "implement": {
+      "at": "2026-10-28T17:16:08.465Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "aprovado pelo dono"
+    },
+    "verify": {
+      "at": "2026-10-28T17:43:37.763Z",
       "by": "DouglasDeCastroAlmeida",
       "forced": false,
       "note": "aprovado pelo dono"
@@ -51,6 +63,16 @@
       "stage": "implement",
       "at": "2026-10-28T09:26:32.303Z",
       "from": "tasks"
+    },
+    {
+      "stage": "verify",
+      "at": "2026-10-28T17:16:08.465Z",
+      "from": "implement"
+    },
+    {
+      "stage": "done",
+      "at": "2026-10-28T17:43:37.763Z",
+      "from": "verify"
     }
   ]
 }

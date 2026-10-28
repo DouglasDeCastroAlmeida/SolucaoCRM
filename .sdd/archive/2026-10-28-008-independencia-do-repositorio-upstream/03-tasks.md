@@ -60,4 +60,4 @@ Cada tarefa ocupa uma linha:
 
 ## Estimativa
 
-| **TOTALIZADOR GERAL** | | **24 tarefas (0 concluídas, 0%)** | | **15h** (restante: 15h) |
+| **TOTALIZADOR GERAL** | | **25 tarefas (25 concluídas, 100%)** | | **15h 40min** (restante: 0min) |
