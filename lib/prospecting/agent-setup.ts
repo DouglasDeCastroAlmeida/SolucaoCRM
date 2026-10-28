@@ -410,6 +410,13 @@ export async function setupProspectingAgent(
           config: { prospecting_setup: metadata },
         },
       );
+      // O agente da Prospecção é automático por desenho (a ativação abaixo o exige). O padrão do
+      // banco para agente novo passou a ser assistido (mudança 006); sem isto o guard de ativação
+      // nunca casaria e a configuração falharia com "O agente mudou durante a configuração".
+      await db.query(
+        "update ai_agents set operation_mode='automatic' where organization_id=$1 and id=$2",
+        [context.orgId, agentId],
+      );
       createdNow = true;
     }
     await db.query("commit");
