@@ -51,6 +51,11 @@ on:
   # next 16.3 ele typecheca os `*.test.ts` colocados. O artefato que o
   # self-hoster instala era o único sem gate.
   pull_request:
+  # Disparo manual, e é por ele que a publicação própria passa: tag criada com o
+  # `GITHUB_TOKEN` (publicar-versao.yml) NÃO dispara o `push: tags` acima, mas o
+  # `gh workflow run publish-image.yml --ref vX.Y.Z` dispara. A ref escolhida é a tag, então
+  # `a-tag-veio-da-main` e `imagens-ok` rodam como num push de tag. `promover-stable`
+  # segue só para push de tag (não foi afrouxado): disparo manual publica X.Y.Z e X.Y.
   workflow_dispatch: {}
 
 env:

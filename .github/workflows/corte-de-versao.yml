@@ -25,8 +25,9 @@ name: corte-de-versao
 # ─── A TAG ──────────────────────────────────────────────────────────────────────
 # Fica fora deste workflow. Tag empurrada com o `GITHUB_TOKEN` também não dispara o
 # `publish-image.yml` (gatilho `push: tags`), então criá-la aqui produziria tag sem
-# imagem e nenhuma VPS atualizada, em silêncio. Publicação é ato do CI: a etapa da tag
-# depende de decisão do dono (ver 03-tasks da mudança 008, T-018).
+# imagem e nenhuma VPS atualizada, em silêncio. Depois de mesclar o PR de release, o dono
+# dispara o `publicar-versao.yml` (informa X.Y.Z), que cria a tag e dispara a publicação.
+# Publicação é ato do CI.
 
 on:
   workflow_dispatch:

@@ -46,6 +46,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-016 [TEST-UNIT] O corte consome os fragmentos antes de o changelog passar do limite de 30.000 bytes e o aviso de proximidade aparece antes do estouro (~35 min) {AC-002.5}
 - [x] T-017 [IMPL] .github/workflows/corte-de-versao.yml e comentário do porquê nos jobs desligados do upstream (~50 min) {AC-002.4, AC-002.5} deps: T-015, T-016
 - [ ] T-018 [CHECK-SMOKE] Disparar o corte manualmente e conferir o PR gerado, o CI dele e a tag depois do merge (~30 min) {AC-002.4} deps: T-017
+- [x] T-025 [IMPL] Workflow manual publicar-versao.yml (valida CHANGELOG e tag, cria a tag anotada e dispara publish-image.yml na tag) com testes, mapa de gatilhos, escritas justificadas e doutrina atualizada (~40 min) {AC-002.4} deps: T-017
 
 ### Fatia 7: Executor de CI (REQ-002.3)
 - [x] T-019 [TEST-INT] so-o-que-e-nosso.sh aceita o repositório do dono e recusa um alheio e um fork; instalar.sh e vaga.sh usam o repositório do dono (~45 min) {AC-002.3}

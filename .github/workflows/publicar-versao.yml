@@ -1,0 +1,93 @@
+name: publicar-versao
+
+# Publicação PRÓPRIA da versão (SDD 008, AC-002.4; adendo de 2026-10-28). É o passo que
+# vem DEPOIS do `corte-de-versao.yml`: o corte abre o PR `release/X.Y.Z`, o dono mescla,
+# e ESTE workflow cria a tag e manda o CI publicar as imagens.
+#
+#   VOCÊ dispara "Run workflow" informando a versão (X.Y.Z, a mesma do CHANGELOG.md).
+#   Ele confere o CHANGELOG da main, confere que a tag ainda não existe, cria a tag
+#   anotada `vX.Y.Z` no topo da main e dispara o `publish-image.yml` nessa tag.
+#
+# Só o `GITHUB_TOKEN` do próprio repositório. Nenhum aplicativo, nenhum segredo novo.
+#
+# ─── POR QUE O DISPARO É EXPLÍCITO ──────────────────────────────────────────────
+# Tag empurrada com o `GITHUB_TOKEN` não cria workflow run (regra do GitHub, para evitar
+# laço), então o gatilho `push: tags` do `publish-image.yml` NÃO dispara sozinho. Já o
+# `workflow_dispatch` pedido pelo `GITHUB_TOKEN` dispara — é a exceção documentada. Por
+# isso o último passo roda `gh workflow run publish-image.yml --ref vX.Y.Z`.
+#
+# ─── O QUE CONTINUA VALENDO NA PUBLICAÇÃO ───────────────────────────────────────
+# A publicação é ato do CI: quem constrói e publica é o `publish-image.yml`, nunca esta
+# máquina nem a do operador. A trava `a-tag-veio-da-main` e o `imagens-ok` rodam como em
+# qualquer tag. Disparo manual publica os números `X.Y.Z` e `X.Y`; o canal `stable` só
+# anda em push de tag (condição do `promover-stable`, que não foi afrouxada).
+#
+# Nunca `--force`: tag publicada não se move (doutrina de packaging, invariante 3).
+
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Versão a publicar, no formato X.Y.Z (a seção correspondente já está no CHANGELOG.md da main)"
+        required: true
+        type: string
+
+# Leitura por padrão; a escrita é concedida só ao job que precisa.
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-versao
+  cancel-in-progress: false
+
+jobs:
+  criar-tag-e-publicar:
+    # Um fork herda este workflow; a publicação é do repositório do dono, e sempre a
+    # partir da main (a tag nasce do topo dela).
+    if: github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # contents: criar e empurrar a tag. actions: disparar o publish-image.yml.
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Conferir a versão, o CHANGELOG e a tag
+        env:
+          VERSAO: ${{ inputs.versao }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "${VERSAO}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::versão inválida: use o formato X.Y.Z (sem 'v')."
+            exit 1
+          fi
+          if ! awk -v v="${VERSAO}" 'index($0, "## [" v "]") == 1 { achou = 1 } END { exit !achou }' CHANGELOG.md; then
+            echo "::error::o CHANGELOG.md da main não tem a seção '## [${VERSAO}]'. Mescle antes o PR de release."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSAO}" >/dev/null 2>&1; then
+            echo "::error::a tag v${VERSAO} já existe. Tag publicada não se move."
+            exit 1
+          fi
+          echo "ok: v${VERSAO} tem seção no CHANGELOG e a tag ainda não existe"
+
+      - name: Criar a tag anotada no topo da main
+        env:
+          VERSAO: ${{ inputs.versao }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "v${VERSAO}" -m "Release ${VERSAO}" "${GITHUB_SHA}"
+          git push origin "refs/tags/v${VERSAO}"
+
+      - name: Disparar a publicação das imagens
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSAO: ${{ inputs.versao }}
+        run: |
+          set -euo pipefail
+          gh workflow run publish-image.yml --ref "v${VERSAO}"
+          echo "publish-image.yml disparado em v${VERSAO}; acompanhe na aba Actions."

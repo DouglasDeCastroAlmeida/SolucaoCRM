@@ -80,6 +80,16 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "padrão. A condição existe para que um fork, que herda o workflow, não tente cortar " +
       "versão de um repositório que não é dele. Desligá-lo faz nenhuma versão ser fechada.",
   },
+  "publicar-versao.yml::criar-tag-e-publicar": {
+    condicao:
+      "github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM' && github.ref == 'refs/heads/main'",
+    efeito:
+      "Este job é a publicação PRÓPRIA (008): cria a tag anotada `vX.Y.Z` no topo da main e " +
+      "dispara o `publish-image.yml` nela, só à mão e só com o token padrão. As duas condições " +
+      "existem para que um fork, que herda o workflow, não crie tag num repositório que não é " +
+      "dele, e para que a tag nasça sempre da main. Desligá-lo faz a versão fechada no CHANGELOG " +
+      "nunca virar tag nem imagem, sem erro em lugar nenhum.",
+  },
   "release.yml::cortar-tag": {
     condicao: "false",
     efeito:

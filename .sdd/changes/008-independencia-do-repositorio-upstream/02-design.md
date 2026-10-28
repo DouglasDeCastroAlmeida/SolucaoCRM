@@ -99,3 +99,10 @@ N/A — sem banco, sem migration. Nada de tenant.
 | AC-005.1 a .3 | unitário | `nada-executa-contra-o-upstream.test.ts`, com sabotagem (acrescentar `melgarafael` num script) para provar que reprova |
 
 Cada teste cita o ID: `it('AC-001.1: ...')`. A prova final é o CI verde e as sondas de produção (`/` = 200, `/app` = 307) após o deploy.
+
+## Adendo (2026-10-28, decisão do dono)
+
+O dono autorizou duas decisões do release, ambas na opção (a):
+
+- **D1.** O PR de release aberto pelo corte nasce sem CI (o `GITHUB_TOKEN` não dispara outros workflows). Saída aceita: fechar e reabrir o PR pela tela, já documentado em `corte-de-versao.yml`. Nada muda em `ci.yml`, `e2e.yml` nem `perf.yml`.
+- **D2.** A tag criada com o `GITHUB_TOKEN` não dispara `publish-image.yml` (gatilho `push: tags`). Solução: novo workflow manual `.github/workflows/publicar-versao.yml` (`workflow_dispatch`, input `versao` X.Y.Z, só no repositório do dono e a partir da `main`, só `GITHUB_TOKEN`, `contents: write` e `actions: write`). Ele valida a seção `## [X.Y.Z]` do `CHANGELOG.md`, valida que a tag não existe, cria a tag anotada `vX.Y.Z` no topo da `main` (nunca `--force`) e roda `gh workflow run publish-image.yml --ref vX.Y.Z`. O `publish-image.yml` já aceitava `workflow_dispatch`; com a ref sendo a tag, `a-tag-veio-da-main` e `imagens-ok` rodam como num push de tag, sem afrouxamento. Limite conhecido: `promover-stable` segue só para push de tag, então o disparo manual publica `X.Y.Z` e `X.Y` e não move `stable`.

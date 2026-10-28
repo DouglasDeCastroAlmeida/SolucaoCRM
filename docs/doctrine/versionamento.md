@@ -251,10 +251,25 @@ Três consequências que o operador precisa conhecer, todas regras do GitHub e n
 2. **O PR só abre se o repositório permitir.** Em Settings > Actions > General, a opção "Allow
    GitHub Actions to create and approve pull requests" precisa estar ligada. Desligada, o branch
    `release/X.Y.Z` é empurrado e o PR não abre.
-3. **A tag e as imagens dependem de decisão do dono.** Tag criada com o `GITHUB_TOKEN` também não
-   dispara o `publish-image.yml` (gatilho `push: tags`), então criá-la no corte produziria tag
-   sem imagem e nenhuma VPS atualizada, em silêncio. Por isso o workflow não cria tag; como a tag
-   e a publicação serão feitas está em aberto (ver `03-tasks.md` da mudança 008, T-018).
+3. **A tag e as imagens são de um segundo workflow, `publicar-versao.yml`.** Tag criada com o
+   `GITHUB_TOKEN` também não dispara o `publish-image.yml` (gatilho `push: tags`), então criá-la no
+   corte produziria tag sem imagem e nenhuma VPS atualizada, em silêncio. Por isso o corte não cria
+   tag. A exceção do GitHub é o `workflow_dispatch`, que o `GITHUB_TOKEN` consegue disparar.
+
+**O fluxo completo, em ordem:**
+
+1. **`corte-de-versao`** (Run workflow): monta a seção do `CHANGELOG.md` e abre o PR `release/X.Y.Z`.
+2. **Merge do PR**, depois de **fechar e reabrir** para o CI rodar (consequência 1).
+3. **`publicar-versao`** (Run workflow, input `versao` = `X.Y.Z`): só no repositório do dono e a
+   partir da `main`; confere o formato, que o `CHANGELOG.md` da `main` tem `## [X.Y.Z]` e que a tag
+   `vX.Y.Z` ainda não existe; cria a tag **anotada** no topo da `main` (nunca com `--force`) e
+   dispara `publish-image.yml` nela (`gh workflow run publish-image.yml --ref vX.Y.Z`). Usa só o
+   `GITHUB_TOKEN`, com `contents: write` (a tag) e `actions: write` (o disparo).
+
+A publicação continua ato do CI: quem constrói e publica é o `publish-image.yml`, com a trava
+`a-tag-veio-da-main` e o `imagens-ok` de sempre; ninguém publica da máquina do operador. Um limite
+conhecido: o `promover-stable` só roda em push de tag, então a publicação por este caminho entrega
+os números `X.Y.Z` e `X.Y`, e o canal `stable` não anda por ela.
 
 **Vitrine pública.** Não há vitrine própria hoje: o `CHANGELOG.md` da `main` é a fonte, e a tela
 de atualização da VPS o lê (`lib/system/changelog.ts`). O cabeçalho da seção continua contrato:
