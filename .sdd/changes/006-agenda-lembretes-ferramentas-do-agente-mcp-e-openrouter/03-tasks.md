@@ -69,8 +69,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-037 [IMPL] Tela em app/app/settings/servidor-mcp-externo e seleção por agente (~60 min) {AC-007.2, AC-007.4} deps: T-035, T-036
 
 ### Fechamento
-- [ ] T-038 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
-- [ ] T-039 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-009.5} deps: T-038, T-016, T-022, T-037
+- [x] T-038 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
+- [x] T-039 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-009.5} deps: T-038, T-016, T-022, T-037
 - [ ] T-040 [TEST-E2E] Jornada pela tela na homologação com serviços reais: conectar chave, testar, ligar em aprovar antes de enviar, aprovar uma resposta, estourar o teto, cadastrar MCP, ligar uma ferramenta (~60 min) {AC-009.3} deps: T-016, T-020, T-037
 - [ ] T-041 [TEST-E2E] Sonda de produção sem agente ligado e sem MCP: resultado igual ao de antes e nenhum provedor novo chamado (~30 min) {AC-009.4}
 - [ ] T-042 [DOCS] Runbook e roteiro do dono: chave do OpenRouter, endereço próprio, teto de custo, modos do agente, cadastro de servidor MCP e a chave MCP_EXTERNO_ADMIN_DA_ORG (~40 min) deps: T-040

@@ -360,11 +360,15 @@ export async function performHumanHandoff(
       ids.tenantId,
       // No idioma da ORGANIZAÇÃO, como o corpo: o título da Central sai como foi
       // gravado (nunca passa por t() na tela).
-      opts.inboxTitle ??
-        traduzir(
-          'Handoff humano solicitado — assumir a conversa',
-          opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
-        ),
+      opts.inboxTitle !== undefined
+        ? traduzir(
+            opts.inboxTitle,
+            opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
+          )
+        : traduzir(
+            'Handoff humano solicitado — assumir a conversa',
+            opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
+          ),
       await corpoDaCentral(db, ids.tenantId, opts),
       ids.conversationId,
     ],
