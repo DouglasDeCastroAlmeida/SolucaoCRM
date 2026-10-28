@@ -17,7 +17,7 @@
 # o GitHub venha a criar. Na dúvida (payload ilegível, campo ausente), recusa.
 set -uo pipefail
 
-REPO_ESPERADO="${DESKCOMM_REPO_ESPERADO:-melgarafael/DeskcommCRM}"
+REPO_ESPERADO="${DESKCOMM_REPO_ESPERADO:-DouglasDeCastroAlmeida/SolucaoCRM}"
 
 recusa() {
   echo "::error::executor próprio recusou este job: $1. Ele só roda trabalho de branch deste repositório; PR de fork roda nas máquinas do GitHub." >&2

@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
-import { format, subDays } from "date-fns";
+import { subDays } from "date-fns";
 import { describe, expect, it } from "vitest";
 
 import { ConversationListItem } from "@/components/inbox/ConversationListItem";
+import { FUSO_PADRAO } from "@/lib/tempo/fusos";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 
 /**
@@ -33,10 +34,18 @@ const atividade = subDays(agora, 12).toISOString();
 /** Criação da conversa — o fallback, e o relógio mais antigo dos três. */
 const criacao = subDays(agora, 300).toISOString();
 
-const horaDaEspera = format(new Date(espera), "dd/MM");
-const horaDaUltimaDoCliente = format(new Date(ultimaDoCliente), "dd/MM");
-const horaDaAtividade = format(new Date(atividade), "dd/MM");
-const horaDaCriacao = format(new Date(criacao), "dd/MM");
+/**
+ * `dd/MM` no fuso padrão do produto, o mesmo que o formatador da lista usa sem fuso
+ * informado. `format` do date-fns usaria o relógio do servidor (UTC no CI) e, entre
+ * 21h e meia-noite de Brasília, daria o dia seguinte e reprovaria o caso à toa.
+ */
+const ddMM = (iso: string) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO_PADRAO, day: "2-digit", month: "2-digit" }).format(new Date(iso));
+
+const horaDaEspera = ddMM(espera);
+const horaDaUltimaDoCliente = ddMM(ultimaDoCliente);
+const horaDaAtividade = ddMM(atividade);
+const horaDaCriacao = ddMM(criacao);
 
 const base = {
   id: "c1",

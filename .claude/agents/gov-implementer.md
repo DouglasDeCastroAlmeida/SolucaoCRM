@@ -46,7 +46,7 @@ código) + `docs/specs/` — este agente só existe pra executar dentro dela.
   `-- manifest: <descrição>` no cabeçalho do `.sql` (o `MANIFEST.md` é histórico) +
   `lib/database.types.ts` regenerado.
   O próximo `NNNN` é medido sobre a POPULAÇÃO da pergunta — a main do
-  PRODUTO (o remoto que aponta para `melgarafael/DeskcommCRM`, com qualquer
+  PRODUTO (o remoto que aponta para `DouglasDeCastroAlmeida/SolucaoCRM`, com qualquer
   nome) mais `refs/heads` E `refs/remotes`, nunca só as branches locais: a cadeia
   `vendaval/F2-*` tem migrations não mergeadas, e o PR aberto de um fork não
   aparece em branch local nenhuma (a regra e o que ela não cobre estão em

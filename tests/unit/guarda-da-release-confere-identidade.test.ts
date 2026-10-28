@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { REPOSITORIO_DESTE_REPO } from "./_identidade-deste-repo";
 
 /**
  * A GUARDA DA RELEASE CONFERE IDENTIDADE, E NÃO NOME — issue #478.
@@ -64,7 +65,7 @@ const NOME_DE_AUTOR_QUE_O_APP_GRAVA = "deskcomm-release[bot]";
 
 /** O login com que a API apresenta o App — o e-mail do corte real confirma o slug. */
 const LOGIN_DO_APP = "deskcommcrm-release[bot]";
-const REPO_DE_CIMA = "melgarafael/DeskcommCRM";
+const REPO_DE_CIMA = REPOSITORIO_DESTE_REPO;
 
 /** Uma linha no formato que o `--jq` da guarda produz: cinco campos por TAB. */
 function linhaDaApi(login: string, tipo: string, ref: string, repo: string, numero: number): string {

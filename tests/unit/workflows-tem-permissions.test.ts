@@ -58,6 +58,16 @@ const ESCRITA_JUSTIFICADA: Record<string, string> = {
     "comenta e rotula o PR cujo número de migration foi tomado depois de ele ficar verde; " +
     "é o mínimo que escreve (um comentário editado por PR + o rótulo), o workflow não roda " +
     "código de PR nenhum e não dispara CI — ver scripts/vigia-colisao-de-migration.ts",
+  "corte-de-versao.yml::contents: write":
+    "empurra o branch release/X.Y.Z do corte manual; nao cria tag nem publica (ver corte-de-versao.yml)",
+  "corte-de-versao.yml::pull-requests: write":
+    "abre o PR de release do corte manual; so no job abrir-pr-de-release, com disparo manual e so no repositorio do dono",
+  "publicar-versao.yml::contents: write":
+    "cria e empurra a tag anotada vX.Y.Z (nunca com --force); so no job criar-tag-e-publicar, " +
+    "com disparo manual, a partir da main e so no repositorio do dono (ver publicar-versao.yml)",
+  "publicar-versao.yml::actions: write":
+    "dispara o publish-image.yml na tag recem-criada (a tag criada com GITHUB_TOKEN nao dispara " +
+    "o gatilho de push); nao constroi nem publica nada por si so",
   "acolhida.yml::pull-requests: write":
     "comenta a acolhida no PR de fork; é o ÚNICO escopo do workflow (o bloco zera o resto), " +
     "e o job não faz checkout nem usa action nenhuma — ver tests/unit/acolhida-nao-toca-no-fork.test.ts",

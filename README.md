@@ -16,7 +16,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-1%20comando-orange)](hostgator-setup-kit/)
-[![CI](https://github.com/melgarafael/DeskcommCRM/actions/workflows/ci.yml/badge.svg)](https://github.com/melgarafael/DeskcommCRM/actions/workflows/ci.yml)
+[![CI](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/actions/workflows/ci.yml/badge.svg)](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 [**⚡ Instalar**](#-instalar-na-sua-vps-o-caminho-principal) · [**🔄 Atualizar**](#-atualizar) · [**🧭 Visão**](VISION.md) · [**🏗️ Arquitetura**](ARCHITECTURE.md) · [**🤝 Contribuir**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
@@ -39,7 +39,7 @@
 > comando certo pro seu caso:
 >
 > ```bash
-> curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/hostgator-setup-kit/comecar.sh | bash
+> git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && bash SolucaoCRM/hostgator-setup-kit/comecar.sh
 > ```
 >
 > *(prefere ler antes de executar? clone o repo e rode `bash hostgator-setup-kit/comecar.sh` —
@@ -72,8 +72,8 @@ travamento: é o terminal escondendo a senha. Digite (ou cole) e dê Enter.
 Já dentro da VPS:
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 bash hostgator-setup-kit/install.sh
 ```
 
@@ -135,11 +135,11 @@ escaneie o QR code com o WhatsApp do seu número.
 
 O repositório traz **guias do assistente** que carregam sozinhos no Claude Code, Codex, Cursor,
 OpenCode ou Antigravity: instalar, montar um cliente por nicho, analisar métricas, afinar o prompt
-do agente e contribuir. Para tê-los em **qualquer pasta** — inclusive antes de clonar, no seu
-computador —, rode uma vez:
+do agente e contribuir. Para tê-los em **qualquer pasta** do seu computador — o repositório é
+privado, então clone-o antes —, rode uma vez, de dentro do clone:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash
+bash scripts/instalar-guias.sh
 ```
 
 Depois abra uma sessão nova do seu assistente e diga *"quero instalar o CRM na minha VPS"*: pedir o
@@ -151,7 +151,7 @@ Os guias **não** se atualizam sozinhos: rodar o mesmo comando de novo traz a ve
 desfazer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash -s -- --remover
+bash scripts/instalar-guias.sh --remover
 ```
 
 Com o repositório já clonado, os guias vêm dentro dele (`.agents/skills/`) e nem isso é preciso. Se
@@ -327,8 +327,8 @@ Detalhes: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > Esta seção é pra quem vai mexer no código.
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 
 nvm use                     # Node 22
 npm install -g pnpm && pnpm install
@@ -398,7 +398,7 @@ pnpm test:e2e      # Playwright (requer dev server)
 **Estes checks são obrigatórios** pra mergear na `main`. A lista abaixo já disse "quatro" e depois "cinco" — **meça, não confie nela**:
 
 ```bash
-gh api repos/melgarafael/DeskcommCRM/branches/main/protection \
+gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection \
   --jq '.required_status_checks.contexts|join(", ")'
 # em 2026-08-14: verify, build-and-size, invariants, e2e, imagens-ok
 ```
@@ -478,9 +478,9 @@ o `imagens-ok` (constrói as três imagens Docker). Verde na sua máquina não �
 
 ## 🐛 Reportando bugs
 
-Abra uma [issue](https://github.com/melgarafael/DeskcommCRM/issues/new/choose) — o template pede o que precisamos (ambiente, `/api/v1/health`, steps). Rodar `bash hostgator-setup-kit/healthcheck.sh` e colar a saída ajuda muito.
+Abra uma [issue](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/issues/new/choose) — o template pede o que precisamos (ambiente, `/api/v1/health`, steps). Rodar `bash hostgator-setup-kit/healthcheck.sh` e colar a saída ajuda muito.
 
-Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [relato privado de vulnerabilidades](https://github.com/melgarafael/DeskcommCRM/security/advisories/new). Detalhes em [`SECURITY.md`](SECURITY.md).
+Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [relato privado de vulnerabilidades](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/security/advisories/new). Detalhes em [`SECURITY.md`](SECURITY.md).
 
 ---
 
@@ -511,10 +511,19 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 
 ## 💬 Comunidade
 
-- **Discussões:** [GitHub Discussions](https://github.com/melgarafael/DeskcommCRM/discussions) — pra perguntas, ideias, showcase.
-- **Issues:** [GitHub Issues](https://github.com/melgarafael/DeskcommCRM/issues) — bugs e tasks.
+- **Discussões:** [GitHub Discussions](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/discussions) — pra perguntas, ideias, showcase.
+- **Issues:** [GitHub Issues](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/issues) — bugs e tasks.
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
+
+---
+
+## Origem
+
+Este projeto nasceu de um fork do DeskcommCRM (licença MIT), criado por Rafael Melgaço, e segue
+com as modificações de Douglas de Castro Almeida. O crédito ao autor original está no
+[`LICENSE`](LICENSE) e no [`NOTICE`](NOTICE). A instalação é feita pelo repositório do dono
+(`DouglasDeCastroAlmeida/SolucaoCRM`), que é **privado**: para instalar é preciso ter acesso a ele.
 
 ---
 
@@ -532,8 +541,8 @@ Este é um projeto **self-host**: cada pessoa roda o CRM na **própria infraestr
 (VPS, banco Supabase e chave de IA próprios). Isso implica:
 
 - **Suporte é comunitário e "as-is".** Dúvidas e bugs entram como
-  [Issues](https://github.com/melgarafael/DeskcommCRM/issues) ou
-  [Discussions](https://github.com/melgarafael/DeskcommCRM/discussions). Não há SLA nem
+  [Issues](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/issues) ou
+  [Discussions](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/discussions). Não há SLA nem
   suporte garantido — é open source mantido por boa vontade.
 - **Você é responsável pela sua instalação.** Atualizações não são automáticas (você clica
   ou roda `update.sh` quando quiser), e manter/backup do seu servidor é com você.

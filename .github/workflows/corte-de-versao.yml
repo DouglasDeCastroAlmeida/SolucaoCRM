@@ -1,0 +1,110 @@
+name: corte-de-versao
+
+# Corte de versão PRÓPRIO (SDD 008, AC-002.4 e AC-002.5). Substitui o `release.yml`,
+# que veio do upstream e depende de um GitHub App que não é nosso.
+#
+#   VOCÊ dispara "Run workflow" -> ele lê `.changes/`, calcula o número, monta a seção
+#   do CHANGELOG e abre o PR `release/X.Y.Z`. Nada é publicado e nenhuma tag nasce aqui.
+#
+# Só o `GITHUB_TOKEN` do próprio repositório. Nenhum aplicativo, nenhum segredo novo.
+#
+# ─── O PR NASCE SEM CI, E ISSO É DO GITHUB ──────────────────────────────────────
+# Evento causado pelo `GITHUB_TOKEN` não cria workflow run (regra do GitHub, para evitar
+# laço). O PR aberto aqui não dispara `ci.yml`, `e2e.yml` nem `perf.yml`, e os checks
+# obrigatórios ficam "pendentes". A saída que NÃO pede segredo nem muda o CI: quem tem
+# permissão FECHA e REABRE o PR pela tela. A reabertura é um ato de usuário, e esse sim
+# dispara `pull_request`. O corpo do PR diz isso ao dono. (Disparar o CI daqui por
+# `gh workflow run` exigiria `workflow_dispatch` em `ci.yml`/`e2e.yml`/`perf.yml`, que
+# hoje não têm; fica como decisão do dono, não como mudança escondida.)
+#
+# ─── PRÉ-REQUISITO NAS CONFIGURAÇÕES DO REPOSITÓRIO ────────────────────────────
+# O `gh pr create` abaixo exige "Allow GitHub Actions to create and approve pull requests"
+# LIGADO em Settings > Actions > General. Desligado, o branch `release/X.Y.Z` é empurrado
+# e o PR NÃO abre (o passo falha no `gh pr create`).
+#
+# ─── A TAG ──────────────────────────────────────────────────────────────────────
+# Fica fora deste workflow. Tag empurrada com o `GITHUB_TOKEN` também não dispara o
+# `publish-image.yml` (gatilho `push: tags`), então criá-la aqui produziria tag sem
+# imagem e nenhuma VPS atualizada, em silêncio. Depois de mesclar o PR de release, o dono
+# dispara o `publicar-versao.yml` (informa X.Y.Z), que cria a tag e dispara a publicação.
+# Publicação é ato do CI.
+
+on:
+  workflow_dispatch:
+    inputs:
+      major:
+        # Major só por decisão explícita do dono: nenhum fragmento a produz.
+        description: "Cortar como MAJOR (só quando o dono pedir)"
+        type: boolean
+        default: false
+
+# Leitura por padrão; a escrita é concedida só ao job que precisa.
+permissions:
+  contents: read
+
+concurrency:
+  group: corte-de-versao
+  cancel-in-progress: false
+
+jobs:
+  abrir-pr-de-release:
+    # Um fork herda este workflow; o corte é do repositório do dono.
+    if: github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      # contents: empurrar o branch `release/X.Y.Z`. pull-requests: abrir o PR.
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # O corte compara com as tags; o checkout raso padrão não traz nenhuma.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/preparar-node
+        timeout-minutes: 5
+
+      # O acervo cabe na tela da VPS (30.000 bytes)? Só AVISA: cortar É o conserto do acervo
+      # grande, então um vermelho aqui não pode impedir o corte.
+      - name: O acervo de .changes/ cabe na tela da VPS? (aviso)
+        continue-on-error: true
+        run: pnpm release:acervo-cabe
+
+      - name: Calcular o número e montar a seção
+        id: corte
+        env:
+          MAJOR: ${{ inputs.major }}
+        run: |
+          set -euo pipefail
+          pedido=()
+          if [ "${MAJOR}" = "true" ]; then pedido=(--major); fi
+          pnpm exec tsx scripts/cortar-release.ts --escrever "${pedido[@]}" | tee "${RUNNER_TEMP}/corte.txt"
+          versao=$(pnpm exec tsx scripts/cortar-release.ts --versao-do-changelog)
+          echo "versao=${versao}" >> "$GITHUB_OUTPUT"
+
+      - name: Abrir o PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSAO: ${{ steps.corte.outputs.versao }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "release/${VERSAO}"
+          git add CHANGELOG.md .changes
+          git commit -m "release(${VERSAO}): a versão montada a partir dos fragmentos declarados"
+          git push origin "release/${VERSAO}"
+          {
+            echo "Esta versão sai como **${VERSAO}**; o número foi CALCULADO a partir dos fragmentos, ninguém digitou."
+            echo
+            echo '```'
+            cat "${RUNNER_TEMP}/corte.txt"
+            echo '```'
+            echo
+            echo "**Antes de mesclar:** este PR foi aberto pelo token padrão do GitHub, e por regra do GitHub isso NÃO dispara o CI. Feche e reabra este PR pela tela para os checks obrigatórios rodarem."
+            echo
+            echo "A tag e a publicação das imagens não acontecem neste PR. Se algo estiver errado, feche o PR, corrija o fragmento e dispare o corte de novo."
+          } > "${RUNNER_TEMP}/corpo.md"
+          gh pr create --base main --head "release/${VERSAO}" \
+            --title "Release ${VERSAO}" --body-file "${RUNNER_TEMP}/corpo.md"

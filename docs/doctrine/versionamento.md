@@ -42,7 +42,7 @@ Quem lê o número é o operador, não o autor. A régua tem que ser escrita da 
 **Major só existe por decisão explícita do dono.** Palavras dele, em 07/10: *"Major update é
 somente quando eu pedir. IA nem nenhum workflow decide isso! Mantenha seguindo com minor
 update."* Nenhum fragmento produz major — nem `exige_acao`. Quem corta pede com `--major`
-(`scripts/cortar-release.ts`) ou marcando o input `major` no "Run workflow" do `release.yml`,
+(`scripts/cortar-release.ts`) ou marcando o input `major` no "Run workflow" do `corte-de-versao.yml`,
 e só quando o dono pediu.
 
 O que protege o operador na linha de baixo é o **aviso**, não o número: o bloco
@@ -230,76 +230,52 @@ E o `package.json` **não** é a fonte: ele segue em `0.1.0`, de propósito. A f
 
 ---
 
-## A vitrine
+## O corte e a vitrine
 
-Toda versão publicada aparece na página de changelog da LP, nos três idiomas:
-[deskcomm.com.br/changelog](https://www.deskcomm.com.br/changelog),
-[/en/changelog](https://www.deskcomm.com.br/en/changelog) e
-[/es/changelog](https://www.deskcomm.com.br/es/changelog), cada versão com página própria
-(`/changelog/X.Y.Z`). É lá que quem ainda não instalou — e quem decide se atualiza — lê o que
-mudou sem abrir o GitHub.
+**Como se corta hoje.** O corte é do workflow próprio `.github/workflows/corte-de-versao.yml`
+(SDD 008). Ele só roda por `workflow_dispatch` ("Run workflow"), usa **apenas o `GITHUB_TOKEN`**
+do repositório (nenhum aplicativo do GitHub, nenhum segredo novo) e faz uma coisa: lê `.changes/`,
+calcula o número, monta a seção do `CHANGELOG.md` e abre o PR `release/X.Y.Z`. Ele não cria tag e
+não publica nada. O input `major` existe e só se marca quando o dono pediu.
 
-**Enquanto as três páginas não responderem 200, o parágrafo acima descreve o alvo e não o estado.**
-Elas nascem num PR do repositório `deskcomm-site`, e o corte depende delas: com a vitrine fora do
-ar, o passo abaixo reprova **toda** release depois de 35 tentativas, cerca de meia hora de espera. Quem for cortar confere
-antes — o comando não envelhece, a frase envelheceria:
+O `release.yml` que veio do upstream segue no repositório **desligado**: dependia de um GitHub App
+que não é nosso. O passo dele que conferia a página de changelog da LP do upstream foi **removido**
+(a vitrine não é nossa), e `cortar-tag` não roda.
 
-```bash
-for p in /changelog /en/changelog /es/changelog /guias; do
-  echo "$p: $(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://www.deskcomm.com.br$p")"
-done
-```
+Três consequências que o operador precisa conhecer, todas regras do GitHub e não escolhas nossas:
 
-Quatro `200` e esta seção vale como está escrita. Qualquer `404` e a ordem é a inversa: a vitrine
-entra no ar primeiro, o corte depois.
+1. **O PR de release nasce sem CI.** Evento causado pelo `GITHUB_TOKEN` não dispara outros
+   workflows, então `ci.yml`, `e2e.yml` e `perf.yml` não rodam e os checks obrigatórios ficam
+   "pendentes". A saída sem segredo: o dono **fecha e reabre** o PR pela tela; a reabertura é ato
+   de usuário e dispara o CI. O corpo do PR já avisa isso.
+2. **O PR só abre se o repositório permitir.** Em Settings > Actions > General, a opção "Allow
+   GitHub Actions to create and approve pull requests" precisa estar ligada. Desligada, o branch
+   `release/X.Y.Z` é empurrado e o PR não abre.
+3. **A tag e as imagens são de um segundo workflow, `publicar-versao.yml`.** Tag criada com o
+   `GITHUB_TOKEN` também não dispara o `publish-image.yml` (gatilho `push: tags`), então criá-la no
+   corte produziria tag sem imagem e nenhuma VPS atualizada, em silêncio. Por isso o corte não cria
+   tag. A exceção do GitHub é o `workflow_dispatch`, que o `GITHUB_TOKEN` consegue disparar.
 
-**Ninguém escreve release no site.** A LP (repositório `deskcomm-site`) lê o `CHANGELOG.md` da
-`main` e revalida a cada 10 minutos. Então a regra de quem corta release não é "lembre de
-atualizar a LP" — regra que não protege quem a escreve —, e sim:
+**O fluxo completo, em ordem:**
 
-1. **A seção entra no `CHANGELOG.md` pelo caminho normal** (fragmentos → PR de release). Uma
-   seção que chegou à `main` de outro jeito também aparece: a LP lê o arquivo, não as Releases
-   do GitHub. Foi o que salvou a v1.20.0, cuja tag foi criada à mão e nunca ganhou Release.
-2. **O cabeçalho da seção é contrato.** `## [X.Y.Z] — AAAA-MM-DD`, subseções em `###`. O leitor
-   da LP (`deskcomm-site/lib/changelog.ts`, outro repositório) usa a mesma expressão que
-   `tests/unit/release-chega-na-lp.test.ts` cobra aqui. Mudar o formato é mudar os dois
-   repositórios no mesmo movimento.
-3. **O corte confere a consequência.** O último passo do job `cortar-tag` —
-   *"A versão aparece na página de changelog da LP?"* — procura o link da versão nas três
-   páginas em 35 tentativas, cerca de meia hora (até ~47 min se o site responder devagar), e **reprova** o job se ela não aparecer. Vermelho ali não quer
-   dizer que a versão não saiu (tag, Release e imagens já foram conferidas antes); quer dizer
-   que a vitrine não mostra, e isso se conserta na LP.
-4. **O texto é escrito em português.** Em inglês e espanhol a página traduz a moldura, avisa que
-   as notas estão em português e oferece a tradução do navegador. Traduzir a seção a cada
-   release fica fora até existir quem revise a tradução — nota de versão com erro de tradução
-   num `⚠️ Requer atenção` é pior que nota em outra língua.
+1. **`corte-de-versao`** (Run workflow): monta a seção do `CHANGELOG.md` e abre o PR `release/X.Y.Z`.
+2. **Merge do PR**, depois de **fechar e reabrir** para o CI rodar (consequência 1).
+3. **`publicar-versao`** (Run workflow, input `versao` = `X.Y.Z`): só no repositório do dono e a
+   partir da `main`; confere o formato, que o `CHANGELOG.md` da `main` tem `## [X.Y.Z]` e que a tag
+   `vX.Y.Z` ainda não existe; cria a tag **anotada** no topo da `main` (nunca com `--force`) e
+   dispara `publish-image.yml` nela (`gh workflow run publish-image.yml --ref vX.Y.Z`). Usa só o
+   `GITHUB_TOKEN`, com `contents: write` (a tag) e `actions: write` (o disparo).
 
-Se o passo falhar, a ordem de investigação é: a LP responde? → o `CHANGELOG.md` da `main` tem a
-seção com o cabeçalho certo? → o formato mudou sem o leitor da LP mudar junto?
+A publicação continua ato do CI: quem constrói e publica é o `publish-image.yml`, com a trava
+`a-tag-veio-da-main` e o `imagens-ok` de sempre; ninguém publica da máquina do operador. Um limite
+conhecido: o `promover-stable` só roda em push de tag, então a publicação por este caminho entrega
+os números `X.Y.Z` e `X.Y`, e o canal `stable` não anda por ela.
 
-**Depois de consertar a LP, não re-rode o job para conferir.** Um "Re-run failed jobs" roda no
-mesmo commit, onde a tag já existe: a guarda de idempotência do passo `pendente` grava
-`cortar=nao`, e este passo — como o das imagens — aparece como pulado. O job fica verde sem ter
-olhado a LP. A conferência depois do conserto é à mão, com o laço de `curl … | grep -c` de
-`triagem/TRIAGEM.md` (seção "Depois do merge, a versão sai"), nos três caminhos: `/changelog`,
-`/en/changelog` e `/es/changelog`.
-
-Três coisas fazem essa conferência à mão mentir, e as três mentem no sentido do susto:
-
-- **Não basta trocar a URL.** O `href` procurado carrega o prefixo da própria página —
-  `/en/changelog/X.Y.Z` na inglesa, `/es/changelog/X.Y.Z` na espanhola. Procurar o link do pt nas
-  outras duas devolve 0 **com a versão listada**. O passo do `release.yml` monta o padrão com
-  `${p}` justamente por isso; o laço da receita monta igual.
-- **0 também é o que a página inexistente devolve.** Num 404 o corpo não tem o `href`, e o
-  `grep -c` conta 0 igualzinho a uma página que existe e ainda não listou a versão — dois
-  desfechos opostos com o mesmo número. Por isso a receita imprime o `http=` ao lado da contagem,
-  e o passo do `release.yml` nomeia o status de cada página que faltou antes de reprovar.
-  `http=404` é a vitrine fora do ar, e repetir não conserta.
-- **Com `http=200`, 0 na primeira volta não é veredito.** A página revalida a cada 10 minutos e lê
-  o `CHANGELOG.md` pelo `raw.githubusercontent.com`, que guarda outros 5: a versão aparece em até
-  ~15 min, e é o próprio acesso que agenda a regeneração. Repita antes de concluir que a vitrine
-  não mostra — é a mesma razão pela qual o passo do `release.yml` repete a sonda 35 vezes, e não
-  duas.
+**Vitrine pública.** Não há vitrine própria hoje: o `CHANGELOG.md` da `main` é a fonte, e a tela
+de atualização da VPS o lê (`lib/system/changelog.ts`). O cabeçalho da seção continua contrato:
+`## [X.Y.Z] — AAAA-MM-DD`, subseções em `###` (cobrado por `tests/unit/release-chega-na-lp.test.ts`).
+O texto é escrito em português. Se um dia houver site próprio com página de changelog, ele deve
+ler o `CHANGELOG.md` do mesmo jeito; ninguém escreve release à mão no site.
 
 ---
 
@@ -314,5 +290,5 @@ Três coisas fazem essa conferência à mão mentir, e as três mentem no sentid
    operador é reconstruído por quem não estava lá — ou não chega.
 6. **Bump não pode exigir edição manual de arquivo na VPS.** Se exigir, vem com plano de
    migração e aviso `exige_acao`; major só se o dono pedir.
-7. **Toda versão publicada aparece na vitrine.** A LP lê o `CHANGELOG.md`; o corte confere
-   que ela chegou, nos três idiomas, e reprova quando não chegou.
+7. **O `CHANGELOG.md` da `main` é a vitrine.** Não há mais conferência automática de página
+   externa (o passo do upstream foi removido na SDD 008).

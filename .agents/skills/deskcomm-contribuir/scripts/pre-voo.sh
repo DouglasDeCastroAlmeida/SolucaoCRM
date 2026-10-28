@@ -31,7 +31,7 @@ echo "── pré-voo do contribuidor · $(date -u +%Y-%m-%dT%H:%MZ) ──"
 # ── 0. Âncora ────────────────────────────────────────────────────────────────
 if git fetch origin -q 2>/dev/null; then :; else olhe "sem rede: origin/main pode estar velha (git fetch origin)"; fi
 if ! git rev-parse -q --verify origin/main >/dev/null 2>&1; then
-  trava "origin/main não existe neste clone — adicione o remoto do repositório principal: git remote add upstream https://github.com/melgarafael/DeskcommCRM.git && git fetch upstream && git branch --track main-upstream upstream/main"
+  trava "origin/main não existe neste clone — adicione o remoto do repositório principal: git remote add upstream https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && git fetch upstream && git branch --track main-upstream upstream/main"
   exit 0
 fi
 MAIN="$(git rev-parse --short origin/main)"
@@ -101,7 +101,7 @@ else
   else trava "migration nova SEM descrição:$sem_desc — ponha uma linha \`-- manifest: <o quê e por quê>\` no cabeçalho do .sql (não no MANIFEST.md)"
   fi
   # A POPULAÇÃO da unicidade: a main do PRODUTO (o remoto que aponta para
-  # melgarafael/DeskcommCRM, com qualquer nome) mais `refs/heads` E
+  # DouglasDeCastroAlmeida/SolucaoCRM, com qualquer nome) mais `refs/heads` E
   # `refs/remotes` (#1273). O `origin/main` de antes, num clone de fork, é a main
   # DO FORK — que pode estar atrás da do principal, e aí o pré-voo dizia "NNNN
   # livre" com exit 0 sobre um número que o principal já tinha (caso medido:
@@ -151,7 +151,7 @@ else
     done
   fi
   if [ "$pop_sem_produto" = 1 ]; then
-    olhe "NÃO MEDIDO contra a main do PRODUTO: nenhum remoto aponta para melgarafael/DeskcommCRM — a unicidade abaixo sai sobre '${pop_base:-nenhuma base}' e a cópia local. Corrija com: git remote add upstream https://github.com/melgarafael/DeskcommCRM.git && git fetch upstream"
+    olhe "NÃO MEDIDO contra a main do PRODUTO: nenhum remoto aponta para DouglasDeCastroAlmeida/SolucaoCRM — a unicidade abaixo sai sobre '${pop_base:-nenhuma base}' e a cópia local. Corrija com: git remote add upstream https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && git fetch upstream"
   fi
   # "livre" sobre a base errada não é ✓: é ⚠ com o nome da régua.
   livre() { if [ "$pop_sem_produto" = 1 ]; then olhe "$* (NÃO MEDIDO contra a main do produto)"; else ok "$*"; fi; }
@@ -275,7 +275,7 @@ fi
 
 # ── 9. A régua real, se o gh estiver logado ──────────────────────────────────
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  checks="$(gh api repos/melgarafael/DeskcommCRM/branches/main/protection --jq '.required_status_checks.contexts|join(", ")' 2>/dev/null || true)"
+  checks="$(gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection --jq '.required_status_checks.contexts|join(", ")' 2>/dev/null || true)"
   [ -n "$checks" ] && ok "checks obrigatórios na main hoje: $checks" || nao "não consegui ler a branch protection (sem permissão?) — a lista em CLAUDE.md pode estar velha"
 else
   nao "gh não logado: checks obrigatórios NÃO MEDIDOS (a lista em CLAUDE.md/CONTRIBUTING.md pode estar velha)"

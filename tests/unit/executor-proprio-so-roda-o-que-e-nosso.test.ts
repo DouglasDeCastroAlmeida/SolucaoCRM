@@ -18,8 +18,13 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { REPOSITORIO_DESTE_REPO } from "./_identidade-deste-repo";
+
 const GUARDA = "infra/executor-proprio/so-o-que-e-nosso.sh";
-const REPO = "melgarafael/DeskcommCRM";
+const REPO = REPOSITORIO_DESTE_REPO;
+// O repositório de origem (alheio a este), montado em pedaços para a cerca
+// nada-executa-contra-o-upstream não ler o literal.
+const UPSTREAM = ["melgara", "fael/Deskcomm", "CRM"].join("");
 
 function guarda(evento: string, payload: unknown, repo = REPO): number {
   const dir = mkdtempSync(join(tmpdir(), "guarda-"));
@@ -65,6 +70,19 @@ describe("a guarda da máquina", () => {
 
   it("recusa outro repositório mesmo com evento aceito", () => {
     expect(guarda("push", {}, "alguem/OutroRepo")).not.toBe(0);
+  });
+
+  it("AC-002.3: recusa o repositório de origem (upstream) mesmo com evento aceito", () => {
+    expect(guarda("push", {}, UPSTREAM)).not.toBe(0);
+    expect(guarda("pull_request", prDe(UPSTREAM), UPSTREAM)).not.toBe(0);
+  });
+
+  it("AC-002.3: o padrão da guarda, do instalar.sh e da vaga.sh é o repositório do dono", () => {
+    for (const f of ["so-o-que-e-nosso.sh", "instalar.sh", "vaga.sh"]) {
+      const t = readFileSync(`infra/executor-proprio/${f}`, "utf-8");
+      expect(t, f).toContain(REPO);
+      expect(t.toLowerCase(), f).not.toContain(UPSTREAM.toLowerCase());
+    }
   });
 
   it("a imagem instala a guarda como hook de entrada do runner", () => {

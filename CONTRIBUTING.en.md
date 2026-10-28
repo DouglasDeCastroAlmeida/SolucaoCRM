@@ -111,7 +111,7 @@ When finishing an epic:
    > This list used to say "three required" and called `e2e` non-blocking. It was
    > out of date on both points, and whoever used it as a ruler would measure against the wrong ruler.
    > Check the source before trusting any written list:
-   > `gh api repos/melgarafael/DeskcommCRM/branches/main/protection --jq '.required_status_checks.contexts'`
+   > `gh api repos/DouglasDeCastroAlmeida/SolucaoCRM/branches/main/protection --jq '.required_status_checks.contexts'`
 
 ### Claiming an issue — the protocol
 
@@ -233,9 +233,9 @@ See [`README.en.md`](README.en.md) §Development — how to run locally.
 
 ## Support
 
-**[GitHub Discussions](https://github.com/melgarafael/DeskcommCRM/discussions)** — it is the public
+**[GitHub Discussions](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/discussions)** — it is the public
 channel, works for anyone and is where the answer stays recorded for whoever comes after. For bugs,
-[open an issue](https://github.com/melgarafael/DeskcommCRM/issues/new/choose).
+[open an issue](https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/issues/new/choose).
 
 If it is something that does not fit in public (security, for example): `rafael@maudibrasil.com.br` — the same
 address as in [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
