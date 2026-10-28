@@ -8,7 +8,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  process.env.AI_CRED_AES_KEY = "iBc1Z2gYaAH4rEHs1dHQ2dvNQ6t4OfrdE1/Y6OSvtZY=";
+  process.env.AI_CRED_AES_KEY = Buffer.alloc(32, 7).toString("base64");
 });
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
 
