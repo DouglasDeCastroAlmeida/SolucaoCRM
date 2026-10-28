@@ -483,8 +483,22 @@ export const crmMoveLeadStage: McpToolDefinition<typeof moveInputShape> = {
         .eq("organization_id", ctx.organizationId)
         .eq("id", input.lead_id)
         .maybeSingle();
-      if (atual && (atual as { stage_id?: string }).stage_id === input.to_stage_id) {
-        return { lead: atual, ja_estava_na_etapa: true };
+      const a = atual as { stage_id?: string; status?: string; contact_id?: string | null } | null;
+      // Só negócio ABERTO: o encerrado cai no handler, que aplica a recusa de reabertura.
+      if (a && a.stage_id === input.to_stage_id && a.status === "open") {
+        // E só de contato que não é pessoal: o handler recusa escrita para pessoal (403), e o
+        // atalho não pode pular essa recusa — nesse caso segue para o handler.
+        let pessoal = false;
+        if (a.contact_id) {
+          const { data: contato } = await ctx.supabase
+            .from("contacts")
+            .select("is_personal")
+            .eq("organization_id", ctx.organizationId)
+            .eq("id", a.contact_id)
+            .maybeSingle();
+          pessoal = (contato as { is_personal?: boolean } | null)?.is_personal === true;
+        }
+        if (!pessoal) return { lead: atual, ja_estava_na_etapa: true };
       }
     }
     const lead = await moveLeadHandler(

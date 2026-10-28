@@ -218,11 +218,8 @@ import {
   montarBriefingDaPassagem,
   type BriefingDaPassagem,
 } from '@/lib/escalacao/briefing-da-passagem';
-import {
-  RESUMO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
-  TITULO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
-  criarContadorDeErrosDeFerramenta,
-} from '@/lib/ai/handoff/falhas-de-ferramenta';
+import { criarContadorDeErrosDeFerramenta } from '@/lib/ai/handoff/falhas-de-ferramenta';
+import { passarPorErroDeFerramenta } from './passar-por-erro-de-ferramenta';
 import { diffCheckpoint } from '@/lib/leads/checkpoint-diff';
 import { CORRECAO_DO_TURNO_MUDO, turnoMudoPedeCorrecao } from './turno-mudo';
 import { criarTravaDeDuplicata } from './near-dup';
@@ -5010,40 +5007,39 @@ async function executarTurnoDoAgente(
     // vai para a fila humana com o motivo `erro_de_ferramenta` (texto fixo: nenhum modelo é
     // chamado aqui). Se o próprio modelo já tinha passado a conversa neste turno, só a
     // contagem é reiniciada. Mesma ordem do pedido explícito: AVISA o cliente e só então silencia.
-    if (contadorDeErros?.estourou() === true) {
-      if (!passouParaAEquipe) {
-        const aviso = await avisarLeadDaEscalacao(pool, avisoDaEscalacao().ids, {
-          ...avisoDaEscalacao().base,
-          motivo: 'outro',
-        });
-        const doTurno = montarBriefingDaPassagem({
-          checkpoint: previous,
-          pendentesDoCliente: inboundsPendentes,
-          motivo: { codigo: 'erro_de_ferramenta' },
-        });
-        const briefing = {
-          ...doTurno,
-          body: `${RESUMO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA}\n\n${doTurno.body}`,
-        };
-        await performHumanHandoff(
-          pool,
-          { tenantId, leadId, conversationId: input.conversationId },
-          {
-            reason: 'erro_de_ferramenta',
-            conversationSummary: briefing.body,
-            inboxTitle: TITULO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
-            passagem: { origem: 'runtime_nativo', motivoCodigo: 'erro_de_ferramenta', briefing },
-            avisoAoLead: aviso,
-            log: runLog,
-          },
-        );
-        runLog.warn('duas falhas seguidas de ferramenta — conversa devolvida à fila humana', {
-          kind: liveJob().kind,
-          lead_avisado: aviso.avisado,
-        });
-      }
-      await contadorDeErros.zerar();
-      if (!passouParaAEquipe) return; // bot silencia: nada mais sai neste turno
+    if (
+      contadorDeErros !== null &&
+      (await passarPorErroDeFerramenta({
+        contador: contadorDeErros,
+        passouParaAEquipe,
+        avisarLead: () =>
+          avisarLeadDaEscalacao(pool, avisoDaEscalacao().ids, {
+            ...avisoDaEscalacao().base,
+            motivo: 'outro',
+          }),
+        briefingBase: () =>
+          montarBriefingDaPassagem({
+            checkpoint: previous,
+            pendentesDoCliente: inboundsPendentes,
+            motivo: { codigo: 'erro_de_ferramenta' },
+          }),
+        passar: (passagem) =>
+          performHumanHandoff(
+            pool,
+            { tenantId, leadId, conversationId: input.conversationId },
+            {
+              reason: passagem.reason,
+              conversationSummary: passagem.conversationSummary,
+              inboxTitle: passagem.inboxTitle,
+              passagem: passagem.passagem,
+              avisoAoLead: passagem.avisoAoLead,
+              log: runLog,
+            },
+          ),
+        log: runLog,
+      }))
+    ) {
+      return; // bot silencia: nada mais sai neste turno
     }
 
     // SAÍDA TRUNCADA (finish_reason = 'length'): o modelo bateu no

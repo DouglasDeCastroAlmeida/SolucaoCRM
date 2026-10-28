@@ -84,6 +84,38 @@ describe("AC-005.1: o cliente pede uma pessoa", () => {
   });
 });
 
+describe("AC-005.1: o reconhecimento do pedido de uma pessoa", () => {
+  it.each([
+    "Quero me passar para uma pessoa",
+    "pode me transferir para um atendente?",
+    "preciso me encaminhar pro humano",
+    "quero um atendente",
+    "Preciso de um humano, por favor",
+    "queria falar com uma pessoa",
+    "gostaria de falar com um atendente",
+    "prefiro ser atendido por uma pessoa",
+    // Pré-existente e deliberado: a negação não é tratada. Passar a conversa a uma pessoa é o
+    // lado seguro do erro, e o aviso ao cliente diz o que aconteceu.
+    "não quero falar com humano",
+  ])("AC-005.1: reconhece %j", (frase) => {
+    expect(detectHumanHandoffRequest(frase)).toBe(true);
+  });
+
+  it.each([
+    "pessoa",
+    "a pessoa que me atendeu ontem foi ótima",
+    "sou pessoa física",
+    "o atendente foi ótimo",
+    "fui atendido por uma pessoa muito educada",
+    "pode me passar para a pessoa que me atendeu ontem?",
+    "preciso de um orçamento",
+    "quero um agendamento",
+    "preciso de um atestado humano",
+  ])("AC-005.1: não reconhece %j", (frase) => {
+    expect(detectHumanHandoffRequest(frase)).toBe(false);
+  });
+});
+
 describe("AC-005.2: sem segurança, o agente transfere em vez de inventar", () => {
   it("AC-005.2: a ferramenta de passagem manda passar quando o limite do que pode resolver é atingido", () => {
     const descricao = AGENT_TOOL_DEFS.request_human_handoff.description;

@@ -82,16 +82,19 @@ describe("AC-006.1: marcar horário passa a chave de idempotência ao handler co
 });
 
 describe("AC-006.2: mover etapa sem efeito duplicado", () => {
-  function ctxComLead(lead: Record<string, unknown> | null) {
+  function ctxComLead(lead: Record<string, unknown> | null, contato: Record<string, unknown> | null = { is_personal: false }) {
     const filtros: Array<[string, unknown]> = [];
     const q: Record<string, unknown> = {
       select: () => q,
       eq: (c: string, v: unknown) => (filtros.push([c, v]), q),
       maybeSingle: async () => ({ data: lead, error: null }),
     };
+    const qContato: Record<string, unknown> = { ...q, maybeSingle: async () => ({ data: contato, error: null }) };
+    qContato.select = () => qContato;
+    qContato.eq = (c: string, v: unknown) => (filtros.push([c, v]), qContato);
     return {
       ctx: {
-        supabase: { from: () => q },
+        supabase: { from: (t: string) => (t === "contacts" ? qContato : q) },
         organizationId: ORG,
         actor: { type: "ai_agent", id: AGENTE },
         requestId: "r",
@@ -99,7 +102,7 @@ describe("AC-006.2: mover etapa sem efeito duplicado", () => {
       filtros,
     };
   }
-  const lead = { id: LEAD, organization_id: ORG, stage_id: ETAPA_A, pipeline_id: "p" };
+  const lead = { id: LEAD, organization_id: ORG, stage_id: ETAPA_A, pipeline_id: "p", status: "open", contact_id: CONTATO };
 
   it("AC-006.2: o negócio que já está na etapa pedida não é escrito de novo", async () => {
     const { ctx, filtros } = ctxComLead(lead);
@@ -109,6 +112,24 @@ describe("AC-006.2: mover etapa sem efeito duplicado", () => {
     expect((r.lead as Record<string, unknown>).id).toBe(LEAD);
     // a leitura que decide isso filtra pela organização do agente
     expect(filtros).toContainEqual(["organization_id", ORG]);
+  });
+
+  it("AC-006.2: contato pessoal: o atalho não vale e o handler aplica a recusa de escrita", async () => {
+    deps.mover.mockRejectedValue(new Error("Contato marcado como pessoal."));
+    const { ctx } = ctxComLead(lead, { is_personal: true });
+    await expect(
+      crmMoveLeadStage.handler({ lead_id: LEAD, to_stage_id: ETAPA_A } as never, ctx),
+    ).rejects.toThrow(/pessoal/);
+    expect(deps.mover).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC-006.2: negócio encerrado na mesma etapa não usa o atalho (o handler aplica a recusa de reabertura)", async () => {
+    deps.mover.mockResolvedValue({ id: LEAD });
+    for (const status of ["won", "lost"]) {
+      const { ctx } = ctxComLead({ ...lead, status });
+      await crmMoveLeadStage.handler({ lead_id: LEAD, to_stage_id: ETAPA_A } as never, ctx);
+    }
+    expect(deps.mover).toHaveBeenCalledTimes(2);
   });
 
   it("AC-006.2: mover para outra etapa segue pelo handler compartilhado (o movimento de verdade)", async () => {
