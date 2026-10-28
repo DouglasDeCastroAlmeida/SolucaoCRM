@@ -72,6 +72,14 @@ const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string
       "Este job é quem monta o PR de release a partir dos fragmentos de `.changes/`. " +
       "Desligá-lo faz nenhuma versão ser fechada — sem erro em lugar nenhum.",
   },
+  "corte-de-versao.yml::abrir-pr-de-release": {
+    condicao: "github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM'",
+    efeito:
+      "Este job é o corte de versão PRÓPRIO (008): monta o PR de release a partir dos " +
+      "fragmentos de `.changes/`, disparado só à mão (`workflow_dispatch`) e só com o token " +
+      "padrão. A condição existe para que um fork, que herda o workflow, não tente cortar " +
+      "versão de um repositório que não é dele. Desligá-lo faz nenhuma versão ser fechada.",
+  },
   "release.yml::cortar-tag": {
     condicao: "false",
     efeito:
