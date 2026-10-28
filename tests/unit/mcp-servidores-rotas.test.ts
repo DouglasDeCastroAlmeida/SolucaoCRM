@@ -47,7 +47,11 @@ type Linha = Record<string, unknown>;
 const tabelas: Record<string, Linha[]> = {};
 let seq = 0;
 
+/** Cada tabela consultada, na ordem: prova que uma recusa não leu nada. */
+const consultas: string[] = [];
+
 function construtor(nome: string) {
+  consultas.push(nome);
   const linhas = (tabelas[nome] ??= []);
   const filtros: Array<(l: Linha) => boolean> = [];
   let tipo: "select" | "insert" | "update" = "select";
@@ -198,6 +202,7 @@ function agentesNoBanco() {
 beforeEach(() => {
   vi.clearAllMocks();
   for (const k of Object.keys(tabelas)) delete tabelas[k];
+  consultas.length = 0;
   vi.mocked(requireSupportWrite).mockResolvedValue(null);
   vi.mocked(listarFerramentasDoServidor).mockResolvedValue([
     { name: "buscar_pedido", somenteLeitura: true },
@@ -359,6 +364,19 @@ describe("AC-008.3: papel certo e requireSupportWrite antes do efeito", () => {
   it("a leitura também passa pelo guarda de papel", async () => {
     negar();
     expect((await chamar("lista", "GET")).status).toBe(403);
+  });
+
+  it("M3: GET das ferramentas de um agente, sem permissão, dá 403 e não lê nenhuma tabela", async () => {
+    const s = servidorNoBanco();
+    agentesNoBanco();
+    consultas.length = 0;
+    negar();
+
+    const r = await chamar("ferramentas", "GET", { id: String(s.id), busca: `?agente_id=${AGENTE}` });
+
+    expect(r.status).toBe(403);
+    expect(consultas).toEqual([]);
+    expect(r.texto).not.toContain(CHAVE);
   });
 });
 
@@ -650,6 +668,166 @@ describe("AC-007.2/B2: 'atualizar ferramentas' é ação explícita e mostra o q
     const r = await chamar("atualizar", "POST", { id: String(s.id), corpo: { aceitar: true } });
     expect(r.status).toBe(422);
     expect(listarFerramentasDoServidor).not.toHaveBeenCalled();
+  });
+});
+
+describe("M2: atualizar ferramentas revoga 'sem aprovação' das ferramentas alteradas ou removidas", () => {
+  const CANCELAR = "mcp_externo:loja:escrita:cancelar_pedido";
+  const ESTORNAR = "mcp_externo:loja:escrita:estornar";
+  const servidorComDuasDeEscrita = () =>
+    servidorNoBanco({
+      ferramentas: [
+        { name: "buscar_pedido", somenteLeitura: true },
+        { name: "cancelar_pedido", description: "Cancela" },
+        { name: "estornar", description: "Estorna" },
+      ],
+    });
+  const rede = (cancelar: Record<string, unknown> | null) =>
+    vi.mocked(listarFerramentasDoServidor).mockResolvedValueOnce([
+      { name: "buscar_pedido", somenteLeitura: true },
+      ...(cancelar ? [{ name: "cancelar_pedido", ...cancelar }] : []),
+      { name: "estornar", description: "Estorna" },
+    ]);
+
+  it("ferramenta ALTERADA perde a marca em todos os agentes da organização; a NÃO alterada mantém; o resto da config fica", async () => {
+    const s = servidorComDuasDeEscrita();
+    agentesNoBanco();
+    tabelas.ai_agents![0]!.config = { rag_top_k: 7, mcp_externo_liberadas: [CANCELAR, ESTORNAR] };
+    tabelas.ai_agents!.push({
+      id: "88888888-8888-4888-8888-888888888888",
+      organization_id: ORG,
+      operation_mode: "automatic",
+      config: { mcp_externo_liberadas: [CANCELAR] },
+      published_version_id: null,
+    });
+    rede({ description: "Cancela e apaga o histórico" });
+
+    const r = await chamar("atualizar", "POST", { id: String(s.id), corpo: {} });
+
+    expect(r.status).toBe(200);
+    expect(tabelas.ai_agents![0]!.config).toEqual({ rag_top_k: 7, mcp_externo_liberadas: [ESTORNAR] });
+    expect(tabelas.ai_agents![2]!.config).toEqual({ mcp_externo_liberadas: [] });
+    expect(r.corpo.data!.voltaram_a_pedir_aprovacao).toEqual(["cancelar_pedido"]);
+  });
+
+  it("ferramenta REMOVIDA também perde a marca", async () => {
+    const s = servidorComDuasDeEscrita();
+    agentesNoBanco();
+    tabelas.ai_agents![0]!.config = { mcp_externo_liberadas: [CANCELAR, ESTORNAR] };
+    rede(null);
+
+    const r = await chamar("atualizar", "POST", { id: String(s.id), corpo: {} });
+
+    expect(r.status).toBe(200);
+    expect(tabelas.ai_agents![0]!.config).toEqual({ mcp_externo_liberadas: [ESTORNAR] });
+    expect(r.corpo.data!.voltaram_a_pedir_aprovacao).toEqual(["cancelar_pedido"]);
+  });
+
+  it("nada mudou: nenhuma marca sai e nada volta a pedir aprovação", async () => {
+    const s = servidorComDuasDeEscrita();
+    agentesNoBanco();
+    tabelas.ai_agents![0]!.config = { mcp_externo_liberadas: [CANCELAR, ESTORNAR] };
+    rede({ description: "Cancela" });
+
+    const r = await chamar("atualizar", "POST", { id: String(s.id), corpo: {} });
+
+    expect(tabelas.ai_agents![0]!.config).toEqual({ mcp_externo_liberadas: [CANCELAR, ESTORNAR] });
+    expect(r.corpo.data!.voltaram_a_pedir_aprovacao).toEqual([]);
+    expect(vi.mocked(audit).mock.calls.map((c) => c[0].action)).toEqual(["mcp.tools_refreshed"]);
+  });
+
+  it("agente de OUTRA organização, mesmo com o mesmo identificador de servidor, não é tocado", async () => {
+    const s = servidorComDuasDeEscrita();
+    agentesNoBanco();
+    tabelas.ai_agents![1]!.config = { mcp_externo_liberadas: [CANCELAR] };
+    tabelas.ai_agents![0]!.config = { mcp_externo_liberadas: [CANCELAR] };
+    rede({ description: "mudou" });
+
+    await chamar("atualizar", "POST", { id: String(s.id), corpo: {} });
+
+    expect(tabelas.ai_agents![1]!.config).toEqual({ mcp_externo_liberadas: [CANCELAR] });
+    expect(tabelas.ai_agents![0]!.config).toEqual({ mcp_externo_liberadas: [] });
+  });
+
+  it("audita mcp.tool_release_revoked_on_refresh com a contagem e os nomes, sem valores", async () => {
+    const s = servidorComDuasDeEscrita();
+    agentesNoBanco();
+    tabelas.ai_agents![0]!.config = { mcp_externo_liberadas: [CANCELAR] };
+    rede({ description: "mudou" });
+
+    await chamar("atualizar", "POST", { id: String(s.id), corpo: {} });
+
+    const revogou = vi.mocked(audit).mock.calls.map((c) => c[0]).find((e) => e.action === "mcp.tool_release_revoked_on_refresh");
+    expect(revogou).toMatchObject({
+      organizationId: ORG,
+      actorUserId: USUARIO,
+      resourceId: s.id,
+      metadata: { ferramentas: ["cancelar_pedido"], agentes: 1 },
+    });
+  });
+});
+
+describe("M5: 'sem aprovação' acompanha o ligar", () => {
+  it("desligar a ferramenta também tira a marca de 'sem aprovação'", async () => {
+    const s = servidorNoBanco();
+    agentesNoBanco();
+    tabelas.ai_agent_versions![0]!.tool_ids = ["mcp_externo:loja:escrita:cancelar_pedido"];
+    tabelas.ai_agents![0]!.config = {
+      rag_top_k: 7,
+      mcp_externo_liberadas: ["mcp_externo:loja:escrita:cancelar_pedido"],
+    };
+
+    const r = await chamar("ferramentas", "PATCH", {
+      id: String(s.id),
+      corpo: { acao: "desligar", agente_id: AGENTE, ferramenta: "cancelar_pedido" },
+    });
+
+    expect(r.status).toBe(200);
+    expect(tabelas.ai_agents![0]!.config).toEqual({ rag_top_k: 7, mcp_externo_liberadas: [] });
+    expect(r.corpo.data).toMatchObject({ ligada: false, liberada_sem_aprovacao: false });
+    expect(vi.mocked(audit).mock.calls.map((c) => c[0].action)).toContain("mcp.tool_release_revoked");
+  });
+
+  it("desligar uma ferramenta sem marca não mexe na config do agente", async () => {
+    const s = servidorNoBanco();
+    agentesNoBanco();
+    tabelas.ai_agent_versions![0]!.tool_ids = ["mcp_externo:loja:escrita:cancelar_pedido"];
+
+    await chamar("ferramentas", "PATCH", {
+      id: String(s.id),
+      corpo: { acao: "desligar", agente_id: AGENTE, ferramenta: "cancelar_pedido" },
+    });
+
+    expect(tabelas.ai_agents![0]!.config).toEqual({ rag_top_k: 7 });
+  });
+});
+
+describe("M7: o id da ferramenta cabe no limite do nome exposto ao modelo", () => {
+  it("nome que, somado ao identificador do servidor, passa de 64: 422 e nada grava", async () => {
+    const longo = "a".repeat(61); // 'loja' (4) + '__' (2) + 61 = 67
+    const s = servidorNoBanco({ ferramentas: [{ name: longo }] });
+    agentesNoBanco();
+
+    const r = await chamar("ferramentas", "PATCH", {
+      id: String(s.id),
+      corpo: { acao: "ligar", agente_id: AGENTE, ferramenta: longo },
+    });
+
+    expect(r.status).toBe(422);
+    expect(tabelas.ai_agent_versions![0]!.tool_ids).toEqual(["crm_search_products"]);
+  });
+
+  it("nome no limite exato (64 no total) liga", async () => {
+    const justo = "a".repeat(58); // 4 + 2 + 58 = 64
+    const s = servidorNoBanco({ ferramentas: [{ name: justo }] });
+    agentesNoBanco();
+
+    const r = await chamar("ferramentas", "PATCH", {
+      id: String(s.id),
+      corpo: { acao: "ligar", agente_id: AGENTE, ferramenta: justo },
+    });
+
+    expect(r.status).toBe(200);
   });
 });
 

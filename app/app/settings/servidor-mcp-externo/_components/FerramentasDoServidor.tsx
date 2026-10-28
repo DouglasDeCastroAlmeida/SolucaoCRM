@@ -12,7 +12,7 @@
  *
  * Nome e descrição de ferramenta vêm do servidor remoto: dado de terceiro, sem `t()`.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -58,6 +58,8 @@ interface Mudancas {
   novas: string[];
   removidas: string[];
   alteradas: string[];
+  /** Ferramentas que perderam o "pode rodar sem aprovação" por terem mudado ou sumido. */
+  voltaramAPedirAprovacao: string[];
 }
 
 const MENSAGEM_DO_ERRO: Record<string, string> = {
@@ -81,6 +83,16 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
   const [confirmando, setConfirmando] = useState<string | null>(null);
   const [atualizando, setAtualizando] = useState(false);
   const [mudancas, setMudancas] = useState<Mudancas | null>(null);
+  // Número do último pedido de lista: uma resposta que chega depois de o admin trocar de agente
+  // (ou de fechar o painel) não é a lista que ele está olhando e é descartada.
+  const pedidoAtual = useRef(0);
+
+  useEffect(
+    () => () => {
+      pedidoAtual.current += 1;
+    },
+    [],
+  );
 
   const mensagem = useCallback(
     (err: unknown) => t(err instanceof ApiError ? (MENSAGEM_DO_ERRO[err.code] ?? ERRO_GENERICO) : ERRO_GENERICO),
@@ -105,13 +117,16 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
 
   const carregar = useCallback(
     async (id: string) => {
+      const meu = ++pedidoAtual.current;
       try {
         const r = await apiClient.get<{ data: { ferramentas: Ferramenta[] } }>(
           `/api/v1/mcp-servidores/${servidorId}/ferramentas?agente_id=${id}`,
         );
+        if (meu !== pedidoAtual.current) return;
         setLista(r.data.ferramentas);
         setErro(null);
       } catch (err) {
+        if (meu !== pedidoAtual.current) return;
         setLista(null);
         setErro(mensagem(err));
       }
@@ -120,6 +135,7 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
   );
 
   function escolherAgente(id: string) {
+    pedidoAtual.current += 1;
     setAgenteId(id);
     setLista(null);
     setErro(null);
@@ -160,11 +176,13 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
     setMudancas(null);
     setAtualizando(true);
     try {
-      const r = await apiClient.post<{ data: { mudancas: Mudancas } }>(
-        `/api/v1/mcp-servidores/${servidorId}/atualizar-ferramentas`,
-        {},
-      );
-      setMudancas(r.data.mudancas);
+      const r = await apiClient.post<{
+        data: {
+          mudancas: Omit<Mudancas, "voltaramAPedirAprovacao">;
+          voltaram_a_pedir_aprovacao?: string[];
+        };
+      }>(`/api/v1/mcp-servidores/${servidorId}/atualizar-ferramentas`, {});
+      setMudancas({ ...r.data.mudancas, voltaramAPedirAprovacao: r.data.voltaram_a_pedir_aprovacao ?? [] });
       if (agenteId) await carregar(agenteId);
     } catch (err) {
       setErro(mensagem(err));
@@ -209,6 +227,11 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
         <p className="text-xs text-muted-foreground">
           {t("Ligar ou desligar muda o rascunho do agente e só vale quando você publicar o agente.")}
         </p>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            "Já a opção de rodar sem aprovação vale na hora, mas só com o agente no modo automático, e só para ferramenta que já está ligada.",
+          )}
+        </p>
         {!ativo ? (
           <p className="text-xs text-muted-foreground">
             {t("Este servidor está desativado: reative-o para ligar ferramentas.")}
@@ -245,6 +268,11 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
                     </li>
                   ) : null}
                 </ul>
+                {mudancas.voltaramAPedirAprovacao.length ? (
+                  <p className="mt-2 font-medium">
+                    {t("Voltaram a pedir aprovação")}: {mudancas.voltaramAPedirAprovacao.join(", ")}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-xs text-muted-foreground">
                   {t("As ferramentas novas ficam desligadas em todos os agentes até você ligá-las.")}
                 </p>
@@ -293,7 +321,11 @@ export function FerramentasDoServidor({ servidorId, nome, ativo }: Props) {
                       ) : (
                         <Switch
                           checked={f.liberada_sem_aprovacao}
-                          disabled={mexendo === f.nome || (!ativo && !f.liberada_sem_aprovacao)}
+                          disabled={
+                            mexendo === f.nome ||
+                            // Só se marca com a ferramenta ligada; marca antiga de ferramenta desligada ainda pode ser tirada.
+                            ((!f.ligada || !ativo) && !f.liberada_sem_aprovacao)
+                          }
                           aria-label={t("Deixar {nome} rodar sem aprovação").replace("{nome}", f.nome)}
                           onCheckedChange={(v) => aoMudarSemAprovacao(f, v)}
                         />

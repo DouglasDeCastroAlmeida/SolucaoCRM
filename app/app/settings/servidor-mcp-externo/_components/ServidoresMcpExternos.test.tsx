@@ -107,6 +107,17 @@ describe("AC-007.2: cadastro", () => {
     expect(document.body.textContent).not.toContain(CHAVE_DE_TESTE);
   });
 
+  it("M7: sem permissão, a mensagem não promete que só o dono da instalação pode (a chave da organização muda isso)", async () => {
+    post().mockRejectedValue(new ApiError(403, "forbidden_role", undefined, "r1", "forbidden_role"));
+    render(<ServidoresMcpExternos />);
+    await screen.findByRole("table");
+    preencher();
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar e testar" }));
+    const alerta = await screen.findByRole("alert");
+    expect(alerta.textContent).toBe("Você não tem permissão para gerenciar servidores MCP.");
+    expect(alerta.textContent).not.toMatch(/dono da instalação/i);
+  });
+
   it.each([
     ["ai_destino_proibido", /rede interna|localhost/i],
     ["ai_http_nao_permitido", /https/i],

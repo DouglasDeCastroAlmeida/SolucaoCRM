@@ -90,6 +90,31 @@ describe("AC-007.3: cartão de ação pendente na Central", () => {
     expect(alerta.textContent).not.toContain(codigo);
   });
 
+  it("M4: se a lista não carrega, avisa em português simples em vez de sumir", async () => {
+    get().mockRejectedValue(new ApiError(500, "internal_error", undefined, "r1", "internal_error"));
+    render(<AcoesMcpPendentes conversaId={CONVERSA} />);
+    const alerta = await screen.findByRole("alert");
+    expect(alerta.textContent).toBe("Não foi possível carregar as ações. Recarregue a página.");
+    expect(alerta.textContent).not.toContain("internal_error");
+    expect(screen.queryByRole("button", { name: /Aprovar/ })).toBeNull();
+  });
+
+  it("M4: quando a lista volta a carregar, o aviso de falha some", async () => {
+    post().mockResolvedValue({ data: { id: ACAO, estado: "executada" } } as never);
+    render(<AcoesMcpPendentes conversaId={CONVERSA} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Aprovar cancelar_pedido" }));
+    await screen.findByText("Pronto: a ação foi aprovada e executada.");
+    expect(screen.queryByText("Não foi possível carregar as ações. Recarregue a página.")).toBeNull();
+  });
+
+  it("M4: depois de decidir, avisa a Central para reler a própria lista", async () => {
+    post().mockResolvedValue({ data: { id: ACAO, estado: "executada" } } as never);
+    const aoDecidir = vi.fn();
+    render(<AcoesMcpPendentes conversaId={CONVERSA} aoDecidir={aoDecidir} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Aprovar cancelar_pedido" }));
+    await waitFor(() => expect(aoDecidir).toHaveBeenCalledTimes(1));
+  });
+
   it("AC-007.3: sem ação pendente, o cartão não ocupa lugar", async () => {
     get().mockResolvedValue({ data: [] } as never);
     const { container } = render(<AcoesMcpPendentes conversaId={CONVERSA} />);

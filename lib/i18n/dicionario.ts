@@ -17147,6 +17147,11 @@ export const DICIONARIO: Traducoes = {
   "Não foi possível falar com o servidor agora. A lista de ferramentas continua a mesma.": { es: "No se pudo hablar con el servidor ahora. La lista de herramientas sigue igual." },
   "Não foi possível salvar a lista de ferramentas agora.": { es: "No se pudo guardar la lista de herramientas ahora." },
   "Só o administrador da instalação pode cadastrar servidores de ferramentas externos.": { es: "Solo el administrador de la instalación puede registrar servidores de herramientas externos." },
+  "Você não tem permissão para gerenciar servidores MCP.": { es: "No tienes permiso para gestionar servidores MCP." },
+  "Já a opção de rodar sem aprovação vale na hora, mas só com o agente no modo automático, e só para ferramenta que já está ligada.": { es: "En cambio, la opción de ejecutar sin aprobación vale al instante, pero solo con el agente en modo automático y solo para una herramienta que ya está activada." },
+  "Voltaram a pedir aprovação": { es: "Volvieron a pedir aprobación" },
+  "O nome desta ferramenta é longo demais para ser usado com este servidor.": { es: "El nombre de esta herramienta es demasiado largo para usarse con este servidor." },
+  "Não foi possível carregar as ações. Recarregue a página.": { es: "No fue posible cargar las acciones. Recarga la página." },
 };
 
 /**

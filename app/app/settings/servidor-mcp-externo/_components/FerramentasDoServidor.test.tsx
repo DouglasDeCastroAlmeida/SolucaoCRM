@@ -54,6 +54,22 @@ async function abrirComAgente() {
   await screen.findByText("buscar_pedido");
 }
 
+/** Agente com `criar_pedido` (escrita) já LIGADA: só assim a opção "sem aprovação" fica disponível. */
+async function abrirComEscritaLigada(liberada = false) {
+  get().mockImplementation(async (url: string) =>
+    url.startsWith("/api/v1/ai/agents")
+      ? ({ data: [{ id: AGENTE, name: "Atendente" }] } as never)
+      : (ferramentas({
+          ferramentas: [
+            { nome: "criar_pedido", somente_leitura: false, ligada: true, marca: "escrita", liberada_sem_aprovacao: liberada },
+          ],
+        }) as never),
+  );
+  render(<FerramentasDoServidor servidorId={SERVIDOR} nome="Loja" ativo />);
+  fireEvent.change(await screen.findByLabelText("Agente"), { target: { value: AGENTE } });
+  await screen.findByText("criar_pedido");
+}
+
 beforeEach(() => {
   get().mockReset();
   patch().mockReset();
@@ -117,8 +133,29 @@ describe("AC-007.4: rodar sem aprovação só para escrita, atrás de aviso", ()
     expect(screen.getByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" })).toBeTruthy();
   });
 
-  it("AC-007.4: marcar abre o diálogo de aviso e só envia depois de confirmar, com a confirmação no corpo", async () => {
+  it("M5: com a ferramenta DESLIGADA, 'sem aprovação' fica desabilitado e não abre diálogo", async () => {
     await abrirComAgente();
+    const semAprovacao = screen.getByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" });
+    expect(semAprovacao.hasAttribute("disabled")).toBe(true);
+    fireEvent.click(semAprovacao);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(patch()).not.toHaveBeenCalled();
+  });
+
+  it("M5: com a ferramenta LIGADA, 'sem aprovação' fica habilitado", async () => {
+    await abrirComEscritaLigada();
+    const semAprovacao = screen.getByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" });
+    expect(semAprovacao.hasAttribute("disabled")).toBe(false);
+  });
+
+  it("M5: a tela diz que 'Ligar' vale ao publicar e 'sem aprovação' vale na hora", async () => {
+    await abrirComAgente();
+    expect(screen.getByText(/só vale quando você publicar/i)).toBeTruthy();
+    expect(screen.getByText(/sem aprovação.*vale na hora/i)).toBeTruthy();
+  });
+
+  it("AC-007.4: marcar abre o diálogo de aviso e só envia depois de confirmar, com a confirmação no corpo", async () => {
+    await abrirComEscritaLigada();
     fireEvent.click(screen.getByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" }));
     const dialogo = await screen.findByRole("alertdialog");
     expect(within(dialogo).getByText(/sozinho/i)).toBeTruthy();
@@ -137,7 +174,7 @@ describe("AC-007.4: rodar sem aprovação só para escrita, atrás de aviso", ()
   });
 
   it("AC-007.4: cancelar o diálogo não envia nada", async () => {
-    await abrirComAgente();
+    await abrirComEscritaLigada();
     fireEvent.click(screen.getByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" }));
     const dialogo = await screen.findByRole("alertdialog");
     fireEvent.click(within(dialogo).getByRole("button", { name: "Cancelar" }));
@@ -145,17 +182,7 @@ describe("AC-007.4: rodar sem aprovação só para escrita, atrás de aviso", ()
   });
 
   it("AC-007.4: voltar a exigir aprovação não pede confirmação", async () => {
-    get().mockImplementation(async (url: string) =>
-      url.startsWith("/api/v1/ai/agents")
-        ? ({ data: [{ id: AGENTE, name: "Atendente" }] } as never)
-        : (ferramentas({
-            ferramentas: [
-              { nome: "criar_pedido", somente_leitura: false, ligada: true, marca: "escrita", liberada_sem_aprovacao: true },
-            ],
-          }) as never),
-    );
-    render(<FerramentasDoServidor servidorId={SERVIDOR} nome="Loja" ativo />);
-    fireEvent.change(await screen.findByLabelText("Agente"), { target: { value: AGENTE } });
+    await abrirComEscritaLigada(true);
     fireEvent.click(await screen.findByRole("switch", { name: "Deixar criar_pedido rodar sem aprovação" }));
     await waitFor(() =>
       expect(patch()).toHaveBeenCalledWith(`/api/v1/mcp-servidores/${SERVIDOR}/ferramentas`, {
@@ -183,5 +210,71 @@ describe("Atualizar ferramentas", () => {
     expect(resumo.textContent).toContain("antiga");
     expect(resumo.textContent).toContain("criar_pedido");
     expect(resumo.textContent).toMatch(/desligadas/i);
+  });
+});
+
+describe("M2: depois de atualizar, a tela diz o que voltou a pedir aprovação", () => {
+  it("lista as ferramentas que perderam o 'sem aprovação' em português simples", async () => {
+    post().mockResolvedValue({
+      data: {
+        servidor: { id: SERVIDOR },
+        mudancas: { novas: [], removidas: ["antiga"], alteradas: ["criar_pedido"] },
+        voltaram_a_pedir_aprovacao: ["criar_pedido", "antiga"],
+      },
+    } as never);
+    await abrirComAgente();
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar ferramentas" }));
+    const resumo = await screen.findByTestId("mudancas");
+    expect(resumo.textContent).toMatch(/voltaram a pedir aprovação: criar_pedido, antiga/i);
+  });
+
+  it("sem marca revogada, não mostra a frase", async () => {
+    post().mockResolvedValue({
+      data: {
+        servidor: { id: SERVIDOR },
+        mudancas: { novas: ["nova"], removidas: [], alteradas: [] },
+        voltaram_a_pedir_aprovacao: [],
+      },
+    } as never);
+    await abrirComAgente();
+    fireEvent.click(screen.getByRole("button", { name: "Atualizar ferramentas" }));
+    const resumo = await screen.findByTestId("mudancas");
+    expect(resumo.textContent).not.toMatch(/voltaram a pedir aprovação/i);
+  });
+});
+
+describe("M1: resposta atrasada de outro agente é descartada", () => {
+  const AGENTE_2 = "33333333-3333-4333-8333-333333333333";
+
+  it("trocar de agente antes da resposta do primeiro mostra a lista do segundo", async () => {
+    let soltarPrimeiro: (v: unknown) => void = () => undefined;
+    const primeiro = new Promise((resolve) => {
+      soltarPrimeiro = resolve;
+    });
+    const ferramentasDe = (nome: string) =>
+      ferramentas({
+        ferramentas: [{ nome, somente_leitura: true, ligada: false, marca: null, liberada_sem_aprovacao: false }],
+      });
+    get().mockImplementation(async (url: string) => {
+      if (url.startsWith("/api/v1/ai/agents")) {
+        return { data: [{ id: AGENTE, name: "Um" }, { id: AGENTE_2, name: "Dois" }] } as never;
+      }
+      if (url.includes(`agente_id=${AGENTE}`)) return (await primeiro) as never;
+      return ferramentasDe("ferramenta_do_dois") as never;
+    });
+    render(<FerramentasDoServidor servidorId={SERVIDOR} nome="Loja" ativo />);
+    const seletor = await screen.findByLabelText("Agente");
+    await screen.findByRole("option", { name: "Dois" });
+
+    fireEvent.change(seletor, { target: { value: AGENTE } });
+    fireEvent.change(seletor, { target: { value: AGENTE_2 } });
+    await screen.findByText("ferramenta_do_dois");
+
+    soltarPrimeiro(ferramentasDe("ferramenta_do_um"));
+    await waitFor(() => expect(get().mock.calls.some(([u]) => String(u).includes(`agente_id=${AGENTE}`))).toBe(true));
+    await Promise.resolve();
+
+    expect(screen.queryByText("ferramenta_do_um")).toBeNull();
+    expect(screen.getByText("ferramenta_do_dois")).toBeTruthy();
   });
 });

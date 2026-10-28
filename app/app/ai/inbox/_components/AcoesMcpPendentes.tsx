@@ -33,20 +33,29 @@ const MENSAGEM_DO_ERRO: Record<string, string> = {
 };
 const ERRO_GENERICO = "Não foi possível registrar a decisão agora. Tente de novo em instantes.";
 
-export function AcoesMcpPendentes({ conversaId }: { conversaId: string }) {
+interface Props {
+  conversaId: string;
+  /** Chamado depois de cada decisão: a Central relê a própria lista (o aviso pode ter mudado). */
+  aoDecidir?: () => void;
+}
+
+export function AcoesMcpPendentes({ conversaId, aoDecidir }: Props) {
   const t = useT();
   const localeDaData = useLocaleDeData();
   const [acoes, setAcoes] = useState<Acao[] | null>(null);
   const [decidindo, setDecidindo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [listaFalhou, setListaFalhou] = useState(false);
 
   const carregar = useCallback(async () => {
     try {
       const r = await apiClient.get<{ data: Acao[] }>(`/api/v1/mcp-acoes?conversa_id=${conversaId}`);
       setAcoes(r.data);
+      setListaFalhou(false);
     } catch {
       setAcoes([]);
+      setListaFalhou(true);
     }
   }, [conversaId]);
 
@@ -72,11 +81,12 @@ export function AcoesMcpPendentes({ conversaId }: { conversaId: string }) {
     } finally {
       setDecidindo(null);
       await carregar();
+      aoDecidir?.();
     }
   }
 
   const pendentes = acoes ?? [];
-  if (pendentes.length === 0 && !resultado && !erro) return null;
+  if (pendentes.length === 0 && !resultado && !erro && !listaFalhou) return null;
 
   return (
     <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/30 p-3" data-testid="acoes-mcp-pendentes">
@@ -121,6 +131,11 @@ export function AcoesMcpPendentes({ conversaId }: { conversaId: string }) {
       {resultado ? (
         <p role="status" className="text-sm">
           {resultado}
+        </p>
+      ) : null}
+      {listaFalhou ? (
+        <p role="alert" className="text-sm text-destructive">
+          {t("Não foi possível carregar as ações. Recarregue a página.")}
         </p>
       ) : null}
       {erro ? (

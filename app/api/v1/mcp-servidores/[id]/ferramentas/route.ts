@@ -24,6 +24,7 @@ import {
   estaLiberada,
   marcaDaFerramentaNoAgente,
 } from "@/lib/mcp/servidor-externo/ferramentas-do-agente";
+import { LIMITE_DO_NOME_EXPOSTO } from "@/lib/mcp/servidor-externo/ids";
 import { exigirAdminDeServidoresMcp } from "@/lib/mcp/servidor-externo/quem-administra";
 import { obterLinhaDoServidor, paraPublico } from "@/lib/mcp/servidor-externo/repositorio";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -179,6 +180,16 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       { requestId },
     );
   }
+  // O modelo enxerga `<servidor>__<nome>`: acima do limite dos provedores o id nem seria reconhecido.
+  const ligaOuLibera = corpo.acao === "ligar" || corpo.acao === "liberar_sem_aprovacao";
+  if (ligaOuLibera && linha.slug.length + 2 + ferramenta.nome.length > LIMITE_DO_NOME_EXPOSTO) {
+    return fail(
+      "validation_failed",
+      t("O nome desta ferramenta é longo demais para ser usado com este servidor."),
+      422,
+      { requestId },
+    );
+  }
   const agente = await lerAgente(supabase, organizationId, corpo.agente_id);
   if (!agente) return fail("not_found", t("Agente não encontrado."), 404, { requestId });
 
@@ -231,6 +242,25 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       action: corpo.acao === "ligar" ? "mcp.tool_enabled" : "mcp.tool_disabled",
       metadata: { ...detalhe, marca },
     });
+
+    // "Sem aprovação" só existe com a ferramenta ligada: ao desligar, a marca sai junto. Senão ligá-la
+    // de novo mais tarde a faria voltar a rodar sozinha sem ninguém ter decidido isso outra vez.
+    let liberada = !ferramenta.somente_leitura && estaLiberada(agente.config, linha.slug, ferramenta.nome);
+    if (corpo.acao === "desligar" && liberada) {
+      const semMarca = alternarLiberacao(agente.config, linha.slug, ferramenta.nome, false);
+      const { error: erroDaMarca } = await supabase
+        .from("ai_agents")
+        .update({ config: semMarca })
+        .eq("id", agente.id)
+        .eq("organization_id", organizationId);
+      if (erroDaMarca) return fail("internal_error", t("Não foi possível salvar agora."), 500, { requestId });
+      liberada = false;
+      void audit({
+        ...auditoria,
+        action: "mcp.tool_release_revoked",
+        metadata: { ...detalhe, motivo: "ferramenta_desligada" },
+      });
+    }
     return ok(
       {
         agente_id: agente.id,
@@ -238,7 +268,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         ligada: marca !== null,
         marca,
         versao: "rascunho",
-        liberada_sem_aprovacao: !ferramenta.somente_leitura && estaLiberada(agente.config, linha.slug, ferramenta.nome),
+        liberada_sem_aprovacao: liberada,
         modo_do_agente: agente.operation_mode,
       },
       { requestId },

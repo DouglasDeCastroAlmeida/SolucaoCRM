@@ -18,6 +18,7 @@ import { requireSupportWrite } from "@/lib/impersonate/support";
 import { exigirAdminDeServidoresMcp } from "@/lib/mcp/servidor-externo/quem-administra";
 import { atualizarFerramentasDoServidor, ErroDeServidorMcp } from "@/lib/mcp/servidor-externo/repositorio";
 import { falhaDoServidorMcp } from "@/lib/mcp/servidor-externo/resposta-de-erro";
+import { revogarLiberacoesDasFerramentas } from "@/lib/mcp/servidor-externo/revogar-liberacoes";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -54,7 +55,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const organizationId = auth.org.orgId;
   try {
-    const resultado = await atualizarFerramentasDoServidor(createAdminClient(), organizationId, id, {
+    const supabase = createAdminClient();
+    const resultado = await atualizarFerramentasDoServidor(supabase, organizationId, id, {
       aceitarMudancas: true,
     });
     if (!resultado) return fail("not_found", t("Servidor não encontrado."), 404, { requestId });
@@ -73,7 +75,25 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         alteradas: resultado.mudancas.alteradas.length,
       },
     });
-    return ok(resultado, { requestId });
+
+    // Ferramenta de escrita que já rodava sozinha não pode seguir rodando com descrição e esquema que
+    // ninguém conferiu: alterada ou removida, ela volta a pedir aprovação em todo agente da organização.
+    const revogadas = await revogarLiberacoesDasFerramentas(supabase, organizationId, resultado.servidor.slug, [
+      ...resultado.mudancas.alteradas,
+      ...resultado.mudancas.removidas,
+    ]);
+    if (revogadas.agentes > 0) {
+      void audit({
+        action: "mcp.tool_release_revoked_on_refresh",
+        actorUserId: auth.user.id,
+        organizationId,
+        resourceType: "mcp_server",
+        resourceId: id,
+        requestId,
+        metadata: { ferramentas: revogadas.ferramentas, agentes: revogadas.agentes },
+      });
+    }
+    return ok({ ...resultado, voltaram_a_pedir_aprovacao: revogadas.ferramentas }, { requestId });
   } catch (err) {
     if (err instanceof ErroDeServidorMcp) return falhaDoServidorMcp(err, auth.user.idioma, requestId);
     throw err;

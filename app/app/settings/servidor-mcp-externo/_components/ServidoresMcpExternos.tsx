@@ -43,7 +43,7 @@ const MENSAGEM_DO_ERRO: Record<string, string> = {
   mcp_servidor_duplicado: "Já existe um servidor com este identificador. Escolha outro.",
   mcp_servidor_invalido: "Não foi possível conectar ao servidor. Confira o endereço e a chave.",
   validation_failed: "Informe um identificador (letras minúsculas, números e hífen), um nome, o endereço e a chave.",
-  forbidden_role: "Só o dono da instalação cadastra servidores de ferramentas externos.",
+  forbidden_role: "Você não tem permissão para gerenciar servidores MCP.",
   mfa_required: "Esta ação exige a verificação em duas etapas. Entre novamente com o código do aplicativo.",
   unauthenticated: "Sua sessão expirou. Entre de novo para continuar.",
 };
@@ -220,7 +220,11 @@ export function ServidoresMcpExternos() {
         </p>
       ) : null}
 
-      {escolhido ? <FerramentasDoServidor servidorId={escolhido.id} nome={escolhido.nome} ativo={escolhido.ativo} /> : null}
+      {escolhido ? (
+        // A chave força um painel novo a cada servidor: sem ela o React reaproveitaria o estado (agente, lista)
+        // do servidor anterior sob o título do novo.
+        <FerramentasDoServidor key={escolhido.id} servidorId={escolhido.id} nome={escolhido.nome} ativo={escolhido.ativo} />
+      ) : null}
 
       <Card>
         <CardHeader>

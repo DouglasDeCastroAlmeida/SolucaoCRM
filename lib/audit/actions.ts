@@ -210,6 +210,7 @@ export const AUDIT_ACTIONS = [
   "mcp.tool_disabled",
   "mcp.tool_released_without_approval",
   "mcp.tool_release_revoked",
+  "mcp.tool_release_revoked_on_refresh",
   "ai.credential_created",
   "ai.credential_deleted",
   "ai.credential_revalidated",

@@ -106,6 +106,7 @@ export function AgentInboxList({ canResolve, canDecideMcp = false }: { canResolv
               canDecideMcp={canDecideMcp}
               pending={update.isPending}
               onToggle={(status) => update.mutate({ id: item.id, status })}
+              onDecidirAcaoMcp={() => void refetch()}
             />
           ))}
         </ul>
@@ -121,12 +122,14 @@ function InboxRow({
   canDecideMcp,
   pending,
   onToggle,
+  onDecidirAcaoMcp,
 }: {
   item: AgentInboxItem;
   canResolve: boolean;
   canDecideMcp: boolean;
   pending: boolean;
   onToggle: (status: "open" | "resolved") => void;
+  onDecidirAcaoMcp: () => void;
 }) {
   const localeDaData = useLocaleDeData();
   const t = useT();
@@ -157,7 +160,7 @@ function InboxRow({
         {item.body ? <p className="mt-1 text-xs text-muted-foreground">{item.body}</p> : null}
         {item.destination.orientacao ? <p className="mt-2 text-xs text-muted-foreground">{t(item.destination.orientacao)}</p> : null}
         {canDecideMcp && item.kind === "acao_mcp_pendente" && item.status !== "resolved" && item.ref_kind === "conversation" && item.ref_id ? (
-          <AcoesMcpPendentes conversaId={item.ref_id} />
+          <AcoesMcpPendentes conversaId={item.ref_id} aoDecidir={onDecidirAcaoMcp} />
         ) : null}
         {item.destination.estado === "disponivel" ? (
           <Button asChild size="sm" variant="link" className="mt-1 h-auto whitespace-normal px-0 text-left">

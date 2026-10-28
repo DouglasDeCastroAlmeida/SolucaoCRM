@@ -39,6 +39,7 @@ vi.mock("@/lib/auth/require-role", () => ({
 }));
 
 import { requireRole } from "@/lib/auth/require-role";
+import { loadAuthUser } from "@/lib/auth/server";
 import { exigirAdminDeServidoresMcp } from "@/lib/mcp/servidor-externo/quem-administra";
 
 beforeEach(() => {
@@ -87,7 +88,12 @@ describe("chave MCP_EXTERNO_ADMIN_DA_ORG ligada: o admin da organização cadast
     estado.ligada = true;
     const r = await exigirAdminDeServidoresMcp("req-2");
     expect(r.ok).toBe(true);
-    expect(requireRole).toHaveBeenCalledWith("admin", expect.objectContaining({ resource: "mcp_servidores" }));
+    expect(requireRole).toHaveBeenCalledWith(
+      "admin",
+      expect.objectContaining({ requestId: "req-2", resource: "mcp_servidores", allowPlatformAdmin: true }),
+    );
+    // Com a chave ligada o dono da instalação não é consultado: o papel da organização decide.
+    expect(loadAuthUser).not.toHaveBeenCalled();
     if (r.ok) expect(r.org.orgId).toBe("org-da-sessao");
   });
 
