@@ -56,7 +56,7 @@ import { sendFinalResponse } from "./finalize";
 import { finalizeHandoff } from "./handoff";
 import { loadHistoryWithBudget } from "./history";
 import { mintEphemeralToken, revokeEphemeralToken } from "./mcp_token";
-import { carregarServidorMcpExternoDoTurno } from "@/lib/mcp/servidor-externo/carregar";
+import { carregarFerramentasExternasDoTurno } from "@/lib/mcp/servidor-externo/carregar";
 import { pickToolsFromMcp, type RuntimeHandoffSignal } from "./tools";
 import { modulosLigados } from "@/lib/instalacao/modulos";
 import { capacidadesDaOrganizacao } from "@/lib/organizacao/capacidades";
@@ -132,6 +132,7 @@ interface AgentRow {
   organization_id: string;
   created_by: string | null;
   config?: { mcp_externo_no_atendimento?: unknown } | null;
+  operation_mode?: unknown;
 }
 
 function buildSentinelRegex(keywords: string[]): RegExp | null {
@@ -342,7 +343,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
 
     const { data: agentRaw } = await admin
       .from("ai_agents")
-      .select("id, organization_id, created_by, config")
+      .select("id, organization_id, created_by, config, operation_mode")
       .eq("id", run.agent_id)
       .eq("organization_id", run.organization_id)
       .maybeSingle();
@@ -622,7 +623,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     // escolha (b)). Ligada, o servidor recebe a identidade do contato em
     // cabeçalho (ver `carregar.ts`). `null` também sem registro ou com o
     // servidor calado.
-    const servidorExterno = await carregarServidorMcpExternoDoTurno(
+    const ferramentasExternas = await carregarFerramentasExternasDoTurno(
       admin,
       run.organization_id,
       version.tool_ids ?? [],
@@ -640,6 +641,8 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
           : {}),
       },
     );
+    const modoBruto = agent?.operation_mode;
+    const modoDoAgente = modoBruto === "assisted" || modoBruto === "automatic" ? modoBruto : undefined;
     const tools = pickToolsFromMcp({
       supabase: admin,
       ctx,
@@ -652,7 +655,16 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
       modulosLigados: await modulosLigados(admin),
       capacidadesLigadas: await capacidadesDaOrganizacao(admin, run.organization_id),
       handoffSignal,
-      ...(servidorExterno ? { servidorMcpExterno: servidorExterno } : {}),
+      ...(ferramentasExternas ? { ferramentasExternas } : {}),
+      // AC-007.3/007.4: a escrita de servidor externo depende do modo do agente.
+      // `liberadas` vazio: a marca "pode rodar sem aprovação" ainda não tem onde
+      // ser gravada, então toda escrita externa pede aprovação (falha fechada).
+      aprovacaoMcp: {
+        ...(modoDoAgente ? { modo: modoDoAgente } : {}),
+        agenteId: run.agent_id,
+        conversaId: run.conversation_id ?? null,
+        liberadas: [],
+      },
       ...(contatoDoTurno ? { contatoDoTurno } : {}),
     });
 

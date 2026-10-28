@@ -198,6 +198,9 @@ export const AUDIT_ACTIONS = [
   "platform_admin.user_viewed",
   "platform_admin.platform_admins_listed",
   "mcp.tool_called",
+  // Uma pessoa aprovou/recusou uma ação de escrita de servidor MCP externo (mudança 006).
+  "mcp.action_approved",
+  "mcp.action_rejected",
   "ai.credential_created",
   "ai.credential_deleted",
   "ai.credential_revalidated",

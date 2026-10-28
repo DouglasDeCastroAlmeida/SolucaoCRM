@@ -24,7 +24,7 @@ const pickToolsFromMcp = vi.fn((_input: Record<string, unknown>): Record<string,
  * e repassar o contato (e a opção, só quando ligada) é a única forma de isso
  * valer para os DOIS montadores (Conversador e Operador).
  */
-const carregarServidorMcpExternoDoTurno = vi.fn(async (..._argumentos: unknown[]) => null);
+const carregarFerramentasExternasDoTurno = vi.fn(async (..._argumentos: unknown[]) => null);
 
 vi.mock("@/lib/ai/runtime/tools", () => ({ pickToolsFromMcp }));
 vi.mock("@/lib/ai/runtime/mcp_token", () => ({
@@ -45,11 +45,11 @@ vi.mock("@/lib/ai/credentials", () => ({
 /**
  * O montador do motor carrega o servidor MCP externo LÁ DENTRO (o próprio dele
  * é quem lê `organizations.settings`), e este teste passa `{}` como supabase de
- * propósito: sem o mock, `carregarServidorMcpExternoDoTurno` estoura
+ * propósito: sem o mock, `carregarFerramentasExternasDoTurno` estoura
  * `supabase.from is not a function` antes de qualquer asserção sobre o contato.
  * Devolver `null` mantém o recado da função: sem registro, não há chave nova.
  */
-vi.mock("@/lib/mcp/servidor-externo/carregar", () => ({ carregarServidorMcpExternoDoTurno }));
+vi.mock("@/lib/mcp/servidor-externo/carregar", () => ({ carregarFerramentasExternasDoTurno }));
 const finalizeRun = vi.fn(async (_args: Record<string, unknown>) => {});
 vi.mock("@/lib/ai/runtime/finalize", () => ({ finalizeRun, sendFinalResponse: vi.fn() }));
 
@@ -80,14 +80,14 @@ function entregue(): Record<string, unknown> {
 
 beforeEach(() => {
   pickToolsFromMcp.mockClear();
-  carregarServidorMcpExternoDoTurno.mockClear();
+  carregarFerramentasExternasDoTurno.mockClear();
   finalizeRun.mockClear();
 });
 
-/** O 4º argumento de `carregarServidorMcpExternoDoTurno` — é ele que carrega o contato. */
+/** O 4º argumento de `carregarFerramentasExternasDoTurno` — é ele que carrega o contato. */
 function opcoesDaCarga() {
-  expect(carregarServidorMcpExternoDoTurno, "o servidor externo nem foi consultado").toHaveBeenCalled();
-  return carregarServidorMcpExternoDoTurno.mock.calls.at(-1)![3] as Record<string, unknown> | undefined;
+  expect(carregarFerramentasExternasDoTurno, "o servidor externo nem foi consultado").toHaveBeenCalled();
+  return carregarFerramentasExternasDoTurno.mock.calls.at(-1)![3] as Record<string, unknown> | undefined;
 }
 
 /**
@@ -96,8 +96,8 @@ function opcoesDaCarga() {
  * de todo agente, com ou sem escolha remota.
  */
 function toolIdsDaCarga() {
-  expect(carregarServidorMcpExternoDoTurno, "o servidor externo nem foi consultado").toHaveBeenCalled();
-  return carregarServidorMcpExternoDoTurno.mock.calls.at(-1)![2];
+  expect(carregarFerramentasExternasDoTurno, "o servidor externo nem foi consultado").toHaveBeenCalled();
+  return carregarFerramentasExternasDoTurno.mock.calls.at(-1)![2];
 }
 
 describe("motor: buildMcpTurnTools repassa o contato do turno", () => {
@@ -111,6 +111,7 @@ describe("motor: buildMcpTurnTools repassa o contato do turno", () => {
         agentId: "agente-1",
         toolIds: ["crm_query_external_data"],
         pipelineIds: [],
+        operationMode: "assisted",
         ...(mcpExternoNoAtendimento !== undefined ? { mcpExternoNoAtendimento } : {}),
       } as never,
       { warn: vi.fn() } as never,
@@ -145,6 +146,16 @@ describe("motor: buildMcpTurnTools repassa o contato do turno", () => {
   it("ensaio sem cliente com a opção ligada: segue sem nada na carga (turno sem contato inalterado)", async () => {
     await montar(null, true);
     expect(opcoesDaCarga()).toEqual({});
+  });
+
+  // AC-007.3/007.4: a escrita externa precisa saber o modo, o agente e a conversa.
+  it("AC-007.3: a aprovação de ação externa recebe o modo, o agente e a conversa do turno", async () => {
+    expect((await montar(CONTATO)).aprovacaoMcp).toEqual({
+      modo: "assisted",
+      agenteId: "agente-1",
+      conversaId: "conv-1",
+      liberadas: [],
+    });
   });
 
   it("a carga recebe o tool_ids do agente — é ele que decide se abre rede (item 7)", async () => {
@@ -193,6 +204,7 @@ describe("runtime antigo: runAgent repassa o contato do turno", () => {
         id: "agente-1",
         organization_id: "org-1",
         created_by: null,
+        operation_mode: "automatic",
         ...(configDoAgente !== undefined ? { config: configDoAgente } : {}),
       },
       ...(conversa !== undefined ? { conversations: conversa } : {}),
@@ -221,6 +233,16 @@ describe("runtime antigo: runAgent repassa o contato do turno", () => {
   it("turno de conversa com a opção LIGADA: a carga recebe o contato, a opção e a conversa", async () => {
     await rodar({ contact_id: CONTATO, conversation_id: "conv-1" }, undefined, { mcp_externo_no_atendimento: true });
     expect(opcoesDaCarga()).toEqual({ contatoDoTurno: CONTATO, noAtendimento: true, conversaDoTurno: "conv-1" });
+  });
+
+  it("AC-007.3: a aprovação de ação externa recebe o modo do agente, o agente e a conversa do run", async () => {
+    await rodar({ contact_id: CONTATO, conversation_id: "conv-1" });
+    expect(entregue().aprovacaoMcp).toEqual({
+      modo: "automatic",
+      agenteId: "agente-1",
+      conversaId: "conv-1",
+      liberadas: [],
+    });
   });
 
   it("linha sem contato: vale o dono da conversa", async () => {

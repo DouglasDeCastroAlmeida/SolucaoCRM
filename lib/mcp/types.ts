@@ -69,6 +69,15 @@ export interface McpToolDefinition<TInput extends z.ZodRawShape = z.ZodRawShape>
    */
   permiteOrgSuspensa?: true;
   /**
+   * A tool é de um servidor MCP EXTERNO e o PRÓPRIO handler decide, antes de
+   * qualquer efeito, se pede aprovação de uma pessoa (AC-007.3 e AC-007.4;
+   * `servidor-externo/aprovacao.ts`). O escopo de funil existe para escritas
+   * NO CRM (negócios) e recusa por vacuidade o que não conhece: aplicá-lo a um
+   * sistema alheio fecharia a porta que a aprovação abre. O escopo do CONTATO
+   * da conversa (`escritaCabeNoTurno`) continua valendo para ela.
+   */
+  aprovacaoPropria?: true;
+  /**
    * Limpa os args ANTES da auditoria (os dois ingressos: runtime e `/api/mcp`).
    *
    * Existe porque `auditMcpToolCall` grava os args em `api_audit_log.metadata` e

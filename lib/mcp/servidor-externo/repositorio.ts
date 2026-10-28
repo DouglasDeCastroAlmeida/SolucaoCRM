@@ -113,6 +113,8 @@ export interface DepsDoRepositorio {
   /** Lista as ferramentas do servidor (a rede). Default: cliente MCP com destino seguro. */
   listar?: (servidor: ServidorMcpExterno) => Promise<FerramentaRemota[]>;
   agora?: () => number;
+  /** Linhas já lidas (evita segunda consulta quando quem chama já as tem). */
+  linhas?: readonly LinhaDeServidor[];
 }
 
 export interface EntradaDeServidor {
@@ -329,7 +331,7 @@ export async function resolverFerramentasDoAgente(
   if (escolhas.length === 0) return [];
 
   const porSlug = new Map(
-    (await listarServidores(supabase, organizationId))
+    (deps.linhas ?? (await listarServidores(supabase, organizationId)))
       .filter((l) => l.ativo)
       .map((l) => [l.slug, l] as const),
   );
@@ -354,4 +356,29 @@ export async function resolverFerramentasDoAgente(
     });
   }
   return resolvidos;
+}
+
+/**
+ * Um servidor ATIVO da organização, com a chave aberta (só em memória), pelo id.
+ * `null` quando não existe, é de outra organização, está desativado ou a chave
+ * não abre. Usado para executar uma ação aprovada: o servidor é o da AÇÃO, e a
+ * organização é a da sessão de quem aprova.
+ */
+export async function obterServidorResolvido(
+  supabase: SupabaseClient,
+  organizationId: string,
+  servidorId: string,
+): Promise<ServidorResolvido | null> {
+  const { data, error } = await supabase
+    .from(TABELA)
+    .select(COLUNAS)
+    .eq("organization_id", organizationId)
+    .eq("id", servidorId)
+    .maybeSingle();
+  if (error || !data) return null;
+  const linha = data as unknown as LinhaDeServidor;
+  if (!linha.ativo) return null;
+  const chave = abrirChaveDaLinha(linha);
+  if (chave === null) return null;
+  return { id: linha.id, slug: linha.slug, nome: linha.nome, endpoint: linha.endpoint, chave };
 }

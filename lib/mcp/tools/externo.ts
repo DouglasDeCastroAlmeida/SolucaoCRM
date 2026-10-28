@@ -44,6 +44,7 @@ import {
 } from "@/lib/mcp/servidor-externo/chamada";
 import { nomeExpostoDaEscolha, type EscolhaRemota } from "@/lib/mcp/servidor-externo/ids";
 import { hostDoEndpoint, type ServidorMcpExterno } from "@/lib/mcp/servidor-externo/registro";
+import { decidirComoExecutar, type ModoDoAgente } from "@/lib/mcp/servidor-externo/aprovacao";
 import type { FerramentaDoAgente } from "@/lib/mcp/servidor-externo/repositorio";
 import {
   embrulharComoDadoExterno,
@@ -52,6 +53,22 @@ import {
 } from "@/lib/mcp/servidor-externo/resultado-como-dado";
 import type { McpToolDefinition } from "@/lib/mcp/types";
 import { logger } from "@/lib/logger";
+
+/**
+ * Como a escrita do turno pede aprovação (AC-007.3 e AC-007.4). Sem este
+ * controle (o registro antigo, de servidor único) nada muda. `liberadas` são
+ * nomes EXPOSTOS ao modelo que o admin marcou "pode rodar sem aprovação".
+ */
+export interface ControleDeAprovacao {
+  modo: ModoDoAgente | undefined;
+  liberadas: ReadonlySet<string>;
+  pedir: (dados: {
+    servidorId: string;
+    servidorNome: string;
+    ferramenta: string;
+    argumentos: Record<string, unknown>;
+  }) => Promise<{ id: string; nova: boolean } | null>;
+}
 
 /**
  * O esqueleto do JSON Schema que o MCP exige (`type: object`) em Zod.
@@ -154,10 +171,11 @@ export function definirFerramentasRemotas(
  * (AC-007.7). `servidor.slug` identifica o servidor; sem ele, o host.
  */
 function definicaoDaFerramenta(
-  servidor: ServidorMcpExterno,
+  servidor: ServidorMcpExterno & { id?: string; nome?: string },
   ferramenta: FerramentaRemota,
   escolha: EscolhaRemota,
   opcoes?: OpcoesDeChamada,
+  aprovacao?: ControleDeAprovacao,
 ): McpToolDefinition {
   const rotulo = servidor.slug ?? hostDoEndpoint(servidor.endpoint);
   // LEITURA só com as duas metades do item 8 — ver o cabeçalho deste arquivo.
@@ -173,6 +191,8 @@ function definicaoDaFerramenta(
     category: ehLeitura ? "read" : "write",
     requiresRole: "agent",
     requiresScope: ehLeitura ? "mcp:read" : "mcp:write",
+    // Com controle de aprovação, é o handler que pede aprovação (ver abaixo).
+    ...(aprovacao ? { aprovacaoPropria: true as const } : {}),
     redigirParaAuditoria: (args) => ({
       servidor: rotulo,
       ferramenta: ferramenta.name,
@@ -181,12 +201,42 @@ function definicaoDaFerramenta(
     resumoParaAuditoria: (resultado) =>
       resumirResultadoParaAuditoria(resultado, { chave: servidor.chave }),
     handler: async (input) => {
-      const resultado = await chamarFerramentaRemota(
-        servidor,
-        ferramenta.name,
-        (input ?? {}) as Record<string, unknown>,
-        opcoes,
-      );
+      const argumentos = (input ?? {}) as Record<string, unknown>;
+      // AC-007.3/007.4: escrita no assistido (ou sem a marca do admin no
+      // automático) NÃO executa — vira ação pendente para uma pessoa aprovar.
+      if (
+        aprovacao &&
+        decidirComoExecutar({
+          ehLeitura,
+          modo: aprovacao.modo,
+          liberadaSemAprovacao: aprovacao.liberadas.has(nomeExpostoDaEscolha(escolha)),
+        }) === "pedir_aprovacao"
+      ) {
+        const pendente =
+          servidor.id !== undefined && servidor.id !== ""
+            ? await aprovacao.pedir({
+                servidorId: servidor.id,
+                servidorNome: servidor.nome ?? rotulo,
+                ferramenta: ferramenta.name,
+                argumentos,
+              })
+            : null;
+        if (!pendente) {
+          return {
+            permitido: false,
+            motivo: "aprovacao_indisponivel",
+            mensagem:
+              "não consegui pedir a aprovação desta ação agora, então ela não foi feita; siga a conversa normalmente.",
+          };
+        }
+        return {
+          pendente_de_aprovacao: true,
+          mensagem:
+            "esta ação precisa da aprovação de uma pessoa da equipe e ainda não foi feita; " +
+            "avise que ela será conferida e siga a conversa.",
+        };
+      }
+      const resultado = await chamarFerramentaRemota(servidor, ferramenta.name, argumentos, opcoes);
       return embrulharComoDadoExterno(
         resultado,
         { servidor: rotulo, ferramenta: ferramenta.name },
@@ -205,6 +255,7 @@ export function definirFerramentasDosServidores(
   ligadas: readonly FerramentaDoAgente[],
   nomesOcupados: ReadonlySet<string>,
   opcoes?: OpcoesDeChamada,
+  aprovacao?: ControleDeAprovacao,
 ): McpToolDefinition[] {
   const definicoes: McpToolDefinition[] = [];
   for (const { servidor, ferramenta, escolha, nomeExposto } of ligadas) {
@@ -215,7 +266,7 @@ export function definirFerramentasDosServidores(
       });
       continue;
     }
-    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes));
+    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes, aprovacao));
   }
   return definicoes;
 }
