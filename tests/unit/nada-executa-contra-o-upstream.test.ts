@@ -8,7 +8,7 @@
  *
  * CONJUNTO VARRIDO (git ls-files): scripts/, hostgator-setup-kit/, .github/, infra/, loop/,
  * workers/, hooks/, app/, components/, lib/ (sem *.test.*), extensoes/, tests/shell/,
- * tests/setup/, .agents/skills/ (o espelho .claude/skills é gerado dali), SECURITY.md,
+ * tests/setup/, .claude/agents/, .agents/skills/ (o espelho .claude/skills é gerado dali), SECURITY.md,
  * CONTRIBUTING*.md, public/llms.txt, `.env*example`,
  * Dockerfile*, docker-compose*, ubuntu-local-installer.sh, .mailmap e README*.md.
  *
@@ -25,8 +25,8 @@
  * Baixe o TETO no mesmo commit (senão reprova também, para a folga não virar vaga).
  * Exceção que já não casa com nada também reprova: remova-a.
  *
- * AGENDA DE SAÍDA: as exceções do release.yml (Fatia 6) e de infra/executor-proprio/**
- * (Fatia 7) saem quando essas fatias encerrarem; o teto desce de 15 para 11.
+ * AGENDA DE SAÍDA: a exceção do release.yml já saiu (Fatia 6). As de infra/executor-proprio/**
+ * (Fatia 7) saem quando essa fatia encerrar; o teto desce de 14 para 11.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -64,10 +64,6 @@ export const EXCECOES: Excecao[] = [
     caminho: "extensoes/loja.json",
     motivo: "dado de catálogo versionado; regenerar com a origem do dono fica para depois (grill)",
   },
-  {
-    caminho: ".github/workflows/release.yml",
-    motivo: "job desligado, removido/reescrito na Fatia 6",
-  },
   { caminho: "infra/executor-proprio/instalar.sh", motivo: "Fatia 7" },
   { caminho: "infra/executor-proprio/so-o-que-e-nosso.sh", motivo: "Fatia 7" },
   { caminho: "infra/executor-proprio/vaga.sh", motivo: "Fatia 7" },
@@ -88,7 +84,7 @@ export const EXCECOES: Excecao[] = [
 ];
 
 /** Só pode baixar. Subir exige justificar no PR e é recusado por este teste. */
-export const TETO_DE_EXCECOES = 15;
+export const TETO_DE_EXCECOES = 14;
 
 const PREFIXOS = [
   "scripts/",
@@ -105,6 +101,7 @@ const PREFIXOS = [
   "tests/shell/",
   "tests/setup/",
   ".agents/skills/",
+  ".claude/agents/",
   "public/llms.txt",
 ];
 

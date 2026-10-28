@@ -42,9 +42,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-014 [IMPL] Montar a lista de exceções com motivo (só o que for legítimo) e o teto gravado (~30 min) {AC-005.1, AC-005.2} deps: T-013
 
 ### Fatia 6: Release próprio (REQ-002.4, .5)
-- [ ] T-015 [TEST-UNIT] O workflow de corte usa só GITHUB_TOKEN com permissões mínimas, sem aplicativo nem segredo de terceiro, e é disparável manualmente; testes de workflows-tem-permissions seguem verdes (~40 min) {AC-002.4}
-- [ ] T-016 [TEST-UNIT] O corte consome os fragmentos antes de o changelog passar do limite de 30.000 bytes e o aviso de proximidade aparece antes do estouro (~35 min) {AC-002.5}
-- [ ] T-017 [IMPL] .github/workflows/corte-de-versao.yml e comentário do porquê nos jobs desligados do upstream (~50 min) {AC-002.4, AC-002.5} deps: T-015, T-016
+- [x] T-015 [TEST-UNIT] O workflow de corte usa só GITHUB_TOKEN com permissões mínimas, sem aplicativo nem segredo de terceiro, e é disparável manualmente; testes de workflows-tem-permissions seguem verdes (~40 min) {AC-002.4}
+- [x] T-016 [TEST-UNIT] O corte consome os fragmentos antes de o changelog passar do limite de 30.000 bytes e o aviso de proximidade aparece antes do estouro (~35 min) {AC-002.5}
+- [x] T-017 [IMPL] .github/workflows/corte-de-versao.yml e comentário do porquê nos jobs desligados do upstream (~50 min) {AC-002.4, AC-002.5} deps: T-015, T-016
 - [ ] T-018 [CHECK-SMOKE] Disparar o corte manualmente e conferir o PR gerado, o CI dele e a tag depois do merge (~30 min) {AC-002.4} deps: T-017
 
 ### Fatia 7: Executor de CI (REQ-002.3)

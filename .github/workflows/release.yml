@@ -37,7 +37,9 @@ permissions:
 
 jobs:
   abrir-pr-de-release:
-    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    # SolucaoCRM ADR-004/D-06: desligado. Veio do upstream e depende de um GitHub App
+    # (RELEASE_APP_ID/RELEASE_APP_PRIVATE_KEY) que nao e nosso. Substituido por
+    # corte-de-versao.yml (token padrao, disparo manual). SDD 008.
     if: false
     runs-on: ubuntu-latest
     permissions:
@@ -99,7 +101,9 @@ jobs:
             --title "Release ${VERSAO}" --body-file /tmp/corpo.md
 
   cortar-tag:
-    # SolucaoCRM ADR-004/D-06: desligado (workflow do upstream)
+    # SolucaoCRM ADR-004/D-06: desligado. Veio do upstream e depende de um GitHub App
+    # (RELEASE_APP_ID/RELEASE_APP_PRIVATE_KEY) que nao e nosso. Substituido por
+    # corte-de-versao.yml (token padrao, disparo manual). SDD 008.
     if: false
     runs-on: ubuntu-latest
     permissions:
@@ -472,123 +476,6 @@ jobs:
           fi
           echo "stable e ${VERSAO} são o mesmo manifesto nas três imagens"
 
-      # ─── A VERSÃO CHEGOU À VITRINE? ───────────────────────────────────────
-      #
-      # Lei em docs/doctrine/versionamento.md, seção "A vitrine". A página de
-      # changelog da LP (deskcomm-site) lê o CHANGELOG.md da `main` e revalida a
-      # cada 10 min; somando o cache de 5 min do raw.githubusercontent.com, a
-      # versão aparece em até ~15 min. Ninguém escreve release no site — por isso
-      # o que se confere aqui é a CONSEQUÊNCIA, nos três idiomas, e não um passo
-      # de "atualizar a LP" que poderia rodar verde sem mudar nada.
-      #
-      # Cada sonda também é o que DISPARA a regeneração: numa página vencida, o
-      # primeiro acesso recebe a versão velha e agenda a nova. Por isso a sonda
-      # repete em vez de esperar parada.
-      #
-      # Só no repositório oficial: um fork herda este workflow, e a LP dele não é
-      # a nossa. A release em si já saiu quando este passo roda — vermelho aqui
-      # quer dizer "a vitrine não mostra", não "a versão não existe".
-      # SDD 008: este passo vive no job `cortar-tag`, desligado (`if: false`) ate a fatia 6.
-      # A condicao ja compara com o repositorio do dono; a URL da LP abaixo e do upstream e
-      # nao e conferida aqui - nao religue este passo sem trocar ou remover a vitrine.
-      - name: A versão aparece na página de changelog da LP?
-        if: steps.pendente.outputs.cortar == 'sim' && github.repository == 'DouglasDeCastroAlmeida/SolucaoCRM'
-        # O teto cobre o pior caso, para o diagnóstico rodar antes de o GitHub matar o passo:
-        # 35 tentativas × (3 páginas × 10 s de curl + 50 s de espera) ≈ 47 min, mais o
-        # diagnóstico e as páginas das versões. Com 40 min e curl de 30 s, um site que aceita a
-        # conexão e não responde estourava o teto e o log não dizia qual página faltou.
-        timeout-minutes: 55
-        env:
-          VERSAO: ${{ steps.pendente.outputs.versao }}
-          LP: https://www.deskcomm.com.br
-        run: |
-          set -euo pipefail
-          paginas="/changelog /en/changelog /es/changelog"
-          faltando="$paginas"
-          corpo=$(mktemp)
-          # Status que NENHUMA espera conserta: a vitrine inteira está fora do ar,
-          # não é a versão que ainda não propagou. Medido em 19/09/2026, quando a
-          # Vercel desativou o deploy por cobrança e devolveu `402` com
-          # `x-vercel-error: DEPLOYMENT_DISABLED` — este passo teria gasto os 47
-          # minutos inteiros para então dizer "a versão não aparece", que é o
-          # diagnóstico errado. O comentário acima já raciocinava sobre isso
-          # ("404 é a vitrine fora do ar, nenhuma espera conserta") e mesmo assim
-          # esperava; agora o raciocínio vira código.
-          definitivo() { case "$1" in 401|402|403|404|410|5??) return 0 ;; *) return 1 ;; esac; }
-          fora_do_ar_seguidas=0
-          for tentativa in $(seq 1 35); do
-            faltando=""
-            codigos=""
-            for p in $paginas; do
-              # UMA requisição serve o corpo E o status. A versão anterior usava
-              # `curl -f`, que descarta o corpo do erro, e só ia buscar o status
-              # depois do laço — então durante 47 minutos ninguém sabia se a
-              # página estava viva.
-              # `|| true`, NUNCA `|| echo 000`: quando a conexão não completa, o
-              # curl já imprime `000` pelo `-w` E sai != 0, então o `echo` de
-              # socorro CONCATENA e a variável vira `000000`. Medido em bancada.
-              codigo=$(curl -sL -o "$corpo" -w '%{http_code}' --max-time 10 "${LP}${p}" 2>/dev/null || true)
-              codigos="${codigos} ${p}=${codigo}"
-              # O link para a página da versão, e não o número solto: "1.2.1"
-              # aparece dentro de "1.2.10"; o href fecha a aspa.
-              # Sem pipeline: sob pipefail, `printf | grep -q` dá "faltando" com a
-              # versão listada assim que o HTML tiver quebra de linha depois do link
-              # (o grep sai cedo e o printf morre de SIGPIPE, 141).
-              # A sonda do link fica com a FORMA que `release-chega-na-lp.test.ts`
-              # reconhece como segura (sem pipeline: sob `pipefail`, um
-              # `printf | grep -q` dá falso-faltando por SIGPIPE). O status entra
-              # como guarda ANTES dela, em vez de virar um `&&` na própria linha:
-              # alargar a cerca para caber no meu código seria trocar a régua pelo
-              # que eu escrevi.
-              html=""
-              if [ "$codigo" = "200" ]; then html=$(cat "$corpo"); fi
-              if [[ "$html" == *"href=\"${p}/${VERSAO}\""* ]]; then
-                echo "  ${p}: v${VERSAO} listada"
-              else
-                faltando="${faltando} ${p}"
-              fi
-            done
-            [ -z "$faltando" ] && break
-            # Só desiste cedo quando TODAS as páginas devolvem um status definitivo
-            # em DUAS tentativas seguidas: uma página só pode estar sendo regerada,
-            # e um 5xx isolado durante um deploy se resolve sozinho. As três ao
-            # mesmo tempo, duas vezes, é o site.
-            todas_fora=sim
-            for p in $paginas; do
-              c=$(printf '%s' "$codigos" | tr ' ' '\n' | sed -n "s#^${p}=##p")
-              definitivo "$c" || todas_fora=nao
-            done
-            if [ "$todas_fora" = sim ]; then
-              fora_do_ar_seguidas=$((fora_do_ar_seguidas + 1))
-              if [ "$fora_do_ar_seguidas" -ge 2 ]; then
-                echo "::error::A VITRINE está fora do ar, não é a versão que falta:${codigos}"
-                echo "::error::v${VERSAO} SAIU — tag, release e as três imagens já foram conferidas nos passos anteriores. Quem instalou numa VPS puxa do GHCR e não é alcançado por isto."
-                echo "::error::Não redispare o corte: a tag já existe. Conserte ${LP} e a página se atualiza sozinha."
-                exit 1
-              fi
-            else
-              fora_do_ar_seguidas=0
-            fi
-            echo "tentativa ${tentativa}: ainda falta em${faltando} (status:${codigos})"
-            sleep 50
-          done
-          if [ -n "$faltando" ]; then
-            # Chegar aqui com status 200 é o outro desfecho: a página está viva e
-            # não lista a versão — a versão não chegou ao CHANGELOG que a LP lê.
-            for p in $faltando; do
-              echo "::error::${LP}${p} respondeu $(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "${LP}${p}")"
-            done
-            echo "::error::v${VERSAO} saiu (tag, release e imagens conferidas), mas a LP não a lista em:${faltando}"
-            echo "::error::Confira se ${LP}/changelog responde e se o CHANGELOG.md da main tem a seção '## [${VERSAO}] — AAAA-MM-DD'."
-            echo "::error::Se o formato do cabeçalho mudou, o leitor da LP (lib/changelog.ts em deskcomm-site) precisa mudar junto."
-            exit 1
-          fi
-          # A página da própria versão é gerada no primeiro acesso: confirma que ela abre.
-          for p in $paginas; do
-            codigo=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 30 "${LP}${p}/${VERSAO}")
-            if [ "$codigo" != "200" ]; then
-              echo "::error::${LP}${p}/${VERSAO} respondeu ${codigo}."
-              exit 1
-            fi
-          done
-          echo "a LP mostra v${VERSAO} em pt-BR, en e es"
+      # SDD 008: o passo que conferia a pagina de changelog da LP do upstream foi REMOVIDO
+      # (a vitrine nao e nossa). Este job segue desligado; o corte proprio esta em
+      # corte-de-versao.yml e a etapa da tag depende de decisao do dono.
