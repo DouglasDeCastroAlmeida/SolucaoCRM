@@ -18,9 +18,9 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Prova em serviços reais e decisão de segurança, antes de qualquer código (REQ-009)
-- [ ] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): chat com chamada de ferramenta pelo OpenRouter (modelo gratuito) e pelo provedor com endereço próprio, e um servidor MCP de teste respondendo tools/list e tools/call; grava evidência (~60 min) {AC-009.1}
-- [ ] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/006-agente/ e decidir: passou segue; falhou para a esteira e volta ao design (~20 min) {AC-009.1} deps: T-001
-- [ ] T-003 [DOCS] Obter a confirmação do dono sobre a ADR-004 (abrir o cadastro de servidor MCP ao admin da organização atrás da chave MCP_EXTERNO_ADMIN_DA_ORG) e registrar a resposta; sem confirmação, a T-035 não abre o cadastro (~10 min) {AC-007.1} deps: T-002
+- [x] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): chat com chamada de ferramenta pelo OpenRouter (modelo gratuito) e pelo provedor com endereço próprio, e um servidor MCP de teste respondendo tools/list e tools/call; grava evidência (~60 min) {AC-009.1} **Parcial: OpenRouter provado; provedor próprio e servidor MCP real não provados (ver sonda-fatia-1.md).**
+- [x] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/006-agente/ e decidir: passou segue; falhou para a esteira e volta ao design (~20 min) {AC-009.1} deps: T-001
+- [x] T-003 [DOCS] Obter a confirmação do dono sobre a ADR-004 (abrir o cadastro de servidor MCP ao admin da organização atrás da chave MCP_EXTERNO_ADMIN_DA_ORG) e registrar a resposta; sem confirmação, a T-035 não abre o cadastro (~10 min) {AC-007.1} deps: T-002
 
 ### Fatia 2: Destino seguro compartilhado e provedores (REQ-001, REQ-002)
 - [ ] T-004 [TEST-UNIT] lib/net/destino-seguro: recusa loopback, link-local, metadata, RFC1918, CGNAT, multicast e reservadas; http recusado; IP resolvido fixado na conexão; redirecionamento para destino não validado não é seguido (~50 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4} deps: T-002

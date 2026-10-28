@@ -126,7 +126,7 @@ Migrations aditivas, idempotentes, com apêndice no `baseline.sql` antes da varr
 
 ### ADR-004: Quem cadastra servidor MCP
 - Contexto: hoje só o administrador da plataforma cadastra (cerca de teste), o que impede o autônomo de usar o próprio sistema externo; o Grill pediu "admin".
-- Decisão: abrir o cadastro ao **administrador da organização**, condicionado a ADR-001 estar implantado (destino seguro, `https`, tamanho, prazo), com a chave de instalação `MCP_EXTERNO_ADMIN_DA_ORG` (padrão `desligado`) para a plataforma liberar. A cerca de teste é atualizada para o novo contrato. **Esta decisão afeta a postura de segurança e precisa da confirmação do dono antes de implementar.**
+- Decisão: abrir o cadastro ao **administrador da organização**, condicionado a ADR-001 estar implantado (destino seguro, `https`, tamanho, prazo), com a chave de instalação `MCP_EXTERNO_ADMIN_DA_ORG` (padrão `desligado`) para a plataforma liberar. A cerca de teste é atualizada para o novo contrato. **Confirmada pelo dono em 2026-10-28 ("aceito"): abrir ao administrador da organização, com a chave desligada de fábrica.**
 - Consequências: até a chave ser ligada, o comportamento de hoje fica intacto; ligada, o admin da organização cadastra sob as novas proteções.
 
 ### ADR-005: Ferramenta de escrita externa vira ação pendente no modo assistido
