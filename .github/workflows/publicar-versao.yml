@@ -59,7 +59,9 @@ jobs:
           VERSAO: ${{ inputs.versao }}
         run: |
           set -euo pipefail
-          if ! printf '%s' "${VERSAO}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          # `[[ =~ ]]` casa a string INTEIRA; `grep` casa linha a linha e deixaria
+          # passar "1.2.3<quebra de linha>qualquer coisa".
+          if ! [[ "${VERSAO}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::versão inválida: use o formato X.Y.Z (sem 'v')."
             exit 1
           fi
@@ -67,8 +69,15 @@ jobs:
             echo "::error::o CHANGELOG.md da main não tem a seção '## [${VERSAO}]'. Mescle antes o PR de release."
             exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/v${VERSAO}" >/dev/null 2>&1; then
+          # ls-remote --exit-code: 0 = a tag existe, 2 = não existe, outro = falha
+          # (rede, permissão). Falha NÃO pode ser lida como "não existe".
+          rc=0
+          git ls-remote --exit-code --tags origin "refs/tags/v${VERSAO}" >/dev/null 2>&1 || rc=$?
+          if [ "${rc}" -eq 0 ]; then
             echo "::error::a tag v${VERSAO} já existe. Tag publicada não se move."
+            exit 1
+          elif [ "${rc}" -ne 2 ]; then
+            echo "::error::não consegui consultar as tags do repositório (código ${rc}); nada foi criado."
             exit 1
           fi
           echo "ok: v${VERSAO} tem seção no CHANGELOG e a tag ainda não existe"
