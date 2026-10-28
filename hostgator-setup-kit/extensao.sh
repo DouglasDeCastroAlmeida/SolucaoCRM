@@ -29,9 +29,21 @@
 
 source "$(dirname "$0")/_common.sh"
 
-ORIGEM_PADRAO="https://extensoes.deskcomm.com.br"
-ORIGEM="${EXTENSOES_ORIGEM:-$ORIGEM_PADRAO}"
+# Sem endereço padrão: este projeto não consulta servidor de terceiro. Quem tem um
+# catálogo informa o endereço em EXTENSOES_ORIGEM. Extensões já instaladas moram no
+# banco e não dependem disto.
+ORIGEM="${EXTENSOES_ORIGEM:-}"
 CATALOGO_URL="${ORIGEM}/catalogo.json"
+
+# Sem origem, avisa e sai sem erro (nada foi consultado).
+exigir_origem() {
+  [[ -n "$ORIGEM" ]] && return 0
+  echo "Nenhuma origem de catálogo configurada; nada foi consultado."
+  echo "Se você tem um catálogo de extensões, informe o endereço assim:"
+  echo "  EXTENSOES_ORIGEM=https://seu-endereco ./extensao.sh listar"
+  echo "As extensões que já estão instaladas continuam funcionando normalmente."
+  exit 0
+}
 
 ajuda() {
   sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
@@ -72,6 +84,7 @@ catalogo_tem_forma() {
 }
 
 comando_listar() {
+  exigir_origem
   exigir_jq
   local tmp
   tmp="$(mktemp)"
@@ -85,6 +98,7 @@ comando_listar() {
 }
 
 comando_baixar() {
+  exigir_origem
   exigir_jq
   local destino="${1:-${PROJECT_DIR:-.}/catalogo-de-extensoes.json}"
   baixar_para "$destino" || return 1

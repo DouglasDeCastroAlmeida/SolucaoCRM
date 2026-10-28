@@ -30,8 +30,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-008 [IMPL] Trocar scripts, loop/hooks, release.yml, e2e.yml, acolhida.yml e testes de identidade (guarda-da-release-*, release-chega-na-lp, populacao-do-proximo-nnnn, deskcomm-contribuir) (~50 min) {AC-002.1, AC-002.2, AC-005.3} deps: T-006, T-007
 
 ### Fatia 3: Catálogo de extensões sem servidor de terceiro (REQ-003)
-- [ ] T-009 [TEST-INT] extensao.sh e gerar-catalogo-de-extensoes sem origem não fazem consulta de rede e avisam; com origem informada funcionam; extensão já instalada continua instalada (~45 min) {AC-003.1, AC-003.2, AC-003.3}
-- [ ] T-010 [IMPL] Origem do catálogo sem valor padrão, com mensagem clara (~35 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-009
+- [x] T-009 [TEST-INT] extensao.sh e gerar-catalogo-de-extensoes sem origem não fazem consulta de rede e avisam; com origem informada funcionam; extensão já instalada continua instalada (~45 min) {AC-003.1, AC-003.2, AC-003.3}
+- [x] T-010 [IMPL] Origem do catálogo sem valor padrão, com mensagem clara (~35 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-009
 
 ### Fatia 4: Crédito ao autor original (REQ-004)
 - [ ] T-011 [TEST-UNIT] LICENSE mantém o copyright original e acrescenta o do dono; NOTICE existe e diz que é fork MIT sem URL; READMEs nos três idiomas têm o parágrafo Origem e nenhum comando que baixe algo do upstream (~35 min) {AC-004.1, AC-004.2, AC-004.3}

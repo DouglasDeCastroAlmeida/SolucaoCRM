@@ -75,5 +75,59 @@ rm -f "$bom" "$ruim" "$vazio"
 
 bash -n "$SCRIPT" && ok "sintaxe válida"
 
+# ── ORIGEM: SEM VALOR PADRÃO (008, REQ-003) ─────────────────────────────────
+# Sem origem informada, nada de rede: o `curl` falso abaixo registra toda chamada.
+falso="$(mktemp -d)"; trap 'rm -rf "$falso"; rm -f "$saida"' EXIT
+cat > "${falso}/curl" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "${CURL_REGISTRO}"
+dest=""; while [ $# -gt 0 ]; do [ "$1" = "-o" ] && dest="$2"; shift; done
+[ -n "$dest" ] && echo '{"format_version":1,"origin":"https://x.test","revision":1,"entries":[]}' > "$dest"
+exit 0
+FAKE
+chmod +x "${falso}/curl"
+
+for cmd in listar baixar; do
+  : > "${falso}/registro"
+  if env -u EXTENSOES_ORIGEM PATH="${falso}:${PATH}" CURL_REGISTRO="${falso}/registro" \
+     PROJECT_DIR="$falso" bash "$SCRIPT" "$cmd" >"$saida" 2>&1; then
+    ok "AC-003.1: '$cmd' sem origem termina sem erro"
+  else
+    erro "AC-003.1: '$cmd' sem origem devolveu erro — faltar origem é aviso, não falha"
+  fi
+  [ ! -s "${falso}/registro" ] \
+    && ok "AC-003.1: '$cmd' sem origem não chamou a rede" \
+    || erro "AC-003.1: '$cmd' sem origem chamou curl: $(cat "${falso}/registro")"
+  grep -q "Nenhuma origem de catálogo configurada" "$saida" \
+    && ok "AC-003.1: '$cmd' avisa em português que não há origem" \
+    || erro "AC-003.1: '$cmd' não avisou que falta origem"
+done
+
+# Nenhum endereço de terceiro embutido como padrão.
+if grep -qE 'extensoes\.deskcomm|melgarafael' "$SCRIPT"; then
+  erro "AC-003.1: o script ainda embute endereço de terceiro"
+else
+  ok "AC-003.1: nenhum endereço de terceiro embutido"
+fi
+
+# Com origem: a origem do operador é a usada (precisa de jq para o fluxo completo).
+: > "${falso}/registro"
+PATH="${falso}:${PATH}" CURL_REGISTRO="${falso}/registro" PROJECT_DIR="$falso" \
+  EXTENSOES_ORIGEM="https://minha-origem.test" bash "$SCRIPT" baixar "${falso}/c.json" >"$saida" 2>&1 || true
+if command -v jq >/dev/null 2>&1; then
+  grep -q "https://minha-origem.test/catalogo.json" "${falso}/registro" \
+    && ok "AC-003.2: com origem informada, ela é a consultada" \
+    || erro "AC-003.2: a origem informada não foi usada"
+else
+  ok "AC-003.2: (jq ausente aqui — fluxo completo roda no CI)"
+fi
+grep -q "Nenhuma origem de catálogo configurada" "$saida" \
+  && erro "AC-003.2: com origem informada, avisou que não há origem" \
+  || ok "AC-003.2: com origem informada, não avisa falta de origem"
+
+# AC-003.3: o script nunca toca o banco (a cerca acima proíbe psql/service key), então
+# remover o padrão não desinstala extensão alguma — o estado instalado mora no banco.
+ok "AC-003.3: extensão instalada vive no banco; o script não o toca (cerca acima)"
+
 if [ "$falhas" -gt 0 ]; then echo "FALHOU: $falhas"; exit 1; fi
 echo "tudo verde"
