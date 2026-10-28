@@ -6,7 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { BudgetCard } from "@/components/ai/BudgetCard";
 import { getBudgetStatus } from "@/lib/ai/budget/check";
 import { traduzir } from "@/lib/i18n/dicionario";
+import { carregarUsoDoPeriodo } from "@/lib/ai/orcamento/uso-do-periodo";
 import { UsageDashboardClient } from "./_client";
+import { UsoPorAgente } from "./_uso-por-agente";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +53,13 @@ export default async function AiUsagePage({ searchParams }: PageProps) {
   };
 
   const budget = await getBudgetStatus(activeOrg.orgId);
+  const usoDoMes = await carregarUsoDoPeriodo(supabase, {
+    organizationId: activeOrg.orgId,
+    agentes: agents,
+    tetoCents: budget.monthly_limit_cents,
+  });
+  // Organização antiga: sem teto armado. Ela ganha o aviso, não um teto à força.
+  const semProtecao = budget.enforcement_mode === "off" || budget.monthly_limit_cents <= 0;
   const isAdmin = ROLE_RANK[activeOrg.role] >= ROLE_RANK.admin;
   const idioma = user.idioma;
 
@@ -66,6 +75,7 @@ export default async function AiUsagePage({ searchParams }: PageProps) {
         </p>
       </header>
       <BudgetCard initialData={budget} isAdmin={isAdmin} />
+      {usoDoMes && <UsoPorAgente uso={usoDoMes} semProtecao={semProtecao} />}
       <UsageDashboardClient agents={agents} initial={initial} />
     </div>
   );

@@ -42,12 +42,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-016 [IMPL] Onboarding e primeira publicação nascem assisted; rota /ai/agents/[id]/automatico, diálogo em AgentOperation e PATCH que recusa trocar para automático sem a confirmação (~60 min) {AC-003.2, AC-003.4, AC-003.5, AC-003.6} deps: T-013, T-014, T-015
 
 ### Fatia 5: Teto de custo que protege (REQ-004)
-- [ ] T-017 [TEST-UNIT] Preço estimado para modelo sem preço: conservador, sempre marcado como estimado, nunca inventa preço real (~35 min) {AC-004.6}
-- [ ] T-018 [IMPL] lib/ai/orcamento/preco-estimado.ts usado no cálculo de custo e no gate do orçamento (~45 min) {AC-004.6} deps: T-017
-- [ ] T-019 [TEST-INT] Orçamento: existe teto ao ativar o agente, aviso em 80% na Central e por e-mail uma vez no período, em 100% o agente para e a conversa vai à fila humana com aviso, novo período zera o contador (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.5} deps: T-013
-- [ ] T-020 [IMPL] Orçamento padrão ao publicar o primeiro agente, e-mail de 80% pela marca, banner "sem teto" para organizações antigas (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.5} deps: T-018, T-019
-- [ ] T-021 [TEST-UI] Tela de uso: tokens, custo estimado e teto do período, por agente e total, com "estimado" quando o provedor não informa o custo (~40 min) {AC-004.4}
-- [ ] T-022 [IMPL] Tokens e custo por agente em app/app/ai/usage (~45 min) {AC-004.4} deps: T-021, T-018
+- [x] T-017 [TEST-UNIT] Preço estimado para modelo sem preço: conservador, sempre marcado como estimado, nunca inventa preço real (~35 min) {AC-004.6}
+- [x] T-018 [IMPL] lib/ai/orcamento/preco-estimado.ts usado no cálculo de custo e no gate do orçamento (~45 min) {AC-004.6} deps: T-017
+- [x] T-019 [TEST-INT] Orçamento: existe teto ao ativar o agente, aviso em 80% na Central e por e-mail uma vez no período, em 100% o agente para e a conversa vai à fila humana com aviso, novo período zera o contador (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.5} deps: T-013
+- [x] T-020 [IMPL] Orçamento padrão ao publicar o primeiro agente, e-mail de 80% pela marca, banner "sem teto" para organizações antigas (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.5} deps: T-018, T-019
+- [x] T-021 [TEST-UI] Tela de uso: tokens, custo estimado e teto do período, por agente e total, com "estimado" quando o provedor não informa o custo (~40 min) {AC-004.4}
+- [x] T-022 [IMPL] Tokens e custo por agente em app/app/ai/usage (~45 min) {AC-004.4} deps: T-021, T-018
 
 ### Fatia 6: Transferência para humano e ferramentas do agente (REQ-005, REQ-006)
 - [ ] T-023 [TEST-UNIT] Caracterização do handoff: cliente pede uma pessoa, agente sem segurança transfere, a pessoa que assume vê histórico e motivo (~40 min) {AC-005.1, AC-005.2, AC-005.4}

@@ -17042,6 +17042,21 @@ export const DICIONARIO: Traducoes = {
   "site com problemas": { es: "sitio con problemas" },
   "sem sinais positivos": { es: "sin señales positivas" },
   "verificação pendente": { es: "verificación pendiente" },
+  "estimado": { es: "estimado" },
+  "Parte do teto": { es: "Parte del tope" },
+  "Uso do mês por agente": { es: "Uso del mes por agente" },
+  "Tokens usados e custo de cada agente neste mês, comparados ao teto do mês.": { es: "Tokens usados y costo de cada agente este mes, comparados con el tope del mes." },
+  "Sem teto definido para o mês.": { es: "Sin tope definido para el mes." },
+  "Teto do mês:": { es: "Tope del mes:" },
+  "Nenhum agente criado ainda. Quando houver, o uso de cada um aparece aqui.": { es: "Aún no hay agentes creados. Cuando los haya, el uso de cada uno aparece aquí." },
+  "Tokens e custo do mês, um agente por linha, com o total no fim.": { es: "Tokens y costo del mes, un agente por fila, con el total al final." },
+  "Estimado: o provedor ou o modelo não informa o preço, então o custo é uma estimativa acima do provável, nunca um preço real.": { es: "Estimado: el proveedor o el modelo no informa el precio, así que el costo es una estimación por encima de lo probable, nunca un precio real." },
+  "Esta organização está sem teto de gasto: a IA não para sozinha por gasto. Defina um limite e escolha parar ao chegar nele no cartão de orçamento, acima.": { es: "Esta organización no tiene tope de gasto: la IA no se detiene sola por gasto. Define un límite y elige detenerla al llegar a él en la tarjeta de presupuesto, arriba." },
+  "O gasto com IA chegou a 80% do limite": { es: "El gasto en IA llegó al 80% del límite" },
+  "Neste mês a IA já gastou": { es: "Este mes la IA ya gastó" },
+  "de um limite de": { es: "de un límite de" },
+  "Ao chegar em 100%, a IA para de responder e as conversas passam para uma pessoa da equipe. Os valores são estimativas e podem incluir modelos sem preço conhecido. Se quiser, aumente o limite antes disso.": { es: "Al llegar al 100%, la IA deja de responder y las conversaciones pasan a una persona del equipo. Los valores son estimaciones y pueden incluir modelos sin precio conocido. Si quieres, aumenta el límite antes." },
+  "Ver o uso de IA": { es: "Ver el uso de IA" },
 };
 
 /**
