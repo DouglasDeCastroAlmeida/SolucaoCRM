@@ -79,6 +79,13 @@ export interface McpToolDefinition<TInput extends z.ZodRawShape = z.ZodRawShape>
    */
   redigirParaAuditoria?: (args: Record<string, unknown>) => Record<string, unknown>;
   /**
+   * Resumo CURTO do resultado para a auditoria (até 280 caracteres, cortado pelo
+   * `auditMcpToolCall`). Existe para a ferramenta de servidor MCP externo
+   * (AC-007.7): o resultado é conteúdo de terceiro, então quem resume é a própria
+   * tool, já sem a credencial. Sem isto a auditoria grava só o tamanho.
+   */
+  resumoParaAuditoria?: (resultado: unknown) => string;
+  /**
    * O que a tool DECLARA quando a resposta é um vazio que NÃO é sucesso.
    *
    * Uma busca que não acha nada TERMINOU bem: não houve erro, houve ausência —

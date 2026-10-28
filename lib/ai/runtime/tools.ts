@@ -487,6 +487,9 @@ function wrapMcpTool(
           durationMs: Date.now() - startedAt,
           success: motivoDoVazio === null,
           resultBytes: tamanhoDoResultado(result),
+          ...(def.resumoParaAuditoria
+            ? { resultSummary: def.resumoParaAuditoria(result) }
+            : {}),
           ...(motivoDoVazio === null
             ? {}
             : { desfecho: "sem_resultado" as const, motivo: motivoDoVazio }),

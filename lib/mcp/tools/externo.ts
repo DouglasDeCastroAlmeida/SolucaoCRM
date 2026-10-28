@@ -42,8 +42,14 @@ import {
   type FerramentaRemota,
   type OpcoesDeChamada,
 } from "@/lib/mcp/servidor-externo/chamada";
-import type { EscolhaRemota } from "@/lib/mcp/servidor-externo/ids";
+import { nomeExpostoDaEscolha, type EscolhaRemota } from "@/lib/mcp/servidor-externo/ids";
 import { hostDoEndpoint, type ServidorMcpExterno } from "@/lib/mcp/servidor-externo/registro";
+import type { FerramentaDoAgente } from "@/lib/mcp/servidor-externo/repositorio";
+import {
+  embrulharComoDadoExterno,
+  resumirArgumentosParaAuditoria,
+  resumirResultadoParaAuditoria,
+} from "@/lib/mcp/servidor-externo/resultado-como-dado";
 import type { McpToolDefinition } from "@/lib/mcp/types";
 import { logger } from "@/lib/logger";
 
@@ -135,32 +141,81 @@ export function definirFerramentasRemotas(
       continue;
     }
 
-    // LEITURA só com as duas metades do item 8 — ver o cabeçalho deste arquivo.
-    const ehLeitura = escolha.leitura && ferramenta.somenteLeitura === true;
-
-    definicoes.push({
-      name: ferramenta.name,
-      // O sufixo diz de ONDE o dado vem: o modelo não pode tratar preço vindo
-      // do ERP como se viesse do catálogo do CRM, e o leitor do turno tem o
-      // direito de saber que aquilo é consulta a outro sistema.
-      description: `${ferramenta.description ?? ferramenta.name} (servidor MCP externo)`,
-      inputSchema: shapeDaFerramenta(ferramenta),
-      category: ehLeitura ? "read" : "write",
-      requiresRole: "agent",
-      requiresScope: ehLeitura ? "mcp:read" : "mcp:write",
-      handler: async (input) => {
-        const resultado = await chamarFerramentaRemota(
-          servidor,
-          ferramenta.name,
-          (input ?? {}) as Record<string, unknown>,
-          opcoes,
-        );
-        return resultado.dados === undefined
-          ? { texto: resultado.texto }
-          : { texto: resultado.texto, dados: resultado.dados };
-      },
-    });
+    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes));
   }
 
+  return definicoes;
+}
+
+/**
+ * A definição de UMA ferramenta remota. O retorno do servidor entra no modelo
+ * como DADO EXTERNO, com tamanho máximo (AC-007.5), e a auditoria recebe o
+ * servidor, a ferramenta, os argumentos e o resultado RESUMIDOS, sem a chave
+ * (AC-007.7). `servidor.slug` identifica o servidor; sem ele, o host.
+ */
+function definicaoDaFerramenta(
+  servidor: ServidorMcpExterno,
+  ferramenta: FerramentaRemota,
+  escolha: EscolhaRemota,
+  opcoes?: OpcoesDeChamada,
+): McpToolDefinition {
+  const rotulo = servidor.slug ?? hostDoEndpoint(servidor.endpoint);
+  // LEITURA só com as duas metades do item 8 — ver o cabeçalho deste arquivo.
+  const ehLeitura = escolha.leitura && ferramenta.somenteLeitura === true;
+
+  return {
+    name: nomeExpostoDaEscolha(escolha),
+    // O sufixo diz de ONDE o dado vem: o modelo não pode tratar preço vindo
+    // do ERP como se viesse do catálogo do CRM, e o leitor do turno tem o
+    // direito de saber que aquilo é consulta a outro sistema.
+    description: `${ferramenta.description ?? ferramenta.name} (servidor MCP externo)`,
+    inputSchema: shapeDaFerramenta(ferramenta),
+    category: ehLeitura ? "read" : "write",
+    requiresRole: "agent",
+    requiresScope: ehLeitura ? "mcp:read" : "mcp:write",
+    redigirParaAuditoria: (args) => ({
+      servidor: rotulo,
+      ferramenta: ferramenta.name,
+      ...resumirArgumentosParaAuditoria(args, { chave: servidor.chave }),
+    }),
+    resumoParaAuditoria: (resultado) =>
+      resumirResultadoParaAuditoria(resultado, { chave: servidor.chave }),
+    handler: async (input) => {
+      const resultado = await chamarFerramentaRemota(
+        servidor,
+        ferramenta.name,
+        (input ?? {}) as Record<string, unknown>,
+        opcoes,
+      );
+      return embrulharComoDadoExterno(
+        resultado,
+        { servidor: rotulo, ferramenta: ferramenta.name },
+        { chave: servidor.chave },
+      );
+    },
+  };
+}
+
+/**
+ * As ferramentas LIGADAS para o agente, de qualquer servidor cadastrado
+ * (`resolverFerramentasDoAgente`). Mesma regra de colisão com o catálogo
+ * compilado: o compilado vence.
+ */
+export function definirFerramentasDosServidores(
+  ligadas: readonly FerramentaDoAgente[],
+  nomesOcupados: ReadonlySet<string>,
+  opcoes?: OpcoesDeChamada,
+): McpToolDefinition[] {
+  const definicoes: McpToolDefinition[] = [];
+  for (const { servidor, ferramenta, escolha, nomeExposto } of ligadas) {
+    if (nomesOcupados.has(nomeExposto)) {
+      logger.warn("ferramenta do servidor MCP externo colide com o catalogo compilado — mantida a compilada", {
+        servidor: servidor.slug,
+        ferramenta: ferramenta.name,
+      });
+      continue;
+    }
+    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes));
+  }
   return definicoes;
 }

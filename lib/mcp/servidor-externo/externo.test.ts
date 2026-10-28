@@ -542,7 +542,10 @@ describe("o turno do agente enxerga e chama a ferramenta remota (#2147)", () => 
     };
     const resposta = await ferramenta.execute({ consulta: "pelicula iphone 15" });
 
-    expect(resposta).toEqual({ texto: FRASE, dados: DADOS });
+    // AC-007.5: o retorno do servidor entra marcado como dado externo.
+    expect(resposta).toMatchObject({ dado_externo: true, dados: DADOS });
+    expect((resposta as { texto: string }).texto).toContain(FRASE);
+    expect((resposta as { texto: string }).texto.startsWith("[DADO EXTERNO")).toBe(true);
     expect(ultimaChamada?.nome).toBe("erp_achar");
 
     const auditoria = auditSpy.mock.calls.at(-1)?.[0] as {
@@ -551,6 +554,14 @@ describe("o turno do agente enxerga e chama a ferramenta remota (#2147)", () => 
     };
     expect(auditoria.action).toBe("mcp.tool_called");
     expect(auditoria.metadata).toMatchObject({ tool_name: "erp_achar", success: true });
+    // AC-007.7: servidor, ferramenta, argumentos e resultado resumidos; nunca a chave.
+    expect(auditoria.metadata?.args).toMatchObject({
+      servidor: new URL(base).host,
+      ferramenta: "erp_achar",
+      consulta: "pelicula iphone 15",
+    });
+    expect(String(auditoria.metadata?.result_summary)).toContain("Achei 5");
+    expect(JSON.stringify(auditoria)).not.toContain(CHAVE);
   });
 
   it("servidor registrado mas agente SEM escolha: nada remoto monta (item 7)", () => {
@@ -710,7 +721,9 @@ describe("uso durante o atendimento: opção do agente + identidade do contato (
     });
     const ferramenta = montadas.erp_achar as unknown as { execute: (a: unknown) => Promise<unknown> };
     expect(ferramenta, "a leitura remota identificada não montou no turno com contato").toBeDefined();
-    expect(await ferramenta.execute({ consulta: "pelicula iphone 15" })).toEqual({ texto: FRASE, dados: DADOS });
+    const resposta = (await ferramenta.execute({ consulta: "pelicula iphone 15" })) as { texto: string; dados: unknown };
+    expect(resposta.texto).toContain(FRASE);
+    expect(resposta.dados).toEqual(DADOS);
 
     const daChamada = requisicoes.filter((r) => r.metodo === "POST");
     expect(daChamada.length).toBeGreaterThan(0);

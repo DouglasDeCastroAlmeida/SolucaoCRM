@@ -37,6 +37,12 @@ export const BOLSO_MCP_EXTERNO = "mcp_externo";
 export interface ServidorMcpExterno {
   endpoint: string;
   chave: string;
+  /**
+   * Slug do servidor em `mcp_servidores_externos` (vários por organização).
+   * Ausente no registro legado. Só identifica: vai para a auditoria no lugar
+   * do endereço, nunca a chave.
+   */
+  slug?: string;
 }
 
 /** O que a action de registro recebe da tela. */
