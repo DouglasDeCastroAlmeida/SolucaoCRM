@@ -39,7 +39,7 @@
 > command for your case:
 >
 > ```bash
-> curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/hostgator-setup-kit/comecar.sh | bash
+> git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && bash SolucaoCRM/hostgator-setup-kit/comecar.sh
 > ```
 >
 > *(prefer to read before executing? clone the repo and run `bash hostgator-setup-kit/comecar.sh` —
@@ -72,8 +72,8 @@ That is not a freeze: the terminal is hiding your password. Type (or paste) it a
 Once inside the VPS:
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 bash hostgator-setup-kit/install.sh
 ```
 
@@ -136,7 +136,7 @@ prompt and contribute. To have them in **any folder** — including before cloni
 machine — run once:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash
+bash scripts/instalar-guias.sh
 ```
 
 Then open a new session of your assistant and say *"I want to install the CRM on my VPS"*: asking
@@ -148,7 +148,7 @@ The guides do **not** update themselves: running the same command again brings t
 undo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash -s -- --remover
+bash scripts/instalar-guias.sh --remover
 ```
 
 With the repository already cloned, the guides come inside it (`.agents/skills/`) and none of that
@@ -302,8 +302,8 @@ Details: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > This section is for people who will change the code.
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 
 nvm use                     # Node 22
 npm install -g pnpm && pnpm install
@@ -476,6 +476,15 @@ For **security vulnerabilities**, **do NOT open a public issue** — use [privat
 - **Issues:** [GitHub Issues](https://github.com/melgarafael/DeskcommCRM/issues)
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
+
+---
+
+## Origin
+
+This project was born from a fork of DeskcommCRM (MIT license), created by Rafael Melgaço, and
+continues with the modifications of Douglas de Castro Almeida. Credit to the original author is in
+[`LICENSE`](LICENSE) and [`NOTICE`](NOTICE). Installation is done from the owner's repository
+(`DouglasDeCastroAlmeida/SolucaoCRM`), which is **private**: you need access to it to install.
 
 ---
 

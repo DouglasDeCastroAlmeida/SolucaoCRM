@@ -39,7 +39,7 @@
 > devuelve el comando exacto para tu caso:
 >
 > ```bash
-> curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/hostgator-setup-kit/comecar.sh | bash
+> git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && bash SolucaoCRM/hostgator-setup-kit/comecar.sh
 > ```
 >
 > *(¿prefieres leer antes de ejecutar? clona el repo y corre `bash hostgator-setup-kit/comecar.sh` —
@@ -73,8 +73,8 @@ presiona Enter.
 Ya dentro del VPS:
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 bash hostgator-setup-kit/install.sh
 ```
 
@@ -279,8 +279,8 @@ Detalles: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > Esta sección es para quien va a tocar el código.
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 
 nvm use                     # Node 22
 npm install -g pnpm && pnpm install
@@ -428,6 +428,15 @@ Para **vulnerabilidades de seguridad**, **NO abras un issue público** — usa e
 - **Issues:** [GitHub Issues](https://github.com/melgarafael/DeskcommCRM/issues)
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
+
+---
+
+## Origen
+
+Este proyecto nació de un fork de DeskcommCRM (licencia MIT), creado por Rafael Melgaço, y sigue
+con las modificaciones de Douglas de Castro Almeida. El crédito al autor original está en
+[`LICENSE`](LICENSE) y [`NOTICE`](NOTICE). La instalación se hace desde el repositorio del dueño
+(`DouglasDeCastroAlmeida/SolucaoCRM`), que es **privado**: para instalar se necesita acceso a él.
 
 ---
 

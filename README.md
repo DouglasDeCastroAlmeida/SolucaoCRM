@@ -39,7 +39,7 @@
 > comando certo pro seu caso:
 >
 > ```bash
-> curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/hostgator-setup-kit/comecar.sh | bash
+> git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && bash SolucaoCRM/hostgator-setup-kit/comecar.sh
 > ```
 >
 > *(prefere ler antes de executar? clone o repo e rode `bash hostgator-setup-kit/comecar.sh` —
@@ -72,8 +72,8 @@ travamento: é o terminal escondendo a senha. Digite (ou cole) e dê Enter.
 Já dentro da VPS:
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 bash hostgator-setup-kit/install.sh
 ```
 
@@ -139,7 +139,7 @@ do agente e contribuir. Para tê-los em **qualquer pasta** — inclusive antes d
 computador —, rode uma vez:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash
+bash scripts/instalar-guias.sh
 ```
 
 Depois abra uma sessão nova do seu assistente e diga *"quero instalar o CRM na minha VPS"*: pedir o
@@ -151,7 +151,7 @@ Os guias **não** se atualizam sozinhos: rodar o mesmo comando de novo traz a ve
 desfazer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/melgarafael/DeskcommCRM/main/scripts/instalar-guias.sh | bash -s -- --remover
+bash scripts/instalar-guias.sh --remover
 ```
 
 Com o repositório já clonado, os guias vêm dentro dele (`.agents/skills/`) e nem isso é preciso. Se
@@ -327,8 +327,8 @@ Detalhes: [`ARCHITECTURE.md`](ARCHITECTURE.md).
 > Esta seção é pra quem vai mexer no código.
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git
-cd DeskcommCRM
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git
+cd SolucaoCRM
 
 nvm use                     # Node 22
 npm install -g pnpm && pnpm install
@@ -515,6 +515,15 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 - **Issues:** [GitHub Issues](https://github.com/melgarafael/DeskcommCRM/issues) — bugs e tasks.
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
+
+---
+
+## Origem
+
+Este projeto nasceu de um fork do DeskcommCRM (licença MIT), criado por Rafael Melgaço, e segue
+com as modificações de Douglas de Castro Almeida. O crédito ao autor original está no
+[`LICENSE`](LICENSE) e no [`NOTICE`](NOTICE). A instalação é feita pelo repositório do dono
+(`DouglasDeCastroAlmeida/SolucaoCRM`), que é **privado**: para instalar é preciso ter acesso a ele.
 
 ---
 

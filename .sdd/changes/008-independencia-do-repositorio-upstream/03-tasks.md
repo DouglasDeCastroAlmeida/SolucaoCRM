@@ -34,8 +34,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-010 [IMPL] Origem do catálogo sem valor padrão, com mensagem clara (~35 min) {AC-003.1, AC-003.2, AC-003.3} deps: T-009
 
 ### Fatia 4: Crédito ao autor original (REQ-004)
-- [ ] T-011 [TEST-UNIT] LICENSE mantém o copyright original e acrescenta o do dono; NOTICE existe e diz que é fork MIT sem URL; READMEs nos três idiomas têm o parágrafo Origem e nenhum comando que baixe algo do upstream (~35 min) {AC-004.1, AC-004.2, AC-004.3}
-- [ ] T-012 [DOCS] Escrever a linha de copyright, o NOTICE e o parágrafo Origem em pt-BR, en e es (~30 min) {AC-004.1, AC-004.2, AC-004.3} deps: T-011
+- [x] T-011 [TEST-UNIT] LICENSE mantém o copyright original e acrescenta o do dono; NOTICE existe e diz que é fork MIT sem URL; READMEs nos três idiomas têm o parágrafo Origem e nenhum comando que baixe algo do upstream (~35 min) {AC-004.1, AC-004.2, AC-004.3}
+- [x] T-012 [DOCS] Escrever a linha de copyright, o NOTICE e o parágrafo Origem em pt-BR, en e es (~30 min) {AC-004.1, AC-004.2, AC-004.3} deps: T-011
 
 ### Fatia 5: Cerca contra regressão (REQ-005)
 - [ ] T-013 [TEST-UNIT] nada-executa-contra-o-upstream: varre os caminhos que executam e reprova melgarafael ou deskcomm.com.br fora da lista de exceções, apontando arquivo e linha; a lista só pode encolher; sabotagem prova que reprova (~50 min) {AC-005.1, AC-005.2} deps: T-005, T-008, T-010, T-012
