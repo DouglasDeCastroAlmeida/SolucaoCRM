@@ -1,0 +1,12 @@
+# Achados do gitleaks já avaliados e aceitos. Formato: commit:arquivo:regra:linha.
+# Só impressão digital EXATA de commit completo (nunca pasta, nunca curinga);
+# o teto só desce — ver tests/unit/gitleaks-reprova-segredo.test.ts.
+#
+# São a chave de fixture de teste (a mesma de dezenas de testes de tests/unit/,
+# 32 bytes de mentira, nunca uma chave real). Ela entrou em dois commits da
+# mudança 006 e saiu no commit seguinte (o teste passou a gerar a chave na hora).
+# O gitleaks varre o histórico do PR, então o achado antigo precisa ficar aqui;
+# reescrever commits já empurrados é proibido pela doutrina de branches.
+d7b61e4b1c0615d126ab38d72d397960010b801e:lib/mcp/servidor-externo/repositorio.test.ts:generic-api-key:11
+810c20fdbe3b4042bcf716e4743245792138564e:lib/mcp/servidor-externo/aprovacao.test.ts:generic-api-key:12
+810c20fdbe3b4042bcf716e4743245792138564e:lib/mcp/servidor-externo/turno-multi-servidor.test.ts:generic-api-key:11
