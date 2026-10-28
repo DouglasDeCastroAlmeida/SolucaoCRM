@@ -166,6 +166,53 @@ export async function registrarAcaoPendente(
   return { id, nova: true };
 }
 
+export const LIMITE_DE_ACOES_LISTADAS = 50;
+
+export interface AcaoPendentePublica {
+  id: string;
+  servidor: { nome: string; slug: string } | null;
+  ferramenta: string;
+  criado_em: string;
+  conversa_id: string | null;
+  estado: string;
+}
+
+/**
+ * As ações pendentes da organização, mais novas primeiro, SEM os argumentos (a coluna nem é
+ * pedida ao banco). `organization_id` entra sempre no filtro: quem chama passa o da sessão.
+ */
+export async function listarAcoesPendentes(
+  supabase: SupabaseClient,
+  organizationId: string,
+  filtro: { conversaId?: string } = {},
+): Promise<AcaoPendentePublica[]> {
+  let consulta = supabase
+    .from(TABELA)
+    .select("id, ferramenta, estado, criado_em, conversa_id, mcp_servidores_externos(nome, slug)")
+    .eq("organization_id", organizationId)
+    .eq("estado", "pendente");
+  if (filtro.conversaId) consulta = consulta.eq("conversa_id", filtro.conversaId);
+  const { data, error } = await consulta.order("criado_em", { ascending: false }).limit(LIMITE_DE_ACOES_LISTADAS);
+  if (error) {
+    logger.warn("nao foi possivel listar as acoes pendentes do servidor MCP externo", {
+      organization_id: organizationId,
+      error: error.message,
+    });
+    return [];
+  }
+  type Bruta = Omit<AcaoPendentePublica, "servidor"> & {
+    mcp_servidores_externos: { nome: string; slug: string } | null;
+  };
+  return ((data ?? []) as unknown as Bruta[]).map((l) => ({
+    id: l.id,
+    servidor: l.mcp_servidores_externos ? { nome: l.mcp_servidores_externos.nome, slug: l.mcp_servidores_externos.slug } : null,
+    ferramenta: l.ferramenta,
+    criado_em: l.criado_em,
+    conversa_id: l.conversa_id,
+    estado: l.estado,
+  }));
+}
+
 export type ResultadoDaDecisao =
   | { tipo: "nao_encontrada" }
   | { tipo: "ja_decidida"; estado: string }

@@ -20,6 +20,7 @@ import { linkDePagamentoSeguro } from "@/lib/cobranca/link";
 import { Bell, Check } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
 import { ApiError } from "@/lib/api/types";
+import { AcoesMcpPendentes } from "./AcoesMcpPendentes";
 
 const SEVERITY_VARIANT: Record<AgentInboxSeverity, "info" | "warning" | "error"> = {
   info: "info",
@@ -27,7 +28,7 @@ const SEVERITY_VARIANT: Record<AgentInboxSeverity, "info" | "warning" | "error">
   critical: "error",
 };
 
-export function AgentInboxList({ canResolve }: { canResolve: boolean }) {
+export function AgentInboxList({ canResolve, canDecideMcp = false }: { canResolve: boolean; canDecideMcp?: boolean }) {
   const t = useT();
   const [tab, setTab] = useState<"open" | "resolved">("open");
   const { data: cachedData, error, isLoading, isError, refetch, isFetching } = useAgentInbox(tab);
@@ -102,6 +103,7 @@ export function AgentInboxList({ canResolve }: { canResolve: boolean }) {
               key={item.id}
               item={item}
               canResolve={canResolve}
+              canDecideMcp={canDecideMcp}
               pending={update.isPending}
               onToggle={(status) => update.mutate({ id: item.id, status })}
             />
@@ -116,11 +118,13 @@ export function AgentInboxList({ canResolve }: { canResolve: boolean }) {
 function InboxRow({
   item,
   canResolve,
+  canDecideMcp,
   pending,
   onToggle,
 }: {
   item: AgentInboxItem;
   canResolve: boolean;
+  canDecideMcp: boolean;
   pending: boolean;
   onToggle: (status: "open" | "resolved") => void;
 }) {
@@ -152,6 +156,9 @@ function InboxRow({
         </p>
         {item.body ? <p className="mt-1 text-xs text-muted-foreground">{item.body}</p> : null}
         {item.destination.orientacao ? <p className="mt-2 text-xs text-muted-foreground">{t(item.destination.orientacao)}</p> : null}
+        {canDecideMcp && item.kind === "acao_mcp_pendente" && item.status !== "resolved" && item.ref_kind === "conversation" && item.ref_id ? (
+          <AcoesMcpPendentes conversaId={item.ref_id} />
+        ) : null}
         {item.destination.estado === "disponivel" ? (
           <Button asChild size="sm" variant="link" className="mt-1 h-auto whitespace-normal px-0 text-left">
             <Link href={item.destination.href}>{t(item.destination.rotulo)}</Link>

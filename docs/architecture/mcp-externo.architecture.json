@@ -160,6 +160,14 @@
       "sublabel": "liga por agente (rascunho) · marca 'sem aprovação' com confirmação · atualizar adota as mudanças e mostra o diff"
     },
     {
+      "id": "rotalista",
+      "lane": "borda",
+      "col": 5,
+      "type": "api",
+      "label": "GET /api/v1/mcp-acoes",
+      "sublabel": "manager+ · só as pendentes da organização da sessão · nunca devolve os argumentos"
+    },
+    {
       "id": "quemadmin",
       "lane": "regra",
       "col": 5,
@@ -352,6 +360,24 @@
       "from": "liberadas",
       "to": "agentes",
       "label": "lê ai_agents.config"
+    },
+    {
+      "id": "e29",
+      "from": "central",
+      "to": "rotalista",
+      "label": "busca as pendentes da conversa do aviso"
+    },
+    {
+      "id": "e30",
+      "from": "rotalista",
+      "to": "acoes",
+      "label": "lê id, ferramenta e servidor (sem argumentos)"
+    },
+    {
+      "id": "e31",
+      "from": "central",
+      "to": "rota",
+      "label": "botões Aprovar e Recusar"
     }
   ],
   "cards": [

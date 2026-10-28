@@ -25,7 +25,7 @@ export default async function AgentInboxPage() {
           )}
         </p>
       </header>
-      <AgentInboxList canResolve={canResolve} />
+      <AgentInboxList canResolve={canResolve} canDecideMcp={ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager} />
     </div>
   );
 }
