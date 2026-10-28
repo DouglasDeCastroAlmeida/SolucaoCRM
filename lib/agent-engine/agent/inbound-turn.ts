@@ -218,6 +218,11 @@ import {
   montarBriefingDaPassagem,
   type BriefingDaPassagem,
 } from '@/lib/escalacao/briefing-da-passagem';
+import {
+  RESUMO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
+  TITULO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
+  criarContadorDeErrosDeFerramenta,
+} from '@/lib/ai/handoff/falhas-de-ferramenta';
 import { diffCheckpoint } from '@/lib/leads/checkpoint-diff';
 import { CORRECAO_DO_TURNO_MUDO, turnoMudoPedeCorrecao } from './turno-mudo';
 import { criarTravaDeDuplicata } from './near-dup';
@@ -4952,6 +4957,17 @@ async function executarTurnoDoAgente(
     // este corpo inteiro. Escoltar aqui deixaria de fora as chamadas de modelo dos
     // auxiliares (`classifyStage`, `maybeCompact`), que rodam ANTES desta e por
     // isso são as que estouram primeiro.
+    // AC-005.3: dois erros de ferramenta SEGUIDOS na mesma conversa param o laço e levam a
+    // conversa a uma pessoa (logo depois da chamada). Fora da prévia: simulação não grava
+    // contagem nem transfere conversa de ninguém.
+    const contadorDeErros = preview
+      ? null
+      : criarContadorDeErrosDeFerramenta({
+          pool,
+          organizationId: tenantId,
+          conversationId: input.conversationId,
+          log: runLog,
+        });
     const turn = await runModelCall(
       pool,
       deps.llmCfg,
@@ -4974,7 +4990,9 @@ async function executarTurnoDoAgente(
         // before_send volta ao modelo para ele reescrever (o 1º veto ensina).
         ...(preview?.kind === 'assisted'
           ? { pararQuando: () => preview.result.candidates.length > 0 }
-          : {}),
+          : contadorDeErros !== null
+            ? { pararQuando: contadorDeErros.pararQuando }
+            : {}),
         ...(agentConfig !== null
           ? {
               model: agentConfig.model,
@@ -4987,6 +5005,46 @@ async function executarTurnoDoAgente(
       },
       { registry: deps.registry, log: runLog },
     );
+
+    // AC-005.3: o laço parou porque a ferramenta falhou pela segunda vez seguida. A conversa
+    // vai para a fila humana com o motivo `erro_de_ferramenta` (texto fixo: nenhum modelo é
+    // chamado aqui). Se o próprio modelo já tinha passado a conversa neste turno, só a
+    // contagem é reiniciada. Mesma ordem do pedido explícito: AVISA o cliente e só então silencia.
+    if (contadorDeErros?.estourou() === true) {
+      if (!passouParaAEquipe) {
+        const aviso = await avisarLeadDaEscalacao(pool, avisoDaEscalacao().ids, {
+          ...avisoDaEscalacao().base,
+          motivo: 'outro',
+        });
+        const doTurno = montarBriefingDaPassagem({
+          checkpoint: previous,
+          pendentesDoCliente: inboundsPendentes,
+          motivo: { codigo: 'erro_de_ferramenta' },
+        });
+        const briefing = {
+          ...doTurno,
+          body: `${RESUMO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA}\n\n${doTurno.body}`,
+        };
+        await performHumanHandoff(
+          pool,
+          { tenantId, leadId, conversationId: input.conversationId },
+          {
+            reason: 'erro_de_ferramenta',
+            conversationSummary: briefing.body,
+            inboxTitle: TITULO_DO_HANDOFF_POR_ERRO_DE_FERRAMENTA,
+            passagem: { origem: 'runtime_nativo', motivoCodigo: 'erro_de_ferramenta', briefing },
+            avisoAoLead: aviso,
+            log: runLog,
+          },
+        );
+        runLog.warn('duas falhas seguidas de ferramenta — conversa devolvida à fila humana', {
+          kind: liveJob().kind,
+          lead_avisado: aviso.avisado,
+        });
+      }
+      await contadorDeErros.zerar();
+      if (!passouParaAEquipe) return; // bot silencia: nada mais sai neste turno
+    }
 
     // SAÍDA TRUNCADA (finish_reason = 'length'): o modelo bateu no
     // teto de tokens de saída e o que produziu veio cortado. A detecção mora aqui,

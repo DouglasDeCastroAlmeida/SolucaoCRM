@@ -50,11 +50,11 @@ Cada tarefa ocupa uma linha:
 - [x] T-022 [IMPL] Tokens e custo por agente em app/app/ai/usage (~45 min) {AC-004.4} deps: T-021, T-018
 
 ### Fatia 6: Transferência para humano e ferramentas do agente (REQ-005, REQ-006)
-- [ ] T-023 [TEST-UNIT] Caracterização do handoff: cliente pede uma pessoa, agente sem segurança transfere, a pessoa que assume vê histórico e motivo (~40 min) {AC-005.1, AC-005.2, AC-005.4}
-- [ ] T-024 [TEST-UNIT] Contador de erros de ferramenta: dois seguidos na mesma conversa transferem com motivo erro_de_ferramenta, um sucesso reinicia a contagem (~40 min) {AC-005.3}
-- [ ] T-025 [IMPL] lib/ai/handoff/falhas-de-ferramenta.ts, stopWhen em run-model-call, motivo novo em HandoffReason e MOTIVOS_DA_PASSAGEM e texto da Central (~60 min) {AC-005.3} deps: T-013, T-024
-- [ ] T-026 [TEST-UNIT] Ferramentas: marcar horário e mover etapa sem efeito duplicado na repetição, criar tarefa vinculada ao contato com idempotência, buscar na base citando a fonte e só da organização, argumentos inválidos devolvem erro e não gravam, nenhuma atua fora da organização (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-006.5, AC-006.6}
-- [ ] T-027 [IMPL] lib/mcp/tools/tarefas.ts (crm_create_task com idempotencyKey), registro nos ids de ferramenta e os ajustes que T-026 revelar (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-006.5, AC-006.6} deps: T-013, T-026
+- [x] T-023 [TEST-UNIT] Caracterização do handoff: cliente pede uma pessoa, agente sem segurança transfere, a pessoa que assume vê histórico e motivo (~40 min) {AC-005.1, AC-005.2, AC-005.4}
+- [x] T-024 [TEST-UNIT] Contador de erros de ferramenta: dois seguidos na mesma conversa transferem com motivo erro_de_ferramenta, um sucesso reinicia a contagem (~40 min) {AC-005.3}
+- [x] T-025 [IMPL] lib/ai/handoff/falhas-de-ferramenta.ts, stopWhen em run-model-call, motivo novo em HandoffReason e MOTIVOS_DA_PASSAGEM e texto da Central (~60 min) {AC-005.3} deps: T-013, T-024
+- [x] T-026 [TEST-UNIT] Ferramentas: marcar horário e mover etapa sem efeito duplicado na repetição, criar tarefa vinculada ao contato com idempotência, buscar na base citando a fonte e só da organização, argumentos inválidos devolvem erro e não gravam, nenhuma atua fora da organização (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-006.5, AC-006.6}
+- [x] T-027 [IMPL] lib/mcp/tools/tarefas.ts (crm_create_task com idempotencyKey), registro nos ids de ferramenta e os ajustes que T-026 revelar (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-006.5, AC-006.6} deps: T-013, T-026
 
 ### Fatia 7: MCP externo com vários servidores (REQ-007, REQ-008)
 - [ ] T-028 [TEST-UNIT] Repositório de servidores: cadastrar valida o destino, testa e lista as ferramentas, todas nascem desligadas e se ligam por agente, o agente só vê as ligadas de qualquer servidor, id no formato antigo continua apontando para o servidor migrado (~55 min) {AC-007.1, AC-007.2, AC-007.8, AC-007.9} deps: T-005

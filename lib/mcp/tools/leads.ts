@@ -467,6 +467,26 @@ export const crmMoveLeadStage: McpToolDefinition<typeof moveInputShape> = {
   requiresRole: "agent",
   requiresScope: "mcp:write",
   handler: async (input, ctx) => {
+    // AC-006.2: repetir o movimento para a etapa em que o negócio JÁ está não é um novo
+    // efeito. O handler compartilhado trata "mesma etapa" como reordenação (o gesto de
+    // arrastar dentro da coluna) e grava outra atividade "movido de X para X" e outro
+    // evento — para o agente, que repete a chamada, isso é ruído na linha do tempo.
+    // Só vale sem posição, ganho ou perda: quem os pede quer escrever.
+    if (
+      input.position_in_stage === undefined &&
+      !input.won_reason &&
+      !input.lost_reason
+    ) {
+      const { data: atual } = await ctx.supabase
+        .from("crm_leads")
+        .select("*")
+        .eq("organization_id", ctx.organizationId)
+        .eq("id", input.lead_id)
+        .maybeSingle();
+      if (atual && (atual as { stage_id?: string }).stage_id === input.to_stage_id) {
+        return { lead: atual, ja_estava_na_etapa: true };
+      }
+    }
     const lead = await moveLeadHandler(
       ctx.supabase,
       {

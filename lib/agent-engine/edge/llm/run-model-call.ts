@@ -262,8 +262,12 @@ export interface RunModelCallInput {
    * rascunho assistido para quando há resposta ACEITA, não quando o modelo
    * chamou `send_message` — um envio vetado devolve o erro ao modelo para ele
    * reescrever na etapa seguinte, e parar ali entregava rascunho vazio.
+   *
+   * Recebe os passos já concluídos (o `stopWhen` do SDK) e pode ser assíncrono: o contador
+   * de erros de ferramenta seguidos (`lib/ai/handoff/falhas-de-ferramenta.ts`, AC-005.3) lê
+   * o último passo e manda o laço parar no segundo erro, para a conversa ir a uma pessoa.
    */
-  pararQuando?: () => boolean;
+  pararQuando?: (info: { steps: ReadonlyArray<unknown> }) => boolean | PromiseLike<boolean>;
   /** Teto por chamada auxiliar; nunca aumenta o limite configurado pela organização. */
   maxOutputTokens?: number;
   /**
