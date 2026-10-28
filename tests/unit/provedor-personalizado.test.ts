@@ -36,6 +36,21 @@ vi.mock("node:dns/promises", () => {
   return { lookup, default: { lookup } };
 });
 
+// A conexão real fixa o IP validado (`fetchComIpFixado`, https.request). Aqui ela
+// é trocada por uma que repassa ao `fetch` global (os espiões dos casos abaixo),
+// e o espião `fixado` registra que o caminho fixado foi mesmo o escolhido.
+const fixado = vi.hoisted(() => ({ chamadas: [] as string[] }));
+vi.mock("@/lib/net/destino-seguro", async (original) => {
+  const real = await original<typeof import("@/lib/net/destino-seguro")>();
+  return {
+    ...real,
+    fetchComIpFixado: (url: string, init?: RequestInit) => {
+      fixado.chamadas.push(url);
+      return globalThis.fetch(url, init);
+    },
+  };
+});
+
 const registry = createDefaultRegistry();
 const ENDERECO = "https://gateway.exemplo/v1";
 
@@ -214,6 +229,62 @@ describe("o endereço da empresa não alcança a rede interna do servidor", () =
     await expect(guardado("https://gw.exemplo/v1/chat/completions", { method: "POST" })).rejects.toThrow(
       "unsafe_url:redirect_not_followed",
     );
+  });
+
+  it("AC-002.2: http:// é recusado em qualquer ambiente, sem chamar a rede", async () => {
+    const espiao = vi.fn();
+    vi.stubGlobal("fetch", espiao);
+
+    expect(await validateCustomKey("sk-x", "http://gw.exemplo/v1")).toEqual({
+      ok: false,
+      error: "unsafe_url:https_required",
+    });
+    expect(espiao).not.toHaveBeenCalled();
+  });
+
+  it("AC-002.5: corpo gigante no /models é recusado em vez de parseado", async () => {
+    const grande = JSON.stringify({ data: [{ id: "a".repeat(1_500_000) }] });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(grande, { status: 200 })));
+
+    expect(await validateCustomKey("sk-x", ENDERECO)).toEqual({
+      ok: false,
+      error: "unsafe_url:response_too_large",
+    });
+  });
+
+  it("AC-002.2: no turno do agente, http:// também é recusado", async () => {
+    const interno = vi.fn();
+    const guardado = fetchParaDestinoDaOrganizacao(interno);
+    await expect(guardado("http://gw.exemplo/v1/chat/completions", { method: "POST" })).rejects.toThrow(
+      "unsafe_url:https_required",
+    );
+    expect(interno).not.toHaveBeenCalled();
+  });
+
+  it("AC-002.3: o teste de conexão e o turno saem pela conexão com IP fixado", async () => {
+    fixado.chamadas.length = 0;
+    const espiao = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", espiao);
+
+    await validateCustomKey("sk-x", ENDERECO);
+    await fetchParaDestinoDaOrganizacao()("https://gw.exemplo/v1/chat/completions", { method: "POST" });
+
+    expect(fixado.chamadas).toEqual([
+      "https://gateway.exemplo/v1/models",
+      "https://gw.exemplo/v1/chat/completions",
+    ]);
+  });
+
+  it("AC-002.3: o modelo do registry do turno também sai pela conexão fixada", async () => {
+    fixado.chamadas.length = 0;
+    const espiao = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", espiao);
+
+    await generateText({ model: registry.custom!("sk-x", "gpt-x", ENDERECO), prompt: "oi", maxRetries: 0 }).catch(
+      () => undefined,
+    );
+
+    expect(fixado.chamadas[0]).toBe("https://gateway.exemplo/v1/chat/completions");
   });
 
   it.each([

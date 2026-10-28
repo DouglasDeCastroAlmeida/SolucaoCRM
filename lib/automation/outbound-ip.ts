@@ -46,6 +46,28 @@ const FAIXAS_IPV4: ReadonlyArray<readonly [string, number]> = [
   ["240.0.0.0", 4], // reservada (inclui 255.255.255.255)
 ];
 
+/** IPv6 em 8 grupos de 16 bits, ou null se não parseia. */
+function ipv6EmGrupos(ip: string): number[] | null {
+  let texto = ip.toLowerCase().split("%")[0]!;
+  // Cauda em IPv4 pontuado (::ffff:1.2.3.4) vira dois grupos hex.
+  const cauda = /(\d+\.\d+\.\d+\.\d+)$/.exec(texto);
+  if (cauda) {
+    const n = ipv4ParaInt(cauda[1]!);
+    if (n === null) return null;
+    texto = texto.slice(0, cauda.index) + `${(n >>> 16).toString(16)}:${(n & 0xffff).toString(16)}`;
+  }
+  const partes = texto.split("::");
+  if (partes.length > 2) return null;
+  const lado = (t: string) => (t === "" ? [] : t.split(":"));
+  const esq = lado(partes[0]!);
+  const dir = partes.length === 2 ? lado(partes[1]!) : [];
+  const falta = 8 - esq.length - dir.length;
+  if (partes.length === 1 ? falta !== 0 : falta < 1) return null;
+  const todos = [...esq, ...Array<string>(partes.length === 2 ? falta : 0).fill("0"), ...dir];
+  const grupos = todos.map((x) => (/^[0-9a-f]{1,4}$/.test(x) ? parseInt(x, 16) : NaN));
+  return grupos.length === 8 && grupos.every((x) => !Number.isNaN(x)) ? grupos : null;
+}
+
 export function ipEhEspecial(ip: string): boolean {
   if (isIPv4(ip)) {
     const alvo = ipv4ParaInt(ip);
@@ -60,16 +82,27 @@ export function ipEhEspecial(ip: string): boolean {
   }
 
   if (isIPv6(ip)) {
-    const normal = ip.toLowerCase();
-    // IPv4-mapped (::ffff:127.0.0.1) esconde um IPv4 — decide pelo IPv4 embutido.
-    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(normal);
-    if (mapped?.[1]) return ipEhEspecial(mapped[1]);
-    if (normal === "::" || normal === "::1") return true;
-    if (normal.startsWith("fe80")) return true; // link-local
-    if (/^f[cd]/.test(normal)) return true; // ULA fc00::/7
-    if (normal.startsWith("ff")) return true; // multicast
-    if (normal.startsWith("2001:db8")) return true; // documentação
-    if (normal.startsWith("64:ff9b")) return true; // NAT64 — alcança IPv4 privado
+    const g = ipv6EmGrupos(ip);
+    if (g === null) return true; // não parseou: trata como perigoso
+    const embutido = `${g[6]! >> 8}.${g[6]! & 255}.${g[7]! >> 8}.${g[7]! & 255}`;
+    const zeros = (ate: number) => g.slice(0, ate).every((x) => x === 0);
+    // "::" e "::1"
+    if (zeros(7) && (g[7] === 0 || g[7] === 1)) return true;
+    // IPv4-mapeado (::ffff:x:y), com ou sem zeros extras (::ffff:0:x:y):
+    // decide pelo IPv4 dos dois últimos grupos.
+    if (zeros(5) && g[5] === 0xffff) return ipEhEspecial(embutido);
+    if (zeros(4) && g[4] === 0xffff && g[5] === 0) return ipEhEspecial(embutido);
+    // IPv4-compatível (::x:y)
+    if (zeros(6)) return ipEhEspecial(embutido);
+    // NAT64 64:ff9b::/96 alcança o IPv4 embutido; trata como especial sempre.
+    if (g[0] === 0x64 && g[1] === 0xff9b) return true;
+    const topo = g[0]!;
+    if ((topo & 0xffc0) === 0xfe80) return true; // link-local fe80::/10
+    if ((topo & 0xffc0) === 0xfec0) return true; // site-local fec0::/10
+    if ((topo & 0xfe00) === 0xfc00) return true; // ULA fc00::/7
+    if ((topo & 0xff00) === 0xff00) return true; // multicast
+    if (topo === 0x2001 && g[1] === 0x0db8) return true; // documentação
+    if (topo === 0x2002) return true; // 6to4: embute IPv4 arbitrário
     return false;
   }
 

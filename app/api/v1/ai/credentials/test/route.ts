@@ -5,7 +5,9 @@ import { z } from "zod";
 import { ok, fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { requireSupportWrite } from "@/lib/impersonate/support";
+import { modeloPodeErrarFerramentas } from "@/lib/ai/modelo-fraco";
 import { validateProviderKey } from "@/lib/ai/provider-validators";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { traduzir } from "@/lib/i18n/dicionario";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +29,19 @@ export const dynamic = "force-dynamic";
 const testSchema = z.object({
   base_url: z.string().trim().min(1).max(500),
   api_key: z.string().trim().min(8).max(2048),
+  /** Opcional: com o modelo informado, a resposta diz se ele pode errar ferramentas (AC-001.6). */
+  modelo: z.string().trim().min(1).max(200).optional(),
 });
+
+/** `ai_models` é catálogo global (sem organização). Falha de leitura = sem catálogo = avisa. */
+async function catalogoDoProvedor(provider: string) {
+  const { data } = await createAdminClient()
+    .from("ai_models")
+    .select("model_id, supports_tools")
+    .eq("provider", provider)
+    .is("deprecated_at", null);
+  return (data ?? []) as Array<{ model_id: string; supports_tools: boolean | null }>;
+}
 
 export async function POST(req: NextRequest): Promise<Response> {
   const supportDenied = await requireSupportWrite();
@@ -55,10 +69,15 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const resultado = await validateProviderKey("custom", parsed.data.api_key, parsed.data.base_url);
 
+  // Aviso, nunca bloqueio: modelo fraco só é dito, o uso segue livre.
+  const aviso = resultado.ok
+    ? modeloPodeErrarFerramentas(parsed.data.modelo, await catalogoDoProvedor("custom"))
+    : false;
+
   return ok(
     resultado.ok
-      ? { ok: true, models: resultado.models, error: null }
-      : { ok: false, models: [], error: resultado.error },
+      ? { ok: true, models: resultado.models, error: null, aviso_modelo_fraco: aviso }
+      : { ok: false, models: [], error: resultado.error, aviso_modelo_fraco: false },
     { requestId },
   );
 }
