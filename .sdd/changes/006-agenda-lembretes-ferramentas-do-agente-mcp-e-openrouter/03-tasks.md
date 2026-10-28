@@ -34,7 +34,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-010 [TEST-INT] Invariantes: padrões novos (agente assistido, orçamento armado) valem só para linhas novas e as existentes ficam intactas; tabelas novas isoladas entre 2 organizações; funções novas sem EXECUTE para PUBLIC e anon; migração do servidor MCP atual é idempotente e não apaga o formato antigo (~60 min) {AC-003.1, AC-007.9, AC-008.4, AC-009.2} deps: T-002
 - [x] T-011 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
 - [x] T-012 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: padrão assisted, orçamento armado para linhas novas e trigger do orçamento padrão, mcp_servidores_externos com cópia do servidor atual, mcp_acoes_pendentes, ai_falhas_de_ferramenta, kinds novos da Central (~60 min) {AC-003.1, AC-007.9, AC-008.4, AC-009.2} deps: T-010, T-011
-- [ ] T-013 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~20 min) deps: T-012
+- [x] T-013 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~20 min) deps: T-012 Provado pelo CI do PR #23 (invariants-majors verde, instalação nova e atualização, depois de corrigir o baseline e 4 invariantes que dependiam do padrão automatico).
 
 ### Fatia 4: Agente desligado de fábrica e automático com confirmação (REQ-003)
 - [ ] T-014 [TEST-UNIT] Caracterização: modo assistido redige e fica pendente, só sai após aprovação, texto mudado exige nova aprovação, desligar para o envio e preserva as respostas pendentes (~45 min) {AC-003.2, AC-003.3, AC-003.7}
