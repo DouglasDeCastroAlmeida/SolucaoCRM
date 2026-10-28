@@ -48,3 +48,15 @@ systemctl list-timers deskcomm-executor-atualizar.timer   # próxima atualizaç�
 ```
 
 Vigiado por `tests/unit/executor-proprio-so-roda-o-que-e-nosso.test.ts`.
+
+## Situação neste repositório
+
+Hoje **não há executor próprio instalado** aqui: não existe a variável `EXECUTOR_PROPRIO` nem
+máquina registrada, e o CI roda inteiro nas máquinas do GitHub. Nada precisa ser desligado.
+
+Para registrar um, o `instalar.sh` já faz o caminho: numa Ubuntu 24.04 amd64 dedicada, rode-o como
+administrador. Ele instala Docker e Sysbox, pede um token do GitHub (só do repositório
+`DouglasDeCastroAlmeida/SolucaoCRM`, permissão "Administration: Read and write"), confere o token
+e liga as vagas. Depois disso a variável `EXECUTOR_PROPRIO` com o valor `ligado` é o que manda os
+jobs para a máquina. A guarda só aceita trabalho deste repositório; qualquer outro, inclusive o
+repositório de origem, é recusado.

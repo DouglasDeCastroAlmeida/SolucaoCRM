@@ -48,9 +48,9 @@ Cada tarefa ocupa uma linha:
 - [ ] T-018 [CHECK-SMOKE] Disparar o corte manualmente e conferir o PR gerado, o CI dele e a tag depois do merge (~30 min) {AC-002.4} deps: T-017
 
 ### Fatia 7: Executor de CI (REQ-002.3)
-- [ ] T-019 [TEST-INT] so-o-que-e-nosso.sh aceita o repositório do dono e recusa um alheio e um fork; instalar.sh e vaga.sh usam o repositório do dono (~45 min) {AC-002.3}
-- [ ] T-020 [IMPL] Trocar o repositório esperado do executor com EXECUTOR_PROPRIO desligada e religar depois (~40 min) {AC-002.3} deps: T-019
-- [ ] T-021 [CHECK-SMOKE] PR de teste roda no executor próprio e um fork continua recusado (~30 min) {AC-002.3} deps: T-020
+- [x] T-019 [TEST-INT] so-o-que-e-nosso.sh aceita o repositório do dono e recusa um alheio e um fork; instalar.sh e vaga.sh usam o repositório do dono (~45 min) {AC-002.3}
+- [x] T-020 [IMPL] Trocar o repositório esperado do executor com EXECUTOR_PROPRIO desligada e religar depois (~40 min) {AC-002.3} deps: T-019
+- [x] T-021 [CHECK-SMOKE] PR de teste roda no executor próprio e um fork continua recusado (~30 min) {AC-002.3} deps: T-020 **NÃO APLICÁVEL (medido em 2026-10-28): o repositório do dono não tem a variável EXECUTOR_PROPRIO nem runner registrado (0 runners); não há executor para provar. Fazer quando o dono montar um executor próprio.**
 
 ### Fechamento
 - [ ] T-022 [CHECK-SMOKE] Deploy na homologação e sondas de / (200) e /app (307); produção só com autorização escrita do dono (~30 min) deps: T-021, T-018

@@ -25,8 +25,8 @@
  * Baixe o TETO no mesmo commit (senão reprova também, para a folga não virar vaga).
  * Exceção que já não casa com nada também reprova: remova-a.
  *
- * AGENDA DE SAÍDA: a exceção do release.yml já saiu (Fatia 6). As de infra/executor-proprio/**
- * (Fatia 7) saem quando essa fatia encerrar; o teto desce de 14 para 11.
+ * AGENDA DE SAÍDA: as exceções do release.yml (Fatia 6) e de infra/executor-proprio/** (Fatia 7)
+ * já saíram. O teto é 11.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -64,9 +64,6 @@ export const EXCECOES: Excecao[] = [
     caminho: "extensoes/loja.json",
     motivo: "dado de catálogo versionado; regenerar com a origem do dono fica para depois (grill)",
   },
-  { caminho: "infra/executor-proprio/instalar.sh", motivo: "Fatia 7" },
-  { caminho: "infra/executor-proprio/so-o-que-e-nosso.sh", motivo: "Fatia 7" },
-  { caminho: "infra/executor-proprio/vaga.sh", motivo: "Fatia 7" },
   { caminho: "tests/shell/extensao-nao-instala.test.sh", motivo: ASSERCAO_NEGATIVA },
   { caminho: "tests/shell/update-guard.test.sh", motivo: ASSERCAO_NEGATIVA },
   {
@@ -84,7 +81,7 @@ export const EXCECOES: Excecao[] = [
 ];
 
 /** Só pode baixar. Subir exige justificar no PR e é recusado por este teste. */
-export const TETO_DE_EXCECOES = 14;
+export const TETO_DE_EXCECOES = 11;
 
 const PREFIXOS = [
   "scripts/",
