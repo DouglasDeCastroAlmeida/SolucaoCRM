@@ -16734,6 +16734,24 @@ export const DICIONARIO: Traducoes = {
   "Um cliente pediu para remarcar um horário": {
     es: "Un cliente pidió reprogramar un horario",
   },
+  "Uma ação em um sistema externo espera aprovação": {
+    es: "Una acción en un sistema externo espera aprobación",
+  },
+  "O serviço de IA parou de responder": {
+    es: "El servicio de IA dejó de responder",
+  },
+  "O assistente quer fazer uma alteração em um sistema externo e espera a sua aprovação. Confira o que será feito e aprove ou recuse.": {
+    es: "El asistente quiere hacer un cambio en un sistema externo y espera tu aprobación. Revisa lo que se hará y aprueba o rechaza.",
+  },
+  "O serviço de IA não respondeu (chave revogada, saldo zerado ou serviço fora do ar) e a conversa foi para a fila de uma pessoa. Atenda o cliente e revise a chave de IA.": {
+    es: "El servicio de IA no respondió (clave revocada, saldo agotado o servicio caído) y la conversación pasó a la cola de una persona. Atiende al cliente y revisa la clave de IA.",
+  },
+  "O serviço de IA não respondeu — o cliente não pediu uma pessoa": {
+    es: "El servicio de IA no respondió — el cliente no pidió a una persona",
+  },
+  "Uma ferramenta do assistente falhou duas vezes seguidas": {
+    es: "Una herramienta del asistente falló dos veces seguidas",
+  },
   "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar. Nada foi alterado: abra o compromisso, combine o novo horário com ele e remarque ou cancele pela agenda.": {
     es: "El cliente respondió al recordatorio pidiendo reprogramar o cancelar. No se cambió nada: abre la cita, acuerda el nuevo horario con él y reprograma o cancela desde la agenda.",
   },

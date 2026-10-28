@@ -10204,6 +10204,12 @@ alter table public.agent_inbox_items
     -- avisa a Central; nada é remarcado nem cancelado sozinho. Entra NESTA
     -- lista pelas razões de sempre (bloco único por constraint, #159).
     'agenda_cliente_pediu_remarcar',
+    -- (migration 0724, mudança SDD 006) Uma ferramenta de escrita de servidor MCP
+    -- externo espera aprovação de uma pessoa, e o provedor de IA do agente parou
+    -- de responder (chave revogada, saldo zerado). Entram NESTA lista pelas
+    -- razões de sempre (bloco único por constraint, #159).
+    'acao_mcp_pendente',
+    'ia_provedor_indisponivel',
     'other'
   ));
 
@@ -30074,7 +30080,7 @@ create table if not exists public.passagens_de_atendimento (
   motivo_codigo    text not null check (motivo_codigo in (
                      'requested_human','suspected_optout','orcamento_de_ia','low_sentiment',
                      'low_confidence','critical_stage','legal_mention','refund_mention',
-                     'caso_escalado','verificacao_manual')),
+                     'caso_escalado','verificacao_manual','provedor_indisponivel','erro_de_ferramenta')),
 
   -- ─── OS QUATRO NOMES QUE O GATE DE LGPD LÊ (ver o cabeçalho) ─────────────
   --   title   ← "o que o cliente quer", em uma linha (é o título do cartão)
@@ -30167,7 +30173,7 @@ alter table public.passagens_de_atendimento
   check (motivo_codigo in (
     'requested_human','suspected_optout','orcamento_de_ia','low_sentiment',
     'low_confidence','critical_stage','legal_mention','refund_mention',
-    'caso_escalado','verificacao_manual'));
+    'caso_escalado','verificacao_manual','provedor_indisponivel','erro_de_ferramenta'));
 
 alter table public.passagens_de_atendimento
   drop constraint if exists passagens_de_atendimento_aviso_motivo_codigo_check;
@@ -58174,6 +58180,154 @@ alter table public.calendar_event_types
 create index if not exists calendar_appointments_client_pending_idx
   on public.calendar_appointments (organization_id, contact_id, starts_at)
   where client_confirmed_at is null and status in ('pending', 'confirmed');
+
+-- ---- agente: padrões seguros e MCP com vários servidores (migration 0724) ----
+-- manifest: Agente de IA, padrões seguros e MCP multi-servidor (os CHECKs de motivo da passagem e de kind da Central estão nos blocos únicos das suas constraints).
+
+alter table public.ai_agents
+  alter column operation_mode set default 'assisted';
+
+-- >>> ARMA SO LINHA NOVA 0724: INICIO <<<
+-- Autorizado por `tests/unit/migracao-nao-arma-ninguem.test.ts` (mudança SDD 006,
+-- AC-004.1): o DEFAULT vale só para linha que NASCER depois (nenhum UPDATE em
+-- linha existente, linha 'off' fica 'off') e o gatilho só arma linha sem decisão
+-- (inexistente, ou 'bloquear' ainda sem data de vigência).
+alter table public.ai_budgets
+  alter column enforcement_mode set default 'bloquear';
+
+create or replace function public.fn_arma_teto_ao_publicar_agente()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.published_version_id is not null
+     and (tg_op = 'INSERT' or old.published_version_id is null) then
+    insert into public.ai_budgets
+      (organization_id, monthly_limit_cents, enforcement_mode, enforcement_effective_at)
+    values (new.organization_id, 5000, 'bloquear', now())
+    on conflict (organization_id) do update
+      set enforcement_effective_at = now()
+      where public.ai_budgets.enforcement_mode = 'bloquear'
+        and public.ai_budgets.enforcement_effective_at is null;
+  end if;
+  return new;
+end;
+$$;
+-- >>> ARMA SO LINHA NOVA 0724: FIM <<<
+
+revoke execute on function public.fn_arma_teto_ao_publicar_agente() from public, anon, authenticated;
+
+drop trigger if exists trg_ai_agents_arma_teto on public.ai_agents;
+create trigger trg_ai_agents_arma_teto
+  after insert or update of published_version_id on public.ai_agents
+  for each row execute function public.fn_arma_teto_ao_publicar_agente();
+
+create table if not exists public.mcp_servidores_externos (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  slug            text not null check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$' and char_length(slug) <= 40),
+  nome            text not null check (char_length(nome) between 1 and 80),
+  endpoint        text not null,
+  chave_encrypted bytea,
+  chave_iv        bytea,
+  chave_tag       bytea,
+  chave_last4     text,
+  ferramentas     jsonb not null default '[]'::jsonb check (jsonb_typeof(ferramentas) = 'array'),
+  ferramentas_em  timestamptz,
+  ativo           boolean not null default true,
+  created_at      timestamptz not null default now(),
+  unique (organization_id, slug)
+);
+
+comment on table public.mcp_servidores_externos is
+  'Servidores MCP externos de uma organização (mudança SDD 006). A chave é cifrada com AES-256-GCM (AI_CRED_AES_KEY) e NUNCA sai do servidor: o papel authenticated só lê as colunas sem segredo. Escrita só pelo service_role, com organization_id resolvido no servidor.';
+
+-- As colunas cifradas nascem no apêndice 0580, que no baseline vem DEPOIS deste
+-- bloco: repetidas aqui (idempotente) para o insert abaixo existir já na instalação nova.
+alter table public.organizations
+  add column if not exists mcp_externo_chave_encrypted bytea,
+  add column if not exists mcp_externo_chave_iv bytea,
+  add column if not exists mcp_externo_chave_tag bytea,
+  add column if not exists mcp_externo_chave_last4 text;
+
+insert into public.mcp_servidores_externos
+  (organization_id, slug, nome, endpoint, chave_encrypted, chave_iv, chave_tag, chave_last4)
+select o.id, 'padrao', 'Servidor padrão',
+       trim(o.settings->'mcp_externo'->>'endpoint'),
+       o.mcp_externo_chave_encrypted, o.mcp_externo_chave_iv,
+       o.mcp_externo_chave_tag, o.mcp_externo_chave_last4
+  from public.organizations o
+ where jsonb_typeof(o.settings->'mcp_externo') = 'object'
+   and nullif(trim(o.settings->'mcp_externo'->>'endpoint'), '') is not null
+on conflict (organization_id, slug) do nothing;
+
+create table if not exists public.mcp_acoes_pendentes (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  agente_id       uuid references public.ai_agents(id) on delete cascade,
+  conversa_id     uuid references public.conversations(id) on delete cascade,
+  servidor_id     uuid not null references public.mcp_servidores_externos(id) on delete cascade,
+  ferramenta      text not null,
+  argumentos      jsonb not null default '{}'::jsonb,
+  argumentos_hash text not null,
+  estado          text not null default 'pendente'
+                  check (estado in ('pendente','aprovada','recusada','executada','falhou')),
+  criado_em       timestamptz not null default now(),
+  decidido_por    uuid references auth.users(id) on delete set null,
+  decidido_em     timestamptz
+);
+
+create unique index if not exists mcp_acoes_pendentes_aberta_uidx
+  on public.mcp_acoes_pendentes (conversa_id, ferramenta, argumentos_hash)
+  where estado = 'pendente';
+
+create index if not exists mcp_acoes_pendentes_org_estado_idx
+  on public.mcp_acoes_pendentes (organization_id, estado, criado_em desc);
+
+create table if not exists public.ai_falhas_de_ferramenta (
+  conversation_id uuid primary key references public.conversations(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  seguidas        integer not null default 0 check (seguidas >= 0),
+  ultima_em       timestamptz not null default now()
+);
+
+alter table public.mcp_servidores_externos enable row level security;
+alter table public.mcp_acoes_pendentes     enable row level security;
+alter table public.ai_falhas_de_ferramenta enable row level security;
+
+drop policy if exists tenant_isolation_mcp_servidores_externos_all on public.mcp_servidores_externos;
+create policy tenant_isolation_mcp_servidores_externos_all on public.mcp_servidores_externos
+  for select to authenticated
+  using (organization_id in (select public.fn_user_org_ids()));
+
+drop policy if exists tenant_isolation_mcp_acoes_pendentes_all on public.mcp_acoes_pendentes;
+create policy tenant_isolation_mcp_acoes_pendentes_all on public.mcp_acoes_pendentes
+  for select to authenticated
+  using (organization_id in (select public.fn_user_org_ids()));
+
+drop policy if exists tenant_isolation_ai_falhas_de_ferramenta_all on public.ai_falhas_de_ferramenta;
+create policy tenant_isolation_ai_falhas_de_ferramenta_all on public.ai_falhas_de_ferramenta
+  for select to authenticated
+  using (organization_id in (select public.fn_user_org_ids()));
+
+revoke all on table public.mcp_servidores_externos from anon, authenticated;
+revoke all on table public.mcp_acoes_pendentes     from anon, authenticated;
+revoke all on table public.ai_falhas_de_ferramenta from anon, authenticated;
+
+grant select (id, organization_id, slug, nome, endpoint, chave_last4, ferramentas, ferramentas_em, ativo, created_at)
+  on public.mcp_servidores_externos to authenticated;
+-- `argumentos` fica fora: pode carregar dado do cliente e só o servidor o lê.
+grant select (id, organization_id, agente_id, conversa_id, servidor_id, ferramenta, argumentos_hash, estado, criado_em, decidido_por, decidido_em)
+  on public.mcp_acoes_pendentes to authenticated;
+grant select on public.ai_falhas_de_ferramenta to authenticated;
+
+grant all on table public.mcp_servidores_externos to service_role;
+grant all on table public.mcp_acoes_pendentes     to service_role;
+grant all on table public.ai_falhas_de_ferramenta to service_role;
+
+notify pgrst, 'reload schema';
 
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
