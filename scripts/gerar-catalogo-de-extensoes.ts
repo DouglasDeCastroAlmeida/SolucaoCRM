@@ -9,9 +9,9 @@
  * Cada pacote é validado pelo SCHEMA REAL (`parseManifest` + `checkCompatibility`), não por
  * uma cópia das regras: um gerador com regras próprias publicaria pacote que o host recusa.
  *
- * Uso:
- *   pnpm tsx scripts/gerar-catalogo-de-extensoes.ts            # grava
- *   pnpm tsx scripts/gerar-catalogo-de-extensoes.ts --conferir # só confere (é o que o CI roda)
+ * Uso (EXTENSOES_ORIGEM é obrigatória: use a `origin` que está em extensoes/catalogo.json):
+ *   EXTENSOES_ORIGEM=<origem> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts            # grava
+ *   EXTENSOES_ORIGEM=<origem> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts --conferir # só confere
  */
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -120,7 +120,7 @@ async function main() {
     if (atual !== catalogo) {
       throw new Error(
         "extensoes/catalogo.json está fora de dia com os pacotes. " +
-          "Rode: pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
+          "Rode: EXTENSOES_ORIGEM=<origin do catalogo.json> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
       );
     }
     console.log(`catálogo em dia: ${entries.length} pacote(s), revisão ${revision}`);

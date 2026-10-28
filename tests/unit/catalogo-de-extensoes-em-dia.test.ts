@@ -67,7 +67,7 @@ describe("catálogo de extensões", () => {
     });
     expect(
       divergentes.map((c) => c.slice(RAIZ.length + 1)),
-      "catálogo fora de dia: rode pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
+      "catálogo fora de dia: rode EXTENSOES_ORIGEM=<origin do catalogo.json> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
     ).toEqual([]);
   });
 

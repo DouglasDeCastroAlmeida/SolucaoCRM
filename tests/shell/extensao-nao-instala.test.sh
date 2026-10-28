@@ -127,7 +127,13 @@ grep -q "Nenhuma origem de catálogo configurada" "$saida" \
 
 # AC-003.3: o script nunca toca o banco (a cerca acima proíbe psql/service key), então
 # remover o padrão não desinstala extensão alguma — o estado instalado mora no banco.
-ok "AC-003.3: extensão instalada vive no banco; o script não o toca (cerca acima)"
+for banco in 'psql' 'service_role' 'SERVICE_ROLE' 'DATABASE_URL' 'SUPABASE_DB_URL' 'extension_installs' 'delete from' 'DELETE FROM' '/api/v1/extensions'; do
+  if grep -q "$banco" "$SCRIPT"; then
+    erro "AC-003.3: o script passou a tocar o banco/extensões ('$banco') — extensão instalada deve independer dele"
+  else
+    ok "AC-003.3: não usa '$banco'"
+  fi
+done
 
 if [ "$falhas" -gt 0 ]; then echo "FALHOU: $falhas"; exit 1; fi
 echo "tudo verde"

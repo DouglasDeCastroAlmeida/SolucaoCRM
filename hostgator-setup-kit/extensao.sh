@@ -26,6 +26,7 @@
 #   ./extensao.sh listar                    # o que existe no catálogo oficial
 #   ./extensao.sh baixar [destino]          # baixa e confere; imprime o caminho
 #   ./extensao.sh --ajuda
+#   (informe o endereço do catálogo em EXTENSOES_ORIGEM; sem ele nada é consultado)
 
 source "$(dirname "$0")/_common.sh"
 
@@ -46,7 +47,7 @@ exigir_origem() {
 }
 
 ajuda() {
-  sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'
   exit 0
 }
 
