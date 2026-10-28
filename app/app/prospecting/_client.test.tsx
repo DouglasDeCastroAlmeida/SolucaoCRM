@@ -226,6 +226,19 @@ describe("A3: painel de configuração por estado do rascunho", () => {
     expect(screen.getByLabelText("O que a IA deve oferecer e como iniciar")).toBeEnabled();
   });
 
+  it("o seletor de agente explica por que agente em 'aprovar antes de enviar' não aparece", async () => {
+    openPage();
+    fireEvent.click(await screen.findByRole("button", { name: /Imobiliária parcial/ }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Usar agente existente / configurar manualmente" }),
+    );
+    expect(
+      screen.getByText(
+        "Agentes no modo 'aprovar antes de enviar' não aparecem aqui. Ligue o automático no agente para usá-lo na Prospecção.",
+      ),
+    ).toBeVisible();
+  });
+
   it("config completa continua travada e sem 'Configurar por conversa'", async () => {
     openPage();
     expect(await screen.findByLabelText("Agente de IA")).toBeDisabled();

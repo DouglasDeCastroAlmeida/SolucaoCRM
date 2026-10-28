@@ -1155,6 +1155,9 @@ export const DICIONARIO: Traducoes = {
   "O agente vai passar a responder sozinho aos seus clientes, sem esperar a aprovação de uma pessoa. O custo de cada resposta vai na chave de IA da sua empresa.": {
     es: "El agente pasará a responder solo a tus clientes, sin esperar la aprobación de una persona. El costo de cada respuesta va en la clave de IA de tu empresa.",
   },
+  "Agentes no modo 'aprovar antes de enviar' não aparecem aqui. Ligue o automático no agente para usá-lo na Prospecção.": {
+    es: "Los agentes en modo 'aprobar antes de enviar' no aparecen aquí. Activa el automático en el agente para usarlo en la Prospección.",
+  },
   "Confirmar e ligar o automático": { es: "Confirmar y activar el automático" },
   "Para ligar o modo automático é preciso confirmar. O agente passará a responder sozinho.": {
     es: "Para activar el modo automático hay que confirmar. El agente pasará a responder solo.",
