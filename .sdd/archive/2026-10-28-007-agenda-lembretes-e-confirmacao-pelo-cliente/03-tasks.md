@@ -21,7 +21,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-001 [TEST-INT] Invariante: nenhum tipo de agendamento existente muda de lembrete nem de chave por causa da migration, campos novos de confirmação e de pedido de remarcar nulos nos compromissos existentes, isolamento entre 2 organizações, funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-001.2, AC-005.3, AC-006.1}
 - [x] T-002 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min)
 - [x] T-003 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: client_confirmed_at e client_reschedule_requested_at em calendar_appointments, chave por tipo da confirmação do cliente (desligada nos existentes), kinds novos da Central (~50 min) {AC-001.2, AC-005.3, AC-006.1} deps: T-001, T-002
-- [ ] T-004 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-003
+- [x] T-004 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-003 Provado pelo CI no PR #18 (invariants-majors verde, instalação nova e atualização).
 
 ### Fatia 2: Lembretes padrão para tipos novos (REQ-001)
 - [x] T-005 [TEST-UNIT] Texto padrão em pt-BR, en e es: nome do contato, serviço, data, hora e nome da organização, sem marca fixa, e a frase "Responda 1 ... 2 ..." só quando a confirmação do cliente está ligada no tipo (~35 min) {AC-001.4, AC-001.5}
@@ -51,12 +51,12 @@ Cada tarefa ocupa uma linha:
 ### Fechamento
 - [x] T-022 [TEST-UNIT] Textos novos (selos, respostas automáticas, texto padrão) em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-004.3, AC-006.4}
 - [x] T-023 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-004.3, AC-006.4} deps: T-022, T-008, T-017
-- [ ] T-024 [TEST-E2E] Jornada pela tela na homologação com WhatsApp real (WAHA): tipo novo, lembrete chega, um cliente responde "1" e outro "2", selo e pendência na agenda (~60 min) {AC-006.2} deps: T-015, T-017, T-021
+- [x] T-024 [TEST-E2E] Jornada pela tela na homologação com WhatsApp real (WAHA): tipo novo, lembrete chega, um cliente responde "1" e outro "2", selo e pendência na agenda (~60 min) {AC-006.2} deps: T-015, T-017, T-021
 - [x] T-025 [TEST-E2E] Sonda de produção com os tipos existentes: resultado igual ao de antes e nenhum lembrete novo enviado (~30 min) {AC-006.3}
 - [x] T-026 [DOCS] Runbook e roteiro do dono: lembretes padrão, confirmação do cliente, chaves, e a situação da verificação do Google Agenda (~35 min) deps: T-024
-- [ ] T-027 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com WhatsApp real (~30 min) deps: T-024
+- [x] T-027 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com WhatsApp real (~30 min) deps: T-024 Jornada rodada em produção com autorização escrita do dono (evidence/007-agenda/jornada-em-producao-2026-10-27.md).
 - [x] T-028 [CHECK-SMOKE] Implantar em produção e rodar a sonda (~30 min) deps: T-027, T-025
-- [ ] T-029 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-028
+- [x] T-029 [REFACTOR] Limpeza com testes verdes (~20 min) deps: T-028 Sem refatoração necessária: CI verde na main.
 
 ## Estimativa
 
