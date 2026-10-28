@@ -39,6 +39,11 @@ set -uo pipefail
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SKILL="$RAIZ/.agents/skills/deskcomm-contribuir"
 SCRIPTS="$SKILL/scripts"
+# O repositorio do produto vem da ancora de identidade (SDD 008), nunca repetido aqui:
+# trocar a ancora troca o que este teste exige dos scripts.
+REPO_PRODUTO="$(sed -n 's/^export const REPOSITORIO_DESTE_REPO = "\(.*\)";/\1/p' "$RAIZ/tests/unit/_identidade-deste-repo.ts")"
+[ -n "$REPO_PRODUTO" ] || { echo "ancora REPOSITORIO_DESTE_REPO nao encontrada"; exit 1; }
+URL_PRODUTO="https://github.com/$REPO_PRODUTO.git"
 falhas=0; casos=0
 ok()   { casos=$((casos+1)); printf '  ✓ %s\n' "$1"; }
 falha(){ casos=$((casos+1)); falhas=$((falhas+1)); printf '  ✗ %s\n     %s\n' "$1" "${2:-}"; }
@@ -187,7 +192,7 @@ git reset -q --hard HEAD 2>/dev/null
 
 # ── 2-ter. Clone que só tem o FORK (item 1 da #1273) ─────────────────────────
 # A `origin` aponta para um fork no GitHub (o insteadOf a resolve para o
-# principal local, sem rede) e nenhum remoto é melgarafael/DeskcommCRM: a base
+# principal local, sem rede) e nenhum remoto é o repositório do produto: a base
 # vira a origin/main DO FORK, que pode estar atrás do principal. O hook não
 # bloqueia por isso, mas DIZ; e o pré-voo não dá ✓ de "livre" sobre essa régua.
 echo "2-ter. clone só com o fork: NÃO MEDIDO declarado"
@@ -225,9 +230,9 @@ printf -- '-- apêndice 0412\n' >> "$produto/supabase/baseline.sql"
 printf '| `20260103000000` | `0412_versao_da_main` |\n' >> "$produto/supabase/migrations/MANIFEST.md"
 git -C "$produto" add -A; git -C "$produto" commit -q -m "0412 na main"
 merge="$TMP/c2-merge"; clonar "$merge" "alguem@fork.dev"
-cfg "$merge" remote.upstream.url "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$merge" remote.upstream.url "$URL_PRODUTO"
 cfg "$merge" remote.upstream.fetch "+refs/heads/*:refs/remotes/upstream/*"
-cfg "$merge" "url.$produto.insteadOf" "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$merge" "url.$produto.insteadOf" "$URL_PRODUTO"
 cd "$merge" || exit 1; git fetch -q upstream; git switch -q -c fix/traz-a-main
 git rev-parse -q --verify refs/remotes/upstream/velha >/dev/null || falha "2-quater" "a branch velha do principal não chegou: o caso não mede a colisão"
 git merge -q --no-ff --no-commit upstream/main >/dev/null 2>&1
@@ -328,9 +333,9 @@ assert_contains "$saida" "você está na 'main'" "na main, manda abrir branch"
 # o clone precisa de um remoto com a URL do principal — o mesmo preparo do 2-quater.
 echo "5-bis. o 'próximo NNNN' do pré-voo não aponta para o número que a branch já commitou"
 clone="$TMP/c5-bis"; clonar "$clone" "alguem@fork.dev"
-cfg "$clone" remote.produto.url "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" remote.produto.url "$URL_PRODUTO"
 cfg "$clone" remote.produto.fetch "+refs/heads/*:refs/remotes/produto/*"
-cfg "$clone" "url.$principal.insteadOf" "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" "url.$principal.insteadOf" "$URL_PRODUTO"
 git -C "$clone" fetch -q produto
 git -C "$clone" switch -q -c fix/minha
 printf 'select 2;\n' > "$clone/supabase/migrations/20260920120000_0201_minha.sql"
@@ -348,9 +353,9 @@ assert_not_contains "$saida" "próximo NNNN medido em produto/main ∪ outras re
 # com o checkout NO PR (a cabeça é o HEAD); o modo do §4 é o 5-quater.
 echo "5-ter. o complemento.sh acusa as duas migrations de mesmo NNNN dentro do próprio PR"
 clone="$TMP/c5-ter"; clonar "$clone" "alguem@fork.dev"
-cfg "$clone" remote.produto.url "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" remote.produto.url "$URL_PRODUTO"
 cfg "$clone" remote.produto.fetch "+refs/heads/*:refs/remotes/produto/*"
-cfg "$clone" "url.$principal.insteadOf" "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" "url.$principal.insteadOf" "$URL_PRODUTO"
 git -C "$clone" fetch -q produto
 git -C "$clone" switch -q -c tri/1780
 printf 'select 3;\n' > "$clone/supabase/migrations/20260928000000_0201_a.sql"
@@ -405,9 +410,9 @@ pr_sem_checkout() {
   git -C "$clone" switch -q main; git -C "$clone" branch -q -D "tmp/$n"
 }
 clone="$TMP/c5-quater"; clonar "$clone" "alguem@fork.dev"
-cfg "$clone" remote.produto.url "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" remote.produto.url "$URL_PRODUTO"
 cfg "$clone" remote.produto.fetch "+refs/heads/*:refs/remotes/produto/*"
-cfg "$clone" "url.$principal.insteadOf" "https://github.com/melgarafael/DeskcommCRM.git"
+cfg "$clone" "url.$principal.insteadOf" "$URL_PRODUTO"
 git -C "$clone" fetch -q produto
 pr_sem_checkout 1781 20260928000000_0201_a.sql 20260928010000_0201_b.sql
 pr_sem_checkout 1782 20260928000000_0201_so.sql
@@ -567,7 +572,7 @@ for sh in bash zsh; do
   passo0 "$cmd" "$sem_guias" "$antigo/app"
   if [ "$code" != 0 ] && [ -z "$out" ]; then ok "($sh) clone sem o script, sem instalação global: sai com erro e sem resposta inventada"; else falha "($sh) clone sem o script, sem instalação global: sai com erro e sem resposta inventada" "code=$code out=$out"; fi
   assert_contains "$err" "^NÃO MEDIDO — não achei o quem-sou.sh no clone .*c7-antigo" "($sh) e o erro diz o que não achou e onde procurou"
-  assert_contains "$err" "comando de uma linha do README (https://github.com/melgarafael/DeskcommCRM#readme) e rode de novo" "($sh) e diz como sair dali"
+  assert_contains "$err" "comando de uma linha do README (https://github.com/$REPO_PRODUTO#readme) e rode de novo" "($sh) e diz como sair dali"
   passo0 "$cmd" "$sem_guias" "$fora"
   if [ "$code" != 0 ] && [ -z "$out" ]; then ok "($sh) fora de clone, sem instalação global: sai com erro e sem resposta inventada"; else falha "($sh) fora de clone, sem instalação global: sai com erro e sem resposta inventada" "code=$code out=$out"; fi
   assert_contains "$err" "^NÃO MEDIDO — não achei o quem-sou.sh nem nas pastas globais" "($sh) e o erro não finge que havia clone"

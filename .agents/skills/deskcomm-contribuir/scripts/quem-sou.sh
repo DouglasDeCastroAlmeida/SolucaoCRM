@@ -40,7 +40,7 @@ if [ -z "$motivo" ] && command -v gh >/dev/null 2>&1; then
 fi
 
 case "$origin" in
-  *github.com[:/]melgarafael/DeskcommCRM*) remoto="origin é o repositório principal" ;;
+  *github.com[:/]DouglasDeCastroAlmeida/SolucaoCRM*) remoto="origin é o repositório principal" ;;
   "")                                       remoto="sem origin configurado" ;;
   *)                                        remoto="origin é um fork ($origin)" ;;
 esac

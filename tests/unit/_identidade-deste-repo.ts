@@ -46,7 +46,15 @@
  * reprova lá. Não remova essa derivação pensando que é redundante — ela é o que
  * torna a âncora não-falsificável de dentro do diff.
  */
-export const NAMESPACE_DESTE_REPO = "ghcr.io/melgarafael";
+export const NAMESPACE_DESTE_REPO = "ghcr.io/douglasdecastroalmeida";
+
+/**
+ * O repositório (`<dono>/<nome>`, com a caixa que o GitHub mostra) de onde o kit
+ * clona e consulta tags, e que os Dockerfiles gravam em `image.source`.
+ * `namespace-das-imagens.test.ts` confere que o dono daqui, em minúsculas, é o
+ * dono de `NAMESPACE_DESTE_REPO` - editar só um dos dois reprova.
+ */
+export const REPOSITORIO_DESTE_REPO = "DouglasDeCastroAlmeida/SolucaoCRM";
 
 /**
  * O dono de uma referência `<registry>/<dono>`.

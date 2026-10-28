@@ -67,7 +67,7 @@ mkdir -p "$CONF"
 chmod 0700 "$CONF"
 if [ ! -s "$CONF/token" ]; then
   echo
-  echo "Cole o token do GitHub (fine-grained, só o repositório DeskcommCRM,"
+  echo "Cole o token do GitHub (fine-grained, só o repositório SolucaoCRM,"
   echo "permissão 'Administration: Read and write'). Ele não aparece na tela:"
   read -r -s token
   echo
@@ -78,9 +78,9 @@ fi
 # Confere o token AGORA, em vez de descobrir pelo log de uma vaga parada.
 codigo=$(curl -s -o /dev/null -w '%{http_code}' \
   -H "Authorization: Bearer $(cat "$CONF/token")" \
-  "https://api.github.com/repos/melgarafael/DeskcommCRM/actions/runners")
+  "https://api.github.com/repos/DouglasDeCastroAlmeida/SolucaoCRM/actions/runners")
 [ "$codigo" = 200 ] || falha "o token não lê os runners do repositório (HTTP ${codigo}). Confira a permissão Administration."
-echo "melgarafael/DeskcommCRM" > "$CONF/repo"
+echo "DouglasDeCastroAlmeida/SolucaoCRM" > "$CONF/repo"
 
 nucleos=$(nproc)
 memoria_gb=$(awk '/MemTotal/ {printf "%d", $2/1024/1024}' /proc/meminfo)
@@ -154,6 +154,6 @@ systemctl enable --now deskcomm-executor-atualizar.timer
 
 echo
 echo "==> pronto: ${vagas} vaga(s) ligada(s)."
-echo "Confira em https://github.com/melgarafael/DeskcommCRM/settings/actions/runners"
+echo "Confira em https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/settings/actions/runners"
 echo "(cada vaga aparece como deskcomm-vaga-N-<hora>, status Idle)."
 echo "Logs de uma vaga: journalctl -u deskcomm-vaga@1 -f"

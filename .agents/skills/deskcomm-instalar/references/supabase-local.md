@@ -45,7 +45,7 @@ mkdir -p .runtime && chmod 700 .runtime
 ## Instalar
 
 ```bash
-git clone https://github.com/melgarafael/DeskcommCRM.git deskcommcrm   # se ainda não clonou
+git clone https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git deskcommcrm   # se ainda não clonou
 cd deskcommcrm
 bash hostgator-setup-kit/install-single-server.sh --domain crm.empresa.com.br
 ```

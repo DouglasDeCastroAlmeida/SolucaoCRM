@@ -9,9 +9,9 @@
  * Cada pacote é validado pelo SCHEMA REAL (`parseManifest` + `checkCompatibility`), não por
  * uma cópia das regras: um gerador com regras próprias publicaria pacote que o host recusa.
  *
- * Uso:
- *   pnpm tsx scripts/gerar-catalogo-de-extensoes.ts            # grava
- *   pnpm tsx scripts/gerar-catalogo-de-extensoes.ts --conferir # só confere (é o que o CI roda)
+ * Uso (EXTENSOES_ORIGEM é obrigatória: use a `origin` que está em extensoes/catalogo.json):
+ *   EXTENSOES_ORIGEM=<origem> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts            # grava
+ *   EXTENSOES_ORIGEM=<origem> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts --conferir # só confere
  */
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -32,10 +32,10 @@ const DESTINO = join(RAIZ, "extensoes", "catalogo.json");
  * (`https://usuario.github.io/REPO` é recusado), e a hospedagem precisa ser um domínio ou
  * subdomínio dedicado. Provado nos três casos em `tests/unit/catalogo-de-extensoes-em-dia.test.ts`.
  *
- * Qual subdomínio é decisão do dono (DEC-007). Até lá o valor abaixo é o padrão declarado,
- * e `EXTENSOES_ORIGEM` troca sem tocar em código. Publicar de fato continua sendo ato dele.
+ * Sem valor padrão (mudança 008): o projeto não aponta para servidor de terceiro. Quem
+ * tem um catálogo informa o endereço em `EXTENSOES_ORIGEM`; sem ele o gerador avisa e sai.
  */
-const ORIGEM = process.env.EXTENSOES_ORIGEM ?? "https://extensoes.deskcomm.com.br";
+const ORIGEM = (process.env.EXTENSOES_ORIGEM ?? "").trim();
 
 function arquivosDePacote(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entrada) => {
@@ -59,6 +59,13 @@ const LOJA: Record<string, Extra> = JSON.parse(
 ) as Record<string, Extra>;
 
 async function main() {
+  if (ORIGEM === "") {
+    console.log(
+      "Nenhuma origem de catálogo configurada; nada foi consultado nem gerado. " +
+        "Para gerar, informe o endereço: EXTENSOES_ORIGEM=https://seu-endereco",
+    );
+    return;
+  }
   const conferir = process.argv.includes("--conferir");
   const entries: CatalogEntry[] = [];
 
@@ -113,7 +120,7 @@ async function main() {
     if (atual !== catalogo) {
       throw new Error(
         "extensoes/catalogo.json está fora de dia com os pacotes. " +
-          "Rode: pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
+          "Rode: EXTENSOES_ORIGEM=<origin do catalogo.json> pnpm tsx scripts/gerar-catalogo-de-extensoes.ts",
       );
     }
     console.log(`catálogo em dia: ${entries.length} pacote(s), revisão ${revision}`);

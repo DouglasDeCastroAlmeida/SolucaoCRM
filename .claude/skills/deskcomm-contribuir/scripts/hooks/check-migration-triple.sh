@@ -9,7 +9,7 @@
 #      fazia todo PR com migration conflitar; linha nele ainda passa, para PR
 #      aberto antes de 02/10/2026)
 # E o NNNN e o TIMESTAMP do nome novo não podem existir na POPULAÇÃO que os
-# mediu: a main do PRODUTO (o remoto que aponta para melgarafael/DeskcommCRM, com
+# mediu: a main do PRODUTO (o remoto que aponta para DouglasDeCastroAlmeida/SolucaoCRM, com
 # qualquer nome) mais as outras refs do clone. Colisão é o defeito nº 1 da
 # triagem (renumerada 11 vezes desde agosto de 2026), e quem cria migration
 # copiando outra copia os dois. A população — e o que ela DEIXA de fora — é a
@@ -29,7 +29,7 @@ novas="$(git diff --cached --name-status | awk '$1 == "A" && $2 ~ /^supabase\/mi
 #
 # A pergunta deste hook é "esse número já foi usado ou reservado?", e a resposta
 # honesta é sobre a main do PRODUTO (o remoto que aponta para
-# melgarafael/DeskcommCRM, com QUALQUER nome) mais as outras refs do clone. A
+# DouglasDeCastroAlmeida/SolucaoCRM, com QUALQUER nome) mais as outras refs do clone. A
 # versão anterior media `origin/main` + `git branch` — e essas duas são o
 # recorte que a issue mediu como errado: num clone de fork, a `origin/main` é a
 # main DO FORK (que pode estar atrás da do principal, e o hook saía com 0
@@ -97,7 +97,7 @@ fi
 [ -z "$novas" ] && exit 0
 
 if [ "$aviso_fork" = 1 ]; then
-  echo "pre-commit AVISO: NNNN/timestamp NÃO MEDIDOS contra a main do PRODUTO: nenhum remoto aponta para melgarafael/DeskcommCRM (a base é a origin/main do seu fork, que pode estar atrás). Corrija com: git remote add upstream https://github.com/melgarafael/DeskcommCRM.git && git fetch upstream (#1273)" >&2
+  echo "pre-commit AVISO: NNNN/timestamp NÃO MEDIDOS contra a main do PRODUTO: nenhum remoto aponta para DouglasDeCastroAlmeida/SolucaoCRM (a base é a origin/main do seu fork, que pode estar atrás). Corrija com: git remote add upstream https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git && git fetch upstream (#1273)" >&2
 fi
 
 staged="$(git diff --cached --name-only)"

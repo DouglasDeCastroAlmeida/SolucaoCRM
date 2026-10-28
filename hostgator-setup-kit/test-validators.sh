@@ -4152,6 +4152,16 @@ else
   printf '  ✓ o heredoc do bootstrap do dono está livre de crase\n'
 fi
 
+# Independência do upstream (AC-001.2, AC-001.5): o namespace das imagens e o
+# repositório de onde se clona e se consulta a última versão são os do dono.
+if [ "${IMG_NS#ghcr.io/}" = "douglasdecastroalmeida" ] && [ "${IMG_NS%%/*}" = "ghcr.io" ] \
+   && grep -qF 'local url="${1:-https://github.com/DouglasDeCastroAlmeida/SolucaoCRM.git}" ref' ./_common.sh \
+   && ! grep -qi 'melgarafael' ./_common.sh ./install.sh ./comecar.sh ./update.sh ./diagnostico.sh; then
+  printf '  ✓ IMG_NS e a URL de clone/consulta de versão apontam para o dono do produto\n'
+else
+  printf '  ✗ IMG_NS ou URL de clone ainda aponta para o upstream (IMG_NS=%s)\n' "$IMG_NS"; fail=1
+fi
+
 echo
 if [ "$fail" = 0 ]; then echo "todos os validadores passaram"; else echo "FALHOU"; fi
 exit "$fail"
