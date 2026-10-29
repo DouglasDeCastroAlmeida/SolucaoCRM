@@ -38,8 +38,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-012 [IMPL] Tokens de superfície, cantos, tipografia e cabeçalho em app/globals.css e no TopBar (~60 min) {AC-003.1,AC-003.2,AC-003.3,AC-003.4} deps: T-009,T-010,T-011
 
 ### Fatia 5 (leva 1): Prova na homologação e aprovação do dono
-- [ ] T-013 [TEST-E2E] Jornada da leva 1 na hml: capturas lado a lado da tela nova, da antiga e do WhatsApp Web, claro e escuro, computador e celular, com medidas (~60 min) {AC-005.1,AC-005.2,AC-007.1} deps: T-002,T-004,T-008,T-012
-- [ ] T-014 [TEST-UNIT] Suíte completa e diff sem app/api, supabase nem permissões (~30 min) {AC-006.1,AC-006.2} deps: T-013
+- [x] T-013 [TEST-E2E] Jornada da leva 1 na hml: capturas lado a lado da tela nova, da antiga e do WhatsApp Web, claro e escuro, computador e celular, com medidas (~60 min) {AC-005.1,AC-005.2,AC-007.1} deps: T-002,T-004,T-008,T-012
+- [x] T-014 [TEST-UNIT] Suíte completa e diff sem app/api, supabase nem permissões (~30 min) {AC-006.1,AC-006.2} deps: T-013
 - [ ] T-015 [CHECK-SMOKE] Implantar a leva 1 na hml e, depois da aprovação do dono, em produção só com autorização escrita; sondas / 200 e /app 307 (~40 min) {AC-007.1} deps: T-014
 - [ ] T-016 [TEST-E2E] Voltar à imagem anterior na hml e medir que o visual antigo volta e que / responde 200 e /app 307 (~30 min) {AC-007.3} deps: T-015
 
