@@ -71,12 +71,12 @@ Cada tarefa ocupa uma linha:
 ### Fechamento
 - [x] T-038 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
 - [x] T-039 [IMPL] Entradas do dicionário com a chave en/es até a varredura passar (~30 min) {AC-009.5} deps: T-038, T-016, T-022, T-037
-- [ ] T-040 [TEST-E2E] Jornada pela tela na homologação com serviços reais: conectar chave, testar, ligar em aprovar antes de enviar, aprovar uma resposta, estourar o teto, cadastrar MCP, ligar uma ferramenta (~60 min) {AC-009.3} deps: T-016, T-020, T-037
-- [ ] T-041 [TEST-E2E] Sonda de produção sem agente ligado e sem MCP: resultado igual ao de antes e nenhum provedor novo chamado (~30 min) {AC-009.4}
-- [ ] T-042 [DOCS] Runbook e roteiro do dono: chave do OpenRouter, endereço próprio, teto de custo, modos do agente, cadastro de servidor MCP e a chave MCP_EXTERNO_ADMIN_DA_ORG (~40 min) deps: T-040
-- [ ] T-043 [CHECK-SMOKE] Implantar na homologação e rodar a jornada (~30 min) deps: T-040
-- [ ] T-044 [CHECK-SMOKE] Implantar em produção com padrões novos só para linhas novas e rodar a sonda (~30 min) deps: T-043, T-041
-- [ ] T-045 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-044
+- [x] T-040 [TEST-E2E] Jornada pela tela na homologação com serviços reais: conectar chave, testar, ligar em aprovar antes de enviar, aprovar uma resposta, estourar o teto, cadastrar MCP, ligar uma ferramenta (~60 min) {AC-009.3} deps: T-016, T-020, T-037
+- [x] T-041 [TEST-E2E] Sonda de produção sem agente ligado e sem MCP: resultado igual ao de antes e nenhum provedor novo chamado (~30 min) {AC-009.4}
+- [x] T-042 [DOCS] Runbook e roteiro do dono: chave do OpenRouter, endereço próprio, teto de custo, modos do agente, cadastro de servidor MCP e a chave MCP_EXTERNO_ADMIN_DA_ORG (~40 min) deps: T-040
+- [x] T-043 [CHECK-SMOKE] Implantar na homologação e rodar a jornada (~30 min) deps: T-040
+- [x] T-044 [CHECK-SMOKE] Implantar em produção com padrões novos só para linhas novas e rodar a sonda (~30 min) deps: T-043, T-041
+- [x] T-045 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-044
 
 ## Estimativa
 
