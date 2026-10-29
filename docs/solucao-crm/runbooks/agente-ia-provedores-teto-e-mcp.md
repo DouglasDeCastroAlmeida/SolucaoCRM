@@ -112,9 +112,12 @@ O mesmo vale para o provedor de endereço próprio em Credenciais: `http://` dei
 
 1. Volte a imagem anterior (a versão anterior do app, do worker e do scheduler) e recrie os
    serviços, como em `docs/runbooks/deploy.md`.
-2. **Não é preciso mexer no banco.** A migration 0724 só acrescenta (tabelas e colunas
-   novas, sem apagar nada), e o formato antigo do servidor MCP foi preservado como leitura
-   de reserva.
+2. **Não é preciso mexer no banco.** A migration 0724 não apaga nem altera linha existente:
+   cria tabelas novas, amplia listas de valores aceitos e muda só os padrões de linhas
+   NOVAS (agente nasce Assistido, orçamento nasce no modo "bloquear", e um gatilho arma o
+   teto de US$ 50 ao publicar o primeiro agente). O formato antigo do servidor MCP foi
+   preservado como leitura de reserva. Depois de voltar a imagem, esses padrões novos
+   continuam valendo para agentes criados daí em diante, o que é o lado seguro.
 3. Confira: `/` responde 200 e `/app` responde 307.
 
 Alternativa sem voltar a imagem: desligue a chave da seção 5 e, na tela, desative o
