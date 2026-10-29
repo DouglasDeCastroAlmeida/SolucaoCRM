@@ -58,6 +58,8 @@ import {
 } from './orcamento';
 import { costCents, gravacaoDeUmaHora } from './pricing';
 import { custoDoModeloForaDoMotor } from './pricing-do-catalogo';
+import { reivindicarAvisoPorEmail } from '../../../ai/orcamento/aviso-por-email';
+import { estimarCusto } from '../../../ai/orcamento/preco-estimado';
 import { chaveDeOrcamentoDaInstalacao } from '../../../instalacao/comportamento';
 import { cobrancaLigadaComMemo } from '../../../instalacao/modulos';
 import { createDefaultRegistry, type ProviderRegistry } from './providers';
@@ -260,8 +262,12 @@ export interface RunModelCallInput {
    * rascunho assistido para quando há resposta ACEITA, não quando o modelo
    * chamou `send_message` — um envio vetado devolve o erro ao modelo para ele
    * reescrever na etapa seguinte, e parar ali entregava rascunho vazio.
+   *
+   * Recebe os passos já concluídos (o `stopWhen` do SDK) e pode ser assíncrono: o contador
+   * de erros de ferramenta seguidos (`lib/ai/handoff/falhas-de-ferramenta.ts`, AC-005.3) lê
+   * o último passo e manda o laço parar no segundo erro, para a conversa ir a uma pessoa.
    */
-  pararQuando?: () => boolean;
+  pararQuando?: (info: { steps: ReadonlyArray<unknown> }) => boolean | PromiseLike<boolean>;
   /** Teto por chamada auxiliar; nunca aumenta o limite configurado pela organização. */
   maxOutputTokens?: number;
   /**
@@ -501,6 +507,16 @@ export async function aplicarOrcamento(d: EntradaDoGate): Promise<void> {
   if (veredito.acao === 'avisar_e_seguir') {
     // O item da Central já foi aberto pelo próprio statement (CTE `avisa`), no
     // mesmo snapshot que decidiu — aqui só sobra o log.
+    // E-mail ao admin, uma vez por mês (AC-004.2): a reivindicação carimba o mês
+    // e emite o evento que o dreno do app transforma em mensagem. Nunca lança.
+    const reivindicou = await reivindicarAvisoPorEmail(d.db, {
+      organizationId: d.organizationId,
+      gastoCents,
+      tetoCents,
+    });
+    if (reivindicou) {
+      d.log?.info('llm: aviso de gasto por e-mail enfileirado', comum);
+    }
     d.log?.warn('llm: gasto de IA passou do aviso — a chamada SEGUE', {
       ...comum,
       porque: veredito.porque,
@@ -1180,7 +1196,7 @@ export async function runModelCall(db: pg.Pool, cfg: LlmEdgeConfig, input: RunMo
   // na tabela estática não muda uma vírgula: `costCents` segue sendo chamado
   // primeiro, e só o `null` dele chega aqui.
   let cost = costCents(model, usage, cfg.cacheTtl ?? '1h');
-  let origemDoCusto: 'catalogo_da_instalacao' | undefined;
+  let origemDoCusto: 'catalogo_da_instalacao' | 'estimado' | undefined;
   if (cost === null) {
     cost = await custoDoModeloForaDoMotor(db, {
       model,
@@ -1189,6 +1205,15 @@ export async function runModelCall(db: pg.Pool, cfg: LlmEdgeConfig, input: RunMo
       log: deps.log,
     });
     if (cost !== null) origemDoCusto = 'catalogo_da_instalacao';
+  }
+  // Sem preço em lugar nenhum (AC-004.6): o custo NULL contava zero na régua do
+  // teto e o limite nunca disparava. Entra o preço ESTIMADO conservador, e a
+  // origem 'estimado' no log diz que o número não é preço real. O null vem tanto
+  // de "sem preço" quanto de leitura do catálogo que falhou; estimar nos dois é o
+  // lado que protege.
+  if (cost === null) {
+    cost = estimarCusto(usage).costCents;
+    origemDoCusto = 'estimado';
   }
 
   const { rows } = await db.query<{ id: string }>(

@@ -100,7 +100,26 @@ interface Achado {
   trecho: string;
 }
 
+/**
+ * A segunda faixa autorizada (mudança SDD 006, AC-004.1): o padrão de LINHA NOVA
+ * e o gatilho que arma, ao publicar o primeiro agente, a linha que ninguém
+ * decidiu. Existe só no baseline (apêndice da 0724). Não é uma exceção para
+ * armar quem já existe: o teste `(d)` abaixo proíbe UPDATE em `ai_budgets`
+ * dentro dela e exige que a linha 'off' fique de fora do `on conflict`.
+ */
+const NOVA_INICIO = "-- >>> ARMA SO LINHA NOVA 0724: INICIO <<<";
+const NOVA_FIM = "-- >>> ARMA SO LINHA NOVA 0724: FIM <<<";
+
+function faixaDaLinhaNova(texto: string): [number, number] | null {
+  const i = texto.indexOf(NOVA_INICIO);
+  const f = texto.indexOf(NOVA_FIM);
+  if (i === -1 || f === -1 || f < i) return null;
+  return [i, f + NOVA_FIM.length];
+}
+
 function foraDoResgate(texto: string, offset: number): boolean {
+  const nova = faixaDaLinhaNova(texto);
+  if (nova !== null && offset >= nova[0] && offset < nova[1]) return false;
   const faixa = faixaDoResgate(texto);
   if (faixa === null) return true;
   return offset < faixa[0] || offset >= faixa[1];
@@ -162,6 +181,10 @@ function normalizar(sql: string): string {
 
 const migration = readFileSync(MIGRATION, "utf8");
 const baseline = readFileSync(BASELINE, "utf8");
+const migration0724 = readFileSync(
+  join(RAIZ, "supabase", "migrations", "20261028100000_0724_agente_padroes_seguros_e_mcp_multi_servidor.sql"),
+  "utf8",
+);
 
 const ARQUIVOS: Array<{ nome: string; texto: string }> = [
   { nome: "supabase/migrations/20260814210000_0159_o_teto_que_vincula.sql", texto: migration },
@@ -214,6 +237,39 @@ describe("0159 — a migration não arma ninguém", () => {
           /monthly_limit_cents\s*=/i,
         );
       }
+    });
+
+    it("(d) a faixa da linha nova (0724) não faz UPDATE nem arma linha 'off'", () => {
+      const nova = faixaDaLinhaNova(baseline);
+      expect(nova).not.toBeNull();
+      const noBaseline = semComentarios(baseline.slice(nova?.[0] ?? 0, nova?.[1] ?? 0));
+      // A migration 0724 não tem marcadores: recorta do default até o fim da função do gatilho.
+      const m0724 = semComentarios(migration0724);
+      const ini = m0724.search(/alter\s+column\s+enforcement_mode\s+set\s+default/i);
+      const fimFn = m0724.indexOf("$$;", m0724.indexOf("fn_arma_teto_ao_publicar_agente"));
+      expect(ini).toBeGreaterThan(-1);
+      expect(fimFn).toBeGreaterThan(ini);
+      const naMigration = m0724.slice(ini, fimFn + 3);
+
+      for (const [nome, dentro] of [
+        ["baseline", noBaseline],
+        ["migration 0724", naMigration],
+      ] as const) {
+        expect(dentro, nome).not.toMatch(/\bupdate\s+public\.ai_budgets/i);
+        // Qualquer `update` solto (com ou sem prefixo de schema), fora do `do update` do on conflict.
+        expect(dentro.replace(/\bdo\s+update\b/gi, ""), nome).not.toMatch(/\bupdate\b/i);
+        expect(dentro, nome).not.toMatch(/\bfrom\s+public\.organizations\b/i);
+        // O `do update set` só toca a data de vigência, nunca o modo.
+        const doUpdate = /do\s+update\s+set([\s\S]*?)where/i.exec(dentro);
+        expect(doUpdate, nome).not.toBeNull();
+        expect(doUpdate?.[1], nome).not.toMatch(/enforcement_mode\s*=/i);
+        // O `do update` só alcança linha em 'bloquear' que ainda não tem data.
+        expect(dentro, nome).toMatch(
+          /where\s+public\.ai_budgets\.enforcement_mode\s*=\s*'bloquear'\s+and\s+public\.ai_budgets\.enforcement_effective_at\s+is\s+null/i,
+        );
+      }
+      expect(baseline.split(NOVA_INICIO).length - 1).toBe(1);
+      expect(baseline.split(NOVA_FIM).length - 1).toBe(1);
     });
 
     it("o neutralizador de comentários preserva os offsets", () => {

@@ -184,8 +184,8 @@ beforeAll(async () => {
     [CONV, ORG, CONTACT, SESSION],
   );
   await pool.query(
-    `insert into ai_agents (id, organization_id, name, system_prompt)
-     values ($1, $2, 'Agente do handoff', 'system') on conflict (id) do nothing`,
+    `insert into ai_agents (id, organization_id, name, system_prompt, operation_mode)
+     values ($1, $2, 'Agente do handoff', 'system', 'automatic') on conflict (id) do nothing`,
     [AGENT, ORG],
   );
   // `operator_enabled = true` e `operator_tool_ids` no default (vazio): o papel

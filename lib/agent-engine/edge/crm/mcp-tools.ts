@@ -19,7 +19,8 @@ import { claimOfJob } from '@/lib/agent-engine/queue/claim';
  */
 import type { Tool } from 'ai';
 
-import { carregarServidorMcpExternoDoTurno } from '@/lib/mcp/servidor-externo/carregar';
+import { carregarFerramentasExternasDoTurno } from '@/lib/mcp/servidor-externo/carregar';
+import { CHAVE_DAS_LIBERADAS, nomesLiberadosParaOTurno } from '@/lib/mcp/servidor-externo/liberadas';
 import { pickToolsFromMcp, type RuntimeHandoffSignal } from '@/lib/ai/runtime/tools';
 import { mintEphemeralToken, revokeEphemeralToken } from '@/lib/ai/runtime/mcp_token';
 import { IDS_DO_HARNESS, motivoDoHarness } from '@/lib/mcp/tools/ferramentas-do-harness';
@@ -142,7 +143,7 @@ export async function buildMcpTurnTools(
   // `ids.contactId` está presente, turno de conversa, sem a opção
   // `mcp_externo_no_atendimento` do agente (item 8, escolha (b)). Ligada, o
   // servidor recebe a identidade do contato em cabeçalho (ver `carregar.ts`).
-  const servidorExterno = await carregarServidorMcpExternoDoTurno(
+  const ferramentasExternas = await carregarFerramentasExternasDoTurno(
     cfg.supabase,
     ids.organizationId,
     allowed,
@@ -178,7 +179,19 @@ export async function buildMcpTurnTools(
     modulosLigados: await modulosLigados(cfg.supabase),
     capacidadesLigadas: await capacidadesDaOrganizacao(cfg.supabase, ids.organizationId),
     ...(ids.contactId ? { contatoDoTurno: ids.contactId } : {}),
-    ...(servidorExterno ? { servidorMcpExterno: servidorExterno } : {}),
+    ...(ferramentasExternas ? { ferramentasExternas } : {}),
+    // AC-007.3/007.4: a escrita de servidor externo depende do modo do agente.
+    // `liberadas`: o que o admin marcou "pode rodar sem aprovação" para ESTE agente
+    // (`ai_agents.config.mcp_externo_liberadas`), só de ferramentas de escrita
+    // ligadas; sem marca, toda escrita externa pede aprovação (falha fechada).
+    aprovacaoMcp: {
+      ...(agentConfig.operationMode ? { modo: agentConfig.operationMode } : {}),
+      agenteId: agentConfig.agentId,
+      conversaId: ids.conversationId ?? null,
+      liberadas: nomesLiberadosParaOTurno(ferramentasExternas?.ligadas, {
+        [CHAVE_DAS_LIBERADAS]: agentConfig.mcpExternoLiberadas,
+      }),
+    },
   });
 
   return {

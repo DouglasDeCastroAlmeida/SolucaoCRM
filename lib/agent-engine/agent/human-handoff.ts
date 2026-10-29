@@ -80,6 +80,12 @@ function normalize(text: string): string {
 const HUMAN_HANDOFF_PATTERNS: readonly RegExp[] = [
   /\b(?:falar|conversar)\s+com\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa|gente|consultor|vendedor|representante|responsavel)\b/,
   /\bme\s+(?:passa|passe|transfere|transfira|encaminha|encaminhe|manda|mande)\s+(?:pra|para|pro)\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa|gente|setor|comercial)\b/,
+  // Forma no infinitivo ("quero me passar para uma pessoa"). "pessoa" só vale ALVO de um verbo
+  // de encaminhamento com "um/uma": "para a pessoa que me atendeu ontem" não casa.
+  /\bme\s+(?:passar|transferir|encaminhar)\s+(?:pra|para|pro)\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa|setor|comercial)\b/,
+  // "quero um atendente", "preciso de um humano". Só atendente/humano — "preciso de um orçamento" não casa.
+  /\b(?:quero|queria|preciso\s+de|precisava\s+de|gostaria\s+de)\s+(?:um[a]?\s+)?(?:atendente|humano)\b/,
+  /\b(?:quero|queria|gostaria\s+de|prefiro)\s+(?:ser\s+)?atendid[oa]\s+por\s+(?:um[a]?\s+)?(?:atendente|humano|pessoa)\b/,
   /\batendimento\s+humano\b/,
   /\b(?:atendente|humano|pessoa)\s+de\s+verdade\b/,
 ];
@@ -354,11 +360,15 @@ export async function performHumanHandoff(
       ids.tenantId,
       // No idioma da ORGANIZAÇÃO, como o corpo: o título da Central sai como foi
       // gravado (nunca passa por t() na tela).
-      opts.inboxTitle ??
-        traduzir(
-          'Handoff humano solicitado — assumir a conversa',
-          opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
-        ),
+      opts.inboxTitle !== undefined
+        ? traduzir(
+            opts.inboxTitle,
+            opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
+          )
+        : traduzir(
+            'Handoff humano solicitado — assumir a conversa',
+            opts.passagem?.idioma ?? (await idiomaDaOrganizacao(db, ids.tenantId, opts.log)),
+          ),
       await corpoDaCentral(db, ids.tenantId, opts),
       ids.conversationId,
     ],

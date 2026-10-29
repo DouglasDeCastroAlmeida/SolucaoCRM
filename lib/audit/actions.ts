@@ -198,6 +198,19 @@ export const AUDIT_ACTIONS = [
   "platform_admin.user_viewed",
   "platform_admin.platform_admins_listed",
   "mcp.tool_called",
+  // Uma pessoa aprovou/recusou uma ação de escrita de servidor MCP externo (mudança 006).
+  "mcp.action_approved",
+  "mcp.action_rejected",
+  // Cadastro e manutenção de servidor MCP externo e das ferramentas por agente (mudança 006).
+  "mcp.server_added",
+  "mcp.server_updated",
+  "mcp.server_removed",
+  "mcp.tools_refreshed",
+  "mcp.tool_enabled",
+  "mcp.tool_disabled",
+  "mcp.tool_released_without_approval",
+  "mcp.tool_release_revoked",
+  "mcp.tool_release_revoked_on_refresh",
   "ai.credential_created",
   "ai.credential_deleted",
   "ai.credential_revalidated",
@@ -208,6 +221,8 @@ export const AUDIT_ACTIONS = [
   "ai_agent.archived",
   "ai_agent.duplicated",
   "ai_agent.paused",
+  // O admin confirmou o modo automático (o agente passa a responder sozinho). Mudança 006.
+  "ai_agent.automatic_confirmed",
   "ai_agent.published",
   // A chave por ASSUNTO JURÍDICO por agente mudou de valor numa publicação
   // (#2156). À parte de `ai_agent.published`: este só emite quando o VALOR

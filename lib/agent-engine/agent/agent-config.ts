@@ -18,6 +18,7 @@ import type pg from 'pg';
 import { lerJanelaDeAtendimento, type JanelaDeAtendimento } from './janela-de-atendimento';
 import { lerTextoDoAvisoForaDoHorario } from './aviso-fora-do-horario';
 import { lerFiltroDePalavraChave } from './palavra-chave-do-gatilho';
+import { idsLiberadosDaConfig } from '@/lib/mcp/servidor-externo/liberadas';
 
 export interface PublishedAgentConfig {
   operationMode?: 'automatic' | 'assisted';
@@ -125,6 +126,12 @@ export interface PublishedAgentConfig {
    * cabeçalho. Opcional porque nasce depois das fixtures; ausente = desligado.
    */
   mcpExternoNoAtendimento?: boolean;
+  /**
+   * `ai_agents.config.mcp_externo_liberadas`: ids das ferramentas de ESCRITA de
+   * servidor MCP externo que o admin marcou "pode rodar sem aprovação" (mudança
+   * 006, AC-007.4). Ausente = nenhuma.
+   */
+  mcpExternoLiberadas?: string[];
   /** criadores (p/ mint do token efêmero de audit — padrão do runtime nativo). */
   versionCreatedBy: string | null;
   agentCreatedBy: string | null;
@@ -206,6 +213,7 @@ function mapAgentConfigRow(r: Row): PublishedAgentConfig {
     rag_top_k?: unknown;
     rag_similarity_threshold?: unknown;
     mcp_externo_no_atendimento?: unknown;
+    mcp_externo_liberadas?: unknown;
   };
   const ragTopK =
     typeof cfg.rag_top_k === 'number' &&
@@ -272,6 +280,7 @@ function mapAgentConfigRow(r: Row): PublishedAgentConfig {
     avisoForaDoHorario: lerTextoDoAvisoForaDoHorario(r.trigger_config),
     // `=== true`: jsonb ausente ou com outro tipo é DESLIGADO, o lado seguro.
     mcpExternoNoAtendimento: cfg.mcp_externo_no_atendimento === true,
+    mcpExternoLiberadas: idsLiberadosDaConfig(cfg),
     // Mesma leitura defensiva da linha acima: regex torta/valor vazio ⇒ `null`
     // (sem filtro ⇒ entra em tudo), nunca uma mordaça acidental (#2679).
     filtroDePalavraChave: lerFiltroDePalavraChave(r.trigger_config),

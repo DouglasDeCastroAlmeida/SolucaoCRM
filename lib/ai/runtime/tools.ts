@@ -21,8 +21,12 @@ import type { McpAuthResult } from "@/lib/mcp/auth";
 import { logger } from "@/lib/logger";
 import { allTools, getToolByName } from "@/lib/mcp/tools";
 import { escolhasRemotas } from "@/lib/mcp/servidor-externo/ids";
-import { definirFerramentasRemotas } from "@/lib/mcp/tools/externo";
-import type { ServidorMcpExternoMontado } from "@/lib/mcp/servidor-externo/carregar";
+import { definirFerramentasDosServidores, definirFerramentasRemotas } from "@/lib/mcp/tools/externo";
+import { registrarAcaoPendente, type ModoDoAgente } from "@/lib/mcp/servidor-externo/aprovacao";
+import type {
+  FerramentasExternasDoTurno,
+  ServidorMcpExternoMontado,
+} from "@/lib/mcp/servidor-externo/carregar";
 import { catalogEntry, deCapacidadeDesligada, deModuloDesligado } from "@/lib/mcp/tools/catalog";
 import type { CapacidadeDaOrganizacao } from "@/lib/organizacao/capacidades";
 import type { ModuloOpcional } from "@/lib/instalacao/modulos";
@@ -96,6 +100,24 @@ export interface PickToolsInput {
    * é síncrono.
    */
   servidorMcpExterno?: ServidorMcpExternoMontado;
+  /**
+   * As ferramentas LIGADAS para o agente, de QUALQUER servidor da organização
+   * (mudança 006, AC-007.8) — o caminho dos montadores de turno. Quem monta é
+   * `carregarFerramentasExternasDoTurno`, antes daqui (descobrir é rede).
+   */
+  ferramentasExternas?: FerramentasExternasDoTurno;
+  /**
+   * Como a escrita externa pede aprovação (AC-007.3 e AC-007.4). Ausente vale
+   * como modo assistido sem nenhuma marca: na dúvida, uma pessoa decide.
+   * `liberadas`: nomes expostos ao modelo que o admin marcou "pode rodar sem
+   * aprovação" (só vale no modo automático).
+   */
+  aprovacaoMcp?: {
+    modo?: ModoDoAgente;
+    agenteId?: string | null;
+    conversaId?: string | null;
+    liberadas?: readonly string[];
+  };
 }
 
 /**
@@ -350,7 +372,9 @@ function wrapMcpTool(
           ferramenta: def.name,
           argumentos: argsRecord,
           escopo: input.pipelineIds,
-          ehEscrita: def.category === "write",
+          // Escrita de servidor MCP externo não é escrita NO CRM: a aprovação
+          // dela é do handler (`aprovacaoPropria`), não do escopo de funil.
+          ehEscrita: def.category === "write" && def.aprovacaoPropria !== true,
           resolvePipelineDoLead: async (leadId) => {
             const { data, error } = await input.supabase
               .from("crm_leads")
@@ -487,6 +511,9 @@ function wrapMcpTool(
           durationMs: Date.now() - startedAt,
           success: motivoDoVazio === null,
           resultBytes: tamanhoDoResultado(result),
+          ...(def.resumoParaAuditoria
+            ? { resultSummary: def.resumoParaAuditoria(result) }
+            : {}),
           ...(motivoDoVazio === null
             ? {}
             : { desfecho: "sem_resultado" as const, motivo: motivoDoVazio }),
@@ -501,7 +528,8 @@ function wrapMcpTool(
           args: argsAudit,
           durationMs: Date.now() - startedAt,
           success: false,
-          errorMessage: message,
+          // Ferramenta externa: o texto do servidor não vai à auditoria (5 anos).
+          errorMessage: mensagemParaAuditoria(err, message),
         });
         if (err instanceof EscritaDoNegocioSemDesfechoError) {
           logger.error("escrita do negócio sem desfecho; novas escritas recusadas", {
@@ -545,6 +573,16 @@ function wrapMcpTool(
       }
     },
   });
+}
+
+/**
+ * O que a auditoria grava como erro. Falha de ferramenta de servidor externo
+ * declara um código fixo (`mensagemAuditavel`): o texto que o servidor escreveu
+ * vai ao modelo dentro do envelope de dado externo, nunca a `api_audit_log`.
+ */
+function mensagemParaAuditoria(err: unknown, padrao: string): string {
+  const fixa = (err as { mensagemAuditavel?: unknown } | null)?.mensagemAuditavel;
+  return typeof fixa === "string" ? fixa : padrao;
 }
 
 /** O `motivo` de uma recusa `{ permitido: false, motivo }` devolvida pelo handler, ou `null`. */
@@ -680,6 +718,52 @@ export function pickToolsFromMcp(input: PickToolsInput): Record<string, Tool> {
         if (input.contatoDoTurno && def.category === "read" && !identificado) continue;
         result[def.name] = wrapMcpTool(def, entradaDaRemota, executarEscrita);
       }
+    }
+  }
+
+  // ── Ferramentas LIGADAS de qualquer servidor da organização (AC-007.8) ────
+  //
+  // O caminho dos montadores de turno. Mesmas regras do bloco acima — passam
+  // pelo MESMO `wrapMcpTool`, o catálogo compilado vence na colisão, a leitura
+  // só monta em turno com contato quando o servidor carrega a identidade DESTE
+  // contato, e a escrita em turno com contato cai em `escrita_sem_escopo_do_turno`.
+  // A diferença: a escrita que passa pelo escopo (turno sem contato) não executa
+  // sem aprovação — ver `servidor-externo/aprovacao.ts`.
+  if (input.ferramentasExternas && input.ferramentasExternas.ligadas.length > 0) {
+    const externas = input.ferramentasExternas;
+    const ocupados = new Set(allTools.map((t) => t.name));
+    const controle = {
+      modo: input.aprovacaoMcp?.modo,
+      liberadas: new Set(input.aprovacaoMcp?.liberadas ?? []),
+      pedir: (dados: {
+        servidorId: string;
+        servidorNome: string;
+        ferramenta: string;
+        argumentos: Record<string, unknown>;
+      }) =>
+        registrarAcaoPendente(input.supabase, input.ctx.organizationId, {
+          agenteId: input.aprovacaoMcp?.agenteId ?? null,
+          conversaId: input.aprovacaoMcp?.conversaId ?? null,
+          ...dados,
+        }),
+    };
+    const remotas = definirFerramentasDosServidores(
+      externas.ligadas,
+      ocupados,
+      {
+        ...(externas.fetch ? { fetch: externas.fetch } : {}),
+        ...(externas.cabecalhos ? { cabecalhos: externas.cabecalhos } : {}),
+      },
+      controle,
+    );
+    const identificado =
+      input.contatoDoTurno !== undefined && externas.contato === input.contatoDoTurno;
+    const entradaDaRemota = input.contatoDoTurno
+      ? { ...input, ctx: { ...input.ctx, contatoDoTurno: input.contatoDoTurno } }
+      : input;
+    for (const def of remotas) {
+      if (input.contatoDoTurno && def.category === "read" && !identificado) continue;
+      result[def.name] = wrapMcpTool(def, entradaDaRemota, executarEscrita);
     }
   }
 

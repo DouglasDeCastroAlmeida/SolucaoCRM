@@ -84,6 +84,19 @@ describe('mcpExternoNoAtendimento (#2147) — desligado de fábrica', () => {
   });
 });
 
+describe('mcpExternoLiberadas (AC-007.4) — nenhuma de fábrica', () => {
+  it.each([
+    ['marcas de escrita', { mcp_externo_liberadas: ['mcp_externo:loja:escrita:cancelar'] }, ['mcp_externo:loja:escrita:cancelar']],
+    ['leitura é descartada', { mcp_externo_liberadas: ['mcp_externo:loja:leitura:ver'] }, []],
+    ['ausente', {}, []],
+    ['config nulo', null, []],
+    ['tipo errado', { mcp_externo_liberadas: 'x' }, []],
+  ])('%s', async (_c, config, esperado) => {
+    const cfg = await loadPublishedAgentConfig(poolWith({ ...baseRow, config }), 'org1', 'cs1');
+    expect(cfg?.mcpExternoLiberadas).toEqual(esperado);
+  });
+});
+
 describe('loadPublishedAgentConfigById', () => {
   it('filtra por organization_id e agent_id, nessa ordem — risco de vazamento cross-tenant se removido', async () => {
     const pool = poolWith(baseRow);

@@ -190,6 +190,14 @@ export const POLITICAS_DE_AVISO = {
     refs: ["appointment", "conversation"],
     orientacao: "O cliente respondeu ao lembrete pedindo para remarcar ou cancelar. Nada foi alterado: abra o compromisso, combine o novo horário com ele e remarque ou cancele pela agenda.",
   },
+  acao_mcp_pendente: {
+    refs: ["conversation"],
+    orientacao: "O assistente quer fazer uma alteração em um sistema externo e espera a sua aprovação. Confira o que será feito e aprove ou recuse.",
+  },
+  ia_provedor_indisponivel: {
+    refs: ["conversation", "ai_provider_credential"],
+    orientacao: "O serviço de IA não respondeu (chave revogada, saldo zerado ou serviço fora do ar) e a conversa foi para a fila de uma pessoa. Atenda o cliente e revise a chave de IA.",
+  },
   other: { refs: ["agenda_reminder_sender", "lead", "channel_session", "appointment", "ai_agent", "ai_provider_credential", "agent_case"], orientacao: "Confira a situação descrita neste aviso com a pessoa responsável." },
 } satisfies Record<InboxKind, Politica>;
 

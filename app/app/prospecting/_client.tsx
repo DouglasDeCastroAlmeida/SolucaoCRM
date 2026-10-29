@@ -1114,6 +1114,11 @@ export function ProspectingClient() {
                                       </option>
                                     ))}
                                   </select>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {t(
+                                      "Agentes no modo 'aprovar antes de enviar' não aparecem aqui. Ligue o automático no agente para usá-lo na Prospecção.",
+                                    )}
+                                  </p>
                                   {config.agent_id && (
                                     <Link
                                       className="mt-2 block text-xs underline"

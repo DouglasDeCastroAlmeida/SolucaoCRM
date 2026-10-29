@@ -214,8 +214,8 @@ beforeAll(async () => {
     [SESSION_CASOS, ORG],
   );
   await pool.query(
-    `insert into ai_agents (id, organization_id, name, system_prompt)
-     values ($1, $2, 'Agente com casos', 'system') on conflict (id) do nothing`,
+    `insert into ai_agents (id, organization_id, name, system_prompt, operation_mode)
+     values ($1, $2, 'Agente com casos', 'system', 'automatic') on conflict (id) do nothing`,
     [AGENT_CASOS, ORG],
   );
   await pool.query(

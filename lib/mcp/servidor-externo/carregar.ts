@@ -42,7 +42,13 @@ import {
   listarFerramentasDoServidor,
   type FerramentaRemota,
 } from "./chamada";
-import { escolhasRemotas } from "./ids";
+import { escolhasRemotas, nomeExpostoDaEscolha, servidorDaEscolha, SLUG_DO_SERVIDOR_PADRAO } from "./ids";
+import {
+  listarServidores,
+  resolverFerramentasDoAgente,
+  type DepsDoRepositorio,
+  type FerramentaDoAgente,
+} from "./repositorio";
 import { hostDoEndpoint, lerEndpointMcpExterno, type ServidorMcpExterno } from "./registro";
 import { abrirChaveMcpExterno } from "./segredo";
 
@@ -244,4 +250,110 @@ export async function carregarServidorMcpExternoDoTurno(
 ): Promise<ServidorMcpExternoMontado | null> {
   if (escolhasRemotas(toolIds).length === 0) return null;
   return carregarServidorMcpExterno(supabase, organizationId, opcoes);
+}
+
+/**
+ * O que o montador do turno recebe com VÁRIOS servidores (mudança 006, AC-007.8):
+ * as ferramentas LIGADAS para o agente, de qualquer servidor da organização, já
+ * com a chave aberta (só em memória) e o servidor de cada uma.
+ */
+export interface FerramentasExternasDoTurno {
+  ligadas: readonly FerramentaDoAgente[];
+  /** JUNTA DE TESTE, o mesmo sentido de `ServidorMcpExternoMontado.fetch`. */
+  fetch?: FetchLike;
+  /** O contato a que `cabecalhos` está amarrado (turno com contato e opção ligada). */
+  contato?: string;
+  /** A identidade do contato (`CABECALHOS_DO_CONTATO`), lida do banco. */
+  cabecalhos?: Readonly<Record<string, string>>;
+}
+
+export interface OpcoesDaCargaNova extends OpcoesDeCarga {
+  /** Fronteiras do repositório (rede e relógio) — só teste preenche. */
+  deps?: DepsDoRepositorio;
+  /** O registro antigo (jsonb em `organizations`). Só teste troca. */
+  carregarLegado?: typeof carregarServidorMcpExterno;
+}
+
+/**
+ * A porta dos MONTADORES DE TURNO com vários servidores. Mesmas cercas da
+ * versão de servidor único, na mesma ordem:
+ *
+ * 1. sem escolha `mcp_externo:*` no `tool_ids`: `null`, sem banco e sem rede;
+ * 2. turno com contato e sem a opção do agente: `null`, sem banco (escolha (b));
+ * 3. contato que não resolve (erro, outra organização): `null`, falha fechada;
+ * 4. só as ferramentas ligadas, de servidores ATIVOS da PRÓPRIA organização
+ *    (`resolverFerramentasDoAgente`): id de outro servidor, de outra
+ *    organização ou que o servidor deixou de anunciar é ignorado.
+ *
+ * AC-007.9: o id no formato antigo aponta para o servidor `padrao` migrado. A
+ * tela de configuração ainda grava o registro antigo; enquanto a organização
+ * não tem a linha `padrao`, esse registro serve de leitura de reserva — assim
+ * quem configura depois da migração não fica sem servidor.
+ */
+export async function carregarFerramentasExternasDoTurno(
+  supabase: SupabaseClient,
+  organizationId: string,
+  toolIds: readonly string[],
+  opcoes?: OpcoesDaCargaNova,
+): Promise<FerramentasExternasDoTurno | null> {
+  const escolhas = escolhasRemotas(toolIds);
+  if (escolhas.length === 0) return null;
+  if (opcoes?.contatoDoTurno && opcoes.noAtendimento !== true) return null;
+
+  const contato = opcoes?.contatoDoTurno;
+  const cabecalhos = contato
+    ? await cabecalhosDoContato(supabase, organizationId, contato, opcoes?.conversaDoTurno)
+    : undefined;
+  if (cabecalhos === null) return null;
+
+  const deps: DepsDoRepositorio = { ...(opcoes?.deps ?? {}) };
+  if (!deps.listar && (cabecalhos || opcoes?.fetch)) {
+    // A identidade vai também na descoberta, como no servidor único.
+    deps.listar = (s) =>
+      listarFerramentasDoServidor(s, {
+        ...(opcoes?.fetch ? { fetch: opcoes.fetch } : {}),
+        ...(cabecalhos ? { cabecalhos } : {}),
+      });
+  }
+
+  const linhas = await listarServidores(supabase, organizationId);
+  deps.linhas = linhas;
+  const ligadas: FerramentaDoAgente[] = [
+    ...(await resolverFerramentasDoAgente(supabase, organizationId, toolIds, deps)),
+  ];
+
+  const escolhasDoPadrao = escolhas.filter((e) => servidorDaEscolha(e) === SLUG_DO_SERVIDOR_PADRAO);
+  const temLinhaPadrao = linhas.some((l) => l.slug === SLUG_DO_SERVIDOR_PADRAO && l.ativo);
+  if (escolhasDoPadrao.length > 0 && !temLinhaPadrao) {
+    const montado = await (opcoes?.carregarLegado ?? carregarServidorMcpExterno)(supabase, organizationId, {
+      ...(contato ? { contatoDoTurno: contato, noAtendimento: true } : {}),
+      ...(opcoes?.conversaDoTurno ? { conversaDoTurno: opcoes.conversaDoTurno } : {}),
+      ...(opcoes?.fetch ? { fetch: opcoes.fetch } : {}),
+    });
+    if (montado) {
+      for (const escolha of escolhasDoPadrao) {
+        const ferramenta = montado.ferramentas.find((f) => f.name === escolha.nome);
+        if (!ferramenta) continue;
+        ligadas.push({
+          servidor: {
+            id: "",
+            slug: SLUG_DO_SERVIDOR_PADRAO,
+            nome: "Servidor padrão",
+            endpoint: montado.servidor.endpoint,
+            chave: montado.servidor.chave,
+          },
+          ferramenta,
+          escolha,
+          nomeExposto: nomeExpostoDaEscolha(escolha),
+        });
+      }
+    }
+  }
+
+  if (ligadas.length === 0) return null;
+  return {
+    ligadas,
+    ...(opcoes?.fetch ? { fetch: opcoes.fetch } : {}),
+    ...(contato && cabecalhos ? { contato, cabecalhos } : {}),
+  };
 }

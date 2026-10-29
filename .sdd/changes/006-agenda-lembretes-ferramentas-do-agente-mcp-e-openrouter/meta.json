@@ -2,7 +2,7 @@
   "id": "006-agenda-lembretes-ferramentas-do-agente-mcp-e-openrouter",
   "title": "Agenda, lembretes, ferramentas do agente, MCP e OpenRouter",
   "size": "L",
-  "stage": "tasks",
+  "stage": "implement",
   "createdAt": "2026-10-27T11:02:19.037Z",
   "approvals": {
     "grill": {
@@ -22,6 +22,11 @@
       "by": "DouglasDeCastroAlmeida",
       "forced": false,
       "note": "Design da 006 aprovado pelo dono"
+    },
+    "tasks": {
+      "at": "2026-10-28T00:23:01.365Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
     }
   },
   "history": [
@@ -43,6 +48,11 @@
       "stage": "tasks",
       "at": "2026-10-27T13:42:49.311Z",
       "from": "design"
+    },
+    {
+      "stage": "implement",
+      "at": "2026-10-28T00:23:01.365Z",
+      "from": "tasks"
     }
   ]
 }

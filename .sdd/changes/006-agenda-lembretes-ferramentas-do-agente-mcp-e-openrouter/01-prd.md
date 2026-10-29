@@ -60,12 +60,12 @@ Como dono, quero que o endereço informado pela pessoa nunca alcance a rede inte
 
 Como admin, quero que o agente nunca responda sozinho sem eu ter decidido.
 
-- **AC-003.1** Dado uma organização nova ou um agente novo, quando criado, então está desligado e nenhuma mensagem é enviada por ele.
+- **AC-003.1** Dado uma organização nova ou um agente novo, quando criado, então nasce sem versão publicada e no modo "aprovar antes de enviar", e nenhuma mensagem é enviada por ele até que um administrador o publique e o ligue. (Ajuste de 2026-10-29, decisão do dono: o texto original dizia "está desligado"; o que de fato impede o envio é a ausência de versão publicada, somada ao modo que só redige.)
 - **AC-003.2** Dado um agente que o admin liga, quando ligado pela primeira vez, então o modo é "aprovar antes de enviar": o agente redige e uma pessoa aprova cada resposta.
 - **AC-003.3** Dado o modo "aprovar antes de enviar", quando a resposta é redigida, então fica pendente e só sai depois da aprovação de uma pessoa, e se o texto mudar depois de aprovado exige nova aprovação.
 - **AC-003.4** Dado a troca para "automático", quando o admin a escolhe, então vê uma tela dizendo que o agente passará a responder sozinho e que o custo vai na chave dele, e só vale após o clique de confirmação.
 - **AC-003.5** Dado a confirmação do automático, quando feita, então fica registrada na auditoria com quem, quando e qual agente.
-- **AC-003.6** Dado um usuário sem papel de admin ou gerente, quando tenta ligar o agente ou trocar o modo, então a rota recusa.
+- **AC-003.6** Dado um usuário sem papel de administrador, quando tenta trocar o modo do agente para automático, então a rota recusa. (Ajuste de 2026-10-29, decisão do dono: o texto original dizia "admin ou gerente"; o código e o design exigem só administrador, que é o desenho mais restritivo e o que a doutrina de papéis pede para esta ação.)
 - **AC-003.7** Dado um agente desligado depois de ligado, quando desligado, então para de enviar imediatamente e as respostas pendentes permanecem para revisão humana.
 
 ### REQ-004: Teto de custo e contador de tokens

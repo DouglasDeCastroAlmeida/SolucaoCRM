@@ -28,6 +28,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { generateText, streamText, type ModelMessage } from "ai";
 
+import { estimarCusto } from "@/lib/ai/orcamento/preco-estimado";
 import { runModelCall } from "@/lib/agent-engine/edge/llm/run-model-call";
 import { toolPartsAsText } from "@/lib/agent-engine/agent/prune-tool-results";
 import { lerLoginCodexRenovandoSeProxima } from "@/lib/ai/credenciais/login-codex";
@@ -81,7 +82,7 @@ const FITA_DO_STREAM: ModelMessage[] = [
  * `tests/unit/seam-respeita-o-binding.test.ts`: distinguir por trecho do SQL é
  * frágil de propósito, para quebrar alto se o seam trocar a consulta.
  */
-function poolDaAssinatura() {
+function poolDaAssinatura(modelo = "gpt-5.6-luna") {
   const inserts: Array<{ params: unknown[] }> = [];
   const query = vi.fn(async (sql: string, params: unknown[] = []) => {
     if (sql.includes("settings->'llm'")) {
@@ -90,7 +91,7 @@ function poolDaAssinatura() {
           {
             llm: {
               provider: "openai-assinatura",
-              default_model: "gpt-5.6-luna",
+              default_model: modelo,
               params: {},
               enabled_models: [],
               monthly_budget_cents: null,
@@ -304,5 +305,42 @@ describe("o custo gravado lê a divisão da gravação de cache que a Anthropic 
     // Outro provedor, ou o campo sumiu: o milhão gravado vai todo a 1 h = US$ 4,00.
     const { resultado } = await rodarPelaAnthropic([null]);
     expect(resultado.costCents).toBeCloseTo(400, 6);
+  });
+});
+
+describe("AC-004.6: modelo sem preço conhecido grava custo ESTIMADO, nunca nulo e nunca como preço real", () => {
+  const chaves = { anthropicApiKey: "chave-ant-de-teste", openaiApiKey: "chave-openai-de-teste", cacheTtl: "1h" } as const;
+
+  it("AC-004.6: modelo fora da tabela e do catálogo recebe o preço estimado conservador no custo gravado", async () => {
+    streamDuble();
+    const { pool, inserts } = poolDaAssinatura("modelo-que-ninguem-precifica");
+
+    const resultado = await runModelCall(
+      pool,
+      chaves,
+      { tenantId: ORG, purpose: "agent_preview", messages: [{ role: "user", content: "oi" }] },
+      { registry },
+    );
+
+    // 42 tokens de entrada e 7 de saída pelo preço estimado padrão.
+    const esperado = estimarCusto({ inputTokens: 42, outputTokens: 7 }).costCents;
+    expect(esperado).toBeGreaterThan(0);
+    expect(resultado.costCents).toBeCloseTo(esperado, 9);
+    expect(inserts[0]?.params[11]).toBeCloseTo(esperado, 9);
+  });
+
+  it("AC-004.6: modelo com preço conhecido continua com o custo da tabela, sem estimativa", async () => {
+    streamDuble();
+    const { pool } = poolDaAssinatura("gpt-5.6-luna");
+
+    const resultado = await runModelCall(
+      pool,
+      chaves,
+      { tenantId: ORG, purpose: "agent_preview", messages: [{ role: "user", content: "oi" }] },
+      { registry },
+    );
+
+    expect(resultado.costCents).not.toBeNull();
+    expect(resultado.costCents).toBeLessThan(estimarCusto({ inputTokens: 42, outputTokens: 7 }).costCents);
   });
 });

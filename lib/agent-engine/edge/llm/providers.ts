@@ -10,7 +10,7 @@ import type { LanguageModel } from 'ai';
 import { MockLanguageModelV3 } from 'ai/test';
 
 import { PROVEDOR_POR_ASSINATURA } from '@/lib/ai/pontos/provedores';
-import { fetchParaDestinoDaOrganizacao } from '@/lib/automation/destinos-internos-autorizados';
+import { fetchComConexaoFixada, fetchParaDestinoDaOrganizacao } from '@/lib/automation/destinos-internos-autorizados';
 
 import { allowlistedFetch, buildAllowlist } from '../egress';
 
@@ -295,6 +295,15 @@ export function createDefaultRegistry(opts?: {
       return allowlistedFetch(url, init, { allowlist: allow });
     };
   };
+  // Igual a `contain`, mas a conexão sai no IP validado (endereço de organização).
+  const containFixado = (endpoint: string): typeof fetch => {
+    const allow = buildAllowlist([endpoint, ...extra]);
+    const fixado = fetchComConexaoFixada();
+    return (input, init) => {
+      const url = typeof input === 'string' || input instanceof URL ? input : input.url;
+      return allowlistedFetch(url, init, { allowlist: allow, fetchImpl: fixado });
+    };
+  };
   return {
     anthropic: (apiKey, modelId) =>
       createAnthropic({ apiKey, fetch: contain(ANTHROPIC_ENDPOINT) })(modelId),
@@ -400,7 +409,7 @@ export function createDefaultRegistry(opts?: {
       return createOpenAI({
         apiKey,
         baseURL: baseUrl,
-        fetch: fetchParaDestinoDaOrganizacao(contain(baseUrl)),
+        fetch: fetchParaDestinoDaOrganizacao(containFixado(baseUrl)),
       }).chat(modelId);
     },
   };

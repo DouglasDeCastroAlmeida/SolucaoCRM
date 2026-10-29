@@ -95,6 +95,12 @@ export const MOTIVOS_DA_PASSAGEM = [
   // pediu uma pessoa — mentir no rótulo faria quem assume abrir com um
   // agradecimento que ninguém pediu. Par da migration 0693.
   "verificacao_manual",
+  // O provedor de IA do agente parou de responder (chave revogada, saldo zerado,
+  // serviço fora do ar). O cliente NÃO pediu uma pessoa. Par da migration 0724.
+  "provedor_indisponivel",
+  // Duas chamadas de ferramenta seguidas falharam na mesma conversa. Par da
+  // migration 0724; quem emite é o contador de falhas de ferramenta.
+  "erro_de_ferramenta",
 ] as const;
 export type MotivoDaPassagem = (typeof MOTIVOS_DA_PASSAGEM)[number];
 
@@ -140,6 +146,8 @@ export const FRASE_DO_MOTIVO = {
   refund_mention: "A conversa tocou em reembolso",
   caso_escalado: "Uma pessoa da equipe escalou um atendimento",
   verificacao_manual: "Um fluxo automático coletou dados e passou a conversa para verificação humana",
+  provedor_indisponivel: "O serviço de IA não respondeu — o cliente não pediu uma pessoa",
+  erro_de_ferramenta: "Uma ferramenta do assistente falhou duas vezes seguidas",
 } satisfies Record<MotivoDaPassagem, string>;
 
 /**

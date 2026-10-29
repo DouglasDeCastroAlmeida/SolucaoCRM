@@ -39,13 +39,38 @@ import { z } from "zod";
 
 import {
   chamarFerramentaRemota,
+  RecusaDoServidorMcp,
   type FerramentaRemota,
   type OpcoesDeChamada,
 } from "@/lib/mcp/servidor-externo/chamada";
-import type { EscolhaRemota } from "@/lib/mcp/servidor-externo/ids";
+import { nomeExpostoDaEscolha, type EscolhaRemota } from "@/lib/mcp/servidor-externo/ids";
 import { hostDoEndpoint, type ServidorMcpExterno } from "@/lib/mcp/servidor-externo/registro";
+import { decidirComoExecutar, type ModoDoAgente } from "@/lib/mcp/servidor-externo/aprovacao";
+import type { FerramentaDoAgente } from "@/lib/mcp/servidor-externo/repositorio";
+import {
+  embrulharComoDadoExterno,
+  ErroDeFerramentaExterna,
+  resumirArgumentosParaAuditoria,
+  resumirResultadoParaAuditoria,
+} from "@/lib/mcp/servidor-externo/resultado-como-dado";
 import type { McpToolDefinition } from "@/lib/mcp/types";
 import { logger } from "@/lib/logger";
+
+/**
+ * Como a escrita do turno pede aprovação (AC-007.3 e AC-007.4). Sem este
+ * controle (o registro antigo, de servidor único) nada muda. `liberadas` são
+ * nomes EXPOSTOS ao modelo que o admin marcou "pode rodar sem aprovação".
+ */
+export interface ControleDeAprovacao {
+  modo: ModoDoAgente | undefined;
+  liberadas: ReadonlySet<string>;
+  pedir: (dados: {
+    servidorId: string;
+    servidorNome: string;
+    ferramenta: string;
+    argumentos: Record<string, unknown>;
+  }) => Promise<{ id: string; nova: boolean } | null>;
+}
 
 /**
  * O esqueleto do JSON Schema que o MCP exige (`type: object`) em Zod.
@@ -77,13 +102,33 @@ function campoZod(bruto: unknown): z.ZodTypeAny {
   }
 }
 
+const MAX_CAMPOS_DO_ESQUEMA = 30;
+const PREFIXO_DA_DESCRICAO = "Ferramenta de servidor externo: ";
+const MAX_DESCRICAO = 300;
+
+/**
+ * A descrição vem do servidor (conteúdo de terceiro que o modelo lê como
+ * instrução de uso): sem controles nem quebras de linha, até 300 caracteres e
+ * sempre prefixada com a origem.
+ */
+function descricaoSegura(bruta: string | undefined, nome: string): string {
+  const limpa = (bruta ?? "")
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_DESCRICAO);
+  return PREFIXO_DA_DESCRICAO + (limpa === "" ? nome : limpa);
+}
+
 function shapeDaFerramenta(ferramenta: FerramentaRemota): Record<string, z.ZodTypeAny> {
   const propriedades = ferramenta.inputSchema?.properties;
   if (!propriedades || typeof propriedades !== "object") return {};
   const exigidos = new Set(ferramenta.inputSchema?.required ?? []);
 
   const shape: Record<string, z.ZodTypeAny> = {};
-  for (const [nome, bruto] of Object.entries(propriedades)) {
+  // Esquema vem do servidor: sem teto, centenas de campos inflariam o contexto.
+  for (const [nome, bruto] of Object.entries(propriedades).slice(0, MAX_CAMPOS_DO_ESQUEMA)) {
     // Nome que não é identificador nunca vira campo: o modelo só consegue
     // escrever o que o esquema nomeia.
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(nome)) continue;
@@ -135,32 +180,141 @@ export function definirFerramentasRemotas(
       continue;
     }
 
-    // LEITURA só com as duas metades do item 8 — ver o cabeçalho deste arquivo.
-    const ehLeitura = escolha.leitura && ferramenta.somenteLeitura === true;
-
-    definicoes.push({
-      name: ferramenta.name,
-      // O sufixo diz de ONDE o dado vem: o modelo não pode tratar preço vindo
-      // do ERP como se viesse do catálogo do CRM, e o leitor do turno tem o
-      // direito de saber que aquilo é consulta a outro sistema.
-      description: `${ferramenta.description ?? ferramenta.name} (servidor MCP externo)`,
-      inputSchema: shapeDaFerramenta(ferramenta),
-      category: ehLeitura ? "read" : "write",
-      requiresRole: "agent",
-      requiresScope: ehLeitura ? "mcp:read" : "mcp:write",
-      handler: async (input) => {
-        const resultado = await chamarFerramentaRemota(
-          servidor,
-          ferramenta.name,
-          (input ?? {}) as Record<string, unknown>,
-          opcoes,
-        );
-        return resultado.dados === undefined
-          ? { texto: resultado.texto }
-          : { texto: resultado.texto, dados: resultado.dados };
-      },
-    });
+    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes));
   }
 
+  return definicoes;
+}
+
+/**
+ * A definição de UMA ferramenta remota. O retorno do servidor entra no modelo
+ * como DADO EXTERNO, com tamanho máximo (AC-007.5), e a auditoria recebe o
+ * servidor, a ferramenta, os argumentos e o resultado RESUMIDOS, sem a chave
+ * (AC-007.7). `servidor.slug` identifica o servidor; sem ele, o host.
+ */
+function definicaoDaFerramenta(
+  servidor: ServidorMcpExterno & { id?: string; nome?: string },
+  ferramenta: FerramentaRemota,
+  escolha: EscolhaRemota,
+  opcoes?: OpcoesDeChamada,
+  aprovacao?: ControleDeAprovacao,
+): McpToolDefinition {
+  const rotulo = servidor.slug ?? hostDoEndpoint(servidor.endpoint);
+  // LEITURA só com as duas metades do item 8 — ver o cabeçalho deste arquivo.
+  const ehLeitura = escolha.leitura && ferramenta.somenteLeitura === true;
+
+  return {
+    name: nomeExpostoDaEscolha(escolha),
+    // O sufixo diz de ONDE o dado vem: o modelo não pode tratar preço vindo
+    // do ERP como se viesse do catálogo do CRM, e o leitor do turno tem o
+    // direito de saber que aquilo é consulta a outro sistema.
+    description: descricaoSegura(ferramenta.description, ferramenta.name),
+    inputSchema: shapeDaFerramenta(ferramenta),
+    category: ehLeitura ? "read" : "write",
+    requiresRole: "agent",
+    requiresScope: ehLeitura ? "mcp:read" : "mcp:write",
+    // Com controle de aprovação, é o handler que pede aprovação (ver abaixo).
+    ...(aprovacao ? { aprovacaoPropria: true as const } : {}),
+    redigirParaAuditoria: (args) => ({
+      ...resumirArgumentosParaAuditoria(args, { chave: servidor.chave }),
+      servidor: rotulo,
+      ferramenta: ferramenta.name,
+    }),
+    resumoParaAuditoria: (resultado) =>
+      resumirResultadoParaAuditoria(resultado, { chave: servidor.chave }),
+    handler: async (input) => {
+      const argumentos = (input ?? {}) as Record<string, unknown>;
+      // AC-007.3/007.4: escrita no assistido (ou sem a marca do admin no
+      // automático) NÃO executa — vira ação pendente para uma pessoa aprovar.
+      if (
+        aprovacao &&
+        decidirComoExecutar({
+          ehLeitura,
+          modo: aprovacao.modo,
+          liberadaSemAprovacao: aprovacao.liberadas.has(nomeExpostoDaEscolha(escolha)),
+        }) === "pedir_aprovacao"
+      ) {
+        const pendente =
+          servidor.id !== undefined && servidor.id !== ""
+            ? await aprovacao.pedir({
+                servidorId: servidor.id,
+                servidorNome: servidor.nome ?? rotulo,
+                ferramenta: ferramenta.name,
+                argumentos,
+              })
+            : null;
+        if (!pendente) {
+          return {
+            permitido: false,
+            motivo: "aprovacao_indisponivel",
+            mensagem:
+              "não consegui pedir a aprovação desta ação agora, então ela não foi feita; siga a conversa normalmente.",
+          };
+        }
+        return {
+          pendente_de_aprovacao: true,
+          mensagem:
+            "esta ação precisa da aprovação de uma pessoa da equipe e ainda não foi feita; " +
+            "avise que ela será conferida e siga a conversa.",
+        };
+      }
+      let resultado;
+      try {
+        resultado = await chamarFerramentaRemota(servidor, ferramenta.name, argumentos, opcoes);
+      } catch (err) {
+        // A recusa escrita pelo servidor volta ao modelo DENTRO do envelope de dado
+        // externo (e truncada); a auditoria recebe só um código fixo.
+        if (err instanceof RecusaDoServidorMcp) {
+          const dado = embrulharComoDadoExterno(
+            { texto: err.textoDoServidor },
+            { servidor: rotulo, ferramenta: ferramenta.name },
+            { chave: servidor.chave },
+          );
+          throw new ErroDeFerramentaExterna(`${err.message} ${dado.texto}`, "servidor_recusou_a_chamada");
+        }
+        throw err;
+      }
+      return embrulharComoDadoExterno(
+        resultado,
+        { servidor: rotulo, ferramenta: ferramenta.name },
+        { chave: servidor.chave },
+      );
+    },
+  };
+}
+
+/**
+ * As ferramentas LIGADAS para o agente, de qualquer servidor cadastrado
+ * (`resolverFerramentasDoAgente`). Mesma regra de colisão com o catálogo
+ * compilado: o compilado vence.
+ */
+export function definirFerramentasDosServidores(
+  ligadas: readonly FerramentaDoAgente[],
+  nomesOcupados: ReadonlySet<string>,
+  opcoes?: OpcoesDeChamada,
+  aprovacao?: ControleDeAprovacao,
+): McpToolDefinition[] {
+  const definicoes: McpToolDefinition[] = [];
+  const usados = new Set<string>();
+  for (const { servidor, ferramenta, escolha, nomeExposto } of ligadas) {
+    // Duas remotas com o mesmo nome exposto (ex.: `x__y` do formato antigo e
+    // servidor `x` + ferramenta `y`): a primeira vence, de forma determinística.
+    if (usados.has(nomeExposto)) {
+      logger.warn("duas ferramentas de servidores MCP externos com o mesmo nome — mantida a primeira", {
+        servidor: servidor.slug,
+        ferramenta: ferramenta.name,
+      });
+      continue;
+    }
+    if (nomesOcupados.has(nomeExposto)) {
+      logger.warn("ferramenta do servidor MCP externo colide com o catalogo compilado — mantida a compilada", {
+        servidor: servidor.slug,
+        ferramenta: ferramenta.name,
+      });
+      continue;
+    }
+    usados.add(nomeExposto);
+    definicoes.push(definicaoDaFerramenta(servidor, ferramenta, escolha, opcoes, aprovacao));
+  }
   return definicoes;
 }

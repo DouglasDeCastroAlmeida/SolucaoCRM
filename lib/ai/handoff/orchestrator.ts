@@ -69,7 +69,14 @@ export type HandoffReason =
    * a MESMA constante que o engine grava: dois caminhos param a IA pelo mesmo
    * motivo, e duas grafias fariam quem filtra por uma achar metade das conversas.
    */
-  | "orcamento_de_ia";
+  | "orcamento_de_ia"
+  /**
+   * Duas chamadas de ferramenta seguidas falharam na mesma conversa (AC-005.3, mudança 006).
+   * NÃO é pedido do lead. Quem emite é o contador de `falhas-de-ferramenta.ts`, pelo motor
+   * nativo (`performHumanHandoff`); entra aqui para o vocabulário do motor B cobrir o mesmo
+   * motivo que o banco aceita.
+   */
+  | "erro_de_ferramenta";
 
 export interface TriggerHandoffInput {
   serviceBoundary?: ServiceBoundary;
@@ -130,6 +137,7 @@ const MOTIVO_DA_PASSAGEM = {
   legal_mention: "legal_mention",
   refund_mention: "refund_mention",
   orcamento_de_ia: "orcamento_de_ia",
+  erro_de_ferramenta: "erro_de_ferramenta",
 } satisfies Record<HandoffReason, MotivoDaPassagem>;
 
 function motivoDaPassagem(reason: HandoffReason): MotivoDaPassagem {

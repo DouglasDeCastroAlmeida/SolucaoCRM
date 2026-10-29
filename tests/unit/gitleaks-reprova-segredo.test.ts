@@ -50,4 +50,18 @@ describe("gitleaks", () => {
     expect(cfg).toMatch(/useDefault = true/);
     expect(cfg).toContain(String.raw`\.env\.example`);
   });
+
+  it("o .gitleaksignore só tem impressão digital exata de commit completo, sem curinga, e o teto só desce", () => {
+    const linhas = readFileSync(join(raiz, ".gitleaksignore"), "utf8")
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l !== "" && !l.startsWith("#"));
+    const TETO = 3;
+    expect(linhas.length).toBeLessThanOrEqual(TETO);
+    for (const l of linhas) {
+      expect(l, `linha fora do formato commit:arquivo:regra:linha — ${l}`).toMatch(
+        /^[0-9a-f]{40}:[^:*?\[\]]+:[a-z0-9-]+:\d+$/,
+      );
+    }
+  });
 });

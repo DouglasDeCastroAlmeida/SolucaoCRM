@@ -31,6 +31,8 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { FetchLike } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { assertSafeOutboundUrl } from "@/lib/automation/outbound-url";
+import { logger } from "@/lib/logger";
+import { fetchComIpFixado, type DepsDeFetch } from "@/lib/net/destino-seguro";
 import { assertDestinoResolvidoSeguro } from "@/lib/automation/outbound-ip";
 import {
   EgressBlockedError,
@@ -39,7 +41,7 @@ import {
   hostOf,
 } from "@/lib/agent-engine/edge/egress";
 
-import type { ServidorMcpExterno } from "./registro";
+import { hostDoEndpoint, type ServidorMcpExterno } from "./registro";
 
 /** Uma ferramenta como o servidor a anuncia (`tools/list`). */
 export interface FerramentaRemota {
@@ -66,7 +68,7 @@ export interface ResultadoRemoto {
 }
 
 export interface OpcoesDeChamada {
-  /** Teto de uma chamada. Default 15s: o turno tem orçamento, e um ERP mudo não pode gastá-lo todo. */
+  /** Teto de uma chamada. Default 10s (`PRAZO_DA_CHAMADA_MS`): o turno tem orçamento, e um ERP mudo não pode gastá-lo todo. */
   timeoutMs?: number;
   /**
    * O `fetch` de SAÍDA, no lugar do guard anti-SSRF (#2147, item 4).
@@ -97,7 +99,109 @@ export const CABECALHOS_DO_CONTATO = {
   canal: "X-Deskcomm-Canal",
 } as const;
 
-const TIMEOUT_PADRAO_MS = 15_000;
+/** Prazo de uma chamada ao servidor externo (AC-007.6). Era 15 s antes da mudança 006. */
+export const PRAZO_DA_CHAMADA_MS = 10_000;
+/** Teto do corpo que um servidor externo pode devolver (AC-007.5). */
+export const TETO_DO_CORPO_BYTES = 1024 * 1024;
+
+const TIMEOUT_PADRAO_MS = PRAZO_DA_CHAMADA_MS;
+
+/** Falha de conversa com o servidor externo, com frase pronta para a tela e o agente. */
+export class ErroDeChamadaMcp extends Error {
+  constructor(
+    readonly codigo: "timeout" | "indisponivel",
+    mensagem: string,
+  ) {
+    super(mensagem);
+    this.name = "ErroDeChamadaMcp";
+  }
+}
+
+function nomeDoServidor(servidor: ServidorMcpExterno): string {
+  return servidor.slug ?? hostDoEndpoint(servidor.endpoint);
+}
+
+/**
+ * A recusa que o PRÓPRIO servidor escreveu (`isError: true`). A `message` é fixa:
+ * o texto dele é conteúdo de terceiro e vai só em `textoDoServidor` (já sem a
+ * chave), para quem decide embrulhá-lo como dado externo antes de mostrar a
+ * alguém ou ao modelo.
+ */
+export class RecusaDoServidorMcp extends Error {
+  constructor(
+    servidor: ServidorMcpExterno,
+    readonly textoDoServidor: string,
+  ) {
+    super(`O servidor "${nomeDoServidor(servidor)}" recusou a chamada.`);
+    this.name = "RecusaDoServidorMcp";
+  }
+}
+
+function traduzirFalha(servidor: ServidorMcpExterno, timeoutMs: number, erro: unknown): ErroDeChamadaMcp {
+  if (erro instanceof ErroDeChamadaMcp) return erro;
+  const bruto = erro instanceof Error ? erro.message : String(erro);
+  const motivo = servidor.chave.length >= 4 ? bruto.replaceAll(servidor.chave, "[chave]") : bruto;
+  if (!/timed out|timeout/i.test(motivo)) {
+    // O detalhe (que pode trazer o CORPO da resposta do servidor) vai só ao log.
+    logger.warn("falha ao falar com o servidor MCP externo", {
+      servidor: nomeDoServidor(servidor),
+      error: motivo.slice(0, 200),
+    });
+  }
+  if (/timed out|timeout/i.test(motivo)) {
+    return new ErroDeChamadaMcp(
+      "timeout",
+      `O servidor "${nomeDoServidor(servidor)}" não respondeu em ${Math.ceil(timeoutMs / 1000)} segundos. Siga sem esse dado.`,
+    );
+  }
+  // Só o código de bloqueio do NOSSO destino seguro (token curto e fixo) passa.
+  const bloqueio = /unsafe_url:[a-z_]+/.exec(motivo)?.[0];
+  return new ErroDeChamadaMcp(
+    "indisponivel",
+    `Não foi possível falar com o servidor "${nomeDoServidor(servidor)}" agora.${bloqueio ? ` (${bloqueio})` : ""}`,
+  );
+}
+
+/** Termina em `timeoutMs` mesmo que o servidor segure a conexão aberta. */
+async function comPrazo<T>(servidor: ServidorMcpExterno, timeoutMs: number, trabalho: Promise<T>): Promise<T> {
+  let relogio: ReturnType<typeof setTimeout> | undefined;
+  const prazo = new Promise<never>((_, rejeita) => {
+    relogio = setTimeout(() => rejeita(traduzirFalha(servidor, timeoutMs, new Error("timeout"))), timeoutMs);
+  });
+  try {
+    return await Promise.race([trabalho, prazo]);
+  } catch (erro) {
+    throw traduzirFalha(servidor, timeoutMs, erro);
+  } finally {
+    clearTimeout(relogio);
+  }
+}
+
+/**
+ * O `fetch` do transporte com o NÚCLEO de destino seguro (`lib/net/destino-seguro`):
+ * só https, nada de IP especial, a conexão sai para o IP que foi validado (o TLS
+ * segue falando com o nome), redirecionamento não é seguido, corpo com teto e
+ * prazo. O host da chamada tem de ser o cadastrado: falha fechada, antes do DNS.
+ */
+export function fetchDestinoSeguro(endpoint: string, deps: DepsDeFetch = {}): FetchLike {
+  return async (input, init) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : String(input);
+    let cadastrado: string | null = null;
+    let pedido: string | null = null;
+    try {
+      cadastrado = new URL(endpoint).host;
+      pedido = new URL(url).host;
+    } catch {
+      throw new Error("unsafe_url:host_invalido");
+    }
+    if (cadastrado !== pedido) throw new Error("unsafe_url:host_nao_cadastrado");
+    return fetchComIpFixado(
+      url,
+      { ...init, redirect: "manual" },
+      { timeoutMs: PRAZO_DA_CHAMADA_MS, maxBytes: TETO_DO_CORPO_BYTES, ...deps },
+    );
+  };
+}
 
 /**
  * O que a saída do processo confere antes de sair byte — injetável para o
@@ -180,7 +284,7 @@ async function comOCliente<T>(
     // O guard anti-SSRF entra POR AQUI (item 4): o SDK aceita `fetch` próprio e
     // é por ele que toda requisição deste transporte passa. Sem opção nenhuma o
     // default é `fetchDeSaida` — protegido, e não o fetch global.
-    fetch: fetch ?? fetchDeSaida(servidor.endpoint),
+    fetch: fetch ?? fetchDestinoSeguro(servidor.endpoint),
   });
   const cliente = new Client({ name: "deskcomm-crm", version: "0.1.0" });
   try {
@@ -202,12 +306,16 @@ export async function listarFerramentasDoServidor(
   opcoes?: OpcoesDeChamada,
 ): Promise<FerramentaRemota[]> {
   const timeoutMs = opcoes?.timeoutMs ?? TIMEOUT_PADRAO_MS;
-  const resposta = await comOCliente(
+  const resposta = await comPrazo(
     servidor,
     timeoutMs,
-    (cliente) => cliente.listTools(undefined, { timeout: timeoutMs }),
-    opcoes?.fetch,
-    opcoes?.cabecalhos,
+    comOCliente(
+      servidor,
+      timeoutMs,
+      (cliente) => cliente.listTools(undefined, { timeout: timeoutMs }),
+      opcoes?.fetch,
+      opcoes?.cabecalhos,
+    ),
   );
   const ferramentas = Array.isArray(resposta?.tools) ? resposta.tools : [];
   return ferramentas
@@ -240,12 +348,16 @@ export async function chamarFerramentaRemota(
   opcoes?: OpcoesDeChamada,
 ): Promise<ResultadoRemoto> {
   const timeoutMs = opcoes?.timeoutMs ?? TIMEOUT_PADRAO_MS;
-  const resposta = (await comOCliente(
+  const resposta = (await comPrazo(
     servidor,
     timeoutMs,
-    (cliente) => cliente.callTool({ name: nome, arguments: argumentos }, undefined, { timeout: timeoutMs }),
-    opcoes?.fetch,
-    opcoes?.cabecalhos,
+    comOCliente(
+      servidor,
+      timeoutMs,
+      (cliente) => cliente.callTool({ name: nome, arguments: argumentos }, undefined, { timeout: timeoutMs }),
+      opcoes?.fetch,
+      opcoes?.cabecalhos,
+    ),
   )) as {
     content?: Array<{ type?: string; text?: unknown }>;
     isError?: boolean;
@@ -259,7 +371,11 @@ export async function chamarFerramentaRemota(
     .join("\n");
 
   if (resposta.isError) {
-    throw new Error(texto || `o servidor MCP externo recusou "${nome}"`);
+    const recusa = texto || `o servidor MCP externo recusou "${nome}"`;
+    throw new RecusaDoServidorMcp(
+      servidor,
+      servidor.chave.length >= 4 ? recusa.replaceAll(servidor.chave, "[chave]") : recusa,
+    );
   }
 
   return resposta.structuredContent === undefined

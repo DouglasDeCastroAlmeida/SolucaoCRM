@@ -46,8 +46,10 @@
     { "id": "llmcalls", "lane": "dados", "col": 3, "type": "database", "label": "llm_calls", "sublabel": "cost_cents em USD; NULL = preço desconhecido (o furo que a tela confessa)" },
     { "id": "itens", "lane": "dados", "col": 4, "type": "database", "label": "agent_inbox_items", "sublabel": "ref_kind='ai_budget' — é o que permite FECHAR o item depois" },
     { "id": "audit", "lane": "dados", "col": 5, "type": "database", "label": "api_audit_log", "sublabel": "ai.budget_limit_changed · _enforcement_armed · _enforcement_disarmed" },
+    { "id": "eventoaviso", "lane": "dados", "col": 7, "type": "database", "label": "event_log (ai.budget_warning)", "sublabel": "emitido no MESMO statement que carimba ai_budgets.last_alarm_sent_at — uma vez por mês civil" },
     { "id": "usofn", "lane": "dados", "col": 6, "type": "database", "label": "fn_uso_de_ia(uuid,timestamptz,timestamptz,uuid,text)", "sublabel": "uso num PERÍODO escolhido, não a régua do teto mensal · security invoker (0586)" },
 
+    { "id": "avisoemail", "lane": "volta", "col": 4, "type": "service", "label": "aviso-por-email.handler.ts", "sublabel": "dreno do app · e-mail aos admins pela marca da organização · sem Resend/SMTP só registra e segue" },
     { "id": "handoff", "lane": "volta", "col": 2, "type": "service", "label": "performHumanHandoff / triggerHandoff", "sublabel": "conversa → fila humana, razão orcamento_de_ia, zero token" },
     { "id": "conversas", "lane": "volta", "col": 3, "type": "database", "label": "conversations / contacts", "sublabel": "status='pending' · bot_silenced_until='infinity' · force_human=true" },
     { "id": "retrata", "lane": "volta", "col": 1, "type": "service", "label": "retratarAvisos + CTE retrata", "sublabel": "gasto abaixo do limiar, teto apagado ou afrouxamento pela tela" }
@@ -100,7 +102,10 @@
     { "id": "e45", "from": "midia", "to": "llmcalls", "label": "o sucesso grava custo em visao_de_imagem e transcricao_de_audio (degrau 3) e soma no gasto do mês" },
     { "id": "e46", "from": "card", "to": "usoapi", "label": "a mesma tela: custo, chamadas, turnos e cache do período" },
     { "id": "e47", "from": "usoapi", "to": "usofn", "label": "RPC, security invoker — a RLS isola, p_org é defesa em profundidade" },
-    { "id": "e48", "from": "usofn", "to": "llmcalls", "label": "sum(cost_cents) por dia e por purpose; turnos = jobs com agent_turn ok" }
+    { "id": "e48", "from": "usofn", "to": "llmcalls", "label": "sum(cost_cents) por dia e por purpose; turnos = jobs com agent_turn ok" },
+    { "id": "e49", "from": "runmodel", "to": "eventoaviso", "label": "reivindicarAvisoPorEmail: carimba last_alarm_sent_at e emite ai.budget_warning num só statement (aviso do gate em 80% ou mais)" },
+    { "id": "e50", "from": "eventoaviso", "to": "avisoemail", "label": "dreno de eventos: o handler consome ai.budget_warning" },
+    { "id": "e51", "from": "avisoemail", "to": "inbox", "label": "o e-mail aos admins repete o aviso que a Central já mostra (melhor esforço, nunca bloqueia)" }
   ],
   "cards": [
     {

@@ -5,6 +5,7 @@ import { assertDestinoResolvidoSeguro, ipEhEspecial } from "@/lib/automation/out
 import { assertSafeOutboundUrl } from "@/lib/automation/outbound-url";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { fetchComIpFixado } from "@/lib/net/destino-seguro";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -332,6 +333,18 @@ export async function motivoDaRecusaDeDestino(
 }
 
 /**
+ * O `fetch` que conecta no IP já validado (`lib/net/destino-seguro.ts`), fechando
+ * a janela de DNS rebinding entre a régua e o connect. Redirect volta ao
+ * chamador (`manual`), que decide.
+ */
+export function fetchComConexaoFixada(): typeof fetch {
+  return (input, init) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    return fetchComIpFixado(url, { ...init, redirect: "manual" });
+  };
+}
+
+/**
  * `fetch` para um endereço escolhido por uma ORGANIZAÇÃO e chamado por um SDK
  * (o provedor personalizado, #1642). Cada requisição passa pela régua da
  * organização ANTES de a chave sair, e redirect não é seguido: um 3xx vira
@@ -339,15 +352,19 @@ export async function motivoDaRecusaDeDestino(
  * chave, para a rede interna. Julgar a cada chamada, e não só no cadastro, é o
  * que pega o nome que passou a resolver para IP interno depois de validado.
  *
- * ponytail: entre o lookup daqui e o connect do fetch sobra a janela de um
- * segundo lookup (rebinding com TTL zero). Fechá-la pede fixar o IP resolvido
- * no dispatcher do undici, e isso vale para todo o egress, não só para este.
+ * Sem `interno`, a conexão usa o IP validado (`fetchComConexaoFixada`), sem
+ * segunda resolução. Quem passa `interno` próprio (ex.: contido por allowlist)
+ * deve compor com `fetchComConexaoFixada` se quiser o mesmo efeito.
  */
-export function fetchParaDestinoDaOrganizacao(interno: typeof fetch = fetch): typeof fetch {
+export function fetchParaDestinoDaOrganizacao(
+  interno: typeof fetch = fetchComConexaoFixada(),
+): typeof fetch {
   return async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     const recusa = await motivoDaRecusaDeDestino(url, "organizacao");
     if (recusa) throw new Error(recusa);
+    // Endereço de organização é sempre https, em qualquer ambiente (AC-002.2).
+    if (new URL(url).protocol !== "https:") throw new Error("unsafe_url:https_required");
     const res = await interno(input, { ...init, redirect: "manual" });
     if (res.status >= 300 && res.status < 400) throw new Error("unsafe_url:redirect_not_followed");
     return res;

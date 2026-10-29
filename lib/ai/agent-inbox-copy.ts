@@ -120,6 +120,8 @@ export const KIND_LABEL = {
   task_due: "Uma tarefa está perto do vencimento",
   task_overdue: "Uma tarefa venceu sem conclusão",
   agenda_cliente_pediu_remarcar: "Um cliente pediu para remarcar um horário",
+  acao_mcp_pendente: "Uma ação em um sistema externo espera aprovação",
+  ia_provedor_indisponivel: "O serviço de IA parou de responder",
   other: "Aviso do assistente",
 } as const satisfies Record<InboxKind, string>;
 

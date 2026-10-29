@@ -129,6 +129,11 @@ export type InboxKind =
   // (migration 0719, mudança SDD 007) O cliente respondeu ao lembrete da agenda
   // pedindo para remarcar ou cancelar; a equipe decide, nada muda sozinho.
   | 'agenda_cliente_pediu_remarcar'
+  // (migration 0724, mudança SDD 006) Uma ferramenta de escrita de servidor MCP
+  // externo espera aprovação; e o provedor de IA do agente parou de responder
+  // (a conversa foi para a fila humana).
+  | 'acao_mcp_pendente'
+  | 'ia_provedor_indisponivel'
   | 'other';
 
 export interface InboxItemRow {

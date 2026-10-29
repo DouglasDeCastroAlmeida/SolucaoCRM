@@ -100,6 +100,20 @@ const USO_COMO_CHAVE: Array<{ arquivo: string; codigo: string; razao: string }> 
     razao:
       "chave do campo no formulário de comportamento da instalação (`trocar(\"orcamento_de_ia\", …)`) — outro conceito, não o motivo da passagem",
   },
+  // `provedor_indisponivel` (mudança 006) é colisão de nome, como `orcamento_de_ia`:
+  // na passagem é o MOTIVO "o provedor de IA falhou"; nos dois arquivos abaixo é um
+  // CÓDIGO DE ERRO de outro domínio (login com o Google e cobrança). Nenhum exibe
+  // motivo de passagem.
+  {
+    arquivo: "app/actions/auth/signInWithGoogle.ts",
+    codigo: "provedor_indisponivel",
+    razao: "código de erro do login com o Google (`motivo` do retorno) — outro conceito, não o motivo da passagem",
+  },
+  {
+    arquivo: "components/cobranca/AcoesDaAssinatura.tsx",
+    codigo: "provedor_indisponivel",
+    razao: "chave do código de erro da API de cobrança (`provedor_indisponivel` → frase) — outro conceito, não o motivo da passagem",
+  },
 ];
 
 /** Os arquivos de tela, onde um código cru vira texto no rosto de quem opera. */

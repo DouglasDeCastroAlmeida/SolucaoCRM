@@ -35,28 +35,54 @@ export const PREFIXO_TOOL_ID_MCP_EXTERNO = "mcp_externo:";
 /** O que a escolha do agente declara sobre a ferramenta remota. */
 export type MarcaRemota = "leitura" | "escrita";
 
+/** Servidor a que o id no formato ANTIGO se refere (o migrado pela 0724). */
+export const SLUG_DO_SERVIDOR_PADRAO = "padrao";
+
 /** Uma escolha lida de volta de `tool_ids`. */
 export interface EscolhaRemota {
+  /**
+   * Slug do servidor, quando o id está no formato novo
+   * (`mcp_externo:<servidor>:<marca>:<nome>`). Ausente no formato antigo, que
+   * aponta para o servidor `padrao` (`servidorDaEscolha`).
+   */
+  servidor?: string;
   /** Nome como o servidor remoto o anuncia (`tools/list`). */
   nome: string;
   /** `true` só quando o administrador marcou a ferramenta como leitura. */
   leitura: boolean;
 }
 
+/** Limite de nome de ferramenta nos provedores de modelo. */
+export const LIMITE_DO_NOME_EXPOSTO = 64;
+
 const NOME_DE_PROTOCOLO = /^[A-Za-z0-9_-]{1,64}$/;
+/** Mesma régua do CHECK de `mcp_servidores_externos.slug` (sem ':' nem '_'). */
+const SLUG_DE_SERVIDOR = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 function ehNomeDeProtocolo(nome: unknown): nome is string {
   return typeof nome === "string" && NOME_DE_PROTOCOLO.test(nome);
 }
 
-/** Monta o id que vai para `tool_ids` — o inverso exato de `lerToolIdRemoto`. */
-export function toolIdRemoto(nome: string, marca: MarcaRemota): string {
-  return `${PREFIXO_TOOL_ID_MCP_EXTERNO}${marca}:${nome}`;
+export function ehSlugDeServidor(slug: unknown): slug is string {
+  return typeof slug === "string" && slug.length <= 40 && SLUG_DE_SERVIDOR.test(slug);
+}
+
+/**
+ * Monta o id que vai para `tool_ids` — o inverso exato de `lerToolIdRemoto`.
+ * Sem `servidor` sai o formato ANTIGO, que continua válido.
+ */
+export function toolIdRemoto(nome: string, marca: MarcaRemota, servidor?: string): string {
+  return servidor === undefined
+    ? `${PREFIXO_TOOL_ID_MCP_EXTERNO}${marca}:${nome}`
+    : `${PREFIXO_TOOL_ID_MCP_EXTERNO}${servidor}:${marca}:${nome}`;
 }
 
 /**
  * A escolha contida num id, ou `null` quando o id não é de ferramenta remota
- * (prefixo ausente, marca desconhecida ou nome fora do protocolo).
+ * (prefixo ausente, marca desconhecida, slug ou nome fora da régua).
+ *
+ * Dois formatos, distinguidos pelo número de partes: `<marca>:<nome>` (antigo)
+ * e `<servidor>:<marca>:<nome>` (novo). O nome nunca contém ':'.
  *
  * `null` para id SEM prefixo é obrigatório: quem chama costuma testar os dois
  * domínios no mesmo laço, e tratar `crm_search_products` como id remoto
@@ -64,12 +90,31 @@ export function toolIdRemoto(nome: string, marca: MarcaRemota): string {
  */
 export function lerToolIdRemoto(id: string): EscolhaRemota | null {
   if (!id.startsWith(PREFIXO_TOOL_ID_MCP_EXTERNO)) return null;
-  const resto = id.slice(PREFIXO_TOOL_ID_MCP_EXTERNO.length);
-  const [marca, nome, ...sobra] = resto.split(":");
-  if (sobra.length > 0) return null;
+  const partes = id.slice(PREFIXO_TOOL_ID_MCP_EXTERNO.length).split(":");
+  if (partes.length !== 2 && partes.length !== 3) return null;
+  const nome = partes[partes.length - 1];
+  const marca = partes[partes.length - 2];
   if (!ehNomeDeProtocolo(nome)) return null;
   if (marca !== "leitura" && marca !== "escrita") return null;
-  return { nome: nome!, leitura: marca === "leitura" };
+  if (partes.length === 2) return { nome, leitura: marca === "leitura" };
+  const servidor = partes[0];
+  if (!ehSlugDeServidor(servidor)) return null;
+  // O nome exposto (`servidor__nome`) tem de caber no limite dos provedores.
+  if (servidor.length + 2 + nome.length > LIMITE_DO_NOME_EXPOSTO) return null;
+  return { servidor, nome, leitura: marca === "leitura" };
+}
+
+/** O servidor da escolha: o do id, ou o `padrao` no formato antigo. */
+export function servidorDaEscolha(escolha: EscolhaRemota): string {
+  return escolha.servidor ?? SLUG_DO_SERVIDOR_PADRAO;
+}
+
+/**
+ * O nome que o modelo enxerga: `<servidor>__<nome>` no formato novo (elimina a
+ * colisão entre servidores e com o catálogo); o nome cru no antigo.
+ */
+export function nomeExpostoDaEscolha(escolha: EscolhaRemota): string {
+  return escolha.servidor === undefined ? escolha.nome : `${escolha.servidor}__${escolha.nome}`;
 }
 
 /** É um id de ferramenta remota bem formado? (`false` para ids compilados.) */
@@ -99,7 +144,9 @@ export function escolhasRemotas(toolIds: readonly string[]): EscolhaRemota[] {
   const porNome = new Map<string, EscolhaRemota>();
   for (const id of toolIds) {
     const escolha = lerToolIdRemoto(id);
-    if (escolha && !porNome.has(escolha.nome)) porNome.set(escolha.nome, escolha);
+    if (!escolha) continue;
+    const chave = `${escolha.servidor ?? ""}/${escolha.nome}`;
+    if (!porNome.has(chave)) porNome.set(chave, escolha);
   }
   return [...porNome.values()];
 }

@@ -122,6 +122,14 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx): Promise<Response> 
     delete (rawBody as Record<string, unknown>).priority;
   }
 
+  // `confirmar_automatico` não é coluna: é a confirmação de quem troca para o modo automático
+  // (mudança 006). Sai do corpo antes do schema estrito, como `priority`.
+  let confirmouAutomatico = false;
+  if (rawBody !== null && typeof rawBody === "object" && "confirmar_automatico" in rawBody) {
+    confirmouAutomatico = (rawBody as { confirmar_automatico?: unknown }).confirmar_automatico === true;
+    delete (rawBody as Record<string, unknown>).confirmar_automatico;
+  }
+
   const parsed = agentPatchSchema.safeParse(rawBody);
   if (!parsed.success) {
     return fail("validation_failed", t("Campos inválidos."), 422, {
@@ -179,6 +187,20 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx): Promise<Response> 
     }
   }
 
+  // Ir para o automático é a decisão que fala com o cliente sem uma pessoa no meio e gasta a
+  // chave de IA da empresa: exige a confirmação no corpo, e deixa rastro (mudança 006, REQ-003).
+  // Reenviar o modo que já vale não é troca e não pede nada.
+  const trocaParaAutomatico =
+    patch.operation_mode === "automatic" && existing.operation_mode !== "automatic";
+  if (trocaParaAutomatico && !confirmouAutomatico) {
+    return fail(
+      "ai_confirmacao_exigida",
+      t("Para ligar o modo automático é preciso confirmar. O agente passará a responder sozinho."),
+      422,
+      { requestId },
+    );
+  }
+
   // Build UPDATE payload. Para `config`, faz merge preservando defaults.
   const update: Record<string, unknown> = {};
 
@@ -231,6 +253,19 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx): Promise<Response> 
     requestId,
     metadata: { fields: Object.keys(update), via: authz.via },
   });
+
+  if (trocaParaAutomatico) {
+    void audit({
+      action: "ai_agent.automatic_confirmed",
+      actorUserId: actor.type === "user" ? actor.id : null,
+      actorApiTokenId: authz.apiTokenId ?? null,
+      organizationId,
+      resourceType: "ai_agent",
+      resourceId: id,
+      requestId,
+      metadata: { confirmed_at: new Date().toISOString(), previous_mode: existing.operation_mode },
+    });
+  }
 
   return ok(updated, { requestId });
 }

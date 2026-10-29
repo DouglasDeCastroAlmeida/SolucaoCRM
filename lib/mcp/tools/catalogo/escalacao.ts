@@ -83,4 +83,14 @@ export const TOOLS_ESCALACAO = declararTools([
     risco: "critico",
     pacotes: ["escalar"],
   },
+  {
+    name: "crm_create_task",
+    category: "write",
+    rotulo: "Criar tarefa para a equipe",
+    explicacao:
+      "Deixa um lembrete de trabalho para a equipe, ligado ao cliente da conversa — por exemplo, ligar amanhã ou enviar o contrato. O cliente não recebe nada, e pedir a mesma tarefa de novo não cria outra igual.",
+    oQueToca: "Tarefas da equipe",
+    risco: "atencao",
+    pacotes: ["escalar"],
+  },
 ]);

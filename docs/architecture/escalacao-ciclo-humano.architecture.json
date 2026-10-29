@@ -211,6 +211,22 @@
       "sublabel": "handoff_triggered ↔ handoff_resolved"
     },
     {
+      "id": "falhasFerramenta",
+      "lane": "motor",
+      "col": 4,
+      "type": "lib",
+      "label": "lib/ai/handoff/falhas-de-ferramenta.ts",
+      "sublabel": "dois erros de chamada de ferramenta seguidos na mesma conversa param o turno e passam a conversa (motivo erro_de_ferramenta); um sucesso zera; erro de infraestrutura não conta"
+    },
+    {
+      "id": "falhasTabela",
+      "lane": "dados",
+      "col": 6,
+      "type": "database",
+      "label": "ai_falhas_de_ferramenta",
+      "sublabel": "uma linha por conversa: só o número de erros seguidos, nunca argumento nem resultado"
+    },
+    {
       "id": "ritual",
       "lane": "motor",
       "col": 4,
@@ -1471,6 +1487,24 @@
       "from": "prazoConfig",
       "to": "atendimentoManual",
       "label": "manual_reply_silence_minutes (5 min a 24 h; null = 60): quanto a IA fica calada depois de uma resposta pelo celular — lido a cada pausa por lerPrazoDoSilencioManualMinutos (diagnóstico de @gaberaldo-svg, #2005)"
+    },
+    {
+      "id": "e135",
+      "from": "modelo",
+      "to": "falhasFerramenta",
+      "label": "stopWhen do run-model-call: lê o último passo (resultado de ferramenta ou erro de chamada)"
+    },
+    {
+      "id": "e136",
+      "from": "falhasFerramenta",
+      "to": "falhasTabela",
+      "label": "grava o número de erros seguidos por conversa (organization_id sempre)"
+    },
+    {
+      "id": "e137",
+      "from": "falhasFerramenta",
+      "to": "conversas",
+      "label": "no segundo erro: performHumanHandoff silencia o agente e passa a conversa, com o motivo erro_de_ferramenta em português na Central"
     }
   ],
   "cards": [

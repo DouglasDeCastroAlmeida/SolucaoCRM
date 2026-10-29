@@ -11,8 +11,12 @@
 import { baseDaApiDoJev } from "@/lib/ai/decisao/cliente";
 import { caminhoDaProva, ORIGEM_PADRAO, type OrigemDoJev } from "@/lib/ai/decisao/origem";
 import { PROVEDOR_POR_ASSINATURA, type ProvedorComChave } from "@/lib/ai/pontos/provedores";
-import { motivoDaRecusaDeDestino } from "@/lib/automation/destinos-internos-autorizados";
+import {
+  fetchComConexaoFixada,
+  motivoDaRecusaDeDestino,
+} from "@/lib/automation/destinos-internos-autorizados";
 import { env } from "@/lib/env";
+import { lerCorpoComTeto } from "@/lib/net/destino-seguro";
 
 export interface ValidationOk {
   ok: true;
@@ -30,11 +34,16 @@ const TIMEOUT_MS = 5000;
 /** Só do provedor personalizado — ver `validateCustomKey`. */
 const TIMEOUT_MS_CUSTOM = 10000;
 
-async function timedFetch(url: string, init: RequestInit, timeoutMs: number = TIMEOUT_MS): Promise<Response> {
+async function timedFetch(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number = TIMEOUT_MS,
+  fetchImpl: typeof fetch = fetch,
+): Promise<Response> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    return await fetch(url, { ...init, signal: ctrl.signal });
+    return await fetchImpl(url, { ...init, signal: ctrl.signal });
   } finally {
     clearTimeout(t);
   }
@@ -350,6 +359,8 @@ export async function validateCustomKey(
   // lá. Mesma régua da visão em `workers/media-derive-worker.ts` (decisão 22-d).
   const recusa = await motivoDaRecusaDeDestino(base, "organizacao");
   if (recusa) return { ok: false, error: recusa };
+  // Só https, em qualquer ambiente; a conexão sai no IP que a régua validou.
+  if (new URL(base).protocol !== "https:") return { ok: false, error: "unsafe_url:https_required" };
   try {
     const res = await timedFetch(`${base}/models`, {
       method: "GET",
@@ -357,7 +368,7 @@ export async function validateCustomKey(
       // Redirect não é seguido: um endpoint público que responde 3xx para a
       // rede interna furaria a régua acima.
       redirect: "manual",
-    }, TIMEOUT_MS_CUSTOM);
+    }, TIMEOUT_MS_CUSTOM, fetchComConexaoFixada());
     if (res.status >= 300 && res.status < 400) {
       return { ok: false, error: "unsafe_url:redirect_not_followed" };
     }
@@ -367,7 +378,11 @@ export async function validateCustomKey(
     if (!res.ok) {
       return { ok: false, error: `provider_status_${res.status}` };
     }
-    const json = (await res.json()) as { data?: { id?: string }[]; models?: { id?: string }[] };
+    // Corpo lido com teto (1 MB) ANTES de parsear: o endereço é da empresa.
+    const json = JSON.parse(await lerCorpoComTeto(res, 1024 * 1024)) as {
+      data?: { id?: string }[];
+      models?: { id?: string }[];
+    };
     // OpenAI e quase todo gateway servem `{ data: [{ id }] }`; alguns servem
     // `{ models: [{ id }] }`. Sem catálogo o ENDEREÇO ainda foi provado — a
     // lista é o que a tela mostra, não o que decide se a chave vale.
@@ -375,6 +390,10 @@ export async function validateCustomKey(
     const models = modelos.map((m) => m.id ?? "").filter(Boolean);
     return { ok: true, models };
   } catch (err) {
+    // Recusas da nossa régua (corpo grande, prazo) têm código próprio.
+    if (err instanceof Error && err.message.startsWith("unsafe_url:")) {
+      return { ok: false, error: err.message };
+    }
     return { ok: false, error: err instanceof Error ? err.name : "network_error" };
   }
 }

@@ -385,7 +385,10 @@ describe("invocação da ferramenta remota (#2147)", () => {
   it("o 403 do ERP sobe como erro — a permissão continua morando no servidor", async () => {
     await expect(
       chamarFerramentaRemota(servidor(), "erp_achar", { consulta: "comissao" }, { fetch: fetchDoStub() }),
-    ).rejects.toThrow(/403/);
+    ).rejects.toMatchObject({
+      name: "RecusaDoServidorMcp",
+      textoDoServidor: expect.stringContaining("403"),
+    });
   });
 });
 
@@ -542,7 +545,10 @@ describe("o turno do agente enxerga e chama a ferramenta remota (#2147)", () => 
     };
     const resposta = await ferramenta.execute({ consulta: "pelicula iphone 15" });
 
-    expect(resposta).toEqual({ texto: FRASE, dados: DADOS });
+    // AC-007.5: o retorno do servidor entra marcado como dado externo.
+    expect(resposta).toMatchObject({ dado_externo: true, dados: DADOS });
+    expect((resposta as { texto: string }).texto).toContain(FRASE);
+    expect((resposta as { texto: string }).texto.startsWith("[DADO EXTERNO")).toBe(true);
     expect(ultimaChamada?.nome).toBe("erp_achar");
 
     const auditoria = auditSpy.mock.calls.at(-1)?.[0] as {
@@ -551,6 +557,14 @@ describe("o turno do agente enxerga e chama a ferramenta remota (#2147)", () => 
     };
     expect(auditoria.action).toBe("mcp.tool_called");
     expect(auditoria.metadata).toMatchObject({ tool_name: "erp_achar", success: true });
+    // AC-007.7: servidor, ferramenta, argumentos e resultado resumidos; nunca a chave.
+    expect(auditoria.metadata?.args).toMatchObject({
+      servidor: new URL(base).host,
+      ferramenta: "erp_achar",
+      consulta: "[18 caracteres]",
+    });
+    expect(String(auditoria.metadata?.result_summary)).toMatch(/^dado externo: \d+ caracteres/);
+    expect(JSON.stringify(auditoria)).not.toContain(CHAVE);
   });
 
   it("servidor registrado mas agente SEM escolha: nada remoto monta (item 7)", () => {
@@ -710,7 +724,9 @@ describe("uso durante o atendimento: opção do agente + identidade do contato (
     });
     const ferramenta = montadas.erp_achar as unknown as { execute: (a: unknown) => Promise<unknown> };
     expect(ferramenta, "a leitura remota identificada não montou no turno com contato").toBeDefined();
-    expect(await ferramenta.execute({ consulta: "pelicula iphone 15" })).toEqual({ texto: FRASE, dados: DADOS });
+    const resposta = (await ferramenta.execute({ consulta: "pelicula iphone 15" })) as { texto: string; dados: unknown };
+    expect(resposta.texto).toContain(FRASE);
+    expect(resposta.dados).toEqual(DADOS);
 
     const daChamada = requisicoes.filter((r) => r.metodo === "POST");
     expect(daChamada.length).toBeGreaterThan(0);

@@ -17,6 +17,14 @@
  * 09:51. Na Central, três "Uma tarefa do assistente falhou e parou de tentar",
  * que não dizem que a causa era uma só e que se resolvia com uma recarga.
  *
+ * ## ESCOPO ATUAL (AC-001.7, mudança SDD 006)
+ *
+ * Os turnos de lead (`inbound_turn`, `followup_turn`, `case_reply_turn`) já não
+ * chegam aqui por falta de saldo: a escolta do turno (`inbound-turn.ts`) passa a
+ * conversa a uma pessoa com o motivo `provedor_indisponivel` e abre o aviso
+ * `ia_provedor_indisponivel` (`agent/falha-do-provedor.ts`). A espera descrita
+ * abaixo vale só para os jobs fora da escolta (por exemplo `operator_turn`).
+ *
  * ## O que muda
  *
  *   - o job que falhou por falta de saldo volta à fila SEM gastar tentativa
