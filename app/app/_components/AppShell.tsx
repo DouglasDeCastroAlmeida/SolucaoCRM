@@ -59,7 +59,7 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
       sumindo. Princípio 2 de `docs/design-system/screen-flow/07-responsive-strategy.md`,
       escrito em abril de 2026 e aplicado em 6 lugares de 33 até aqui.
     */
-    <div className="flex min-h-dvh w-full bg-background">
+    <div className="flex min-h-dvh w-full bg-surface-elevated">
       <BarraDeProgressoNavegacao />
       <div className="hidden md:block">
         <Sidebar collapsed={sidebarCollapsed} />

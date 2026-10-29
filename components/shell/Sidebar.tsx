@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { ArrowRight, CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
@@ -126,7 +127,7 @@ export function SidebarContent({
   const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
 
   return (
-    <>
+    <TooltipProvider delayDuration={200}>
       <div
         className={cn(
           "flex h-14 items-center border-b px-4",
@@ -198,10 +199,7 @@ export function SidebarContent({
           )
         ) : (
           <span
-            className={cn(
-              "min-w-0 truncate font-semibold tracking-tight",
-              collapsed && "sr-only",
-            )}
+            className={cn("min-w-0 truncate font-semibold tracking-tight", collapsed && "sr-only")}
             title={nome}
           >
             {nome}
@@ -331,50 +329,54 @@ export function SidebarContent({
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          title={collapsed ? t(item.label) : undefined}
-                          aria-current={isActive ? "page" : undefined}
-                          onClick={onNavigate}
-                          className={cn(
-                            "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                            isActive
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                            collapsed && "justify-center px-2",
-                          )}
-                        >
-                          <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
-                          {!collapsed && <span className="truncate">{t(item.label)}</span>}
-                          {item.healthDot && (
-                            <ConnectionHealthDot
-                              className={cn(collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}
-                            />
-                          )}
-                          {item.contador === "casos" && <ContadorDeCasos compacto={collapsed} />}
-                          {item.contador === "fila" && <ContadorDaFila compacto={collapsed} />}
-                        </Link>
+                        <DicaRecolhida collapsed={collapsed} rotulo={t(item.label)}>
+                          <Link
+                            href={item.href}
+                            aria-label={collapsed ? t(item.label) : undefined}
+                            aria-current={isActive ? "page" : undefined}
+                            onClick={onNavigate}
+                            className={cn(
+                              "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                              isActive
+                                ? "bg-accent text-accent-foreground"
+                                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                              collapsed && "justify-center px-2",
+                            )}
+                          >
+                            <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
+                            {!collapsed && <span className="truncate">{t(item.label)}</span>}
+                            {item.healthDot && (
+                              <ConnectionHealthDot
+                                className={cn(collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}
+                              />
+                            )}
+                            {item.contador === "casos" && <ContadorDeCasos compacto={collapsed} />}
+                            {item.contador === "fila" && <ContadorDaFila compacto={collapsed} />}
+                          </Link>
+                        </DicaRecolhida>
                       </li>
                     );
                   })}
                   {group.hub && (
                     <li>
-                      <Link
-                        href={group.hub.href}
-                        title={collapsed ? t(group.hub.label) : undefined}
-                        aria-current={pathname === group.hub.href ? "page" : undefined}
-                        onClick={onNavigate}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                          pathname === group.hub.href
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                          collapsed && "justify-center px-2",
-                        )}
-                      >
-                        <ArrowRight size={18} aria-hidden />
-                        {!collapsed && <span className="truncate">{t(group.hub.label)}</span>}
-                      </Link>
+                      <DicaRecolhida collapsed={collapsed} rotulo={t(group.hub.label)}>
+                        <Link
+                          href={group.hub.href}
+                          aria-label={collapsed ? t(group.hub.label) : undefined}
+                          aria-current={pathname === group.hub.href ? "page" : undefined}
+                          onClick={onNavigate}
+                          className={cn(
+                            "flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                            pathname === group.hub.href
+                              ? "bg-accent text-accent-foreground"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                            collapsed && "justify-center px-2",
+                          )}
+                        >
+                          <ArrowRight size={18} aria-hidden />
+                          {!collapsed && <span className="truncate">{t(group.hub.label)}</span>}
+                        </Link>
+                      </DicaRecolhida>
                     </li>
                   )}
                 </ul>
@@ -385,26 +387,51 @@ export function SidebarContent({
       </nav>
       <div className="border-t p-2">
         {rodape && (
-          <Link
-            href={rodape.href}
-            title={collapsed ? t(rodape.label) : undefined}
-            aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
-            onClick={onNavigate}
-            className={cn(
-              "mb-1 flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-              pathname.startsWith(rodape.href)
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-              collapsed && "justify-center px-2",
-            )}
-          >
-            <Gear size={18} aria-hidden />
-            {!collapsed && <span className="truncate">{t(rodape.label)}</span>}
-          </Link>
+          <DicaRecolhida collapsed={collapsed} rotulo={t(rodape.label)}>
+            <Link
+              href={rodape.href}
+              aria-label={collapsed ? t(rodape.label) : undefined}
+              aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
+              onClick={onNavigate}
+              className={cn(
+                "mb-1 flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                pathname.startsWith(rodape.href)
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                collapsed && "justify-center px-2",
+              )}
+            >
+              <Gear size={18} aria-hidden />
+              {!collapsed && <span className="truncate">{t(rodape.label)}</span>}
+            </Link>
+          </DicaRecolhida>
         )}
         <VersionFooter collapsed={collapsed} onNavigate={onNavigate} />
       </div>
-    </>
+    </TooltipProvider>
+  );
+}
+
+/**
+ * Recolhido, o nome do destino não cabe no trilho de 64px: aparece num balão ao
+ * passar o mouse E ao focar por teclado (o Radix abre nos dois). O nome
+ * acessível continua no `aria-label` do próprio link. Aberto, não envolve nada.
+ */
+function DicaRecolhida({
+  collapsed,
+  rotulo,
+  children,
+}: {
+  collapsed: boolean;
+  rotulo: string;
+  children: React.ReactElement;
+}) {
+  if (!collapsed) return children;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right">{rotulo}</TooltipContent>
+    </Tooltip>
   );
 }
 
