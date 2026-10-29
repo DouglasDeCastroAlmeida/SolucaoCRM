@@ -1,0 +1,37 @@
+# Evidências da jornada da 006 na homologação (29/10/2026)
+
+Prova pela tela do agente de IA, do teto de custo e do servidor MCP externo, em
+`hml.corretora.io`. Medidas em [medidas.md](medidas.md) e, depois dos três consertos
+do PR #28, em [medidas-pos-correcao.md](medidas-pos-correcao.md). Ficaram de fora as
+capturas que mostram o final de uma chave.
+
+- [02-credencial-revalidada.png](02-credencial-revalidada.png)
+- [03-agente-nasce-assistido.png](03-agente-nasce-assistido.png)
+- [04-automatico-dialogo-aviso.png](04-automatico-dialogo-aviso.png)
+- [05-automatico-ligado.png](05-automatico-ligado.png)
+- [06-uso-banner-teto.png](06-uso-banner-teto.png)
+- [07-uso-editar-limite.png](07-uso-editar-limite.png)
+- [08-mcp-pagina.png](08-mcp-pagina.png)
+- [12-central-carrega.png](12-central-carrega.png)
+- [13-tema-light-uso.png](13-tema-light-uso.png)
+- [14-tema-light-mcp.png](14-tema-light-mcp.png)
+- [15-tema-light-agente.png](15-tema-light-agente.png)
+- [16-tema-light-central.png](16-tema-light-central.png)
+- [17-tema-dark-uso.png](17-tema-dark-uso.png)
+- [18-tema-dark-mcp.png](18-tema-dark-mcp.png)
+- [19-tema-dark-agente.png](19-tema-dark-agente.png)
+- [20-tema-dark-central.png](20-tema-dark-central.png)
+- [21-espanhol-usage.png](21-espanhol-usage.png)
+- [22-espanhol-servidor-mcp.png](22-espanhol-servidor-mcp.png)
+- [23-espanhol-agente.png](23-espanhol-agente.png)
+- [24-espanhol-dialogo-automatico.png](24-espanhol-dialogo-automatico.png)
+- [31-mcp-antes-de-atualizar-pos-correcao.png](31-mcp-antes-de-atualizar-pos-correcao.png)
+- [32-mcp-atualizacao-1-pos-correcao.png](32-mcp-atualizacao-1-pos-correcao.png)
+- [33-mcp-atualizacao-2-pos-correcao.png](33-mcp-atualizacao-2-pos-correcao.png)
+- [34-mcp-atualizacao-3-pos-correcao.png](34-mcp-atualizacao-3-pos-correcao.png)
+- [35-uso-aviso-pt-pos-correcao.png](35-uso-aviso-pt-pos-correcao.png)
+- [36-uso-aviso-es-pos-correcao.png](36-uso-aviso-es-pos-correcao.png)
+- [37-escuro-agente-pos-correcao.png](37-escuro-agente-pos-correcao.png)
+- [38-escuro-central-pos-correcao.png](38-escuro-central-pos-correcao.png)
+- [39-escuro-uso-pos-correcao.png](39-escuro-uso-pos-correcao.png)
+- [40-escuro-mcp-pos-correcao.png](40-escuro-mcp-pos-correcao.png)
