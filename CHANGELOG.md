@@ -8,6 +8,32 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.90.0] — 2026-10-29
+
+### ⚠️ Requer atenção
+
+- **O servidor MCP externo exige https, e o que ele devolve entra como dado externo** Se você usa um servidor MCP externo com endereço `http://`, ou cujo endereço redireciona para outro, ele deixa de funcionar depois de atualizar: troque o endereço em Configurações › Servidor MCP externo por um endereço `https` direto. Se o seu servidor demora mais de 10 segundos para responder, a ferramenta passa a falhar com erro claro. Confira também o teto de custo de IA de cada empresa na tela de uso, porque o custo de modelos sem preço agora é contado.
+
+### Adicionado
+
+- **Agente de IA mais seguro, com teto de custo, aprovação de ações e vários servidores MCP** O agente de IA passa a ser mais seguro de ligar. Um agente novo nasce no modo "aprovar antes de enviar": ele redige e uma pessoa aprova cada resposta. Para passar ao modo automático, o administrador vê um aviso dizendo que o agente passará a responder sozinho e que o custo vai na chave de IA da empresa, e só vale depois de confirmar (a confirmação fica na auditoria). Agentes que já existiam continuam como estavam.
+
+  Cada empresa passa a ter um teto de custo de IA. Ao chegar a 80% do teto, o administrador é avisado na Central e por e-mail, uma vez por mês; ao chegar a 100%, o agente para e as conversas vão para uma pessoa. A tela de uso mostra tokens, custo e teto por agente e no total, e a palavra "estimado" aparece quando o provedor não informa o custo. Se o provedor de IA falhar de forma que não se resolve com nova tentativa (chave revogada, saldo zerado), a conversa vai para uma pessoa e a Central avisa; dois erros seguidos de ferramenta na mesma conversa também passam o atendimento a uma pessoa.
+
+  Os provedores OpenRouter e de endereço próprio funcionam como os demais, com a chave guardada cifrada. O agente ganhou a ferramenta "criar tarefa" e a de mover etapa deixou de gravar movimento repetido. O cliente que pede "me passar para uma pessoa" ou "quero um atendente" também é reconhecido.
+
+  Em Configurações, o administrador pode cadastrar vários servidores MCP externos (a chave `MCP_EXTERNO_ADMIN_DA_ORG` decide se o administrador da organização pode, ou só o administrador da plataforma). As ferramentas de cada servidor nascem desligadas e são ligadas agente por agente. Ferramenta de escrita de um servidor externo pede a aprovação de uma pessoa antes de rodar, com botões Aprovar e Recusar na Central, a menos que o administrador marque "pode rodar sem aprovação" para aquela ferramenta (só no modo automático, com aviso).
+
+### Alterado
+
+- **O servidor MCP externo exige https, e o que ele devolve entra como dado externo** A conexão com o servidor MCP externo agora passa pela mesma proteção que as demais saídas do produto: só aceita endereço `https`, não segue redirecionamento, espera no máximo 10 segundos e lê no máximo 1 MB da resposta. O que o servidor devolve (inclusive mensagens de erro) chega ao modelo marcado como dado externo e com tamanho limitado, e não altera as ferramentas nem as permissões do agente. A descrição de cada ferramenta é limitada e prefixada, e uma ferramenta que o administrador já viu não vira "só leitura" sozinha se o servidor mudar de ideia depois. A auditoria guarda só o nome dos campos e os tamanhos, nunca os valores.
+
+  Também mudam dois comportamentos do agente: quando o saldo de IA zera, a conversa passa a ir para uma pessoa na hora (antes esperava a recarga por até 6 horas), e um modelo sem preço conhecido passa a contar no teto de custo por uma estimativa conservadora, marcada como "estimada". Por isso um agente que usa um modelo sem preço pode chegar ao aviso e ao teto antes do que chegava.
+
+### Corrigido
+
+- **Atualizar ferramentas do servidor MCP não desliga mais o que não mudou, e duas telas ficaram mais claras** "Atualizar ferramentas" deixa de tratar como alterada uma ferramenta que o servidor não mudou, e por isso não desliga mais a ferramenta ligada nem tira a marca "pode rodar sem aprovação" sem motivo. A tela de uso deixa de dizer que não há teto quando existe um limite só de acompanhamento. No tema escuro, o texto secundário ganhou contraste suficiente.
+
 ## [1.89.0] — 2026-10-28
 
 ### Adicionado
@@ -12572,7 +12598,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.89.0...HEAD
+[Não lançado]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.90.0...HEAD
+[1.90.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.89.0...v1.90.0
 [1.89.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.88.0...v1.89.0
 [1.88.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.87.0...v1.88.0
 [1.87.0]: https://github.com/DouglasDeCastroAlmeida/SolucaoCRM/compare/v1.86.0...v1.87.0
