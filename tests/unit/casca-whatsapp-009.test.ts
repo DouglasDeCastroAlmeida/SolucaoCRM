@@ -73,4 +73,11 @@ describe("casca 009: marca e tokens", () => {
       }
     }
   });
+
+  it("AC-003.2: o número do sino e o texto de botão destrutivo passam de 4,5:1 sobre a cor de erro nos dois temas", () => {
+    for (const b of [bloco(":root"), bloco('[data-theme="dark"]')]) {
+      const r = razaoDeContraste(token(b, "--destructive-foreground"), token(b, "--color-error"));
+      expect(r).toBeGreaterThanOrEqual(PISOS.texto);
+    }
+  });
 });

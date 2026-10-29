@@ -10,7 +10,23 @@
  * `overflow-x: hidden` do globals.css grampeia) — ver o cabeçalho de
  * `tests/e2e/celular-cabe-na-tela.spec.ts`.
  */
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import { expect, test } from "@playwright/test";
+
+/** Contra a hml (BASE_URL definido): entra sozinho com a conta lida de ~/.secrets, sem gravar nada. */
+function lerEnv(arquivo: string): Record<string, string> {
+  const saida: Record<string, string> = {};
+  const texto = fs.readFileSync(path.join(os.homedir(), ".secrets", arquivo), "utf8");
+  for (const linha of texto.split(/\r?\n/)) {
+    const m = linha.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)$/);
+    if (m?.[1] !== undefined) saida[m[1]] = (m[2] ?? "").trim().replace(/^["']|["']$/g, "");
+  }
+  return saida;
+}
+const BASE = process.env.BASE_URL;
 
 if ((process.env.BASE_URL ?? "").includes("app.corretora.io")) {
   throw new Error("RECUSADO: este spec nunca roda contra a produção (app.corretora.io).");
@@ -18,7 +34,22 @@ if ((process.env.BASE_URL ?? "").includes("app.corretora.io")) {
 
 // AC-002.3 diz "qualquer tela": a spec mede três telas como AMOSTRA; a régua
 // geral de rolagem lateral do app inteiro é `tests/e2e/celular-cabe-na-tela.spec.ts`.
-test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+test.use({
+  viewport: { width: 390, height: 844 },
+  hasTouch: true,
+  isMobile: true,
+  ...(BASE ? { baseURL: BASE, storageState: { cookies: [], origins: [] } } : {}),
+});
+
+test.beforeEach(async ({ page }) => {
+  if (!BASE) return;
+  const admin = lerEnv("hml-admin.env");
+  await page.goto("/login", { waitUntil: "load" });
+  await page.locator("#email").fill(admin.HML_ADMIN_EMAIL ?? "");
+  await page.locator("#password").fill(admin.HML_ADMIN_PASSWORD ?? "");
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await page.waitForURL(/\/app/, { timeout: 90_000 });
+});
 
 const TELAS = ["/app/inbox", "/app/kanban", "/app/contacts"];
 

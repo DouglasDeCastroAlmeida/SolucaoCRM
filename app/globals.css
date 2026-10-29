@@ -428,7 +428,8 @@
   --muted-foreground: var(--color-text-muted);
   --accent-foreground: var(--color-accent-fg);
   --destructive: var(--color-error);
-  --destructive-foreground: #ffffff;
+  /* 009: branco sobre o coral do tema escuro dava 3,48:1 (o 3 do sino); escuro do fundo dá mais de 4,5:1. */
+  --destructive-foreground: #161510;
   --border: var(--color-border);
   --input: var(--color-border);
   --ring: var(--color-accent-400);
@@ -543,7 +544,7 @@
   --color-secondary: var(--color-surface-elevated);
   --color-secondary-foreground: var(--color-text);
   --color-destructive: var(--color-error);
-  --color-destructive-foreground: #ffffff;
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-muted: var(--color-surface-elevated);
   --color-muted-foreground: var(--color-text-muted);
   --color-popover: var(--color-surface);

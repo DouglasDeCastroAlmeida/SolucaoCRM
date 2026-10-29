@@ -180,8 +180,10 @@ async function percorrer(page: Page, mobile: boolean) {
           let forma = "";
           if (tela.nome === "kanban") {
             const colunas = await page.locator("[data-etapa-do-quadro]").count();
-            forma = `colunas do kanban visíveis: ${colunas}`;
-            if (colunas < 1) falhas.push("nenhuma coluna do kanban");
+            // A homologação pode não ter funil (então a tela mostra a lista de "Funis", sem colunas).
+            const lista = await page.getByRole("heading", { name: /funis|funnels|embudos/i }).first().isVisible().catch(() => false);
+            forma = `colunas do kanban visíveis: ${colunas}${colunas < 1 ? " (hml sem funil aberto; tela de lista de funis)" : ""}`;
+            if (colunas < 1 && !lista) falhas.push("nem colunas do kanban nem a lista de funis");
           } else if (tela.nome === "agenda") {
             const tela_ = await page.getByTestId("tela-agenda").isVisible();
             const alternador = await page.getByTestId("alternador-de-visao").isVisible();
