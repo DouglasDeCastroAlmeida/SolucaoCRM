@@ -32,10 +32,10 @@ Cada tarefa ocupa uma linha:
 - [x] T-008 [IMPL] Ajustes de barra de baixo e gaveta aos tokens, sem mudar quais abas aparecem (~30 min) {AC-002.1,AC-002.2,AC-002.3,AC-002.4} deps: T-007
 
 ### Fatia 4 (leva 1): Casca global por tokens, nos dois temas
-- [ ] T-009 [TEST-UNIT] Cercas "AC-003.1/003.3": tailwind-tokens e branding verdes, nenhum hex novo em componente e nenhum verde, logo ou ícone do WhatsApp (~30 min) {AC-003.1,AC-003.3}
-- [ ] T-010 [TEST-E2E] Jornada: contraste de texto de pelo menos 4,5 nas telas principais, em claro e escuro, por getComputedStyle (~45 min) {AC-003.2} deps: T-009
-- [ ] T-011 [TEST-UI] Teste "AC-003.4": a caixa de conversas da 004 mantém balões, duplo check e menu barra, dentro da casca nova (~25 min) {AC-003.4}
-- [ ] T-012 [IMPL] Tokens de superfície, cantos, tipografia e cabeçalho em app/globals.css e no TopBar (~60 min) {AC-003.1,AC-003.2,AC-003.3,AC-003.4} deps: T-009,T-010,T-011
+- [x] T-009 [TEST-UNIT] Cercas "AC-003.1/003.3": tailwind-tokens e branding verdes, nenhum hex novo em componente e nenhum verde, logo ou ícone do WhatsApp (~30 min) {AC-003.1,AC-003.3}
+- [x] T-010 [TEST-E2E] Jornada: contraste de texto de pelo menos 4,5 nas telas principais, em claro e escuro, por getComputedStyle (~45 min) {AC-003.2} deps: T-009
+- [x] T-011 [TEST-UI] Teste "AC-003.4": a caixa de conversas da 004 mantém balões, duplo check e menu barra, dentro da casca nova (~25 min) {AC-003.4}
+- [x] T-012 [IMPL] Tokens de superfície, cantos, tipografia e cabeçalho em app/globals.css e no TopBar (~60 min) {AC-003.1,AC-003.2,AC-003.3,AC-003.4} deps: T-009,T-010,T-011
 
 ### Fatia 5 (leva 1): Prova na homologação e aprovação do dono
 - [ ] T-013 [TEST-E2E] Jornada da leva 1 na hml: capturas lado a lado da tela nova, da antiga e do WhatsApp Web, claro e escuro, computador e celular, com medidas (~60 min) {AC-005.1,AC-005.2,AC-007.1} deps: T-002,T-004,T-008,T-012

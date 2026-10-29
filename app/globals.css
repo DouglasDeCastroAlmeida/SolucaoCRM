@@ -31,16 +31,21 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Surfaces (light) */
+  /* Surfaces (light) — 009: padrão de uso do WhatsApp Web com a cor da marca.
+     Duas camadas: o fundo geral da casca (AppShell) usa o elevated (#f5f3ee,
+     greige quente) e listas e cartões ficam no surface branco. Nenhum hex de
+     superfície mudou: a régua de contraste da marca mede estes pares. Nenhum
+     verde ou logo do WhatsApp: só tons da paleta do produto. */
   --color-bg: #faf9f6;
   --color-surface: #ffffff;
   --color-surface-elevated: #f5f3ee;
   --color-overlay: rgba(28, 26, 22, 0.42);
 
-  /* Text (light) */
+  /* Text (light) — 009: subtle escurecido (antes #7d786c, 4,40:1 no branco e
+     3,69:1 no fundo novo) para metadados de 12-13px atingirem 4,5:1. */
   --color-text: #1c1a16;
   --color-text-muted: #5d594f;
-  --color-text-subtle: #7d786c;
+  --color-text-subtle: #6b675c;
 
   /* Borders (light) */
   --color-border: #e7e3da;
@@ -106,12 +111,13 @@
   --space-24: 96px;
   --space-32: 128px;
 
-  /* Radius */
+  /* Radius — 009: cantos um pouco mais arredondados, como os cartões e campos
+     do WhatsApp (antes 4/8/12/16). Todos os componentes usam estes tokens. */
   --radius-none: 0px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   /* Shadows — desaturated, neutral-based */
@@ -269,7 +275,7 @@
   --color-overlay: rgba(28, 26, 22, 0.42);
   --color-text: #1c1a16;
   --color-text-muted: #5d594f;
-  --color-text-subtle: #7d786c;
+  --color-text-subtle: #6b675c;
   --color-border: #e7e3da;
   --color-border-strong: #d2cdbf;
   --color-accent: var(--color-accent-600);
@@ -346,10 +352,11 @@
   --color-surface-elevated: #272620;
   --color-overlay: rgba(0, 0, 0, 0.55);
 
-  /* Text (dark) */
+  /* Text (dark) — 009: subtle clareado (antes #605e54, 2,3:1) para 4,5:1 sobre
+     bg, surface e elevated; segue abaixo do muted na hierarquia. */
   --color-text: #f5f4ef;
   --color-text-muted: #9a978b;
-  --color-text-subtle: #605e54;
+  --color-text-subtle: #8f8c80;
 
   /* Borders (dark) */
   --color-border: #33312a;
@@ -544,7 +551,14 @@
   --color-card: var(--color-surface);
   --color-card-foreground: var(--color-text);
 
-  /* Tipografia */
+  /* Tipografia — 009: mesma família; corpo 14px, metadados ~12,8px com
+     entrelinha mais solta, como as listas do WhatsApp. */
+  --text-xs: 0.8rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5;
   --font-sans:
     var(--font-atkinson), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -809,6 +823,15 @@
       var(--font-mono), ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* 009: títulos de seção em semibold, no padrão de cabeçalho do WhatsApp.
+     Está em @layer base: qualquer `font-*` de classe continua vencendo. */
+  h1,
+  h2,
+  h3 {
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
 
   ::selection {
