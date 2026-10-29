@@ -1,0 +1,56 @@
+{
+  "id": "009-visual-no-estilo-whatsapp-em-todo-o-sistema",
+  "title": "Visual no estilo WhatsApp em todo o sistema",
+  "size": "L",
+  "stage": "implement",
+  "createdAt": "2026-10-29T14:04:41.717Z",
+  "approvals": {
+    "grill": {
+      "at": "2026-10-29T14:26:25.411Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "Astryx descartado (StyleX, temas fixos, v0.7)"
+    },
+    "prd": {
+      "at": "2026-10-29T14:34:51.565Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "design": {
+      "at": "2026-10-29T14:41:05.885Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "tasks": {
+      "at": "2026-10-29T14:42:50.093Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    }
+  },
+  "history": [
+    {
+      "stage": "grill",
+      "at": "2026-10-29T14:04:41.718Z"
+    },
+    {
+      "stage": "prd",
+      "at": "2026-10-29T14:26:25.411Z",
+      "from": "grill"
+    },
+    {
+      "stage": "design",
+      "at": "2026-10-29T14:34:51.565Z",
+      "from": "prd"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-10-29T14:41:05.885Z",
+      "from": "design"
+    },
+    {
+      "stage": "implement",
+      "at": "2026-10-29T14:42:50.093Z",
+      "from": "tasks"
+    }
+  ]
+}
