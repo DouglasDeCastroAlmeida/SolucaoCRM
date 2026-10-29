@@ -27,9 +27,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-005 [TEST-UNIT] Reforço da cerca de navegação: o recolhido e a gaveta do celular cobrem todo o NAV_CATALOG (~25 min) {AC-006.3} deps: T-004
 
 ### Fatia 3 (leva 1): Navegação no celular
-- [ ] T-006 [P] [TEST-UI] Testes "AC-002.1/002.2": barra de baixo com 4 abas e Mais, e a gaveta lista o restante agrupado (~30 min) {AC-002.1,AC-002.2}
-- [ ] T-007 [TEST-E2E] Jornada a 390 px: sem rolagem lateral, alvos de 44 px e a barra não cobre o campo com o teclado aberto, medidos por getBoundingClientRect (~45 min) {AC-002.3,AC-002.4} deps: T-006
-- [ ] T-008 [IMPL] Ajustes de barra de baixo e gaveta aos tokens, sem mudar quais abas aparecem (~30 min) {AC-002.1,AC-002.2,AC-002.3,AC-002.4} deps: T-007
+- [x] T-006 [P] [TEST-UI] Testes "AC-002.1/002.2": barra de baixo com 4 abas e Mais, e a gaveta lista o restante agrupado (~30 min) {AC-002.1,AC-002.2}
+- [x] T-007 [TEST-E2E] Jornada a 390 px: sem rolagem lateral, alvos de 44 px e a barra não cobre o campo com o teclado aberto, medidos por getBoundingClientRect (~45 min) {AC-002.3,AC-002.4} deps: T-006
+- [x] T-008 [IMPL] Ajustes de barra de baixo e gaveta aos tokens, sem mudar quais abas aparecem (~30 min) {AC-002.1,AC-002.2,AC-002.3,AC-002.4} deps: T-007
 
 ### Fatia 4 (leva 1): Casca global por tokens, nos dois temas
 - [ ] T-009 [TEST-UNIT] Cercas "AC-003.1/003.3": tailwind-tokens e branding verdes, nenhum hex novo em componente e nenhum verde, logo ou ícone do WhatsApp (~30 min) {AC-003.1,AC-003.3}
