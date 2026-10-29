@@ -131,6 +131,24 @@ export interface EntradaDeServidor {
   chave: string;
 }
 
+/**
+ * Assinatura que não depende da ordem das chaves: o jsonb do Postgres devolve as
+ * chaves em outra ordem da que o servidor anuncia, e `JSON.stringify` comparado
+ * direto marcava como "alterada" uma ferramenta que não mudou (achado da hml).
+ */
+function assinaturaEstavel(valor: unknown): string {
+  if (Array.isArray(valor)) return `[${valor.map(assinaturaEstavel).join(",")}]`;
+  if (valor !== null && typeof valor === "object") {
+    const o = valor as Record<string, unknown>;
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${assinaturaEstavel(o[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(valor) ?? "null";
+}
+
 function ferramentasGuardadas(bruto: unknown): FerramentaRemota[] {
   if (!Array.isArray(bruto)) return [];
   return bruto.filter(
@@ -511,8 +529,8 @@ export async function atualizarFerramentasDoServidor(
 
   const guardadas = ferramentasGuardadas(linha.ferramentas);
   const novas = mesclarFerramentas(guardadas, listadas, true);
-  const antes = new Map(guardadas.map((f) => [f.name, JSON.stringify(f)] as const));
-  const depois = new Map(novas.map((f) => [f.name, JSON.stringify(f)] as const));
+  const antes = new Map(guardadas.map((f) => [f.name, assinaturaEstavel(f)] as const));
+  const depois = new Map(novas.map((f) => [f.name, assinaturaEstavel(f)] as const));
   const mudancas: MudancasDeFerramentas = {
     novas: [...depois.keys()].filter((nome) => !antes.has(nome)),
     removidas: [...antes.keys()].filter((nome) => !depois.has(nome)),
