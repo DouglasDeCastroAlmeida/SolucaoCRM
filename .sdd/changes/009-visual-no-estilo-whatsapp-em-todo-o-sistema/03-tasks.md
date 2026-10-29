@@ -22,9 +22,9 @@ Cada tarefa ocupa uma linha:
 - [x] T-002 [IMPL] Layout lê sidebar_collapsed_<userId> com padrão recolhido e toggleSidebar grava por usuário (~30 min) {AC-001.1,AC-001.3,AC-001.4} deps: T-001
 
 ### Fatia 2 (leva 1): Rótulo no foco, item ativo e nenhum destino a menos
-- [ ] T-003 [TEST-UI] Testes "AC-001.2/001.5/001.6": no recolhido o nome aparece no hover e no foco por teclado, aria-current no item ativo, e todos os destinos de sidebarGroups() são renderizados (~35 min) {AC-001.2,AC-001.5,AC-001.6}
-- [ ] T-004 [IMPL] Sidebar recolhida com rótulo no foco e no hover, aria-current e botão de expandir sempre visível (~35 min) {AC-001.2,AC-001.5,AC-001.6} deps: T-003
-- [ ] T-005 [TEST-UNIT] Reforço da cerca de navegação: o recolhido e a gaveta do celular cobrem todo o NAV_CATALOG (~25 min) {AC-006.3} deps: T-004
+- [x] T-003 [TEST-UI] Testes "AC-001.2/001.5/001.6": no recolhido o nome aparece no hover e no foco por teclado, aria-current no item ativo, e todos os destinos de sidebarGroups() são renderizados (~35 min) {AC-001.2,AC-001.5,AC-001.6}
+- [x] T-004 [IMPL] Sidebar recolhida com rótulo no foco e no hover, aria-current e botão de expandir sempre visível (~35 min) {AC-001.2,AC-001.5,AC-001.6} deps: T-003
+- [x] T-005 [TEST-UNIT] Reforço da cerca de navegação: o recolhido e a gaveta do celular cobrem todo o NAV_CATALOG (~25 min) {AC-006.3} deps: T-004
 
 ### Fatia 3 (leva 1): Navegação no celular
 - [ ] T-006 [P] [TEST-UI] Testes "AC-002.1/002.2": barra de baixo com 4 abas e Mais, e a gaveta lista o restante agrupado (~30 min) {AC-002.1,AC-002.2}
