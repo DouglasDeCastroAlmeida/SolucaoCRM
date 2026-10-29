@@ -18,8 +18,8 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1 (leva 1): Menu recolhido por padrão e escolha por usuário
-- [ ] T-001 [TEST-UNIT] Testes "AC-001.1/001.3/001.4": sem cookie do usuário o layout entrega menu recolhido; cookie 0 expandido; cookie de outro usuário ignorado; a ação grava com o userId da sessão e não grava sem usuário (~30 min) {AC-001.1,AC-001.3,AC-001.4}
-- [ ] T-002 [IMPL] Layout lê sidebar_collapsed_<userId> com padrão recolhido e toggleSidebar grava por usuário (~30 min) {AC-001.1,AC-001.3,AC-001.4} deps: T-001
+- [x] T-001 [TEST-UNIT] Testes "AC-001.1/001.3/001.4": sem cookie do usuário o layout entrega menu recolhido; cookie 0 expandido; cookie de outro usuário ignorado; a ação grava com o userId da sessão e não grava sem usuário (~30 min) {AC-001.1,AC-001.3,AC-001.4}
+- [x] T-002 [IMPL] Layout lê sidebar_collapsed_<userId> com padrão recolhido e toggleSidebar grava por usuário (~30 min) {AC-001.1,AC-001.3,AC-001.4} deps: T-001
 
 ### Fatia 2 (leva 1): Rótulo no foco, item ativo e nenhum destino a menos
 - [ ] T-003 [TEST-UI] Testes "AC-001.2/001.5/001.6": no recolhido o nome aparece no hover e no foco por teclado, aria-current no item ativo, e todos os destinos de sidebarGroups() são renderizados (~35 min) {AC-001.2,AC-001.5,AC-001.6}

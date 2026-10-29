@@ -17,6 +17,7 @@ import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { resolverMarcaDaOrganizacao } from "@/lib/branding/organizacao";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { lerSidebarRecolhida } from "@/lib/shell/sidebar-cookie";
 import { modulosLigados } from "@/lib/instalacao/modulos";
 import { capacidadesLigadas } from "@/lib/organizacao/capacidades";
 import { ehOperante } from "@/lib/organizacao/operante";
@@ -242,7 +243,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Read sidebar collapsed state SSR to avoid flash.
   const store = await cookies();
-  const collapsed = store.get("sidebar_collapsed")?.value === "1";
+  const collapsed = lerSidebarRecolhida((nome) => store.get(nome), user.id);
 
   const impersonating = user.support ? {
     tenantId: user.support.organization_id, tenantName: user.support.name,
