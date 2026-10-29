@@ -92,6 +92,20 @@ describe("AC-004.4: tela de uso por agente e total", () => {
     expect(screen.getByTestId("uso-sem-teto").textContent).toMatch(/não para sozinha/iu);
   });
 
+  it("achado da hml: com limite definido e sem parada, o aviso não diz que não há teto", () => {
+    render(<UsoPorAgente uso={uso()} semProtecao />);
+
+    const texto = screen.getByTestId("uso-sem-teto").textContent ?? "";
+    expect(texto).not.toMatch(/sem teto/iu);
+    expect(texto).toMatch(/não para sozinha/iu);
+  });
+
+  it("achado da hml: sem nenhum limite definido, o aviso continua dizendo que está sem teto", () => {
+    render(<UsoPorAgente uso={{ ...uso(), tetoCents: null }} semProtecao />);
+
+    expect(screen.getByTestId("uso-sem-teto").textContent).toMatch(/sem teto/iu);
+  });
+
   it("AC-004.1: com a proteção ligada o aviso não aparece", () => {
     render(<UsoPorAgente uso={uso()} />);
 

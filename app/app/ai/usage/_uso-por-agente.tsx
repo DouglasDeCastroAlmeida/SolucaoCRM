@@ -65,9 +65,13 @@ export function UsoPorAgente({ uso, semProtecao = false }: { uso: UsoDoPeriodo; 
           className="rounded-md border bg-muted p-3 text-sm text-foreground"
           data-testid="uso-sem-teto"
         >
-          {t(
-            "Esta organização está sem teto de gasto: a IA não para sozinha por gasto. Defina um limite e escolha parar ao chegar nele no cartão de orçamento, acima.",
-          )}
+          {uso.tetoCents === null
+            ? t(
+                "Esta organização está sem teto de gasto: a IA não para sozinha por gasto. Defina um limite e escolha parar ao chegar nele no cartão de orçamento, acima.",
+              )
+            : t(
+                "O limite do mês é só um acompanhamento: a IA não para sozinha ao chegar nele. Escolha parar ao chegar no limite no cartão de orçamento, acima.",
+              )}
         </p>
       )}
 

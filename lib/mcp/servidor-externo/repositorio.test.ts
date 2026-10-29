@@ -546,6 +546,18 @@ describe("AC-008.3/B2: 'atualizar ferramentas' adota o que o servidor anuncia e 
     expect(JSON.stringify(r)).not.toContain(CHAVE);
   });
 
+  it("achado da hml: servidor que não mudou não aparece como alterado, mesmo com as chaves reordenadas pelo jsonb", async () => {
+    // O Postgres jsonb devolve as chaves em outra ordem da que o servidor anuncia.
+    const guardadas = [{ somenteLeitura: true, description: "Cancela", name: "cancelar_pedido" }] as FerramentaRemota[];
+    const l = linhaDeServidor("loja", { ferramentas: guardadas, ferramentas_em: new Date().toISOString() });
+    const banco = bancoFalso([l]);
+    listar.mockResolvedValueOnce([{ name: "cancelar_pedido", description: "Cancela", somenteLeitura: true }]);
+
+    const r = await atualizarFerramentasDoServidor(banco.supabase, ORG, l.id, { listar });
+
+    expect(r!.mudancas).toEqual({ novas: [], removidas: [], alteradas: [] });
+  });
+
   it("servidor fora do ar: erro claro e a lista guardada fica como estava", async () => {
     const l = linhaDeServidor("loja", { ferramentas: [{ name: "a" }], ferramentas_em: "2026-10-28T00:00:00Z" });
     const banco = bancoFalso([l]);
