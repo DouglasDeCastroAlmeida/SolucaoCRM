@@ -24,7 +24,14 @@ export type Intervalo = (typeof INTERVALOS)[number];
 export const MOEDAS = ["BRL"] as const;
 export type Moeda = (typeof MOEDAS)[number];
 
-export const AVISOS_DA_REGUA = ["trial_acabando", "venceu", "suspende_em_breve", "suspensa"] as const;
+export const AVISOS_DA_REGUA = [
+  "trial_acabando",
+  "venceu",
+  "suspende_em_breve",
+  "suspensa",
+  "trial_cobra_em_2_dias",
+  "trial_cobra_amanha",
+] as const;
 export type AvisoDaRegua = (typeof AVISOS_DA_REGUA)[number];
 
 export const ERROS_DE_LEITURA = [

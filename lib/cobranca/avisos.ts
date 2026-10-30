@@ -84,6 +84,19 @@ export function textoDoAviso(
         ),
         severidade: "critical",
       };
+    // Trial com cartão (mudança 003): textos mínimos; a régua passa a emiti-los na T-025.
+    case "trial_cobra_em_2_dias":
+      return {
+        titulo: comData("Seu cartão será cobrado em 2 dias, em {data}"),
+        corpo: t("Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado."),
+        severidade: "info",
+      };
+    case "trial_cobra_amanha":
+      return {
+        titulo: comData("Seu cartão será cobrado amanhã, {data}"),
+        corpo: t("Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado."),
+        severidade: "warn",
+      };
     case "liberada":
       return {
         titulo: t("Sua conta foi liberada"),

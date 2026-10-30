@@ -16128,6 +16128,10 @@ export const DICIONARIO: Traducoes = {
   "Confere que um aviso de pagamento veio mesmo da Stripe. É criado sozinho quando você conecta a chave.": { es: "Comprueba que un aviso de pago vino realmente de Stripe. Se crea solo cuando conectas la clave." },
   // ─── Cobrança do revendedor — avisos da régua (PR 3a) ───
   "Seu teste grátis termina em {data}": { es: "Tu prueba gratis termina el {data}" },
+  "Seu cartão será cobrado em 2 dias, em {data}": { es: "Tu tarjeta será cobrada en 2 días, el {data}" },
+  "Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado.": { es: "Si no quieres continuar, cancela en Plan y facturación antes de esa fecha y no se cobrará nada." },
+  "Seu cartão será cobrado amanhã, {data}": { es: "Tu tarjeta será cobrada mañana, {data}" },
+  "Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado.": { es: "Si no quieres continuar, cancela hoy en Plan y facturación y no se cobrará nada." },
   "Assine em Plano e cobrança para continuar usando sem interrupção.": { es: "Suscríbete en Plan y facturación para seguir usando sin interrupción." },
   "Seu teste grátis acabou em {data}": { es: "Tu prueba gratis terminó el {data}" },
   "Assine em Plano e cobrança para continuar usando. Sem a assinatura, a conta é suspensa em alguns dias.": { es: "Suscríbete en Plan y facturación para seguir usando. Sin la suscripción, la cuenta se suspende en unos días." },
