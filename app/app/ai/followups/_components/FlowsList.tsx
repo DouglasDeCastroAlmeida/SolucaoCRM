@@ -4,10 +4,10 @@ import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 
 import { useT } from "@/hooks/i18n/useT";
 import { useState } from "react";
-import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { FlowArrow, Plus, Sparkle, UploadSimple } from "@/lib/ui/icons";
 import { useFollowupFlows, type FollowupFlowPointerRow } from "@/hooks/followup/useFollowupFlows";
 import type { FollowupFlowSurface } from "@/lib/followup/api-schemas";
@@ -156,43 +156,40 @@ export function FlowsList({ initialData, canWrite, surface }: Props) {
         </div>
       )}
 
-      <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="overflow-hidden rounded-lg border border-border">
         {flows.map((flow) => (
-          <li key={flow.id}>
-            <Card className="flex h-full flex-col gap-3 p-4 transition-colors hover:border-accent-400">
-              <Link href={`${baseHref}/${flow.id}`} className="flex flex-1 flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="min-w-0 flex-1 truncate font-medium" title={flow.name}>
-                    {flow.name}
-                  </h3>
-                  <FlowStatusBadge status={flow.status} />
-                </div>
-                <dl className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                  <div>
-                    <dt className="text-text-muted">{t("Versão")}</dt>
-                    <dd className="font-mono">{flow.active_version_id ? t("publicada") : "—"}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-text-muted">{t("Handoff")}</dt>
-                    <dd className="font-mono">
-                      {t(HANDOFF_EM_PALAVRA[flow.handoff_policy] ?? flow.handoff_policy)}
-                    </dd>
-                  </div>
-                </dl>
-                <p className="mt-auto pt-2 text-xs text-text-muted">
+          <LinhaDeLista
+            key={flow.id}
+            avatar={{ nome: flow.name }}
+            titulo={<span title={flow.name}>{flow.name}</span>}
+            direita={<FlowStatusBadge status={flow.status} />}
+            previa={
+              <>
+                <span>
+                  <span>{t("Versão")}</span>: <span className="font-mono">{flow.active_version_id ? t("publicada") : "—"}</span>
+                </span>
+                <span>
+                  <span>{t("Handoff")}</span>:{" "}
+                  <span className="font-mono">
+                    {t(HANDOFF_EM_PALAVRA[flow.handoff_policy] ?? flow.handoff_policy)}
+                  </span>
+                </span>
+                <span>
                   {t("Atualizado em")} {formatUpdatedAt(flow.updated_at, tagDoIdioma)}
-                </p>
-              </Link>
-              {canWrite && (
-                <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-2">
-                  <RenameFollowupFlowButton flowId={flow.id} flowName={flow.name} />
-                  <DuplicateFollowupFlowButton flowId={flow.id} />
-                  <ExportFollowupFlowButton flowId={flow.id} />
-                  <DeleteFollowupFlowButton flowId={flow.id} flowName={flow.name} listHref={baseHref} />
-                </div>
-              )}
-            </Card>
-          </li>
+                </span>
+              </>
+            }
+            href={`${baseHref}/${flow.id}`}
+          >
+            {canWrite && (
+              <div className="flex flex-wrap justify-end gap-2">
+                <RenameFollowupFlowButton flowId={flow.id} flowName={flow.name} />
+                <DuplicateFollowupFlowButton flowId={flow.id} />
+                <ExportFollowupFlowButton flowId={flow.id} />
+                <DeleteFollowupFlowButton flowId={flow.id} flowName={flow.name} listHref={baseHref} />
+              </div>
+            )}
+          </LinhaDeLista>
         ))}
       </ul>
     </div>

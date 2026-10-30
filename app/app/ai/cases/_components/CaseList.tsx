@@ -6,12 +6,12 @@ import { useSearchParams } from "next/navigation";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCases, type CaseListItem } from "@/hooks/ai/useCases";
 import { STATUS_BADGE_VARIANT, STATUS_LABEL, tipoDeCasoLabel } from "@/lib/ai/case-copy";
 import { Robot } from "@/lib/ui/icons";
-import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/i18n/useT";
 import { CaseDetail } from "./CaseDetail";
 
@@ -58,7 +58,7 @@ export function CaseList() {
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="overflow-hidden rounded-lg border border-border">
             {data.cases.map((c) => (
               <CaseRow
                 key={c.id}
@@ -91,29 +91,28 @@ function CaseRow({
   const t = useT();
   const when = formatDistanceToNowStrict(new Date(item.opened_at), { addSuffix: true, locale: localeDaData });
   return (
-    <li>
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-current={selected ? "true" : undefined}
-        data-testid="case-item"
-        className={cn(
-          "flex w-full flex-col items-start gap-1 px-4 py-3 text-left transition-colors hover:bg-accent-soft",
-          selected && "bg-accent-soft",
-        )}
-      >
-        <div className="flex w-full items-center justify-between gap-2">
-          <p className="truncate text-sm font-medium">{item.title}</p>
+    <LinhaDeLista
+      testId="case-item"
+      avatar={{ nome: item.contact_name ?? item.title }}
+      titulo={item.title}
+      direita={
+        <>
           <Badge variant={STATUS_BADGE_VARIANT[item.status]} className="shrink-0">
             {t(STATUS_LABEL[item.status])}
           </Badge>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {/* O assunto vem ANTES do nome: quem tria a fila decide por ele, e o
-              nome só importa depois de escolher o caso. */}
-          {t(tipoDeCasoLabel(item.kind))} · {item.contact_name ?? t("Contato sem nome")} · {when}
-        </p>
-      </button>
-    </li>
+          <span>{when}</span>
+        </>
+      }
+      previa={
+        // O assunto vem ANTES do nome: quem tria a fila decide por ele, e o
+        // nome só importa depois de escolher o caso.
+        <span className="truncate">
+          {t(tipoDeCasoLabel(item.kind))} · {item.contact_name ?? t("Contato sem nome")}
+        </span>
+      }
+      selecionado={selected}
+      ariaCurrent={selected}
+      onClick={onSelect}
+    />
   );
 }

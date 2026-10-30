@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -97,7 +98,7 @@ export function AgentInboxList({ canResolve, canDecideMcp = false }: { canResolv
             {t("Os mais graves primeiro; entre iguais, os mais recentes.")}
           </p>
         ) : null}
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="overflow-hidden rounded-lg border border-border">
           {data.items.map((item) => (
             <InboxRow
               key={item.id}
@@ -138,43 +139,55 @@ function InboxRow({
     locale: localeDaData,
   });
   return (
-    <li className="flex flex-wrap items-start gap-3 px-4 py-3" data-testid="inbox-item">
-      <Badge variant={SEVERITY_VARIANT[item.severity]} className="mt-0.5 shrink-0">
-        {t(SEVERITY_LABEL[item.severity])}
-      </Badge>
-      <div className="min-w-0 flex-1 basis-48 break-words">
-        {/* TÍTULO E CORPO SAEM COMO VIERAM — nunca por t().
-            São LINHAS de `agent_inbox_items`, escritas pelo runtime no momento do
-            evento e recheadas com dado de gente: nome do cliente, número, motivo do
-            handoff, o que o operador cadastrou. É a mesma regra que já vale para nome
-            de funil, rótulo de etapa e conteúdo de mensagem — e a mesma que o PR #600
-            aplicou à Agenda. Passar isso pelo dicionário não traduz nada (a chave é a
-            frase inteira, que nunca casa) e, quando casa, troca a palavra que a pessoa
-            cadastrou por outra que ela não sabe procurar.
-            O que continua traduzido é o que é NOSSO: severidade, rótulo do kind,
-            orientação e rótulo do destino. */}
-        <p className="text-sm font-medium">{item.title}</p>
-        <p className="text-xs text-muted-foreground">
-          {kindLabel(item.kind, t)} · {when}
-        </p>
-        {item.body ? <p className="mt-1 text-xs text-muted-foreground">{item.body}</p> : null}
-        {item.destination.orientacao ? <p className="mt-2 text-xs text-muted-foreground">{t(item.destination.orientacao)}</p> : null}
-        {canDecideMcp && item.kind === "acao_mcp_pendente" && item.status !== "resolved" && item.ref_kind === "conversation" && item.ref_id ? (
-          <AcoesMcpPendentes conversaId={item.ref_id} aoDecidir={onDecidirAcaoMcp} />
-        ) : null}
-        {item.destination.estado === "disponivel" ? (
-          <Button asChild size="sm" variant="link" className="mt-1 h-auto whitespace-normal px-0 text-left">
-            <Link href={item.destination.href}>{t(item.destination.rotulo)}</Link>
-          </Button>
-        ) : null}
-        {linkDePagamentoSeguro(item.link_de_pagamento) ? (
-          <Button asChild size="sm" className="ml-3 mt-1">
-            <a href={linkDePagamentoSeguro(item.link_de_pagamento) ?? undefined} target="_blank" rel="noopener noreferrer">
-              {t("Pagar agora")}
-            </a>
-          </Button>
-        ) : null}
-      </div>
+    <LinhaDeLista
+      testId="inbox-item"
+      avatar={{ nome: kindLabel(item.kind, t) }}
+      /* TÍTULO E CORPO SAEM COMO VIERAM — nunca por t().
+         São LINHAS de `agent_inbox_items`, escritas pelo runtime no momento do
+         evento e recheadas com dado de gente: nome do cliente, número, motivo do
+         handoff, o que o operador cadastrou. É a mesma regra que já vale para nome
+         de funil, rótulo de etapa e conteúdo de mensagem — e a mesma que o PR #600
+         aplicou à Agenda. Passar isso pelo dicionário não traduz nada (a chave é a
+         frase inteira, que nunca casa) e, quando casa, troca a palavra que a pessoa
+         cadastrou por outra que ela não sabe procurar.
+         O que continua traduzido é o que é NOSSO: severidade, rótulo do kind,
+         orientação e rótulo do destino. */
+      titulo={<span className="whitespace-normal break-words">{item.title}</span>}
+      direita={
+        <>
+          <Badge variant={SEVERITY_VARIANT[item.severity]} className="shrink-0">
+            {t(SEVERITY_LABEL[item.severity])}
+          </Badge>
+          <span>{when}</span>
+        </>
+      }
+      previa={
+        <>
+          <span className="w-full">{kindLabel(item.kind, t)}</span>
+          {item.body ? <span className="w-full break-words">{item.body}</span> : null}
+          {item.destination.orientacao ? (
+            <span className="w-full break-words">{t(item.destination.orientacao)}</span>
+          ) : null}
+          {canDecideMcp && item.kind === "acao_mcp_pendente" && item.status !== "resolved" && item.ref_kind === "conversation" && item.ref_id ? (
+            <div className="w-full">
+              <AcoesMcpPendentes conversaId={item.ref_id} aoDecidir={onDecidirAcaoMcp} />
+            </div>
+          ) : null}
+          {item.destination.estado === "disponivel" ? (
+            <Button asChild size="sm" variant="link" className="h-auto whitespace-normal px-0 text-left">
+              <Link href={item.destination.href}>{t(item.destination.rotulo)}</Link>
+            </Button>
+          ) : null}
+          {linkDePagamentoSeguro(item.link_de_pagamento) ? (
+            <Button asChild size="sm">
+              <a href={linkDePagamentoSeguro(item.link_de_pagamento) ?? undefined} target="_blank" rel="noopener noreferrer">
+                {t("Pagar agora")}
+              </a>
+            </Button>
+          ) : null}
+        </>
+      }
+    >
       {canResolve ? (
         item.status === "resolved" ? (
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => onToggle("open")}>
@@ -187,6 +200,6 @@ function InboxRow({
           </Button>
         )
       ) : null}
-    </li>
+    </LinhaDeLista>
   );
 }

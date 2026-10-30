@@ -91,7 +91,7 @@ function renderTabela(
 
 function linhaDoContato() {
   const nome = screen.getByText("Web Speed");
-  return nome.closest("tr") as HTMLElement;
+  return nome.closest("li") as HTMLElement;
 }
 
 describe("ContactsTable — atalho de edição na linha (issue #2715)", () => {
@@ -141,7 +141,7 @@ describe("ContactsTable — atalho de edição na linha (issue #2715)", () => {
       anonymized_at: "2026-10-02T12:00:00.000Z",
     };
     renderTabela([contato, anonimizado]);
-    const linhaAnon = screen.getByText("Cliente Anonimizado #7").closest("tr") as HTMLElement;
+    const linhaAnon = screen.getByText("Cliente Anonimizado #7").closest("li") as HTMLElement;
     expect(within(linhaAnon).queryByRole("button", { name: /Editar contato/ })).toBeNull();
     expect(
       within(linhaDoContato()).getByRole("button", { name: "Editar contato Web Speed" }),
@@ -229,5 +229,44 @@ describe("ContactsTable — seleção múltipla (#2484, F3)", () => {
         expect(contrasteNoTema(borda, "surface", tema), `${borda} no ${tema}`).toBeGreaterThanOrEqual(3);
       }
     }
+  });
+});
+
+// 009, AC-004.1/AC-004.2 — cada contato é uma LinhaDeLista; o que era coluna
+// segue acessível e a ordenação (antes no cabeçalho) vive na barra acima.
+describe("ContactsTable — linha no estilo da lista de conversas (009)", () => {
+  beforeEach(() => vi.clearAllMocks());
+  afterEach(() => cleanup());
+
+  it("AC-004.1: cada contato é um item de lista com iniciais, nome, prévia e situação", () => {
+    renderTabela();
+    const itens = screen.getAllByRole("listitem");
+    expect(itens).toHaveLength(1);
+    const li = within(itens[0] as HTMLElement);
+    expect(li.getByText("WS")).toBeInTheDocument();
+    expect(li.getByRole("link", { name: /Web Speed/ })).toHaveAttribute(
+      "href",
+      `/app/contacts/${contato.id}`,
+    );
+    expect(li.getByText("cliente")).toBeInTheDocument();
+    expect(li.getByText("Ativo")).toBeInTheDocument();
+  });
+
+  it("AC-004.2: a ordenação continua pelos mesmos rótulos, com aria-sort", async () => {
+    const user = userEvent.setup();
+    const onSort = vi.fn();
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <ContactsTable contacts={[contato]} orderBy="display_name" orderDir="asc" onSort={onSort} />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Nome" })).toHaveAttribute("aria-sort", "ascending");
+    await user.click(screen.getByRole("button", { name: "Última atividade" }));
+    expect(onSort).toHaveBeenCalledWith("last_activity_at");
+    await user.click(screen.getByRole("button", { name: "Email" }));
+    expect(onSort).toHaveBeenCalledWith("email");
+    await user.click(screen.getByRole("button", { name: "Telefone" }));
+    expect(onSort).toHaveBeenCalledWith("phone_number");
   });
 });

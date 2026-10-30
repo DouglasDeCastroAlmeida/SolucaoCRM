@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { useUser } from "@/hooks/auth/AuthProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
@@ -16,7 +17,7 @@ import {
   type PrioridadeDaTarefa,
   type Tarefa,
 } from "@/lib/tarefas/tipos";
-import { Check, Kanban, PencilSimple, Trash, UserCircle } from "@/lib/ui/icons";
+import { Kanban, PencilSimple, Trash, UserCircle } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -41,6 +42,11 @@ const COR_DA_PRIORIDADE: Record<PrioridadeDaTarefa, string> = {
   urgent: "bg-destructive/15 text-destructive",
 };
 
+/**
+ * Uma tarefa no desenho da lista de conversas (009, AC-004.1): título à
+ * esquerda, prazo à direita; descrição, prioridade, responsável e negócio na
+ * prévia. A caixa de concluir é a caixa de seleção da linha.
+ */
 function Linha({
   tarefa,
   podeEditar,
@@ -83,64 +89,36 @@ function Linha({
     }
   }
 
+  const prazo = tarefa.due_date
+    ? new Date(tarefa.due_date).toLocaleString(tag, {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : t("Sem prazo");
+
   return (
-    <div
-      className={cn(
-        "group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted/40",
-        encerrada && "opacity-60",
-      )}
-    >
-      <button
-        type="button"
-        role="checkbox"
-        aria-checked={encerrada}
-        aria-label={encerrada ? t("Reabrir a tarefa") : t("Marcar como concluída")}
-        disabled={ocupada || !podeEditar}
-        onClick={() => comBloqueio(() => aoAlternarConcluida(tarefa))}
-        className={cn(
-          "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md border transition-colors",
-          encerrada
-            ? "border-primary bg-primary text-primary-foreground"
-            : "border-muted-foreground/40 hover:border-primary",
-        )}
-      >
-        {encerrada ? <Check size={12} weight="bold" aria-hidden /> : null}
-      </button>
-
-      <div className="min-w-0 flex-1">
-        <p
-          className={cn(
-            "text-sm font-medium",
-            encerrada && "text-muted-foreground line-through",
-          )}
-        >
-          {tarefa.title}
-        </p>
-        {tarefa.description ? (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{tarefa.description}</p>
-        ) : null}
-
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
+    <LinhaDeLista
+      className={cn("group", encerrada && "opacity-60")}
+      avatar={{ nome: tarefa.title }}
+      titulo={
+        <span className={cn(encerrada && "text-muted-foreground line-through")}>{tarefa.title}</span>
+      }
+      direita={<span className={cn(atrasada && "font-semibold text-destructive")}>{prazo}</span>}
+      previa={
+        <>
+          {tarefa.description ? <span className="w-full truncate">{tarefa.description}</span> : null}
           <span
             className={cn(
-              "rounded-full px-2 py-0.5 font-medium",
+              "rounded-full px-2 py-0.5 text-[11px] font-medium",
               COR_DA_PRIORIDADE[tarefa.priority],
             )}
           >
             {rotuloDaPrioridade[tarefa.priority]}
           </span>
-          <span className={cn("text-muted-foreground", atrasada && "font-semibold text-destructive")}>
-            {tarefa.due_date
-              ? new Date(tarefa.due_date).toLocaleString(tag, {
-                  day: "2-digit",
-                  month: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : t("Sem prazo")}
-          </span>
           {nomeDoResponsavel ? (
-            <span className="flex items-center gap-1 text-muted-foreground">
+            <span className="flex items-center gap-1">
               <UserCircle size={12} aria-hidden />
               {nomeDoResponsavel}
             </span>
@@ -148,18 +126,22 @@ function Linha({
           {mostrarNegocio && tarefa.lead ? (
             <Link
               href={`/app/leads/${tarefa.lead.id}`}
-              className="flex min-w-0 max-w-[16rem] items-center gap-1 text-muted-foreground hover:text-foreground hover:underline"
+              className="flex min-w-0 max-w-[16rem] items-center gap-1 hover:text-foreground hover:underline"
               title={tarefa.lead.title}
             >
               <Kanban size={12} aria-hidden className="shrink-0" />
               <span className="truncate">{tarefa.lead.title}</span>
             </Link>
           ) : null}
-        </div>
-      </div>
-
+        </>
+      }
+      selecionado={encerrada}
+      onSelecionar={() => void comBloqueio(() => aoAlternarConcluida(tarefa))}
+      selecaoDesabilitada={ocupada || !podeEditar}
+      rotuloDaSelecao={encerrada ? t("Reabrir a tarefa") : t("Marcar como concluída")}
+    >
       {podeEditar ? (
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-1 transition-opacity focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100">
           <Button
             variant="ghost"
             size="icon"
@@ -199,7 +181,7 @@ function Linha({
           )}
         </div>
       ) : null}
-    </div>
+    </LinhaDeLista>
   );
 }
 
@@ -257,7 +239,7 @@ export function ListaDeTarefas({
           >
             {rotuloDaFaixa[grupo.faixa]}
           </h2>
-          <div className="rounded-xl border bg-card py-1">
+          <ul className="overflow-hidden rounded-xl border bg-card">
             {grupo.tarefas.map((tarefa) => (
               <Linha
                 key={tarefa.id}
@@ -270,7 +252,7 @@ export function ListaDeTarefas({
                 nomeDoResponsavel={nomeDoResponsavel(tarefa)}
               />
             ))}
-          </div>
+          </ul>
         </section>
       ))}
     </div>

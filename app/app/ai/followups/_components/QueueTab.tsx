@@ -8,6 +8,7 @@ import { format, formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import {
   Select,
   SelectContent,
@@ -15,14 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -200,82 +193,68 @@ export function QueueTab({ canWrite }: Props) {
           </p>
         </div>
       ) : (
-        <div className="rounded-md border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("Contato")}</TableHead>
-                <TableHead>{t("Fluxo / Promessa")}</TableHead>
-                <TableHead>{t("Nó atual / Motivo")}</TableHead>
-                <TableHead>{t("Próximo disparo")}</TableHead>
-                <TableHead>{t("Status")}</TableHead>
-                {canWrite && <TableHead className="w-[100px]" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => {
-                const canCancel = canWrite && podeCancelar(row);
-                return (
-                  <TableRow key={`${row.source}:${row.id}`} data-testid="queue-row">
-                    <TableCell className="font-medium">
-                      {/*
-                        A porta do dossiê. Só enrollment tem história para contar:
-                        a promessa (`cron_jobs`) é uma linha só — um horário e um
-                        motivo — e um link que abrisse uma tela vazia ensinaria
-                        que o dossiê às vezes não funciona.
-                      */}
-                      {row.source === "enrollment" ? (
-                        <Link
-                          href={`/app/ai/followups/enrollments/${row.id}`}
-                          className="underline-offset-2 hover:underline"
-                          data-testid="queue-abrir-dossie"
-                        >
-                          {row.contact.name}
-                        </Link>
-                      ) : (
-                        row.contact.name
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span>{row.flow_name ?? <span className="text-text-muted">{t("Promessa")}</span>}</span>
-                        {row.agent_name && (
-                          <span className="text-xs text-text-muted">{t("agente")} {row.agent_name}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-[280px] truncate text-sm" title={row.node_or_reason}>
-                      {row.node_or_reason}
-                    </TableCell>
-                    <TableCell>
-                      <NextFireCell iso={row.next_fire_at} />
-                    </TableCell>
-                    <TableCell>
-                      <QueueStatusBadge status={row.status} />
-                    </TableCell>
-                    {canWrite && (
-                      <TableCell>
-                        {canCancel && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            data-testid="cancelar-item-da-fila"
-                            aria-label={
-                              row.source === "promise" ? t("Cancelar retorno") : t("Cancelar follow-up")
-                            }
-                            onClick={() => setPendingCancel(row)}
-                          >
-                            <Trash size={14} aria-hidden className="mr-1 text-error" /> {t("Cancelar")}
-                          </Button>
-                        )}
-                      </TableCell>
+        <ul className="overflow-hidden rounded-md border border-border">
+          {rows.map((row) => {
+            const canCancel = canWrite && podeCancelar(row);
+            return (
+              <LinhaDeLista
+                key={`${row.source}:${row.id}`}
+                testId="queue-row"
+                avatar={{ nome: row.contact.name }}
+                titulo={
+                  /*
+                    A porta do dossiê. Só enrollment tem história para contar:
+                    a promessa (`cron_jobs`) é uma linha só — um horário e um
+                    motivo — e um link que abrisse uma tela vazia ensinaria
+                    que o dossiê às vezes não funciona.
+                  */
+                  row.source === "enrollment" ? (
+                    <Link
+                      href={`/app/ai/followups/enrollments/${row.id}`}
+                      className="underline-offset-2 hover:underline"
+                      data-testid="queue-abrir-dossie"
+                    >
+                      {row.contact.name}
+                    </Link>
+                  ) : (
+                    row.contact.name
+                  )
+                }
+                previa={
+                  <>
+                    <span>{row.flow_name ?? t("Promessa")}</span>
+                    {row.agent_name && (
+                      <span>
+                        {t("agente")} {row.agent_name}
+                      </span>
                     )}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                    <span className="max-w-full truncate" title={row.node_or_reason}>
+                      {row.node_or_reason}
+                    </span>
+                  </>
+                }
+                direita={
+                  <>
+                    <NextFireCell iso={row.next_fire_at} />
+                    <QueueStatusBadge status={row.status} />
+                  </>
+                }
+              >
+                {canCancel && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    data-testid="cancelar-item-da-fila"
+                    aria-label={row.source === "promise" ? t("Cancelar retorno") : t("Cancelar follow-up")}
+                    onClick={() => setPendingCancel(row)}
+                  >
+                    <Trash size={14} aria-hidden className="mr-1 text-error" /> {t("Cancelar")}
+                  </Button>
+                )}
+              </LinhaDeLista>
+            );
+          })}
+        </ul>
       )}
 
       {hasNextPage && (

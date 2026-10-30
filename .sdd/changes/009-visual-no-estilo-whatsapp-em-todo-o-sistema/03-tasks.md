@@ -44,14 +44,14 @@ Cada tarefa ocupa uma linha:
 - [x] T-016 [TEST-E2E] Voltar à imagem anterior na hml e medir que o visual antigo volta e que / responde 200 e /app 307 (~30 min) {AC-007.3} deps: T-015
 
 ### Fatia 6 (leva 2): Linha de lista e Contatos
-- [ ] T-017 [TEST-UI] Testes "AC-004.1/004.4": LinhaDeLista com avatar, título, prévia e direita, e os estados vazio, erro e carga (~35 min) {AC-004.1,AC-004.4} deps: T-016
-- [ ] T-018 [TEST-UI] Testes "AC-004.2/004.3": Contatos busca, filtra, ordena, pagina e seleciona em lote como antes, sem enfraquecer os testes existentes (~45 min) {AC-004.2,AC-004.3} deps: T-017
-- [ ] T-019 [IMPL] components/ui/linha-de-lista.tsx e Contatos desenhando por ela, mantendo props e handlers (~60 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-017,T-018
+- [x] T-017 [TEST-UI] Testes "AC-004.1/004.4": LinhaDeLista com avatar, título, prévia e direita, e os estados vazio, erro e carga (~35 min) {AC-004.1,AC-004.4} deps: T-016
+- [x] T-018 [TEST-UI] Testes "AC-004.2/004.3": Contatos busca, filtra, ordena, pagina e seleciona em lote como antes, sem enfraquecer os testes existentes (~45 min) {AC-004.2,AC-004.3} deps: T-017
+- [x] T-019 [IMPL] components/ui/linha-de-lista.tsx e Contatos desenhando por ela, mantendo props e handlers (~60 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-017,T-018
 
 ### Fatia 7 (leva 2): Tarefas, Casos, Follow-ups e cartões da Central
-- [ ] T-020 [P] [TEST-UI] Testes de comportamento preservado em Tarefas, Casos e Follow-ups (~45 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-019
-- [ ] T-021 [P] [TEST-UI] Testes dos cartões da Central em linha, com Aprovar e Recusar funcionando (~35 min) {AC-004.1,AC-004.2,AC-004.4} deps: T-019
-- [ ] T-022 [IMPL] Tarefas, Casos, Follow-ups e cartões da Central desenhando por LinhaDeLista (~60 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-020,T-021
+- [x] T-020 [P] [TEST-UI] Testes de comportamento preservado em Tarefas, Casos e Follow-ups (~45 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-019
+- [x] T-021 [P] [TEST-UI] Testes dos cartões da Central em linha, com Aprovar e Recusar funcionando (~35 min) {AC-004.1,AC-004.2,AC-004.4} deps: T-019
+- [x] T-022 [IMPL] Tarefas, Casos, Follow-ups e cartões da Central desenhando por LinhaDeLista (~60 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-020,T-021
 
 ### Fatia 8 (leva 2): Prova e entrega da leva 2
 - [ ] T-023 [TEST-E2E] Jornada da leva 2 na hml: capturas lado a lado e medidas das telas em lista, e funil e agenda com a forma de antes (~60 min) {AC-005.1,AC-007.2} deps: T-022

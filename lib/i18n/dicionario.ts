@@ -1587,6 +1587,7 @@ export const DICIONARIO: Traducoes = {
   },
   "Selecionar conversa": { es: "Seleccionar conversación" },
   "Selecionar todas": { es: "Seleccionar todas" },
+  "Ordenar por": { es: "Ordenar por" },
   "Selecionar todas as conversas visíveis": {
     es: "Seleccionar todas las conversaciones visibles",
   },

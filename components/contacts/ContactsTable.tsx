@@ -13,14 +13,7 @@ import { format, formatRelative, isToday, isYesterday } from "date-fns";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
 import { CaretDown, CaretUp, ChatCircle, Check, PencilSimple, Trash } from "@/lib/ui/icons";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { ChipDeEtiqueta } from "@/components/tags/ChipDeEtiqueta";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,11 +88,11 @@ function SortableHead({
   const emphasis = "text-foreground";
 
   return (
-    <TableHead className={className}>
+    <span className={className}>
       <button
         type="button"
         onClick={() => onSort(column)}
-        className="inline-flex items-center gap-1 font-medium hover:text-foreground"
+        className="inline-flex min-h-11 items-center gap-1 px-2 text-xs font-medium text-muted-foreground hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent sm:min-h-8"
         aria-sort={active ? (orderDir === "asc" ? "ascending" : "descending") : "none"}
       >
         {label}
@@ -116,7 +109,7 @@ function SortableHead({
           />
         </span>
       </button>
-    </TableHead>
+    </span>
   );
 }
 
@@ -204,196 +197,143 @@ export function ContactsTable({
 
   return (
     <>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          {/*
-            Cabeça da seleção em lote (#2484, F3): marca de uma vez tudo o que
-            está na tela. Só existe quando a tabela recebe as props de seleção
-            — quem não liga o lote continua com a tabela de sempre.
-          */}
-          {onAlternarSelecao && (
-            <TableHead className="w-[40px]">
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={
-                  selecionados ? contacts.every((c) => selecionados.has(c.id)) : false
-                }
-                aria-label={t("Selecionar todos os contatos visíveis")}
-                title={t("Selecionar todas")}
-                data-testid="selecionar-todos-contatos"
-                onClick={onSelecionarTodosVisiveis}
-                className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                {selecionados && contacts.every((c) => selecionados.has(c.id)) && (
-                  <Check size={12} weight="bold" aria-hidden />
-                )}
-              </button>
-            </TableHead>
-          )}
-          <SortableHead
-            label={t("Nome")}
-            column="display_name"
-            orderBy={orderBy}
-            orderDir={orderDir}
-            onSort={onSort}
-          />
-          <SortableHead
-            label={t("Email")}
-            column="email"
-            orderBy={orderBy}
-            orderDir={orderDir}
-            onSort={onSort}
-          />
-          <SortableHead
-            label={t("Telefone")}
-            column="phone_number"
-            orderBy={orderBy}
-            orderDir={orderDir}
-            onSort={onSort}
-          />
-          <TableHead>{t("Tags")}</TableHead>
-          <SortableHead
-            label={t("Última atividade")}
-            column="last_activity_at"
-            orderBy={orderBy}
-            orderDir={orderDir}
-            onSort={onSort}
-          />
-          <TableHead>{t("Status")}</TableHead>
-          <TableHead className="w-[88px]">
-            <span className="sr-only">{t("Ações")}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {contacts.map((c) => (
-          <TableRow key={c.id} className="cursor-pointer">
-            {onAlternarSelecao && (
-              <TableCell>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={selecionados?.has(c.id) ?? false}
-                  aria-label={`${t("Selecionar contato")} ${displayName(c, t)}`}
-                  data-testid={`selecionar-contato-${c.id}`}
-                  onClick={() => onAlternarSelecao(c.id)}
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  {selecionados?.has(c.id) && <Check size={12} weight="bold" aria-hidden />}
-                </button>
-              </TableCell>
+    {/*
+      Barra acima da lista (009, AC-004.2): leva o que era cabeça de tabela.
+      A "selecionar todos" do lote (#2484, F3) e a ordenação, que antes se fazia
+      clicando no cabeçalho da coluna — mesmos rótulos, mesmo aria-sort.
+    */}
+    <div
+      className="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-border bg-card px-1 py-1"
+      role="group"
+      aria-label={t("Ordenar por")}
+    >
+      {onAlternarSelecao && (
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={selecionados ? contacts.every((c) => selecionados.has(c.id)) : false}
+            aria-label={t("Selecionar todos os contatos visíveis")}
+            title={t("Selecionar todas")}
+            data-testid="selecionar-todos-contatos"
+            onClick={onSelecionarTodosVisiveis}
+            className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors before:absolute before:-inset-3.5 before:content-[''] hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {selecionados && contacts.every((c) => selecionados.has(c.id)) && (
+              <Check size={12} weight="bold" aria-hidden />
             )}
-            <TableCell className="font-medium">
-              <Link href={`/app/contacts/${c.id}`} className="hover:underline">
-                {displayName(c)}
+          </button>
+        </span>
+      )}
+      <SortableHead label={t("Nome")} column="display_name" orderBy={orderBy} orderDir={orderDir} onSort={onSort} />
+      <SortableHead label={t("Email")} column="email" orderBy={orderBy} orderDir={orderDir} onSort={onSort} />
+      <SortableHead label={t("Telefone")} column="phone_number" orderBy={orderBy} orderDir={orderDir} onSort={onSort} />
+      <SortableHead label={t("Última atividade")} column="last_activity_at" orderBy={orderBy} orderDir={orderDir} onSort={onSort} />
+    </div>
+    <ul className="m-0 list-none p-0">
+      {contacts.map((c) => (
+        <LinhaDeLista
+          key={c.id}
+          avatar={{ nome: displayName(c, t) }}
+          titulo={displayName(c)}
+          href={`/app/contacts/${c.id}`}
+          selecionado={selecionados?.has(c.id) ?? false}
+          onSelecionar={onAlternarSelecao ? () => onAlternarSelecao(c.id) : undefined}
+          rotuloDaSelecao={`${t("Selecionar contato")} ${displayName(c, t)}`}
+          testIdDaSelecao={`selecionar-contato-${c.id}`}
+          previa={
+            <>
+              <span>{c.email ?? "—"}</span>
+              <span>{c.phone_number ? phoneForDisplay(c.phone_number) : "—"}</span>
+              {c.tags.length === 0 ? (
+                <span>—</span>
+              ) : (
+                c.tags.map((tag) => <ChipDeEtiqueta key={tag} tag={tag} />)
+              )}
+            </>
+          }
+          direita={
+            <>
+              <span className="text-xs">
+                {c.last_activity_at ? formatUltimaAtividade(c.last_activity_at, localeDaData) : "—"}
+              </span>
+              {c.is_anonymized && <Badge variant="destructive">{t("Anonimizado")}</Badge>}
+              {c.is_blocked && <Badge variant="warning">{t("Bloqueado")}</Badge>}
+              {/*
+                Selo "Pessoal" lido da COLUNA, nunca da etiqueta (critério 5):
+                etiqueta se edita, coluna não. "Ativo" some junto: pessoal está
+                fora da operação, então chamar de ativo mentiria na mesma linha
+                em que o selo conta.
+              */}
+              {c.is_personal && <Badge variant="secondary">{t("Pessoal")}</Badge>}
+              {/*
+                Lê a COLUNA, nunca a tag, e só com a regra ligada: a tag
+                `cliente` é removível à mão e pelo PATCH, e um selo que some
+                porque alguém editou etiquetas mentiria sobre um fato.
+                Desligada, a coluna está congelada e o selo mentiria do outro lado.
+              */}
+              {clientesLigado && c.first_service_at && (
+                <Badge variant="secondary">{t("Cliente")}</Badge>
+              )}
+              {!c.is_anonymized && !c.is_blocked && !c.is_personal && (
+                <Badge variant="success">{t("Ativo")}</Badge>
+              )}
+            </>
+          }
+        >
+          {c.conversa ? (
+            <Button variant="ghost" size="icon" className="h-11 w-11 sm:h-8 sm:w-8" asChild>
+              <Link
+                href={`/app/inbox?id=${c.conversa.id}`}
+                title={t("Abrir conversa no Inbox")}
+                aria-label={`${t("Abrir conversa com")} ${displayName(c, t)} ${t("no Inbox")}`}
+              >
+                <ChatCircle size={16} weight="regular" aria-hidden />
+                {c.conversa.unread > 0 && (
+                  <span className="sr-only">{c.conversa.unread} {t("sem ler")}</span>
+                )}
               </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {c.email ?? "—"}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {c.phone_number ? phoneForDisplay(c.phone_number) : "—"}
-            </TableCell>
-            <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {c.tags.length === 0
-                  ? <span className="text-muted-foreground text-xs">—</span>
-                  : c.tags.map((tag) => (
-                      <ChipDeEtiqueta key={tag} tag={tag} />
-                    ))}
-              </div>
-            </TableCell>
-            <TableCell className="text-muted-foreground text-sm">
-              {c.last_activity_at
-                ? formatUltimaAtividade(c.last_activity_at, localeDaData)
-                : "—"}
-            </TableCell>
-            <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {c.is_anonymized && <Badge variant="destructive">{t("Anonimizado")}</Badge>}
-                {c.is_blocked && <Badge variant="warning">{t("Bloqueado")}</Badge>}
-                {/*
-                  Selo "Pessoal" lido da COLUNA, nunca da etiqueta (critério 5):
-                  mesma regra do aviso acima — etiqueta se edita, coluna não.
-                  "Ativo" some junto: pessoal está fora da operação, então
-                  chamar de ativo mentiria na mesma linha em que o selo conta.
-                */}
-                {c.is_personal && <Badge variant="secondary">{t("Pessoal")}</Badge>}
-                {/*
-                  Lê a COLUNA, nunca a tag, e só com a regra ligada: a tag
-                  `cliente` é removível à mão e pelo PATCH (que substitui `tags`
-                  por inteiro), e um selo que some porque alguém editou
-                  etiquetas mentiria sobre um fato. Desligada, a coluna está
-                  congelada e o selo mentiria do outro lado.
-                */}
-                {clientesLigado && c.first_service_at && (
-                  <Badge variant="secondary">{t("Cliente")}</Badge>
-                )}
-                {!c.is_anonymized && !c.is_blocked && !c.is_personal && (
-                  <Badge variant="success">{t("Ativo")}</Badge>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center justify-end gap-0.5">
-                {c.conversa ? (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                    <Link
-                      href={`/app/inbox?id=${c.conversa.id}`}
-                      title={t("Abrir conversa no Inbox")}
-                      aria-label={`${t("Abrir conversa com")} ${displayName(c, t)} ${t("no Inbox")}`}
-                    >
-                      <ChatCircle size={16} weight="regular" aria-hidden />
-                      {c.conversa.unread > 0 && (
-                        <span className="sr-only">{c.conversa.unread} {t("sem ler")}</span>
-                      )}
-                    </Link>
-                  </Button>
-                ) : c.phone_number ? (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title={t("Iniciar conversa no Inbox")}
-                    aria-label={`${t("Iniciar conversa com")} ${displayName(c, t)} ${t("no Inbox")}`}
-                    disabled={abrindo}
-                    onClick={() => void iniciarConversa(c)}
-                  >
-                    <ChatCircle size={16} weight="regular" aria-hidden />
-                  </Button>
-                ) : null}
-                {/* Issue #2715 — atalho de edição na linha: o MESMO diálogo da ficha (EditContactDialog), sem formulário novo. A lista já é invalidada pelo useUpdateContact (["contacts"]).
-                    Anonimizado não ganha lápis, como na ficha: o servidor recusa com lgpd_anonymization_irreversible. */}
-                {!c.is_anonymized && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title={t("Editar contato")}
-                    aria-label={`${t("Editar contato")} ${displayName(c, t)}`}
-                    onClick={() => setContatoEmEdicao(c)}
-                  >
-                    <PencilSimple size={16} weight="regular" aria-hidden />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-error-fg"
-                  title={t("Excluir contato")}
-                  aria-label={`${t("Excluir contato")} ${displayName(c, t)}`}
-                  onClick={() => setAlvo(c)}
-                >
-                  <Trash size={16} weight="regular" aria-hidden />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+            </Button>
+          ) : c.phone_number ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 sm:h-8 sm:w-8"
+              title={t("Iniciar conversa no Inbox")}
+              aria-label={`${t("Iniciar conversa com")} ${displayName(c, t)} ${t("no Inbox")}`}
+              disabled={abrindo}
+              onClick={() => void iniciarConversa(c)}
+            >
+              <ChatCircle size={16} weight="regular" aria-hidden />
+            </Button>
+          ) : null}
+          {/* Issue #2715 — atalho de edição na linha: o MESMO diálogo da ficha (EditContactDialog), sem formulário novo. A lista já é invalidada pelo useUpdateContact (["contacts"]).
+              Anonimizado não ganha lápis, como na ficha: o servidor recusa com lgpd_anonymization_irreversible. */}
+          {!c.is_anonymized && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-11 w-11 sm:h-8 sm:w-8"
+              title={t("Editar contato")}
+              aria-label={`${t("Editar contato")} ${displayName(c, t)}`}
+              onClick={() => setContatoEmEdicao(c)}
+            >
+              <PencilSimple size={16} weight="regular" aria-hidden />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 text-muted-foreground hover:text-error-fg sm:h-8 sm:w-8"
+            title={t("Excluir contato")}
+            aria-label={`${t("Excluir contato")} ${displayName(c, t)}`}
+            onClick={() => setAlvo(c)}
+          >
+            <Trash size={16} weight="regular" aria-hidden />
+          </Button>
+        </LinhaDeLista>
+      ))}
+    </ul>
 
     <AlertDialog open={alvo !== null} onOpenChange={(open) => { if (!open) setAlvo(null); }}>
       <AlertDialogContent>
