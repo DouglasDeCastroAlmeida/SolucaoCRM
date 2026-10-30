@@ -388,6 +388,10 @@ async function abrirTela(page: Page, tela: Tela, tema: string) {
   // dá tempo da lista (react-query) assentar
   const esperada = ["contacts", "tasks", "followups-fluxos"].includes(tela.nome);
   if (esperada) await page.locator("main ul > li").first().waitFor({ timeout: 30_000 }).catch(() => undefined);
+  if (tela.nome === "cases") {
+    // espera o estado final (lista ou vazio), não o esqueleto de carregamento
+    await page.locator("main ul > li, main :text('Nenhum caso')").first().waitFor({ timeout: 30_000 }).catch(() => undefined);
+  }
   await page.waitForTimeout(2500);
   expect(await page.locator("html").getAttribute("data-theme")).toBe(tema);
   return resp;
@@ -465,7 +469,11 @@ async function percorrer(page: Page, mobile: boolean) {
           if (m.rolagem > 0) falhas.push(`rolagem lateral ${m.rolagem}`);
           if (m.estouros.length) falhas.push(`elemento passa da janela: ${m.estouros.slice(0, 4).map((x) => `${x.seletor} right=${x.direita}`).join(", ")}`);
           if (mobile && m.ladoALado?.lista && m.ladoALado.painel) falhas.push("Casos: lista e painel lado a lado");
-          if (m.urgente.length) linha(`- INFO ${rotulo}: selo 'urgente' contraste=${m.urgente.map((u) => u.razao).join("/")}`);
+          if (m.urgente.length) {
+            linha(`- ${rotulo}: selo 'urgente' contraste=${m.urgente.map((u) => u.razao).join("/")}`);
+            const baixo = m.urgente.filter((u) => u.razao < PISO_CONTRASTE);
+            if (baixo.length) falhas.push(`selo 'urgente' abaixo de ${PISO_CONTRASTE}:1 (${baixo.map((u) => u.razao).join("/")})`);
+          }
           if (tela.nome === "cases") linha(`- INFO ${rotulo}: Casos lista visível=${m.ladoALado?.lista}; painel visível=${m.ladoALado?.painel}`);
           if (m.contraste.ruins.length) {
             falhas.push(`contraste < ${PISO_CONTRASTE}: ${m.contraste.ruins.slice(0, 3).map((r) => `"${r.texto}" ${r.razao}`).join(", ")}`);
