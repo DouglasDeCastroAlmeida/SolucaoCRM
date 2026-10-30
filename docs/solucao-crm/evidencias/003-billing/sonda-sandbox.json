@@ -1,0 +1,114 @@
+[
+  {
+    "passo": "conta",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "checkout-MONTHLY",
+    "dado": "{\"enviado\":{\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"minutesToExpire\":60,\"callback\":\"(https example.invalid)\",\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"MONTHLY\",\"nextDueDate\":\"2026-11-06 00:00:00\"}},\"status\":200,\"resposta\":{\"id\":\"[UUID]\",\"link\":\"https://sandbox.asaas.com/000/checkoutSession/show/[UUID]\",\"status\":\"ACTIVE\",\"minutesToExpire\":60,\"externalReference\":null,\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"callback\":{\"cancelUrl\":\"https://example.invalid/cobranca/volta?cancelado=1\",\"successUrl\":\"https://example.invalid/cobranca/volta?ok=1\",\"expiredUrl\":\"https://example.invalid/cobranca/volta?expirado=1\"},\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"externalReference\":null,\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"MONTHLY\",\"nextDueDate\":\"2026-11-06T03:00:00Z\",\"endDate\":null},\"installment\":null,\"split\":null,\"customer\":null,\"customerData\":null}}"
+  },
+  {
+    "passo": "checkout-MONTHLY-leitura",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "checkout-YEARLY",
+    "dado": "{\"enviado\":{\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"minutesToExpire\":60,\"callback\":\"(https example.invalid)\",\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"YEARLY\",\"nextDueDate\":\"2026-11-06 00:00:00\"}},\"status\":200,\"resposta\":{\"id\":\"[UUID]\",\"link\":\"https://sandbox.asaas.com/000/checkoutSession/show/[UUID]\",\"status\":\"ACTIVE\",\"minutesToExpire\":60,\"externalReference\":null,\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"callback\":{\"cancelUrl\":\"https://example.invalid/cobranca/volta?cancelado=1\",\"successUrl\":\"https://example.invalid/cobranca/volta?ok=1\",\"expiredUrl\":\"https://example.invalid/cobranca/volta?expirado=1\"},\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"externalReference\":null,\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"YEARLY\",\"nextDueDate\":\"2026-11-06T03:00:00Z\",\"endDate\":null},\"installment\":null,\"split\":null,\"customer\":null,\"customerData\":null}}"
+  },
+  {
+    "passo": "checkout-YEARLY-leitura",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "checkout-passado",
+    "dado": "{\"status\":400,\"resposta\":{\"errors\":[{\"code\":\"invalid_object\",\"description\":\"A data de vencimento não pode ser anterior a hoje.\"}]}}"
+  },
+  {
+    "passo": "checkout-trimestral",
+    "dado": "{\"status\":200,\"resposta\":{\"id\":\"[UUID]\",\"link\":\"https://sandbox.asaas.com/000/checkoutSession/show/[UUID]\",\"status\":\"ACTIVE\",\"minutesToExpire\":60,\"externalReference\":null,\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"callback\":{\"cancelUrl\":\"https://example.invalid/cobranca/volta?cancelado=1\",\"successUrl\":\"https://example.invalid/cobranca/volta?ok=1\",\"expiredUrl\":\"https://example.invalid/cobranca/volta?expirado=1\"},\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"externalReference\":null,\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"QUARTERLY\",\"nextDueDate\":\"2026-11-06T03:00:00Z\",\"endDate\":null},\"installment\":null,\"split\":null,\"customer\":null,\"customerData\":null}}"
+  },
+  {
+    "passo": "checkout-sem-callback",
+    "dado": "{\"status\":400,\"resposta\":{\"errors\":[{\"code\":\"invalid_object\",\"description\":\"O campo callback deve ser informado.\"}]}}"
+  },
+  {
+    "passo": "checkout-callback-http",
+    "dado": "{\"status\":200,\"resposta\":{\"id\":\"[UUID]\",\"link\":\"https://sandbox.asaas.com/000/checkoutSession/show/[UUID]\",\"status\":\"ACTIVE\",\"minutesToExpire\":60,\"externalReference\":null,\"billingTypes\":[\"CREDIT_CARD\"],\"chargeTypes\":[\"RECURRENT\"],\"callback\":{\"cancelUrl\":\"http://example.invalid/y\",\"successUrl\":\"http://example.invalid/x\",\"expiredUrl\":null},\"items\":[{\"name\":\"Plano sonda 003\",\"description\":\"Sonda de sandbox\",\"externalReference\":null,\"quantity\":1,\"value\":49.9}],\"subscription\":{\"cycle\":\"MONTHLY\",\"nextDueDate\":\"2026-11-06T03:00:00Z\",\"endDate\":null},\"installment\":null,\"split\":null,\"customer\":null,\"customerData\":null}}"
+  },
+  {
+    "passo": "nfse-/fiscalInfo",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "nfse-/fiscalInfo/municipalOptions",
+    "dado": "{\"status\":400,\"resposta\":\"{\\\"errors\\\":[{\\\"code\\\":\\\"invalid_person_type\\\",\\\"description\\\":\\\"Essa funcionalidade só esta disponível para pessoa jurídica.\\\"}]}\"}"
+  },
+  {
+    "passo": "nfse-/subscriptions/sub_***/invoiceSettings",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "nfse-/customerFiscalInfo",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "nfse-/invoices?limit=1",
+    "dado": "{\"status\":200,\"resposta\":\"{\\\"object\\\":\\\"list\\\",\\\"hasMore\\\":false,\\\"totalCount\\\":0,\\\"limit\\\":1,\\\"offset\\\":0,\\\"data\\\":[]}\"}"
+  },
+  {
+    "passo": "nfse-/customerAccounts?limit=1",
+    "dado": "{\"status\":404,\"resposta\":null}"
+  },
+  {
+    "passo": "nfse-/subscriptions?limit=1",
+    "dado": "{\"status\":200,\"resposta\":\"{\\\"object\\\":\\\"list\\\",\\\"hasMore\\\":false,\\\"totalCount\\\":0,\\\"limit\\\":1,\\\"offset\\\":0,\\\"data\\\":[]}\"}"
+  },
+  {
+    "passo": "nfse-/payments?limit=1",
+    "dado": "{\"status\":200,\"resposta\":\"{\\\"object\\\":\\\"list\\\",\\\"hasMore\\\":false,\\\"totalCount\\\":0,\\\"limit\\\":1,\\\"offset\\\":0,\\\"data\\\":[]}\"}"
+  },
+  {
+    "passo": "webhooks-lista",
+    "dado": "{\"status\":200,\"total\":0,\"itens\":[]}"
+  },
+  {
+    "passo": "webhook-criar",
+    "dado": "{\"status\":200,\"resposta\":{\"id\":\"[UUID]\",\"name\":\"sonda-003-apagar\",\"url\":\"https://example.com/sonda-003-webhook\",\"email\":\"sonda@example.invalid\",\"enabled\":false,\"interrupted\":false,\"apiVersion\":3,\"hasAuthToken\":true,\"sendType\":\"SEQUENTIALLY\",\"penalizedRequestsCount\":0,\"events\":[\"CHECKOUT_PAID\",\"SUBSCRIPTION_CREATED\",\"PAYMENT_OVERDUE\",\"PAYMENT_CONFIRMED\"],\"authToken\":\"[TOKEN]\"}}"
+  },
+  {
+    "passo": "webhook-token-curto",
+    "dado": "{\"status\":400,\"resposta\":{\"errors\":[{\"code\":\"invalid_object\",\"description\":\"Já existe uma configuração para os eventos com os mesmos atributos.\"},{\"code\":\"invalid_object\",\"description\":\"O token deve ter pelo menos 32 caracteres.\"}]}}"
+  },
+  {
+    "passo": "navegador-pagina",
+    "dado": "{\"abriu\":true,\"campos\":\"e-mail, nome, CPF/CNPJ, celular, endereço (CEP, número), cartão (número, nome, validade, CVV); reCAPTCHA Enterprise barra o envio automatizado\"}"
+  },
+  {
+    "passo": "remover-checkout",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "remover-checkout",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "remover-checkout",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "remover-checkout",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "remover-checkout",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "remover-webhook",
+    "dado": "{\"status\":200}"
+  },
+  {
+    "passo": "sobra-webhooks",
+    "dado": "{\"total\":0,\"nomes\":[]}"
+  }
+]
