@@ -64,3 +64,12 @@ Ao enviar o cartão na página hospedada, a chamada `POST /checkoutSession/pay` 
 - Removidos: todas as sessões de checkout das rodadas finais foram canceladas (`/cancel` = 200) e o webhook apagado (200).
 - **Não removido**: uma sessão de checkout de uma rodada de exploração que quebrou antes do cancelamento; ela expira sozinha em 60 minutos, não tem cliente nem cobrança.
 - Conferência final por listagem: clientes, assinaturas, cobranças, notas e webhooks = **0**. Nenhum cliente, assinatura ou cobrança chegou a ser criado (o pagamento nunca foi aceito).
+
+## Exceção ao AC-010.1
+
+- **Data:** 30/10/2026. **Decisão do dono do produto**, pedida por ele.
+- **O que o AC-010.1 exige:** a sonda no sandbox do Asaas provar o Checkout (V-1, V-2) antes de qualquer código.
+- **Exceção:** seguir com as fatias que **não dependem** do comportamento do Checkout do Asaas (banco, planos por marca, vocabulário, régua, painel) enquanto a prova manual do pagamento no sandbox (V-1/V-2) não é feita. O pagamento barra no reCAPTCHA da página hospedada, que só uma pessoa atravessa.
+- **Razão:** a sonda parcial (acima) já cobre o que a API alcança; o que falta é um passo humano. Esperar parado bloquearia fatias que não tocam o Checkout.
+- **Limite da exceção:** não vale para código que chame o Checkout (`iniciarTrialComCartao`, `/cobranca/iniciar`, `confirmar`, webhook de retorno). Essas fatias só começam depois de V-1/V-2 provados; se a prova falhar, o design volta (ADR-004, tokenização própria).
+- **Fatia 2 (migration 0725)** é a primeira feita sob esta exceção: não chama o Asaas.
