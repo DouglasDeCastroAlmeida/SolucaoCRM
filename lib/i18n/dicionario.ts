@@ -3459,6 +3459,7 @@ export const DICIONARIO: Traducoes = {
     es: "Los casos concluidos, cancelados o transferidos quedan aquí.",
   },
   "Contato sem nome": { es: "Contacto sin nombre" },
+  "Voltar aos casos": { es: "Volver a los casos" },
   "Selecione um caso à esquerda": { es: "Selecciona un caso a la izquierda" },
   "Os detalhes e a resposta aparecem aqui.": { es: "Los detalles y la respuesta aparecen aquí." },
   "Sem telefone": { es: "Sin teléfono" },

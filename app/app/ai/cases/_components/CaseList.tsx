@@ -6,12 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCases, type CaseListItem } from "@/hooks/ai/useCases";
 import { STATUS_BADGE_VARIANT, STATUS_LABEL, tipoDeCasoLabel } from "@/lib/ai/case-copy";
-import { Robot } from "@/lib/ui/icons";
+import { CaretLeft, Robot } from "@/lib/ui/icons";
+import { cn } from "@/lib/utils";
 import { useT } from "@/hooks/i18n/useT";
 import { CaseDetail } from "./CaseDetail";
 
@@ -32,7 +34,13 @@ export function CaseList() {
 
   return (
     <div className="flex min-h-0 flex-1 gap-6">
-      <div className="flex w-full max-w-xs shrink-0 flex-col gap-4">
+      {/* No celular, lista OU painel (nunca os dois lado a lado); de md para cima, os dois. */}
+      <div
+        className={cn(
+          "w-full max-w-xs shrink-0 flex-col gap-4 max-md:max-w-none",
+          selectedId === null ? "flex" : "hidden md:flex",
+        )}
+      >
         <Tabs value={tab} onValueChange={(v) => setTab(v as "open" | "resolved")}>
           <TabsList>
             <TabsTrigger value="open">{t("Abertos")}{data ? ` (${data.open_count})` : ""}</TabsTrigger>
@@ -71,7 +79,18 @@ export function CaseList() {
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className={cn("min-w-0 flex-1", selectedId === null ? "hidden md:block" : "block")}>
+        {selectedId !== null ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-2 min-h-11 md:hidden"
+            onClick={() => setSelectedId(null)}
+          >
+            <CaretLeft size={14} aria-hidden />
+            {t("Voltar aos casos")}
+          </Button>
+        ) : null}
         <CaseDetail caseId={selectedId} />
       </div>
     </div>
