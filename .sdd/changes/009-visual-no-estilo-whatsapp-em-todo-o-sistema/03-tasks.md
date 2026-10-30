@@ -40,8 +40,8 @@ Cada tarefa ocupa uma linha:
 ### Fatia 5 (leva 1): Prova na homologação e aprovação do dono
 - [x] T-013 [TEST-E2E] Jornada da leva 1 na hml: capturas lado a lado da tela nova, da antiga e do WhatsApp Web, claro e escuro, computador e celular, com medidas (~60 min) {AC-005.1,AC-005.2,AC-007.1} deps: T-002,T-004,T-008,T-012
 - [x] T-014 [TEST-UNIT] Suíte completa e diff sem app/api, supabase nem permissões (~30 min) {AC-006.1,AC-006.2} deps: T-013
-- [ ] T-015 [CHECK-SMOKE] Implantar a leva 1 na hml e, depois da aprovação do dono, em produção só com autorização escrita; sondas / 200 e /app 307 (~40 min) {AC-007.1} deps: T-014
-- [ ] T-016 [TEST-E2E] Voltar à imagem anterior na hml e medir que o visual antigo volta e que / responde 200 e /app 307 (~30 min) {AC-007.3} deps: T-015
+- [x] T-015 [CHECK-SMOKE] Implantar a leva 1 na hml e, depois da aprovação do dono, em produção só com autorização escrita; sondas / 200 e /app 307 (~40 min) {AC-007.1} deps: T-014
+- [x] T-016 [TEST-E2E] Voltar à imagem anterior na hml e medir que o visual antigo volta e que / responde 200 e /app 307 (~30 min) {AC-007.3} deps: T-015
 
 ### Fatia 6 (leva 2): Linha de lista e Contatos
 - [ ] T-017 [TEST-UI] Testes "AC-004.1/004.4": LinhaDeLista com avatar, título, prévia e direita, e os estados vazio, erro e carga (~35 min) {AC-004.1,AC-004.4} deps: T-016
