@@ -35,24 +35,17 @@ alter table public.cobranca_assinaturas
   add column if not exists trial_com_cartao boolean not null default false;
 
 -- CHECK de ultimo_aviso ampliado (vocabulário em lib/cobranca/vocabulario.ts, vigiado
--- por vocabulario-banco-x-typescript). Acha a constraint pelo conteúdo, não pelo nome.
+-- por vocabulario-banco-x-typescript). Só reconstrói quando ainda falta o valor novo.
 do $ultimo_aviso$
-declare
-  c record;
 begin
   if not exists (
     select 1 from pg_constraint k
-     where k.conrelid = 'public.cobranca_assinaturas'::regclass and k.contype = 'c'
+     where k.conrelid = 'public.cobranca_assinaturas'::regclass
+       and k.conname = 'cobranca_assinaturas_ultimo_aviso_check'
        and pg_get_constraintdef(k.oid) like '%trial_cobra_amanha%'
   ) then
-    for c in
-      select k.conname from pg_constraint k
-       where k.conrelid = 'public.cobranca_assinaturas'::regclass and k.contype = 'c'
-         and pg_get_constraintdef(k.oid) like '%ultimo_aviso%'
-         and pg_get_constraintdef(k.oid) not like '%ultimo_aviso_em%'
-    loop
-      execute format('alter table public.cobranca_assinaturas drop constraint %I', c.conname);
-    end loop;
+    alter table public.cobranca_assinaturas
+      drop constraint if exists cobranca_assinaturas_ultimo_aviso_check;
     alter table public.cobranca_assinaturas
       add constraint cobranca_assinaturas_ultimo_aviso_check
       check (ultimo_aviso in ('trial_acabando', 'venceu', 'suspende_em_breve', 'suspensa',
