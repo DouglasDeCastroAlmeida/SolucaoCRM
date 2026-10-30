@@ -2,7 +2,7 @@
   "id": "009-visual-no-estilo-whatsapp-em-todo-o-sistema",
   "title": "Visual no estilo WhatsApp em todo o sistema",
   "size": "L",
-  "stage": "implement",
+  "stage": "done",
   "createdAt": "2026-10-29T14:04:41.717Z",
   "approvals": {
     "grill": {
@@ -23,6 +23,16 @@
     },
     "tasks": {
       "at": "2026-10-29T14:42:50.093Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "implement": {
+      "at": "2026-10-30T16:56:03.341Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "verify": {
+      "at": "2026-10-30T17:10:55.536Z",
       "by": "DouglasDeCastroAlmeida",
       "forced": false
     }
@@ -51,6 +61,16 @@
       "stage": "implement",
       "at": "2026-10-29T14:42:50.093Z",
       "from": "tasks"
+    },
+    {
+      "stage": "verify",
+      "at": "2026-10-30T16:56:03.341Z",
+      "from": "implement"
+    },
+    {
+      "stage": "done",
+      "at": "2026-10-30T17:10:55.536Z",
+      "from": "verify"
     }
   ]
 }

@@ -38,3 +38,9 @@ O painel do contato DEVE poder ser recolhido, deixando só o fio de reabrir, e m
 Todo texto novo do inbox DEVE existir em pt-BR, en e es no dicionário, e o código novo NÃO DEVE conter cor ou nome de marca fixo.
 
 - Cenário: Dado o idioma espanhol, quando o inbox abre, então não há texto em português nos elementos novos.
+
+### Requisito: Caixa de conversas dentro da casca nova
+
+A caixa de conversas DEVE continuar com balões, recibos ✓✓ e o menu "/" ao ser exibida dentro da casca da mudança 009, sem remendo visual.
+
+- Cenário: Dado a casca nova, quando a caixa de conversas abre, então balões, duplo check e menu "/" seguem funcionando.
