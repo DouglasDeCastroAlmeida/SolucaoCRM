@@ -16,7 +16,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
  *   2. a LARGURA — recolhido, a grade troca a trilha da ficha pelo trilho
  *      estreito, que é o que o pedido chama de "dar a largura toda à conversa";
  *   3. a PREFERÊNCIA — a tela começa pelo valor que o SERVIDOR leu do cookie
- *      (`painelRecolhidoInicial`), a mesma mecânica do `sidebar_collapsed` do
+ *      (`painelRecolhidoInicial`), a mesma mecânica do `sidebar_collapsed_<userId>` do
  *      menu da esquerda, e cada clique grava pelo mesmo server action.
  *
  * O estado mora na GRADE (`InboxLayout`) e não no painel: quem redistribui a

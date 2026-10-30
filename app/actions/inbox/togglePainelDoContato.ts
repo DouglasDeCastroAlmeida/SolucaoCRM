@@ -12,7 +12,7 @@ import { cookieSecure } from "@/lib/supabase/cookie-secure";
  * primeiro render do Inbox traz o painel aberto e o `useState` inicial só o
  * recolhe depois da hidratação — a conversa nasce estreita e "pula" para larga,
  * que é o flash que o recolher da esquerda já evita (`app/app/layout.tsx` lê
- * `sidebar_collapsed` no SSR pelo mesmo motivo).
+ * `sidebar_collapsed_<userId>` no SSR pelo mesmo motivo).
  *
  * Recebe o estado ATUAL, como `toggleSidebar`: quem chama já leu se está
  * recolhido, então não há uma segunda fonte de verdade para discordar.

@@ -171,7 +171,7 @@ interface InboxLayoutProps {
   rascunho?: AvisoDeRascunho | null;
   /**
    * O painel do contato começa recolhido? Vem do cookie lido no SERVIDOR
-   * (`app/app/inbox/page.tsx`), como `sidebar_collapsed` no layout da casca: é o
+   * (`app/app/inbox/page.tsx`), como `sidebar_collapsed_<userId>` no layout da casca: é o
    * que evita o painel nascer aberto e pular para trilho depois da hidratação.
    */
   painelRecolhidoInicial?: boolean;

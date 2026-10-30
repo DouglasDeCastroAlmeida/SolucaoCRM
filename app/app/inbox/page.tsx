@@ -41,7 +41,7 @@ export default async function InboxPage({
   }
   const { id, rascunho } = await searchParams;
   // A preferência do painel do contato recolhido é lida AQUI, no servidor, pelo
-  // mesmo motivo do `sidebar_collapsed` (`app/app/layout.tsx`): sem isto o
+  // mesmo motivo do `sidebar_collapsed_<userId>` (`app/app/layout.tsx`): sem isto o
   // primeiro render traz o painel aberto e a grade só se ajusta depois da
   // hidratação — a conversa nasce estreita e pula para larga.
   const painelRecolhido = (await cookies()).get("inbox_painel_recolhido")?.value === "1";

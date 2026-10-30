@@ -54,12 +54,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-022 [IMPL] Tarefas, Casos, Follow-ups e cartões da Central desenhando por LinhaDeLista (~60 min) {AC-004.1,AC-004.2,AC-004.3,AC-004.4} deps: T-020,T-021
 
 ### Fatia 8 (leva 2): Prova e entrega da leva 2
-- [ ] T-023 [TEST-E2E] Jornada da leva 2 na hml: capturas lado a lado e medidas das telas em lista, e funil e agenda com a forma de antes (~60 min) {AC-005.1,AC-007.2} deps: T-022
-- [ ] T-024 [CHECK-SMOKE] Implantar a leva 2 na hml e, depois da aprovação do dono, em produção só com autorização escrita; sondas / 200 e /app 307 (~40 min) {AC-007.2} deps: T-023
+- [x] T-023 [TEST-E2E] Jornada da leva 2 na hml: capturas lado a lado e medidas das telas em lista, e funil e agenda com a forma de antes (~60 min) {AC-005.1,AC-007.2} deps: T-022
+- [x] T-024 [CHECK-SMOKE] Implantar a leva 2 na hml e, depois da aprovação do dono, em produção só com autorização escrita; sondas / 200 e /app 307 (~40 min) {AC-007.2} deps: T-023
 
 ### Fechamento
-- [ ] T-025 [DOCS] Fragmento em .changes/ declarando o efeito no operador (menu nasce recolhido) e doc de arquitetura atualizada (~25 min) deps: T-015
-- [ ] T-026 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-024
+- [x] T-025 [DOCS] Fragmento em .changes/ declarando o efeito no operador (menu nasce recolhido) e doc de arquitetura atualizada (~25 min) deps: T-015
+- [x] T-026 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-024
 
 
 ## Estimativa
