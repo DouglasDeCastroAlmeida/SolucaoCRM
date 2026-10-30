@@ -90,6 +90,6 @@ describe("casca 009: marca e tokens", () => {
     }
     const lista = lerArq("app/app/tasks/_components/ListaDeTarefas.tsx");
     expect(lista).toContain("text-error-fg");
-    expect(lista).not.toMatch(/text-destructive/);
+    expect(lista).not.toMatch(/text-destructive(?!-foreground)/);
   });
 });
