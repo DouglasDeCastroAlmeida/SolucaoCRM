@@ -4142,6 +4142,7 @@ isOneToOne: false
           proximo_vencimento: string | null
           relida_em: string | null
           trial_ate: string | null
+          trial_com_cartao: boolean
           ultimo_aviso: string | null
           ultimo_aviso_em: string | null
           ultimo_erro: string | null
@@ -4169,6 +4170,7 @@ isOneToOne: false
           proximo_vencimento?: string | null
           relida_em?: string | null
           trial_ate?: string | null
+          trial_com_cartao?: boolean
           ultimo_aviso?: string | null
           ultimo_aviso_em?: string | null
           ultimo_erro?: string | null
@@ -4196,6 +4198,7 @@ isOneToOne: false
           proximo_vencimento?: string | null
           relida_em?: string | null
           trial_ate?: string | null
+          trial_com_cartao?: boolean
           ultimo_aviso?: string | null
           ultimo_aviso_em?: string | null
           ultimo_erro?: string | null
@@ -4230,6 +4233,7 @@ isOneToOne: false
       cobranca_planos: {
         Row: {
           arquivado_em: string | null
+          brand_id: string | null
           created_at: string
           id: string
           intervalo: string
@@ -4247,6 +4251,7 @@ isOneToOne: false
         }
         Insert: {
           arquivado_em?: string | null
+          brand_id?: string | null
           created_at?: string
           id?: string
           intervalo: string
@@ -4264,6 +4269,7 @@ isOneToOne: false
         }
         Update: {
           arquivado_em?: string | null
+          brand_id?: string | null
           created_at?: string
           id?: string
           intervalo?: string
@@ -4279,7 +4285,83 @@ isOneToOne: false
           updated_at?: string
           updated_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cobranca_planos_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cobranca_reembolsos: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          pagamento_ref: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          pagamento_ref: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          pagamento_ref?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobranca_reembolsos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cobranca_trial_documentos: {
+        Row: {
+          brand_id: string
+          created_at: string
+          documento_hash: string
+          organization_id: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          documento_hash: string
+          organization_id?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          documento_hash?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobranca_trial_documentos_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobranca_trial_documentos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contact_field_proposals: {
         Row: {
@@ -10856,6 +10938,7 @@ isOneToOne: false
       }
       fn_cobranca_avisar_teto_de_ia: { Args: { p_org: string; p_titulo: string; p_corpo: string }; Returns: boolean }
       fn_cobranca_suspender_se_devendo: { Args: { p_org: string; p_motivo: string }; Returns: Json }
+      fn_cobranca_da_marca_ligada: { Args: { p_brand: string }; Returns: boolean }
       fn_cobranca_ligada: { Args: never; Returns: boolean }
       fn_configurar_pre_go_live_canal: {
         Args: {

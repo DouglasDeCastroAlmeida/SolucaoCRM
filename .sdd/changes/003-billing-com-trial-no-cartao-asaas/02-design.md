@@ -146,6 +146,11 @@ Cortesia: **não há coluna**. Org sem linha em `cobranca_assinaturas` é isenta
 - Decisão: guardar só `HMAC-SHA256(chave_de_servidor, documento_normalizado)` por marca, com índice único. A chave é derivada de um segredo de servidor existente; sem env nova (a confirmar na tarefa; se não houver segredo adequado, entra env nova em `.env.example` e `lib/env.ts`).
 - Consequências: o hash sozinho não revela o documento; tentativa repetida é recusada e oferece assinar já (AC-003.5). A mesma pessoa em outra marca recebe trial (AC-003.6).
 
+### ADR-006 (decisão de 30/10/2026): env própria para o pepper do hash
+- Decisão: `BILLING_TRIAL_DOCUMENTO_PEPPER` (opcional, 32+ caracteres quando presente; `lib/env.ts` e `.env.example`). Vazia ou ausente, o hash cai em `CPF_ENCRYPTION_KEY`; o `.env` antigo continua válido. A chave do HMAC é derivada por HKDF com rótulo neutro.
+- Razão: a `CPF_ENCRYPTION_KEY` também cifra CPF e tem outro ciclo de rotação; um pepper próprio deixa girar uma sem apagar a outra.
+- Consequência: girar o pepper (ou a `CPF_ENCRYPTION_KEY`, se for a que vale) zera a memória de "já teve trial" e todos podem ganhar outro; a rotação deve ser comunicada. Testes: `lib/billing-trial/documento-hash.test.ts` e `tests/unit/env-pepper-do-trial.test.ts`.
+
 ## Riscos e casos extremos
 
 - **Checkout do Asaas não aceita D+7 ou anual:** coberto por T-001 (sonda no sandbox) antes de qualquer código; falha ⇒ volta ao design.

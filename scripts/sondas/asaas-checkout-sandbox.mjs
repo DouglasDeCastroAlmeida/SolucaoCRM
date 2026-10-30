@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Sonda da mudança 003 (T-001): prova no SANDBOX do Asaas o que o Checkout hospedado aceita.
-// Uso: node scripts/sondas/asaas-checkout-sandbox.mjs [--navegador] [--saida=<arquivo.json>]
+// Uso: node scripts/sondas/asaas-checkout-sandbox.mjs [--navegador] [--campos-extras] [--saida=<arquivo.json>]
 // A chave é lida de ASAAS_SANDBOX_ENV (padrão: ~/.secrets/asaas-sandbox.env) em tempo de execução.
 // Nada de chave, token ou link completo é impresso ou gravado: tudo passa por mascarar().
 import { readFileSync, writeFileSync } from "node:fs";
@@ -86,7 +86,68 @@ async function checkout(ciclo, nextDue, extra = {}) {
   return { corpo, r };
 }
 
+/** CPF fictício VÁLIDO (dígitos verificadores calculados), aleatório. */
+function cpfFicticio() {
+  const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+  if (n.every((d) => d === n[0])) n[8] = (n[8] + 1) % 10;
+  const dv = (base) => {
+    const soma = base.reduce((t, d, i) => t + d * (base.length + 1 - i), 0);
+    const r = (soma * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  const d1 = dv(n);
+  const d2 = dv([...n, d1]);
+  return [...n, d1, d2].join("");
+}
+
+/** Prova `customer` e `externalReference` no POST /checkouts (sem pagamento) e limpa tudo. */
+async function camposExtras() {
+  const cli = await api("POST", "/customers", {
+    name: "Cliente Sonda Ficticio",
+    cpfCnpj: cpfFicticio(),
+    email: "sonda-003@example.invalid",
+    notificationDisabled: true,
+  });
+  log("cliente-criar", { status: cli.status, tem_id: Boolean(cli.corpo?.id), erro: cli.corpo?.errors });
+  const clienteId = cli.corpo?.id;
+  const orgFicticia = crypto.randomUUID();
+  const prazo = somaDias(7);
+  try {
+    if (clienteId) {
+      const com = await checkout("MONTHLY", prazo, { customer: clienteId, externalReference: orgFicticia });
+      log("checkout-com-customer-e-externalReference", {
+        status: com.r.status,
+        devolveu_customer: com.r.corpo?.customer === clienteId ? "igual ao enviado" : com.r.corpo?.customer ?? null,
+        devolveu_externalReference: com.r.corpo?.externalReference === orgFicticia ? "igual ao enviado" : com.r.corpo?.externalReference ?? null,
+        chaves_da_resposta: Object.keys(com.r.corpo ?? {}),
+        erro: com.r.corpo?.errors,
+      });
+      const so = await checkout("MONTHLY", prazo, { customer: clienteId });
+      log("checkout-so-customer", { status: so.r.status, devolveu_customer: so.r.corpo?.customer === clienteId ? "igual ao enviado" : so.r.corpo?.customer ?? null, erro: so.r.corpo?.errors });
+      const ref = await checkout("MONTHLY", prazo, { externalReference: orgFicticia });
+      log("checkout-so-externalReference", { status: ref.r.status, devolveu_externalReference: ref.r.corpo?.externalReference === orgFicticia ? "igual ao enviado" : ref.r.corpo?.externalReference ?? null, erro: ref.r.corpo?.errors });
+    }
+    const sem = await checkout("MONTHLY", prazo);
+    log("checkout-sem-customer-sem-externalReference", {
+      status: sem.r.status,
+      devolveu_customer: sem.r.corpo?.customer ?? null,
+      devolveu_externalReference: sem.r.corpo?.externalReference ?? null,
+      chaves_da_resposta: Object.keys(sem.r.corpo ?? {}),
+      erro: sem.r.corpo?.errors,
+    });
+  } finally {
+    for (const id of criados.checkouts.splice(0)) log("camp-cancelar-checkout", { status: (await api("POST", `/checkouts/${id}/cancel`)).status });
+    if (clienteId) log("camp-apagar-cliente", { status: (await api("DELETE", `/customers/${clienteId}`)).status });
+    const c = await api("GET", "/customers?limit=100");
+    log("camp-sobra-clientes", { total: c.corpo?.totalCount, nomes_sonda: (c.corpo?.data ?? []).filter((x) => x.name === "Cliente Sonda Ficticio").length });
+  }
+}
+
 async function main() {
+  if (process.argv.includes("--campos-extras")) {
+    await camposExtras();
+    return;
+  }
   const conta = await api("GET", "/myAccount/commercialInfo");
   log("conta", { status: conta.status });
 

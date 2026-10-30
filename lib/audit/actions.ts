@@ -1276,6 +1276,8 @@ export const AUDIT_ACTIONS = [
   "brand_domain.added",
   "brand_domain.removed",
   "brand_plan.saved",
+  /** Cobrança da marca ligada ou desligada (mudança 003; metadata: brand_id, de, para). */
+  "brand.cobranca_changed",
   "vertical_pack.saved",
   /** Troca de marca de uma organização (RPC `fn_set_org_brand`, só admin da plataforma). */
   "org.brand_changed",
