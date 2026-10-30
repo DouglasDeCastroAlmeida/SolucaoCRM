@@ -174,12 +174,12 @@ function InboxRow({
             </div>
           ) : null}
           {item.destination.estado === "disponivel" ? (
-            <Button asChild size="sm" variant="link" className="h-auto whitespace-normal px-0 text-left">
+            <Button asChild size="sm" variant="link" className="h-auto whitespace-normal px-0 text-left max-sm:min-h-11">
               <Link href={item.destination.href}>{t(item.destination.rotulo)}</Link>
             </Button>
           ) : null}
           {linkDePagamentoSeguro(item.link_de_pagamento) ? (
-            <Button asChild size="sm">
+            <Button asChild size="sm" className="max-sm:min-h-11">
               <a href={linkDePagamentoSeguro(item.link_de_pagamento) ?? undefined} target="_blank" rel="noopener noreferrer">
                 {t("Pagar agora")}
               </a>
@@ -190,11 +190,11 @@ function InboxRow({
     >
       {canResolve ? (
         item.status === "resolved" ? (
-          <Button size="sm" variant="ghost" disabled={pending} onClick={() => onToggle("open")}>
+          <Button size="sm" variant="ghost" className="max-sm:min-h-11" disabled={pending} onClick={() => onToggle("open")}>
             {t("Reabrir")}
           </Button>
         ) : (
-          <Button size="sm" variant="outline" disabled={pending} onClick={() => onToggle("resolved")}>
+          <Button size="sm" variant="outline" className="max-sm:min-h-11" disabled={pending} onClick={() => onToggle("resolved")}>
             <Check size={14} aria-hidden />
             {t("Marcar resolvido")}
           </Button>

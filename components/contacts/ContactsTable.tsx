@@ -217,7 +217,7 @@ export function ContactsTable({
             title={t("Selecionar todas")}
             data-testid="selecionar-todos-contatos"
             onClick={onSelecionarTodosVisiveis}
-            className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors before:absolute before:-inset-3.5 before:content-[''] hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+            className="relative flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors before:absolute before:-inset-4 before:content-[''] hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
           >
             {selecionados && contacts.every((c) => selecionados.has(c.id)) && (
               <Check size={12} weight="bold" aria-hidden />

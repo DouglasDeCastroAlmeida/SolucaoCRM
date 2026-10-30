@@ -85,10 +85,10 @@ export function LinhaDeLista({
         </AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
           <span className="min-w-0 truncate text-sm font-medium text-foreground">{titulo}</span>
           {direita ? (
-            <span className="flex shrink-0 flex-wrap items-center justify-end gap-1 text-xs text-muted-foreground">
+            <span className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground sm:shrink-0 sm:justify-end">
               {direita}
             </span>
           ) : null}
@@ -111,7 +111,7 @@ export function LinhaDeLista({
     <li
       data-testid={testId}
       className={cn(
-        "relative flex w-full items-center border-b border-border bg-card",
+        "relative flex w-full flex-wrap items-center border-b sm:flex-nowrap border-border bg-card",
         selecionado && "bg-accent-soft",
         className,
       )}
@@ -129,7 +129,7 @@ export function LinhaDeLista({
             className={cn(
               "relative flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-muted-foreground bg-background transition-colors hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
               // Alvo de toque de 44 px sem aumentar o desenho da caixa.
-              "before:absolute before:-inset-3.5 before:content-['']",
+              "before:absolute before:-inset-4 before:content-['']",
               selecionado && "bg-accent text-accent-foreground",
             )}
           >
@@ -154,7 +154,7 @@ export function LinhaDeLista({
         <div className={classeDoAlvo}>{conteudo}</div>
       )}
       {children ? (
-        <div className="flex shrink-0 items-center justify-end gap-0.5 pr-2">{children}</div>
+        <div className="flex w-full shrink-0 items-center justify-end gap-0.5 px-2 pb-1 sm:w-auto sm:px-0 sm:pb-0 sm:pr-2">{children}</div>
       ) : null}
     </li>
   );
