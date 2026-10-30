@@ -39,7 +39,7 @@ const COR_DA_PRIORIDADE: Record<PrioridadeDaTarefa, string> = {
   low: "bg-muted text-muted-foreground",
   medium: "bg-primary/10 text-primary",
   high: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  urgent: "bg-destructive/15 text-destructive",
+  urgent: "bg-destructive/15 text-error-fg",
 };
 
 /**
@@ -105,7 +105,7 @@ function Linha({
       titulo={
         <span className={cn(encerrada && "text-muted-foreground line-through")}>{tarefa.title}</span>
       }
-      direita={<span className={cn(atrasada && "font-semibold text-destructive")}>{prazo}</span>}
+      direita={<span className={cn(atrasada && "font-semibold text-error-fg")}>{prazo}</span>}
       previa={
         <>
           {tarefa.description ? <span className="w-full truncate">{tarefa.description}</span> : null}
@@ -145,7 +145,7 @@ function Linha({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-11 w-11 sm:h-7 sm:w-7"
             aria-label={t("Editar a tarefa")}
             onClick={() => aoEditar(tarefa)}
           >
@@ -161,7 +161,7 @@ function Linha({
             <Button
               variant="destructive"
               size="sm"
-              className="h-7 px-2 text-[11px]"
+              className="h-11 min-w-11 px-2 text-[11px] sm:h-7"
               disabled={ocupada}
               onClick={() => comBloqueio(() => aoApagar(tarefa))}
             >
@@ -171,7 +171,7 @@ function Linha({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-11 w-11 sm:h-7 sm:w-7"
               aria-label={t("Apagar a tarefa")}
               onClick={() => setConfirmando(true)}
               onBlur={() => setConfirmando(false)}
@@ -234,7 +234,7 @@ export function ListaDeTarefas({
           <h2
             className={cn(
               "mb-1 px-3 text-xs font-semibold uppercase tracking-wider",
-              grupo.faixa === "atrasada" ? "text-destructive" : "text-muted-foreground",
+              grupo.faixa === "atrasada" ? "text-error-fg" : "text-muted-foreground",
             )}
           >
             {rotuloDaFaixa[grupo.faixa]}

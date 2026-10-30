@@ -80,4 +80,16 @@ describe("casca 009: marca e tokens", () => {
       expect(r).toBeGreaterThanOrEqual(PISOS.texto);
     }
   });
+
+  it("AC-003.2: o texto de erro (--color-error-fg) passa de 4,5:1 sobre bg, surface e elevated nos dois temas, e Tarefas o usa em Atrasadas", () => {
+    for (const b of [bloco(":root"), bloco('[data-theme="dark"]')]) {
+      for (const f of ["--color-bg", "--color-surface", "--color-surface-elevated"]) {
+        const r = razaoDeContraste(token(b, "--color-error-fg"), token(b, f));
+        expect(r, `--color-error-fg sobre ${f}`).toBeGreaterThanOrEqual(PISOS.texto);
+      }
+    }
+    const lista = lerArq("app/app/tasks/_components/ListaDeTarefas.tsx");
+    expect(lista).toContain("text-error-fg");
+    expect(lista).not.toMatch(/text-destructive/);
+  });
 });

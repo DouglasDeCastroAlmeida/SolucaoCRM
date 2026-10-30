@@ -69,4 +69,27 @@ describe("LinhaDeLista", () => {
     expect(alvo.className).toContain("min-h-[44px]");
     expect(alvo.className).toContain("focus-visible:ring-2");
   });
+
+  it("AC-004.2: no celular as ações ficam em fileira própria e a prévia/título ocupam a largura, sem sobrepor", () => {
+    const { container } = renderLinha({
+      href: "/x",
+      onSelecionar: () => {},
+      children: <button type="button">Editar</button>,
+    });
+    const li = container.querySelector("li") as HTMLElement;
+    expect(li.className).toContain("flex-wrap");
+    expect(li.className).toContain("sm:flex-nowrap");
+    const acoes = screen.getByRole("button", { name: "Editar" }).parentElement as HTMLElement;
+    expect(acoes.className).toContain("w-full");
+    expect(acoes.className).toContain("sm:w-auto");
+    // título e "direita" empilham no celular (nome sempre visível) e só lado a lado de sm para cima
+    const titulo = screen.getByText("Maria Souza", { selector: "span.truncate" }).parentElement as HTMLElement;
+    expect(titulo.className).toContain("flex-col");
+    expect(titulo.className).toContain("sm:flex-row");
+  });
+
+  it("AC-004.2: a caixa de seleção tem área de toque de pelo menos 44 px (16 + 2x16 de pseudo-elemento)", () => {
+    renderLinha({ href: "/x", onSelecionar: () => {} });
+    expect(screen.getByRole("checkbox").className).toContain("before:-inset-4");
+  });
 });

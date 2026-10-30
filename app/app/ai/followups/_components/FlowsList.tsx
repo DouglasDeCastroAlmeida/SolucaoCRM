@@ -182,7 +182,7 @@ export function FlowsList({ initialData, canWrite, surface }: Props) {
             href={`${baseHref}/${flow.id}`}
           >
             {canWrite && (
-              <div className="flex flex-wrap justify-end gap-2">
+              <div className="flex flex-wrap gap-2 max-sm:[&_button]:min-h-11 max-sm:[&_button]:min-w-11 sm:justify-end">
                 <RenameFollowupFlowButton flowId={flow.id} flowName={flow.name} />
                 <DuplicateFollowupFlowButton flowId={flow.id} />
                 <ExportFollowupFlowButton flowId={flow.id} />
