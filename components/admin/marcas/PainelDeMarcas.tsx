@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { AbaCobranca } from "./AbaCobranca";
 import { chamar, Erro } from "./comum";
 import { EditorDeMarca, type MarcaEditavel } from "./EditorDeMarca";
 import { PainelDeContas } from "./PainelDeContas";
@@ -27,48 +28,14 @@ type Marca = MarcaEditavel & {
   is_default: boolean;
   brand_domains?: Dominio[];
 };
-type Plano = {
-  id: string;
-  name: string;
-  price_cents: number;
-  currency: string;
-  cycle: string;
-  status: string;
-};
-
 const BASE = "/api/v1/admin/brands";
-
-/** "149,90" -> 14990. Devolve null se não for um valor em reais válido. */
-function reaisParaCentavos(texto: string): number | null {
-  const limpo = texto.trim().replace(/\./g, "").replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(limpo)) return null;
-  return Math.round(Number(limpo) * 100);
-}
-
-function formatarPreco(cents: number, moeda: string): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: moeda }).format(cents / 100);
-}
 
 function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
   const t = useT();
-  const [planos, setPlanos] = useState<Plano[]>([]);
   const [host, setHost] = useState("");
   const [tipo, setTipo] = useState<"proprio" | "subdominio">("proprio");
   const [enviandoHost, setEnviandoHost] = useState(false);
   const [erroHost, setErroHost] = useState<string | null>(null);
-  const [nomePlano, setNomePlano] = useState("");
-  const [preco, setPreco] = useState("");
-  const [enviandoPlano, setEnviandoPlano] = useState(false);
-  const [erroPlano, setErroPlano] = useState<string | null>(null);
-
-  const carregarPlanos = useCallback(async () => {
-    const r = await chamar(`${BASE}/${marca.id}/plans`, "GET");
-    if (r.ok && Array.isArray(r.data)) setPlanos(r.data as Plano[]);
-  }, [marca.id]);
-
-  useEffect(() => {
-    void carregarPlanos();
-  }, [carregarPlanos]);
 
   async function adicionarHost(e: React.FormEvent) {
     e.preventDefault();
@@ -86,21 +53,6 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
     const r = await chamar(`${BASE}/${marca.id}/domains?domain_id=${d.id}`, "DELETE");
     if (!r.ok) return setErroHost(r.erro ?? null);
     aoMudar();
-  }
-
-  async function salvarPlano(e: React.FormEvent) {
-    e.preventDefault();
-    if (enviandoPlano) return;
-    const centavos = reaisParaCentavos(preco);
-    if (centavos === null) return setErroPlano("Informe o preço em reais, por exemplo 149,90.");
-    setEnviandoPlano(true);
-    setErroPlano(null);
-    const r = await chamar(`${BASE}/${marca.id}/plans`, "POST", { name: nomePlano.trim(), price_cents: centavos });
-    setEnviandoPlano(false);
-    if (!r.ok) return setErroPlano(r.erro ?? null);
-    setNomePlano("");
-    setPreco("");
-    void carregarPlanos();
   }
 
   return (
@@ -145,31 +97,7 @@ function Detalhe({ marca, aoMudar }: { marca: Marca; aoMudar: () => void }) {
         <Erro texto={erroHost} />
       </div>
 
-      <div className="space-y-3">
-        <h3 className="font-medium">Planos</h3>
-        <ul className="space-y-1 text-sm">
-          {planos.map((p) => (
-            <li key={p.id}>
-              <span>{p.name}</span> — {formatarPreco(p.price_cents, p.currency)}
-            </li>
-          ))}
-        </ul>
-        <form onSubmit={salvarPlano} className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <Label htmlFor={`plano-nome-${marca.id}`}>Nome do plano</Label>
-            <Input id={`plano-nome-${marca.id}`} value={nomePlano} onChange={(e) => setNomePlano(e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor={`plano-preco-${marca.id}`}>{t("Preço (R$)")}</Label>
-            <Input id={`plano-preco-${marca.id}`} value={preco} onChange={(e) => setPreco(e.target.value)} inputMode="decimal" />
-          </div>
-          <Button type="submit" disabled={enviandoPlano || nomePlano.trim() === ""}>
-            Salvar plano
-          </Button>
-        </form>
-        <p className="text-xs text-muted-foreground">{t("Salvar um plano não cria nenhuma cobrança.")}</p>
-        <Erro texto={erroPlano} />
-      </div>
+      <AbaCobranca marcaId={marca.id} marcaNome={marca.name} />
     </section>
   );
 }

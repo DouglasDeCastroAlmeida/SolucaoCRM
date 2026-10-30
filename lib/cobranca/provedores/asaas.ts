@@ -515,6 +515,66 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     return { url, expiraEm: null, assinaturaRef, sessaoId: primeira.id };
   }
 
+  /**
+   * Checkout hospedado (`POST /v3/checkouts`, forma medida na sonda do sandbox):
+   * só cartão, recorrente, 1ª cobrança em `nextDueDate`. O callback é obrigatório
+   * no Asaas e ele aceita http://; a regra de https é NOSSA. Não existe
+   * `GET /checkouts/{id}`, então a releitura antes de criar é pela assinatura
+   * ACTIVE do cliente. Cartão não passa por aqui; o corpo nunca o tem.
+   */
+  async function iniciarTrialComCartao(
+    p: Parameters<NonNullable<AdaptadorDeCobranca["iniciarTrialComCartao"]>>[0],
+  ): ReturnType<NonNullable<AdaptadorDeCobranca["iniciarTrialComCartao"]>> {
+    const orgId = uuidDaOrg(p.orgId);
+    for (const u of [p.urlDeSucesso, p.urlDeCancelamento, p.urlDeExpirado]) {
+      const esquema = URL.canParse(u) ? new URL(u).protocol : null;
+      if (esquema !== "https:" && !(esquema === "http:" && dep.baseUrl !== undefined)) {
+        throw new ErroDoProvedor(null, "url_de_retorno_invalida", false);
+      }
+    }
+    const primeira = dataCivilEmSaoPaulo(p.primeiraCobrancaEm);
+    if (primeira < dataCivilEmSaoPaulo(agora())) throw new ErroDoProvedor(null, "data_da_primeira_cobranca_invalida", false);
+    const caminho = `/subscriptions?customer=${encodeURIComponent(p.clienteRef)}&status=ACTIVE&limit=10`;
+    const ativas = ler(listaDoAsaas(comId), await chamar("GET", caminho)).data.filter((s) => s.deleted !== true);
+    if (ativas.length > 0) throw new ErroDoProvedor(null, "assinatura_ja_existe", false);
+    const minutosParaExpirar = 60;
+    const criado = ler(
+      z.object({ id: z.string().min(1), link: z.string().min(1) }),
+      await chamar("POST", "/checkouts", {
+        billingTypes: ["CREDIT_CARD"],
+        chargeTypes: ["RECURRENT"],
+        minutesToExpire: minutosParaExpirar,
+        // SEM `customer`: medido no sandbox (30/10/2026), o Asaas recusa (400) o checkout com
+        // `customer` de cliente sem telefone e endereço completo. O cliente é identificado na
+        // página; a org volta pela `externalReference`, que o Asaas aceita e devolve.
+        externalReference: orgId,
+        callback: { successUrl: p.urlDeSucesso, cancelUrl: p.urlDeCancelamento, expiredUrl: p.urlDeExpirado },
+        items: [{ name: p.plano.nome, quantity: 1, value: p.plano.precoCents / 100 }],
+        subscription: { cycle: CICLO_DO_INTERVALO[p.plano.intervalo], nextDueDate: `${primeira} 00:00:00` },
+      }),
+    );
+    const url = linkSeguro(criado.link);
+    if (url === null) throw new ErroDoProvedor(200, "resposta_invalida", false);
+    return { url, sessaoId: criado.id, expiraEm: new Date(agora().getTime() + minutosParaExpirar * 60_000) };
+  }
+
+  /**
+   * `POST /subscriptions/{id}/invoiceSettings`: NFS-e na confirmação do pagamento.
+   * ATENÇÃO: o CORPO abaixo NÃO foi provado (o sandbox do dono é pessoa física e a rota
+   * não pôde ser exercitada). Provavelmente exige mais campos (`taxes` e o serviço
+   * municipal); conferir na documentação do Asaas quando houver conta PJ. É melhor
+   * esforço: a falha sobe tipada e quem chama avisa, nunca bloqueia a cobrança.
+   */
+  async function pedirNotaFiscal(p: { assinaturaRef: string; descricao: string }): Promise<void> {
+    await chamar("POST", `/subscriptions/${encodeURIComponent(p.assinaturaRef)}/invoiceSettings`, {
+      municipalServiceName: p.descricao,
+      updatePayment: true,
+      deductions: 0,
+      effectiveDatePeriod: "ON_PAYMENT_CONFIRMATION",
+      receivedOnly: false,
+    });
+  }
+
   async function iniciarAjusteProporcional(p: Parameters<AdaptadorDeCobranca["iniciarAjusteProporcional"]>[0]) {
     const externalReference = `upgrade:${uuidDaOrg(p.orgId)}:${p.chaveIdempotencia}`;
     const consulta = new URLSearchParams({ customer: p.clienteRef, externalReference, limit: "10" });
@@ -678,6 +738,8 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     removerWebhooks,
     garantirCliente,
     iniciarAssinatura,
+    iniciarTrialComCartao,
+    pedirNotaFiscal,
     iniciarAjusteProporcional,
     lerPagamentoProporcional,
     expirarSessao,

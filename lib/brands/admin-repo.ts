@@ -17,7 +17,9 @@ export class ErroDeMarca extends Error {
       | "brand_domain_exists"
       | "brand_slug_exists"
       | "brand_default_protected"
-      | "pack_slug_exists",
+      | "pack_slug_exists"
+      | "state_conflict"
+      | "plano_com_assinantes",
     message: string,
     public readonly status: 404 | 409,
   ) {
@@ -160,6 +162,10 @@ export async function removerDominio(brandId: string, domainId: string): Promise
   return { host };
 }
 
+/**
+ * LEGADO da SP1: `brand_plans` deixou de ser a fonte dos planos da marca
+ * (ADR-002 da mudança 003). A aba Cobrança usa `cobranca-repo.ts`.
+ */
 export async function listarPlanos(brandId: string): Promise<Linha[]> {
   const { data, error } = await createAdminClient()
     .from("brand_plans")

@@ -34,7 +34,8 @@ beforeEach(() => {
   chamadas = [];
   respostas = {
     "GET /api/v1/admin/brands": { status: 200, body: { data: MARCAS } },
-    "GET /api/v1/admin/brands/b2/plans": { status: 200, body: { data: [] } },
+    "GET /api/v1/admin/brands/b2/planos-cobranca": { status: 200, body: { data: [] } },
+    "GET /api/v1/admin/brands/b2/cobranca": { status: 200, body: { data: { cobranca_ligada: false, faltam: [] } } },
     "GET /api/v1/admin/vertical-packs": { status: 200, body: { data: PACOTES } },
     "GET /api/v1/admin/organizations": { status: 200, body: { data: CONTAS } },
   };

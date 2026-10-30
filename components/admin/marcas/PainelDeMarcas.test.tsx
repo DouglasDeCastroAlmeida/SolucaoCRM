@@ -38,10 +38,15 @@ beforeEach(() => {
     }),
   );
   respostas["GET /api/v1/admin/brands"] = { status: 200, body: { data: MARCAS } };
-  respostas["GET /api/v1/admin/brands/b2/plans"] = {
+  respostas["GET /api/v1/admin/brands/b2/planos-cobranca"] = {
     status: 200,
-    body: { data: [{ id: "p1", name: "Pro", price_cents: 9900, currency: "BRL", cycle: "monthly", status: "active" }] },
+    body: {
+      data: [
+        { id: "p1", nome: "Pro", preco_cents: 9900, moeda: "BRL", intervalo: "mes", trial_dias: 7, padrao_no_cadastro: false, arquivado_em: null },
+      ],
+    },
   };
+  respostas["GET /api/v1/admin/brands/b2/cobranca"] = { status: 200, body: { data: { cobranca_ligada: false, faltam: [] } } };
 });
 afterEach(() => {
   cleanup();
@@ -141,8 +146,8 @@ describe("AC-008.3: planos (UI)", () => {
     await u.type(screen.getByLabelText(/preço/i), "149,90");
     await u.click(screen.getByRole("button", { name: /salvar plano/i }));
     await waitFor(() =>
-      expect(chamadas.find((c) => c.method === "POST" && c.url === "/api/v1/admin/brands/b2/plans")?.body).toMatchObject({
-        name: "Plus", price_cents: 14990,
+      expect(chamadas.find((c) => c.method === "POST" && c.url === "/api/v1/admin/brands/b2/planos-cobranca")?.body).toMatchObject({
+        nome: "Plus", preco_cents: 14990,
       }),
     );
   });

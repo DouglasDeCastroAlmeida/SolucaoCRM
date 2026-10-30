@@ -169,6 +169,17 @@ const schema = z.object({
 
   // Encryption keys (pgcrypto)
   CPF_ENCRYPTION_KEY: required("CPF_ENCRYPTION_KEY"),
+  /**
+   * Pepper do hash de documento do trial com cartão (mudança 003, ADR-006). Opcional:
+   * vazia (o `.env.example` a traz vazia) ou ausente, o hash usa `CPF_ENCRYPTION_KEY`.
+   * Presente, exige 32+ caracteres. GIRAR zera a memória de "já teve trial" (hashes
+   * antigos deixam de bater) e quem a gira precisa comunicar isso.
+   */
+  BILLING_TRIAL_DOCUMENTO_PEPPER: z
+    .string()
+    .optional()
+    .default("")
+    .refine((v) => v === "" || v.length >= 32, "BILLING_TRIAL_DOCUMENTO_PEPPER precisa ter ao menos 32 caracteres quando definida"),
   // Opcional (template genérico) — só necessária ao ligar NUVEMSHOP_ENABLED.
   NUVEMSHOP_OAUTH_ENCRYPTION_KEY: z.string().optional().default(""),
   WAHA_BYO_ENCRYPTION_KEY: required("WAHA_BYO_ENCRYPTION_KEY"),
