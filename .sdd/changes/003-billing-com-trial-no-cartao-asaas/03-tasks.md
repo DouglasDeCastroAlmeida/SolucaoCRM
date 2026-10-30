@@ -18,15 +18,15 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Prova do Checkout no sandbox, antes de qualquer código (REQ-010)
-- [ ] T-001 [TEST-INT] Sonda no sandbox do Asaas (credencial do dono em C:\Users\Douglas\.secrets\asaas-sandbox.env): Checkout hospedado aceita 1ª cobrança em hoje+7 sem cobrar no ato, aceita ciclo anual, valida o cartão, devolve ao callback, e onde a NFS-e é configurada; grava evidência (~60 min) {AC-010.1}
-- [ ] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/003-billing/ e decidir: passou segue; falhou para a esteira e volta ao design (~20 min) {AC-010.1} deps: T-001
+- [x] T-001 [TEST-INT] Sonda no sandbox do Asaas (credencial do dono em C:\Users\Douglas\.secrets\asaas-sandbox.env): Checkout hospedado aceita 1ª cobrança em hoje+7 sem cobrar no ato, aceita ciclo anual, valida o cartão, devolve ao callback, e onde a NFS-e é configurada; grava evidência (~60 min) {AC-010.1}
+- [x] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/003-billing/ e decidir: passou segue; falhou para a esteira e volta ao design (~20 min) {AC-010.1} deps: T-001
 
 ### Fatia 2: Banco aditivo, cortesia por padrão e isolamento (REQ-001, REQ-002, REQ-010)
-- [ ] T-003 [TEST-INT] Invariante de migração: toda marca com cobranca_ligada falsa, nenhuma assinatura criada para organização existente, gatilho com marca desligada idêntico ao de hoje, instalação nova e atualização com dados (~50 min) {AC-001.1, AC-002.1} deps: T-002
-- [ ] T-004 [TEST-INT] Invariante de isolamento e grants: 2 marcas, planos de uma não vazam para a outra, único por (marca, hash do documento), único por pedido de reembolso, funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-010.2, AC-003.5, AC-006.5} deps: T-002
-- [ ] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
-- [ ] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: brands.cobranca_ligada, cobranca_planos.brand_id, cobranca_assinaturas.trial_com_cartao, CHECK de avisos ampliado, cobranca_trial_documentos, cobranca_reembolsos (~60 min) {AC-001.1, AC-002.1, AC-010.2, AC-003.5, AC-006.5} deps: T-003, T-004, T-005
-- [ ] T-007 [IMPL] Ramo novo de fn_trial_na_criacao_da_org e fn_create_tenant_with_owner só para marca com cobrança ligada, com revoke de PUBLIC e anon (~60 min) {AC-001.1, AC-010.2} deps: T-006
+- [x] T-003 [TEST-INT] Invariante de migração: toda marca com cobranca_ligada falsa, nenhuma assinatura criada para organização existente, gatilho com marca desligada idêntico ao de hoje, instalação nova e atualização com dados (~50 min) {AC-001.1, AC-002.1} deps: T-002
+- [x] T-004 [TEST-INT] Invariante de isolamento e grants: 2 marcas, planos de uma não vazam para a outra, único por (marca, hash do documento), único por pedido de reembolso, funções novas sem EXECUTE para PUBLIC e anon (~50 min) {AC-010.2, AC-003.5, AC-006.5} deps: T-002
+- [x] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
+- [x] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: brands.cobranca_ligada, cobranca_planos.brand_id, cobranca_assinaturas.trial_com_cartao, CHECK de avisos ampliado, cobranca_trial_documentos, cobranca_reembolsos (~60 min) {AC-001.1, AC-002.1, AC-010.2, AC-003.5, AC-006.5} deps: T-003, T-004, T-005
+- [x] T-007 [IMPL] Ramo novo de fn_trial_na_criacao_da_org e fn_create_tenant_with_owner só para marca com cobrança ligada, com revoke de PUBLIC e anon (~60 min) {AC-001.1, AC-010.2} deps: T-006
 - [ ] T-008 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-006, T-007
 
 ### Fatia 3: Chave e planos por marca no painel (REQ-001, REQ-009)

@@ -351,6 +351,20 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "agent), promovido a admin passa a ler (controle), e UPDATE/INSERT/DELETE " +
       "pela sessão e qualquer leitura por anon dão permission denied. Migration 0510.",
   },
+  {
+    tabela: "cobranca_trial_documentos",
+    razao:
+      "tests/invariants/billing-trial-isolamento.test.ts — tabela exclusiva do servidor " +
+      "(RLS ligada, zero policies, revoke all): admin de organização e anon recebem " +
+      "permission denied na leitura; guarda só o hash, único por marca. Migration 0725.",
+  },
+  {
+    tabela: "cobranca_reembolsos",
+    razao:
+      "tests/invariants/billing-trial-isolamento.test.ts — dois tenants reais por JWT: " +
+      "admin de A lê só os pedidos de A e admin de B só os de B; INSERT pela sessão e " +
+      "leitura por anon dão permission denied; único por (organização, cobrança). Migration 0725.",
+  },
 ];
 
 /**
