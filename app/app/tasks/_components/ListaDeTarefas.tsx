@@ -141,7 +141,7 @@ function Linha({
       rotuloDaSelecao={encerrada ? t("Reabrir a tarefa") : t("Marcar como concluída")}
     >
       {podeEditar ? (
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-1 transition-opacity focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100">
           <Button
             variant="ghost"
             size="icon"
