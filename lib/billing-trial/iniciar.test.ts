@@ -31,12 +31,13 @@ const MARCA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const PLANO = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const AGORA = new Date("2026-10-31T15:00:00Z");
 const CPF = "529.982.247-25";
+const OUTRO_CPF = "111.444.777-35";
 const P = { orgId: ORG, baseUrl: "https://marca.exemplo", actorUserId: "u1", requestId: "r1" };
 
 function cenario(opcoes: { linha?: Record<string, unknown>; cnpj?: string | null; marcaCobra?: boolean; assinatura?: { clienteRef: string; assinaturaRef: string } | null; falha?: Error } = {}) {
   const banco = bancoDeCobrancaFalso(
     {
-      organizations: [{ id: ORG, brand_id: MARCA, cnpj: opcoes.cnpj ?? null }],
+      organizations: [{ id: ORG, brand_id: MARCA, cnpj: opcoes.cnpj === undefined ? CPF : opcoes.cnpj }],
       cobranca_planos: [{ id: PLANO, nome: "Plano Pro", preco_cents: 4990, intervalo: "mes", trial_dias: 7 }],
       cobranca_assinaturas: [
         {
@@ -176,6 +177,61 @@ describe("iniciarTrialComCartao", () => {
     expect(c.banco.tabelas.cobranca_trial_documentos![0]).toMatchObject({ brand_id: MARCA, organization_id: ORG });
   });
 
+  it("AC-003.5: sem CPF/CNPJ no cadastro e nada digitado, pede o documento antes de reservar ou chamar o provedor", async () => {
+    const c = cenario({ cnpj: null });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
+
+    expect(r).toEqual({ tipo: "pede_documento", invalido: false });
+    expect(c.iniciar).not.toHaveBeenCalled();
+    expect(c.linha().checkout_expira_em).toBeNull();
+    expect(c.banco.tabelas.cobranca_trial_documentos!).toHaveLength(0);
+  });
+
+  it("AC-003.5: documento digitado que não confere pede de novo, marcado como inválido", async () => {
+    const c = cenario({ cnpj: null });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, { ...P, documento: "123.456.789-00" }, c.deps);
+
+    expect(r).toEqual({ tipo: "pede_documento", invalido: true });
+    expect(c.iniciar).not.toHaveBeenCalled();
+  });
+
+  it("AC-003.6: documento digitado reserva o trial (só o hash), vai ao cadastro da org e segue ao checkout", async () => {
+    const c = cenario({ cnpj: null });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, { ...P, documento: CPF }, c.deps);
+
+    expect(r.tipo).toBe("redirecionar");
+    const linhas = c.banco.tabelas.cobranca_trial_documentos!;
+    expect(linhas).toHaveLength(1);
+    expect(JSON.stringify(linhas)).not.toContain("52998224725");
+    expect(c.banco.tabelas.organizations![0]!.cnpj).toBe("52998224725");
+  });
+
+  it("AC-003.5: documento digitado que já teve trial na marca recusa com trial_ja_usado antes do cartão", async () => {
+    const c = cenario({ cnpj: null });
+    const antes = await import("@/lib/cobranca/trial-documento");
+    await antes.reservarTrialDoDocumento(c.banco.cliente, { brandId: MARCA, documento: CPF, organizationId: OUTRA_ORG });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, { ...P, documento: CPF }, c.deps);
+
+    expect(r).toMatchObject({ tipo: "trial_ja_usado" });
+    expect(c.iniciar).not.toHaveBeenCalled();
+    expect(c.linha().checkout_expira_em).toBeNull();
+    expect(c.banco.tabelas.organizations![0]!.cnpj).toBeNull();
+  });
+
+  it("AC-003.5: o documento do cadastro vale mais que o digitado (trocar o número na tela não contorna a reserva)", async () => {
+    const c = cenario({ cnpj: CPF });
+    const antes = await import("@/lib/cobranca/trial-documento");
+    await antes.reservarTrialDoDocumento(c.banco.cliente, { brandId: MARCA, documento: CPF, organizationId: OUTRA_ORG });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, { ...P, documento: OUTRO_CPF }, c.deps);
+
+    expect(r).toMatchObject({ tipo: "trial_ja_usado" });
+  });
+
   it("AC-003.2: marca que não cobra ou conta que não espera o cartão não passam pelo Checkout", async () => {
     const semMarca = cenario({ marcaCobra: false });
     const jaPaga = cenario({ linha: { pagamento_inicial_pendente: false } });
@@ -194,8 +250,16 @@ describe("a tela de antes", () => {
 
     const previa = await lerPreviaDoTrial(c.banco.cliente, ORG, { agora: () => AGORA });
 
-    expect(previa).toMatchObject({ planoNome: "Plano Pro", precoCents: 4990, intervalo: "mes" });
+    expect(previa).toMatchObject({ planoNome: "Plano Pro", precoCents: 4990, intervalo: "mes", precisaDeDocumento: false });
     expect(diaDaPrimeiraCobranca(previa!.primeiraCobrancaEm)).toBe("07/11");
+  });
+
+  it("AC-003.5: a prévia avisa quando a org ainda não tem CPF/CNPJ válido para a tela pedir", async () => {
+    const c = cenario({ cnpj: "123" });
+
+    const previa = await lerPreviaDoTrial(c.banco.cliente, ORG, { agora: () => AGORA });
+
+    expect(previa?.precisaDeDocumento).toBe(true);
   });
 
   it("AC-003.2: a conta que não espera o cartão não tem prévia", async () => {

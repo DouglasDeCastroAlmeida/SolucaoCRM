@@ -9,8 +9,8 @@
  *      (guardado com a sessão) é devolvido de novo, sem abrir outro;
  *   2. fora de transação: assinatura que o Checkout já criou para a org (achada
  *      pela `externalReference`) vira `ja_assinou` em vez de um segundo checkout;
- *      documento do cadastro, se houver, reserva o trial da marca; então o
- *      checkout, com `externalReference` = org;
+ *      documento (o do cadastro, ou o digitado na tela de antes; sem nenhum, a
+ *      tela o pede) reserva o trial da marca; então o checkout, com `externalReference` = org;
  *   3. grava link, sessão, validade e o fim do teste (`trial_ate` = dia da 1ª
  *      cobrança). Falha na fase 2 libera a reserva e a org segue suspensa.
  *
@@ -59,6 +59,8 @@ export type ResultadoDoIniciar =
   /** Outro clique está abrindo o checkout agora. */
   | { tipo: "em_preparo" }
   | { tipo: "trial_ja_usado"; mensagem: string }
+  /** A org ainda não tem CPF/CNPJ válido e nenhum foi informado (ou o informado não confere): a tela pede. */
+  | { tipo: "pede_documento"; invalido: boolean }
   | { tipo: "muitas_tentativas"; mensagem: string }
   /** Provedor fora do ar, recusa ou configuração ausente: nada mudou, org segue suspensa. */
   | { tipo: "indisponivel"; mensagem: string };
@@ -95,6 +97,8 @@ export interface PreviaDoTrial {
   intervalo: Intervalo;
   /** Dia da 1ª cobrança: o do checkout vivo, ou o de um checkout aberto agora. */
   primeiraCobrancaEm: Date;
+  /** A organização ainda não tem um CPF/CNPJ válido: a tela pede antes de abrir o cartão. */
+  precisaDeDocumento: boolean;
 }
 
 /** Só leitura, para a tela de antes: "Você só será cobrado em DD/MM". `null` = a org não está nesse passo. */
@@ -110,12 +114,17 @@ export async function lerPreviaDoTrial(
   const plano = await admin.from("cobranca_planos").select("id, nome, preco_cents, intervalo, trial_dias").eq("id", linha.plano_id).maybeSingle();
   const p = plano.data as { nome: string; preco_cents: number; intervalo: Intervalo; trial_dias: number } | null;
   if (plano.error || !p) return null;
+  const orgLida = await admin.from("organizations").select("cnpj").eq("id", orgId).maybeSingle();
+  if (orgLida.error) return null;
+  const cnpj = (orgLida.data as { cnpj: string | null } | null)?.cnpj ?? null;
   const vivo = linha.checkout_url !== null && linha.checkout_expira_em !== null && Date.parse(linha.checkout_expira_em) > agora.getTime();
   return {
     planoNome: p.nome,
     precoCents: p.preco_cents,
     intervalo: p.intervalo,
     primeiraCobrancaEm: vivo && linha.trial_ate ? new Date(linha.trial_ate) : primeiraCobrancaDe(agora, p.trial_dias),
+    // Checkout vivo já passou pela reserva do documento: não pede de novo.
+    precisaDeDocumento: !vivo && (cnpj === null || documentoDoPagador(cnpj) === null),
   };
 }
 
@@ -128,6 +137,8 @@ export async function iniciarTrialComCartao(
     baseUrl: string;
     actorUserId: string;
     requestId: string;
+    /** O que a pessoa digitou na tela (CPF/CNPJ, com ou sem máscara). Só vale quando o cadastro da org não tem documento válido. */
+    documento?: string | null;
   },
   deps: DependenciasDoIniciar = {},
 ): Promise<ResultadoDoIniciar> {
@@ -160,6 +171,14 @@ export async function iniciarTrialComCartao(
     };
   }
   if (reservaOuLinkVivo) return { tipo: "em_preparo" };
+
+  // O trial é de um documento por marca (AC-003.5/3.6): a página do Asaas é a única outra
+  // chance de a pessoa digitá-lo, e nós não a vemos. Por isso pedimos AQUI, antes de reservar
+  // o checkout e antes de gastar a cota de tentativas. O do cadastro vence o digitado.
+  const doCadastro = dono.cnpj === null ? null : documentoDoPagador(dono.cnpj);
+  const digitado = p.documento ? documentoDoPagador(p.documento) : null;
+  const documento = doCadastro ?? digitado;
+  if (documento === null) return { tipo: "pede_documento", invalido: Boolean(p.documento && p.documento.trim() !== "") };
 
   const provedor = await (deps.provedor ?? provedorDaInstalacao)();
   const ad = provedor === null ? null : (deps.adaptador ?? adaptadorPadrao)(provedor);
@@ -198,16 +217,21 @@ export async function iniciarTrialComCartao(
       return { tipo: "ja_assinou" };
     }
 
-    const documento = dono.cnpj === null ? null : documentoDoPagador(dono.cnpj);
-    if (documento !== null) {
-      const reservou = await (deps.reservarTrial ?? reservarTrialDoDocumento)(admin, {
-        brandId: escopo.brandId,
-        documento,
-        organizationId: orgId,
-      });
-      if (!reservou.ok) {
-        await liberar();
-        return reservou.motivo === "trial_ja_usado" ? { tipo: "trial_ja_usado", mensagem: MENSAGEM_TRIAL_JA_USADO } : indisponivel;
+    const reservou = await (deps.reservarTrial ?? reservarTrialDoDocumento)(admin, {
+      brandId: escopo.brandId,
+      documento,
+      organizationId: orgId,
+    });
+    if (!reservou.ok) {
+      await liberar();
+      return reservou.motivo === "trial_ja_usado" ? { tipo: "trial_ja_usado", mensagem: MENSAGEM_TRIAL_JA_USADO } : indisponivel;
+    }
+    // Digitado agora: guarda no cadastro (mesma coluna e forma do resto do produto) para não pedir de novo.
+    // Melhor esforço e sem o documento no log: CNPJ é único na instalação, e conflito não derruba o cartão.
+    if (doCadastro === null) {
+      const gravou = await admin.from("organizations").update({ cnpj: documento }).eq("id", orgId).is("cnpj", null);
+      if (gravou.error && gravou.error.code !== "23505") {
+        logger.warn("cobranca: documento do trial não gravado no cadastro", { organizationId: orgId, codigo: gravou.error.code ?? null });
       }
     }
 

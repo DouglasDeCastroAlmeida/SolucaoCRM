@@ -20,6 +20,7 @@ const POR_ID_DA_ASSINATURA = "lê por id que veio da assinatura da organização
 const PERMITIDAS: Record<string, string> = {
   "lib/cobranca/checkout.ts": POR_ID_DA_ASSINATURA,
   "lib/cobranca/sincronizar.ts": POR_ID_DA_ASSINATURA,
+  "lib/billing-trial/iniciar.ts": POR_ID_DA_ASSINATURA,
   "app/api/v1/admin/cobranca/conexao/route.ts": POR_ID_DA_ASSINATURA,
   "lib/cobranca/rodada.ts": "teto de IA de TODA assinatura, de qualquer escopo: o aviso vale para a empresa onde quer que o plano more",
   "app/api/v1/admin/cobranca/planos/route.ts": "insere plano da instalação: brand_id fica nulo por omissão e o corpo não aceita brand_id",

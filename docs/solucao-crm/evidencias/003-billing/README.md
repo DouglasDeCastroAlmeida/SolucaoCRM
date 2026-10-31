@@ -119,3 +119,13 @@ ser necessária para o Checkout.
 
 Os registros criados no sandbox (cliente, assinatura e cobrança) ficam até a prova pela tela da Fatia 5; depois
 são removidos.
+
+## Limite do trial por documento
+
+Um teste grátis por CPF/CNPJ por marca (AC-003.5 e AC-003.6). A guarda mora em `cobranca_trial_documentos` (só o hash HMAC do documento é gravado).
+
+O que a Fatia 5 faz: a tela de antes (`/cobranca/iniciar`) pede o CPF ou CNPJ quando a organização ainda não tem um documento válido no cadastro. O servidor confere os dígitos verificadores, reserva o trial do documento ANTES de abrir o checkout e, se o documento já usou o teste naquela marca, recusa com `trial_ja_usado` e a mensagem "assine já" (sem abrir cartão). O documento digitado vai para `organizations.cnpj` (a mesma coluna do cadastro), sem log. O documento do cadastro vale mais que o digitado.
+
+**Limite que sobra:** o Checkout hospedado do Asaas pede o CPF/CNPJ de novo, na página deles, e nós não vemos o que a pessoa digita ali. Quem digitar na nossa tela um documento e na página do Asaas outro contorna a regra: o cliente criado pelo Asaas fica com um documento diferente do reservado. Também não há prova de que o documento digitado pertence a quem digita (não há consulta à Receita).
+
+**Pendência para a Fatia 11:** depois da volta do checkout, conferir o `cpfCnpj` do cliente criado pela página com o reservado; se divergir, registrar um aviso na Central da plataforma, sem cancelar nada sozinho. Também não existe ainda o caminho "assinar agora, cobrança imediata sem teste" para quem recebeu `trial_ja_usado`: hoje a mensagem só informa, e o caminho pago depende de decisão do dono.
