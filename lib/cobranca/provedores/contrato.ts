@@ -177,6 +177,14 @@ export interface AdaptadorDeCobranca {
     chaveIdempotencia: string;
   }): Promise<{ url: string; sessaoId: string; expiraEm: Date | null }>;
   /**
+   * Acha a assinatura que o Checkout hospedado criou para a organização, pela
+   * `externalReference` (= orgId): o cliente que a PÁGINA cria pode não ser o
+   * `clienteRef` que temos, então o retorno e o `confirmar` casam a organização
+   * por aqui, nunca pelo cliente. Só assinatura viva; `null` = ainda não existe
+   * (pessoa não concluiu). Falha do provedor sobe como `ErroDoProvedor`.
+   */
+  acharAssinaturaDoCheckout?(p: { orgId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null>;
+  /**
    * Pede a emissão de NFS-e na confirmação de cada pagamento da assinatura. A
    * configuração fiscal (município, alíquota) é da conta do provedor; aqui só o
    * pedido. Melhor esforço: a falha sobe como `ErroDoProvedor` e quem chama avisa.

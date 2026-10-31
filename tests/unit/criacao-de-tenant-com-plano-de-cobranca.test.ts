@@ -98,6 +98,13 @@ describe("POST /api/v1/admin/tenants — cobrança ligada", () => {
     expect((await POST(pedido({ plano_id: PLANO }))).status).toBe(422);
     expect(h.banco.rpcs).toEqual([]);
   });
+  it("AC-001.2: plano que pertence a uma marca não serve ao tenant criado pela instalação → 422 plano_invalido", async () => {
+    planoLido = { ...planoLido, brand_id: "11111111-1111-4111-8111-111111111111" };
+    const res = await POST(pedido({ plano_id: PLANO }));
+    expect(res.status).toBe(422);
+    expect((await res.json()).error.code).toBe("plano_invalido");
+    expect(h.banco.rpcs).toEqual([]);
+  });
   it("plano_id que não é uuid → 400", async () => {
     expect((await POST(pedido({ plano_id: "basico" }))).status).toBe(400);
     expect(h.banco.rpcs).toEqual([]);

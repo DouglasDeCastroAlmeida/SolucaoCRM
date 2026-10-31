@@ -37,17 +37,17 @@ Cada tarefa ocupa uma linha:
 - [x] T-013 [IMPL] Aba Cobrança no editor de marcas; planos da marca passam a ler e gravar cobranca_planos (ADR-002); ajustar testes e telas da SP1 que tocavam brand_plans (~60 min) {AC-009.1} deps: T-011, T-012
 
 ### Fatia 4: Adaptador do Asaas e hash do documento (REQ-003)
-- [ ] T-014 [TEST-CONTRACT] Adaptador iniciarTrialComCartao com fetch simulado: corpo do checkout (só cartão, 1ª cobrança em hoje+trial_dias, URLs na marca, assinatura recorrente), nenhum dado de cartão, erro do provedor sem texto livre, pedido de NFS-e (~50 min) {AC-003.1, AC-003.4, AC-008.4, AC-007.1} deps: T-002
-- [ ] T-015 [IMPL] Método no contrato e no adaptador do Asaas por /v3/checkouts, com releitura antes de criar (~60 min) {AC-003.1, AC-003.4, AC-007.1, AC-008.4} deps: T-014
+- [x] T-014 [TEST-CONTRACT] Adaptador iniciarTrialComCartao com fetch simulado: corpo do checkout (só cartão, 1ª cobrança em hoje+trial_dias, URLs na marca, assinatura recorrente), nenhum dado de cartão, erro do provedor sem texto livre, pedido de NFS-e (~50 min) {AC-003.1, AC-003.4, AC-008.4, AC-007.1} deps: T-002
+- [x] T-015 [IMPL] Método no contrato e no adaptador do Asaas por /v3/checkouts, com releitura antes de criar (~60 min) {AC-003.1, AC-003.4, AC-007.1, AC-008.4} deps: T-014
 - [x] T-016 [TEST-UNIT] Hash HMAC do CPF/CNPJ normalizado: determinístico, distinto por chave, nunca devolve o documento (~25 min) {AC-003.5, AC-003.6}
 - [x] T-017 [IMPL] lib/billing-trial/documento-hash.ts e a chave derivada de segredo de servidor (se não houver segredo adequado, env nova em .env.example e lib/env.ts) (~35 min) {AC-003.5, AC-003.6} deps: T-016, T-008
 
 ### Fatia 5: Cadastro, Checkout e trial de 7 dias (REQ-001, REQ-003, REQ-005)
-- [ ] T-018 [TEST-UNIT] Cadastro por marca com cobrança ligada: planos da marca, organização nasce suspensa por entrada paga, marca desligada intacta, trial repetido do mesmo documento recusado na mesma marca e concedido em outra (~50 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-008, T-017
-- [ ] T-019 [TEST-UNIT] iniciar e confirmar: sucesso vira trial e reativa a org, volta sem concluir mantém suspensa e permite refazer, clique duplo e retorno duplo, checkout vivo reaproveitado, Asaas fora do ar com mensagem clara (~55 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-008.4} deps: T-015
-- [ ] T-020 [TEST-INT] Invariante: dois retornos concorrentes geram uma assinatura; pagamento confirmado reativa org suspensa por cobrança (~40 min) {AC-003.7, AC-005.4} deps: T-008
-- [ ] T-021 [IMPL] signUp, provision e cadastro.ts leem os planos da marca e repassam marca e plano; espelho TypeScript do gatilho (~60 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-018, T-007
-- [ ] T-022 [IMPL] lib/billing-trial/iniciar.ts, confirmar.ts, rota /cobranca/iniciar e ajuste de /cobranca/volta (~60 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4, AC-008.4} deps: T-019, T-020, T-015, T-021
+- [x] T-018 [TEST-UNIT] Cadastro por marca com cobrança ligada: planos da marca, organização nasce suspensa por entrada paga, marca desligada intacta, trial repetido do mesmo documento recusado na mesma marca e concedido em outra (~50 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-008, T-017
+- [x] T-019 [TEST-UNIT] iniciar e confirmar: sucesso vira trial e reativa a org, volta sem concluir mantém suspensa e permite refazer, clique duplo e retorno duplo, checkout vivo reaproveitado, Asaas fora do ar com mensagem clara (~55 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-008.4} deps: T-015
+- [x] T-020 [TEST-INT] Invariante: dois retornos concorrentes geram uma assinatura; pagamento confirmado reativa org suspensa por cobrança (~40 min) {AC-003.7, AC-005.4} deps: T-008
+- [x] T-021 [IMPL] signUp, provision e cadastro.ts leem os planos da marca e repassam marca e plano; espelho TypeScript do gatilho (~60 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-018, T-007
+- [x] T-022 [IMPL] lib/billing-trial/iniciar.ts, confirmar.ts, rota /cobranca/iniciar e ajuste de /cobranca/volta (~60 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4, AC-008.4} deps: T-019, T-020, T-015, T-021
 
 ### Fatia 6: Régua, avisos e estados (REQ-004, REQ-005)
 - [ ] T-023 [TEST-UNIT] Régua pura com relógio injetado: aviso 2 dias e 1 dia antes da 1ª cobrança, sem aviso se cancelou, sem duplicar, atraso com tolerância de 3 dias, suspensão com aviso final de 48 h, cancelamento no trial sem cobrança (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-005.2, AC-005.3, AC-005.5}
@@ -82,7 +82,7 @@ Cada tarefa ocupa uma linha:
 - [ ] T-042 [DOCS] Runbook e roteiro do dono: conta Asaas de produção, dados fiscais com o contador, V-3, texto do arrependimento com advogado, como ligar a marca (~40 min) deps: T-040
 - [ ] T-043 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com o sandbox (~30 min) deps: T-040
 - [ ] T-044 [CHECK-SMOKE] Implantar em produção com todas as marcas desligadas e rodar a sonda (~30 min) deps: T-043, T-041
-- [ ] T-045 [REFACTOR] Limpeza com testes verdes e marcação de brand_plans como supersedida (~25 min) deps: T-044
+- [ ] T-045 [REFACTOR] Limpeza com testes verdes e marcação de brand_plans como supersedida (~25 min) PORTÃO DE RELEASE: nenhuma marca liga a cobrança em produção antes de a hml provar, com pagamento real no sandbox pela nossa rota, que o externalReference chega à assinatura e que a conta é reativada com UMA assinatura (o ligar-cobrança não consegue checar isso; ver evidencias/003-billing/README.md) deps: T-044
 
 ## Estimativa
 

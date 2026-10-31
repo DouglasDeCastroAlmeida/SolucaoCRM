@@ -117,7 +117,8 @@ export async function POST(req: NextRequest) {
   if (parsed.data.plano_id !== undefined) {
     const plano = cobrancaLigada ? await lerPlano(admin, parsed.data.plano_id) : null;
     if (plano === "erro") return fail("internal_error", "Não foi possível ler o plano", 500, { requestId });
-    if (!plano || plano.arquivado_em !== null) {
+    // O corpo não aceita `brand_id`: o tenant nasce na instalação, e plano de marca não lhe serve.
+    if (!plano || plano.arquivado_em !== null || (plano.brand_id ?? null) !== null) {
       return fail(
         "plano_invalido",
         cobrancaLigada ? "Plano não encontrado ou arquivado." : "A cobrança está desligada nesta instalação.",

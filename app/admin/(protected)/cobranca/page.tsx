@@ -57,8 +57,11 @@ export default async function CobrancaPage({ searchParams }: { searchParams: Pro
   const { aba } = await searchParams;
   const inicial: AbaDaCobranca = ABAS_DA_COBRANCA.find((a) => a === aba) ?? "visao-geral";
 
-  const [planos, clientes, visao, tolerancia] = await Promise.all([
-    admin.from("cobranca_planos").select(COLUNAS_DO_PLANO).order("nome"),
+  const [planos, planosDeMarca, clientes, visao, tolerancia] = await Promise.all([
+    // O catálogo editável aqui é o da INSTALAÇÃO; os planos de marca têm a aba Cobrança da marca.
+    admin.from("cobranca_planos").select(COLUNAS_DO_PLANO).is("brand_id", null).order("nome"),
+    // Só os nomes dos planos de marca, para a lista de empresas não mostrar "—" a quem assina um deles.
+    admin.from("cobranca_planos").select("id, nome").not("brand_id", "is", null),
     admin
       .from("organizations")
       .select(
@@ -68,11 +71,14 @@ export default async function CobrancaPage({ searchParams }: { searchParams: Pro
     lerVisaoGeral(admin),
     toleranciaDias(),
   ]);
-  if (planos.error || clientes.error) {
-    throw new Error(`cobrança: leitura falhou (${planos.error?.code ?? clientes.error?.code})`);
+  if (planos.error || planosDeMarca.error || clientes.error) {
+    throw new Error(`cobrança: leitura falhou (${planos.error?.code ?? planosDeMarca.error?.code ?? clientes.error?.code})`);
   }
   const lista = (planos.data ?? []) as PlanoDaTela[];
-  const nomeDoPlano = new Map(lista.map((p) => [p.id, p.nome]));
+  const nomeDoPlano = new Map<string, string>([
+    ...lista.map((p): [string, string] => [p.id, p.nome]),
+    ...((planosDeMarca.data ?? []) as Array<{ id: string; nome: string }>).map((p): [string, string] => [p.id, p.nome]),
+  ]);
   const pagantes = (clientes.data ?? []) as unknown as ClienteDaTela[];
   const data = new Intl.DateTimeFormat(idioma, { dateStyle: "short" });
   const quando = (v: string | null) => (v ? data.format(new Date(v)) : "—");

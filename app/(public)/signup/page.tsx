@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { idiomaDoVisitante } from "@/lib/i18n/idiomaAnonimo";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { brandIdDoCadastro } from "@/lib/brands/tipos";
 import { lerCadastroNaTela, planoInicialDoSeletor } from "@/lib/cobranca/cadastro";
 
 export const metadata = { title: "Criar conta" };
@@ -65,7 +66,7 @@ export default async function SignupPage({
   // padrão a empresa dele nasce no padrão. Sem plano nenhum, nasce isenta e o
   // Google fica (doc 146, opção B). O critério é o de `lib/cobranca/cadastro.ts`,
   // o mesmo do gatilho. Leitura que falha não esconde nada: quem recusa é a action.
-  const cadastro = convite ? null : await lerCadastroNaTela(createAdminClient());
+  const cadastro = convite ? null : await lerCadastroNaTela(createAdminClient(), brandIdDoCadastro(marcaDoHost));
   const planos = cadastro?.oferecidos ?? [];
   const googleSemPlano = cadastro?.exigeEscolha ?? false;
 

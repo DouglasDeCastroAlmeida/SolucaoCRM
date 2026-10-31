@@ -77,7 +77,7 @@ async function lerMarca(brandId: string): Promise<{ id: string; cobranca_ligada:
     .maybeSingle();
   if (error) throw new Error(`ler marca: ${error.code ?? "erro"} ${error.message}`);
   if (!data) throw new ErroDeMarca("not_found", "Marca não encontrada.", 404);
-  return data as unknown as { id: string; cobranca_ligada: boolean };
+  return data as { id: string; cobranca_ligada: boolean };
 }
 
 export async function situacaoDaCobranca(brandId: string): Promise<SituacaoDaCobranca> {
@@ -128,21 +128,21 @@ export async function listarPlanosCobraveis(brandId: string): Promise<Linha[]> {
     .eq("brand_id", brandId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(`listar planos cobráveis: ${error.code ?? "erro"} ${error.message}`);
-  return (data ?? []) as unknown as Linha[];
+  return (data ?? []) as Linha[];
 }
 
 export async function criarPlanoCobravel(brandId: string, campos: Linha, autorId: string): Promise<Linha> {
   await lerMarca(brandId);
   const { data, error } = await createAdminClient()
     .from("cobranca_planos")
-    .insert({ ...campos, brand_id: brandId, updated_by: autorId } as never)
+    .insert({ ...campos, brand_id: brandId, updated_by: autorId })
     .select(COLUNAS_DO_PLANO)
     .single();
   if (error?.code === "23505") {
     throw new ErroDeMarca("state_conflict", "Esta marca já tem um plano do cadastro. Desmarque o outro antes.", 409);
   }
   if (error || !data) throw new Error(`criar plano cobrável: ${error?.code ?? "erro"} ${error?.message ?? ""}`);
-  return data as unknown as Linha;
+  return data as Linha;
 }
 
 export async function editarPlanoCobravel(
@@ -154,15 +154,32 @@ export async function editarPlanoCobravel(
   const admin = createAdminClient();
   const { data: lido, error: e1 } = await admin
     .from("cobranca_planos")
-    .select("id, preco_cents, intervalo, arquivado_em")
+    .select("id, preco_cents, intervalo, arquivado_em, padrao_no_cadastro")
     .eq("id", planoId)
     .eq("brand_id", brandId)
     .maybeSingle();
   if (e1) throw new Error(`ler plano cobrável: ${e1.code ?? "erro"} ${e1.message}`);
   if (!lido) throw new ErroDeMarca("not_found", "Plano não encontrado.", 404);
-  const atual = lido as { preco_cents: number; intervalo: string; arquivado_em: string | null };
+  const atual = lido as { preco_cents: number; intervalo: string; arquivado_em: string | null; padrao_no_cadastro: boolean };
 
   const { arquivado, ...resto } = campos;
+  // Arquivar OU desmarcar o plano do cadastro de uma marca que COBRA deixaria todo cadastro
+  // novo sem plano (cobranca_marca_sem_plano): a saída é marcar outro plano como o do
+  // cadastro, ou desligar a cobrança, antes.
+  const arquivando = arquivado === true && atual.arquivado_em === null;
+  const desmarcando = resto.padrao_no_cadastro === false;
+  if ((arquivando || desmarcando) && atual.padrao_no_cadastro && atual.arquivado_em === null) {
+    const marca = await lerMarca(brandId);
+    if (marca.cobranca_ligada) {
+      throw new ErroDeMarca(
+        "state_conflict",
+        arquivando
+          ? "Este é o plano do cadastro e a cobrança da marca está ligada. Marque outro plano como o do cadastro, ou desligue a cobrança, antes de arquivar."
+          : "Este é o plano do cadastro e a cobrança da marca está ligada. Marque outro plano como o do cadastro, ou desligue a cobrança, antes de desmarcar este.",
+        409,
+      );
+    }
+  }
   const mudaACobranca =
     (resto.preco_cents !== undefined && resto.preco_cents !== Number(atual.preco_cents)) ||
     (resto.intervalo !== undefined && resto.intervalo !== atual.intervalo);
@@ -185,7 +202,7 @@ export async function editarPlanoCobravel(
   const arquivadoEm = arquivado === undefined ? {} : { arquivado_em: arquivado ? (atual.arquivado_em ?? agora) : null };
   const { data, error } = await admin
     .from("cobranca_planos")
-    .update({ ...resto, ...arquivadoEm, updated_at: agora, updated_by: autorId } as never)
+    .update({ ...resto, ...arquivadoEm, updated_at: agora, updated_by: autorId })
     .eq("id", planoId)
     .eq("brand_id", brandId)
     .select(COLUNAS_DO_PLANO)
@@ -194,5 +211,5 @@ export async function editarPlanoCobravel(
     throw new ErroDeMarca("state_conflict", "Esta marca já tem um plano do cadastro. Desmarque o outro antes.", 409);
   }
   if (error || !data) throw new Error(`editar plano cobrável: ${error?.code ?? "erro"} ${error?.message ?? ""}`);
-  return data as unknown as Linha;
+  return data as Linha;
 }

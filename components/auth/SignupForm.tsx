@@ -129,7 +129,9 @@ export function SignupForm({
               ? "Esse plano não está mais disponível. Recarregue a página e escolha outro."
               : recusaDoPlano === "plano_obrigatorio"
                 ? "Não foi possível carregar os planos agora. Recarregue a página e escolha um plano."
-                : "Dados inválidos. Confira os campos.",
+                : recusaDoPlano === "cobranca_marca_sem_plano"
+                  ? "Esta empresa ainda não abriu o cadastro com plano. Fale com quem te indicou o sistema."
+                  : "Dados inválidos. Confira os campos.",
           ),
         );
       } else if (res.error === "conta_ja_existe" && convite) {

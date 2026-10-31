@@ -11,7 +11,8 @@ import { arquivosDeCodigo, caminhoRelativo } from "./helpers/varrer-codigo";
  *
  * `requireRole({ permiteOrgSuspensa: true })` é a única porta de uma org parada
  * para a API de sessão. Pelo AST (comentário não conta):
- *  1. a chave só aparece em `app/api/v1/lgpd/**`, `app/api/v1/cobranca/**` e nos
+ *  1. a chave só aparece em `app/api/v1/lgpd/**`, `app/api/v1/cobranca/**`, `app/cobranca/**`
+ *     (a tela do cartão da org suspensa por entrada paga) e nos
  *     dois arquivos do MCP abaixo;
  *  2. TODA chamada de `requireRole(` em `app/api/v1/lgpd/**` a passa — LGPD
  *     nunca é bloqueada, nem para quem teve a conta suspensa;
@@ -22,7 +23,9 @@ import { arquivosDeCodigo, caminhoRelativo } from "./helpers/varrer-codigo";
  */
 const MCP_ROTA = "app/api/mcp/route.ts";
 const MCP_PRIVACIDADE = "lib/mcp/tools/privacidade.ts";
-const PREFIXOS_PERMITIDOS = ["app/api/v1/lgpd/", "app/api/v1/cobranca/", MCP_ROTA, MCP_PRIVACIDADE] as const;
+// `app/cobranca/`: a organização suspensa por entrada paga (trial com cartão, AC-003.2) precisa
+// alcançar a tela do cartão, que é COBRANÇA — nunca LGPD, custo ou saída para fora.
+const PREFIXOS_PERMITIDOS = ["app/api/v1/lgpd/", "app/api/v1/cobranca/", "app/cobranca/", MCP_ROTA, MCP_PRIVACIDADE] as const;
 const DEFINICAO = "lib/auth/require-role.ts";
 
 function arvore(fonte: string, arquivo: string): ts.SourceFile {

@@ -10,6 +10,7 @@ import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { estadoDoPedido } from "@/lib/auth/registration-requests";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { brandIdDoCadastro } from "@/lib/brands/tipos";
 import { lerCadastroNaTela, planoInicialDoSeletor } from "@/lib/cobranca/cadastro";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -86,7 +87,7 @@ export default async function GetStartedPage() {
   // Os planos do cadastro (#2846): quem chega aqui sem plano escolhido (conta
   // nova pelo Google, ou cadastro anterior à cobrança) escolhe agora. Vem
   // marcado o que a pessoa escolheu no cadastro, se ainda é oferecido; senão o padrão.
-  const cadastro = aguardando ? null : await lerCadastroNaTela(createAdminClient());
+  const cadastro = aguardando ? null : await lerCadastroNaTela(createAdminClient(), brandIdDoCadastro(marcaDoHost));
   const planos = cadastro?.oferecidos ?? [];
   const escolhido = authUser?.user_metadata?.cobranca_plan_id;
   const planoInicial = planos.some((p) => p.id === escolhido)

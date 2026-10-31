@@ -89,3 +89,51 @@ Rodada: `node scripts/sondas/asaas-checkout-sandbox.mjs --campos-extras` (só `a
 Conclusões: (1) `externalReference` é aceita e devolvida: é o elo com a organização. (2) `customer` só vale para cliente com telefone e endereço completos, que não temos antes da página; **o adaptador deixou de enviar `customer`** (testes ajustados). Consequência a tratar na Fatia 5: o cliente criado na página pode não ser o `clienteRef` de `garantirCliente`; o `confirmar` deve casar pela `externalReference` (= org), não pelo cliente.
 
 **NÃO foi provado:** pagamento, cartão, redirecionamento ao callback, cobrança no ato, o webhook de volta e o corpo de `invoiceSettings`. Este último provavelmente exige mais campos (`taxes` e serviço/município municipal); conferir na documentação do Asaas quando houver conta PJ. A falha de `pedirNotaFiscal` é melhor esforço.
+
+## Prova manual do pagamento no sandbox (31/10/2026)
+
+O dono pagou o checkout de teste pela página hospedada, com o cartão de teste do sandbox. A página mostrou
+"Pagamento confirmado" (texto do Asaas: o cartão foi aceito e a assinatura criada; **não** significa que houve
+cobrança). A conferência pela API, feita no mesmo dia:
+
+| O que foi conferido | Resultado |
+|---|---|
+| Assinatura criada | `ACTIVE`, cartão de crédito, ciclo `MONTHLY`, valor 49,90, próxima cobrança em 07/12/2026 |
+| Primeira cobrança | `PENDING`, vencimento **07/11/2026 (hoje + 7)**, sem `paymentDate` e sem `confirmedDate` |
+| Cobrança no ato | **Nenhuma.** Nada foi confirmado nem recebido em 31/10/2026 |
+| Cliente | Criado pelo próprio Asaas na página (1 cliente), sem `externalReference` nesta corrida |
+
+**V-1 PASSOU** (primeira cobrança em hoje+7, sem cobrar no ato) e **o cartão foi aceito** pelo Checkout hospedado.
+
+**Ressalvas que continuam:**
+- O texto "Pagamento confirmado" e o botão "Pagar R$ 49,90" são do Asaas e induzem a achar que houve cobrança:
+  a tela **nossa** deve dizer, antes e depois, "você só será cobrado em DD/MM".
+- O redirecionamento ao nosso `callback` não foi exercitado nesta corrida (a página terminou na tela do Asaas com o
+  botão "Acompanhar meu pedido"); fica para a prova pela tela da Fatia 5.
+- `externalReference` não aparece na assinatura nem na cobrança desta corrida: o link manual da sonda não o enviou.
+  Provado antes só como eco da resposta do checkout. A Fatia 5 deve confirmar que ele chega ao webhook e à assinatura.
+- A nota fiscal (`invoiceSettings`) segue não provada (conta pessoa física).
+
+**Decisão:** T-014 e T-015 (adaptador) passam a concluídas; a Fatia 5 está liberada. A exceção ao AC-010.1 deixa de
+ser necessária para o Checkout.
+
+Os registros criados no sandbox (cliente, assinatura e cobrança) ficam até a prova pela tela da Fatia 5; depois
+são removidos.
+
+## Limite do trial por documento
+
+Um teste grátis por CPF/CNPJ por marca (AC-003.5 e AC-003.6). A guarda mora em `cobranca_trial_documentos` (só o hash HMAC do documento é gravado).
+
+O que a Fatia 5 faz: a tela de antes (`/cobranca/iniciar`) pede o CPF ou CNPJ quando a organização ainda não tem um documento válido no cadastro. O servidor confere os dígitos verificadores, reserva o trial do documento ANTES de abrir o checkout e, se o documento já usou o teste naquela marca, recusa com `trial_ja_usado` e a mensagem "assine já" (sem abrir cartão). O documento digitado vai para `organizations.cnpj` (a mesma coluna do cadastro), sem log. O documento do cadastro vale mais que o digitado.
+
+**Limite que sobra:** o Checkout hospedado do Asaas pede o CPF/CNPJ de novo, na página deles, e nós não vemos o que a pessoa digita ali. Quem digitar na nossa tela um documento e na página do Asaas outro contorna a regra: o cliente criado pelo Asaas fica com um documento diferente do reservado. Também não há prova de que o documento digitado pertence a quem digita (não há consulta à Receita).
+
+**Pendência para a Fatia 11:** depois da volta do checkout, conferir o `cpfCnpj` do cliente criado pela página com o reservado; se divergir, registrar um aviso na Central da plataforma, sem cancelar nada sozinho. Também não existe ainda o caminho "assinar agora, cobrança imediata sem teste" para quem recebeu `trial_ja_usado`: hoje a mensagem só informa, e o caminho pago depende de decisão do dono.
+
+## Portão de release: externalReference
+
+**NENHUMA marca pode ter a cobrança ligada em produção antes de a Fatia 11 provar**, com pagamento real no sandbox pela nossa rota (hml), duas coisas: (1) que o `externalReference` enviado ao Checkout chega à assinatura criada pela página do Asaas; (2) que a conta é reativada com UMA assinatura só.
+
+Por quê: se o Asaas não propagar o `externalReference`, `acharAssinaturaDoCheckout` devolve nada, a volta com `ok` não liga a conta e quem clicasse de novo em "Cadastrar cartão" abriria um segundo checkout (duas assinaturas, cobrança em dobro). Hoje o código segura isso: a volta com `ok` sem assinatura achada marca a linha como "confirmando" por 24 horas (url do checkout nula, sessão guardada e validade no futuro, sem coluna nova) e `iniciar` não abre outro checkout nesse prazo; depois do prazo, só com "Tentar de novo" explícito. Isso reduz o risco, não prova o contrato.
+
+O `ligar-cobrança` (`faltasParaLigar` em `lib/brands/cobranca-repo.ts`) não consegue checar isso: é prova de ambiente, não dado do banco. O portão está escrito em T-045 de `03-tasks.md` e a execução é do dono do produto na hml.

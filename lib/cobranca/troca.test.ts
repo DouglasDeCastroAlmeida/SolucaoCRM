@@ -360,3 +360,37 @@ describe("troca no teste grátis com a assinatura já criada no provedor (Asaas,
     expect(argumentos(escritas()[0]!, "update")?.[0]).toMatchObject({ checkout_url: null, checkout_expira_em: null });
   });
 });
+
+describe("trocarPlanoDaOrg — o plano da troca é do mesmo escopo (instalação ou marca)", () => {
+  const DA_MARCA = "11111111-1111-4111-8111-111111111111";
+  const comPlanosDeMarca = async (corpo: () => Promise<void>) => {
+    PLANOS.push(plano("da-marca", { brand_id: DA_MARCA }), plano("da-marca-b", { brand_id: DA_MARCA }));
+    try {
+      await corpo();
+    } finally {
+      PLANOS.splice(PLANOS.length - 2, 2);
+    }
+  };
+
+  it("AC-001.2: empresa num plano da instalação não troca para plano de marca: 422 plano_invalido, nada gravado", async () => {
+    await comPlanosDeMarca(async () => {
+      expect(await trocar("da-marca")).toMatchObject({ ok: false, status: 422, code: "plano_invalido" });
+      expect(escritas()).toHaveLength(0);
+    });
+  });
+
+  it("AC-001.2: empresa num plano de marca não troca para plano da instalação", async () => {
+    await comPlanosDeMarca(async () => {
+      m.linha = { ...EM_TESTE, plano_id: "da-marca" };
+      expect(await trocar("pro")).toMatchObject({ ok: false, status: 422, code: "plano_invalido" });
+      expect(escritas()).toHaveLength(0);
+    });
+  });
+
+  it("AC-001.2: dentro da mesma marca a troca vale", async () => {
+    await comPlanosDeMarca(async () => {
+      m.linha = { ...EM_TESTE, plano_id: "da-marca" };
+      expect(await trocar("da-marca-b")).toMatchObject({ ok: true, changed: true, planoId: "da-marca-b" });
+    });
+  });
+});

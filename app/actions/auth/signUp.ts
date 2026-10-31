@@ -6,7 +6,7 @@ import { ipDoCliente } from "@/lib/http/ip-do-cliente";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { moduloLigado } from "@/lib/instalacao/modulos";
-import { cadastroExigeEscolhaDePlano, lerPlanosDoCadastro } from "@/lib/cobranca/cadastro";
+import { decidirPlanoDoCadastro, lerEscopoDoCadastro, lerPlanosDoCadastro } from "@/lib/cobranca/cadastro";
 import {
   signupSchema,
   signupComConviteSchema,
@@ -17,7 +17,7 @@ import { verifyInviteToken } from "@/lib/auth/invite-token";
 import { criarContaDeConvite, lerConfigPublicaDoGoTrue } from "@/lib/auth/convite-no-gotrue";
 import { modoDeCadastroDaMarca } from "@/lib/auth/cadastro-da-marca";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
-import { MARCA_PADRAO_EMBUTIDA } from "@/lib/brands/tipos";
+import { brandIdDoCadastro, MARCA_PADRAO_EMBUTIDA } from "@/lib/brands/tipos";
 import { audit, hashEmail } from "@/lib/audit";
 import { authRateLimited, AUTH_LIMITS } from "@/lib/auth/rate-limit";
 import { env } from "@/lib/env";
@@ -160,18 +160,28 @@ export async function signUp(
   if (!convite) {
     const admin = createAdminClient();
     if (await moduloLigado(admin, "cobranca")) {
-      // Recusa ANTES de criar a conta no GoTrue o que o gatilho da 0679 recusaria
+      // Recusa ANTES de criar a conta no GoTrue o que o gatilho da 0679/0725 recusaria
       // depois — senão o usuário ficaria órfão, sem organização. Leitura dos
       // PLANOS que falha recusa: é ação, não informação. A da CHAVE do módulo, não:
       // `moduloLigado` trata a falha como "desligado", e aí a conta nasce e quem
       // decide é o gatilho; se ele recusar, a saída é /get-started, que pede o plano.
-      const planos = await lerPlanosDoCadastro(admin);
+      // Os planos são os da MARCA do endereço quando ela cobra (0725) e os da
+      // instalação nos demais casos: `lerEscopoDoCadastro` decide, e nunca se misturam.
+      const escopo = await lerEscopoDoCadastro(admin, brandIdDoCadastro(marcaDoHost));
+      const planos = escopo ? await lerPlanosDoCadastro(admin, escopo.brandId) : null;
       if (planoEscolhido) {
         if (!planos?.oferecidos.some((p) => p.id === planoEscolhido)) {
           return { ok: false, error: "validation_error", details: { cobranca_plan_id: ["plano_indisponivel"] } };
         }
-      } else if (!planos || cadastroExigeEscolhaDePlano(planos)) {
-        return { ok: false, error: "validation_error", details: { cobranca_plan_id: ["plano_obrigatorio"] } };
+      } else {
+        const decisao = planos ? decidirPlanoDoCadastro(planos, null, escopo?.cobra ?? false) : null;
+        if (decisao === null || decisao.tipo === "erro") {
+          return {
+            ok: false,
+            error: "validation_error",
+            details: { cobranca_plan_id: [decisao?.tipo === "erro" ? decisao.erro : "plano_obrigatorio"] },
+          };
+        }
       }
     }
   }

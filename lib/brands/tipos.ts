@@ -32,6 +32,13 @@ export const MarcaSchema = z.object({
 
 export type Brand = z.infer<typeof MarcaSchema>;
 
+const MARCA_PADRAO_EMBUTIDA_ID = "padrao-embutida";
+
+/** O id da marca REAL do endereço; a padrão embutida (chave off, banco fora) é "sem marca" (`null`). */
+export function brandIdDoCadastro(marca: Pick<Brand, "id">): string | null {
+  return marca.id !== MARCA_PADRAO_EMBUTIDA_ID ? marca.id : null;
+}
+
 export type TipoDeDominio = "padrao" | "subdominio" | "proprio";
 
 /**
@@ -40,7 +47,7 @@ export type TipoDeDominio = "padrao" | "subdominio" | "proprio";
  * Todos os campos visuais nulos, ou seja, o produto exatamente como era antes.
  */
 export const MARCA_PADRAO_EMBUTIDA: Brand = {
-  id: "padrao-embutida",
+  id: MARCA_PADRAO_EMBUTIDA_ID,
   partner_id: null,
   slug: "padrao",
   name: "padrao",
