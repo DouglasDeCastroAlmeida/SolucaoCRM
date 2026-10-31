@@ -17178,6 +17178,23 @@ export const DICIONARIO: Traducoes = {
   "Reativar plano": { es: "Reactivar plan" },
   "Cobrado a cada": { es: "Cobrado cada" },
   "Dias de teste": { es: "Días de prueba" },
+  // Páginas de /cobranca/iniciar e o atalho do hub (mudança 003)
+  "Cadastre o cartão do seu teste grátis": { es: "Registra la tarjeta de tu prueba gratis" },
+  "Você só será cobrado em {dia}. Hoje não sai nada do seu cartão.": { es: "Solo se te cobrará el {dia}. Hoy no se descuenta nada de tu tarjeta." },
+  "Plano {plano}: {preco} {periodo}, a partir de {dia}. Cancele antes disso e não paga nada.": { es: "Plan {plano}: {preco} {periodo}, a partir del {dia}. Cancela antes y no pagas nada." },
+  "Na próxima página, a de pagamento do Asaas pode mostrar \"Pagar\" e \"Pagamento confirmado\". Isso é só o cadastro do cartão: a cobrança é em {dia}.": { es: "En la próxima página, la de pago de Asaas puede mostrar \"Pagar\" y \"Pago confirmado\". Eso es solo el registro de la tarjeta: el cobro es el {dia}." },
+  "Continuar para o cartão": { es: "Continuar a la tarjeta" },
+  "O teste grátis já foi usado": { es: "La prueba gratis ya fue usada" },
+  "Não foi possível abrir o cartão": { es: "No fue posible abrir la tarjeta" },
+  "Já estamos abrindo a página do cartão. Aguarde alguns segundos e tente de novo.": { es: "Ya estamos abriendo la página de la tarjeta. Espera unos segundos e inténtalo de nuevo." },
+  "Não conseguimos abrir a página do cartão agora. Nada foi cobrado e sua conta continua como estava. Tente de novo em alguns minutos.": { es: "No pudimos abrir la página de la tarjeta ahora. No se cobró nada y tu cuenta sigue como estaba. Inténtalo de nuevo en unos minutos." },
+  "Este CPF ou CNPJ já usou o teste grátis aqui. Você pode assinar agora: a cobrança começa hoje.": { es: "Este CPF o CNPJ ya usó la prueba gratis aquí. Puedes suscribirte ahora: el cobro empieza hoy." },
+  "Informe seu CPF ou CNPJ": { es: "Indica tu CPF o CNPJ" },
+  "CPF ou CNPJ": { es: "CPF o CNPJ" },
+  "Usamos o documento só para liberar o teste grátis uma vez por pessoa ou empresa.": { es: "Usamos el documento solo para liberar la prueba gratis una vez por persona o empresa." },
+  "Esse CPF ou CNPJ não confere. Confira os números e tente de novo.": { es: "Ese CPF o CNPJ no es válido. Revisa los números e inténtalo de nuevo." },
+  "Cadastrar cartão e começar o teste grátis": { es: "Registrar tarjeta y empezar la prueba gratis" },
+  "Você só será cobrado em {dia}.": { es: "Solo se te cobrará el {dia}." },
 };
 
 /**

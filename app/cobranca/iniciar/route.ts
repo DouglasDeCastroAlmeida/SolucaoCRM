@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 
 import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
 
 import { requireRole } from "@/lib/auth/require-role";
 import { confirmarTrialDoCheckout } from "@/lib/billing-trial/confirmar";
 import { diaDaPrimeiraCobranca, iniciarTrialComCartao, lerPreviaDoTrial } from "@/lib/billing-trial/iniciar";
 import { paginaDeAviso } from "@/lib/billing-trial/pagina";
+import { textoDaPagina } from "@/lib/billing-trial/textos";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { CABECALHO_BRAND_HOST, normalizarHost } from "@/lib/branding/host";
 import { env } from "@/lib/env";
@@ -38,6 +40,10 @@ function para(req: NextRequest, caminho: string, status = 303): NextResponse {
   return NextResponse.redirect(new URL(caminho, baseDaMarca(req)), status);
 }
 
+const CORPO = z.object({ documento: z.string().trim().max(30).optional() });
+
+const ACAO = "/cobranca/iniciar";
+
 export async function GET(req: NextRequest) {
   const requestId = randomUUID();
   const authz = await requireRole("admin", { requestId, resource: "cobranca_assinaturas", permiteOrgSuspensa: true });
@@ -48,18 +54,32 @@ export async function GET(req: NextRequest) {
   const previa = await lerPreviaDoTrial(admin, authz.org.orgId);
   if (previa === null) return para(req, HUB);
   const marca = await marcaDaSaida(authz.org.orgId);
+  const idioma = authz.user.idioma;
+  const t = (texto: string, valores?: Record<string, string>) => textoDaPagina(texto, idioma, valores);
   const preco = (previa.precoCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const dia = diaDaPrimeiraCobranca(previa.primeiraCobrancaEm);
   return paginaDeAviso({
-    nomeDaMarca: marca.nome,
-    titulo: "Cadastre o cartão do seu teste grátis",
+    marca,
+    idioma,
+    titulo: t("Cadastre o cartão do seu teste grátis"),
     paragrafos: [
-      `Você só será cobrado em ${dia}. Hoje não sai nada do seu cartão.`,
-      `Plano ${previa.planoNome}: ${preco} ${previa.intervalo === "ano" ? "por ano" : "por mês"}, a partir de ${dia}. Cancele antes disso e não paga nada.`,
-      `Na próxima página, a de pagamento do Asaas pode mostrar "Pagar" e "Pagamento confirmado". Isso é só o cadastro do cartão: a cobrança é em ${dia}.`,
+      t("Você só será cobrado em {dia}. Hoje não sai nada do seu cartão.", { dia }),
+      t("Plano {plano}: {preco} {periodo}, a partir de {dia}. Cancele antes disso e não paga nada.", {
+        plano: previa.planoNome,
+        preco,
+        periodo: t(previa.intervalo === "ano" ? "por ano" : "por mês"),
+        dia,
+      }),
+      t(
+        "Na próxima página, a de pagamento do Asaas pode mostrar \"Pagar\" e \"Pagamento confirmado\". Isso é só o cadastro do cartão: a cobrança é em {dia}.",
+        { dia },
+      ),
     ],
-    enviar: { texto: "Continuar para o cartão", acao: "/cobranca/iniciar" },
-    voltar: { texto: "Voltar", href: HUB },
+    documento: previa.precisaDeDocumento
+      ? { rotulo: t("CPF ou CNPJ"), ajuda: t("Usamos o documento só para liberar o teste grátis uma vez por pessoa ou empresa.") }
+      : undefined,
+    enviar: { texto: t("Continuar para o cartão"), acao: ACAO },
+    voltar: { texto: t("Voltar"), href: HUB },
   });
 }
 
@@ -72,8 +92,15 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
   if (!(await moduloLigado(admin, "cobranca"))) return para(req, "/app");
   const orgId = authz.org.orgId;
+  const idioma = authz.user.idioma;
+  const t = (texto: string, valores?: Record<string, string>) => textoDaPagina(texto, idioma, valores);
 
-  const r = await iniciarTrialComCartao(admin, { orgId, baseUrl: baseDaMarca(req), actorUserId: authz.user.id, requestId });
+  // O documento vem do formulário (CPF/CNPJ), conferido de novo em `iniciarTrialComCartao`; a org é a da sessão.
+  const formulario = await req.formData().catch(() => null);
+  const lido = CORPO.safeParse({ documento: formulario?.get("documento") ?? undefined });
+  const documento = lido.success ? (lido.data.documento ?? null) : null;
+
+  const r = await iniciarTrialComCartao(admin, { orgId, baseUrl: baseDaMarca(req), actorUserId: authz.user.id, requestId, documento });
   switch (r.tipo) {
     case "redirecionar":
       return NextResponse.redirect(r.url, 303);
@@ -84,15 +111,34 @@ export async function POST(req: NextRequest) {
     }
     case "nao_aplica":
       return para(req, HUB);
+    case "pede_documento": {
+      const marca = await marcaDaSaida(orgId);
+      return paginaDeAviso({
+        marca,
+        idioma,
+        titulo: t("Informe seu CPF ou CNPJ"),
+        paragrafos: [t("Usamos o documento só para liberar o teste grátis uma vez por pessoa ou empresa.")],
+        documento: {
+          rotulo: t("CPF ou CNPJ"),
+          ajuda: t("Usamos o documento só para liberar o teste grátis uma vez por pessoa ou empresa."),
+          erro: r.invalido ? t("Esse CPF ou CNPJ não confere. Confira os números e tente de novo.") : undefined,
+        },
+        enviar: { texto: t("Continuar para o cartão"), acao: ACAO },
+        voltar: { texto: t("Voltar"), href: HUB },
+        status: r.invalido ? 422 : 200,
+      });
+    }
     default: {
       const marca = await marcaDaSaida(orgId);
-      const mensagem =
-        r.tipo === "em_preparo" ? "Já estamos abrindo a página do cartão. Aguarde alguns segundos e tente de novo." : r.mensagem;
+      const mensagem = t(
+        r.tipo === "em_preparo" ? "Já estamos abrindo a página do cartão. Aguarde alguns segundos e tente de novo." : r.mensagem,
+      );
       return paginaDeAviso({
-        nomeDaMarca: marca.nome,
-        titulo: r.tipo === "trial_ja_usado" ? "O teste grátis já foi usado" : "Não foi possível abrir o cartão",
+        marca,
+        idioma,
+        titulo: t(r.tipo === "trial_ja_usado" ? "O teste grátis já foi usado" : "Não foi possível abrir o cartão"),
         paragrafos: [mensagem],
-        voltar: { texto: "Voltar", href: HUB },
+        voltar: { texto: t("Voltar"), href: HUB },
         status: r.tipo === "trial_ja_usado" ? 409 : r.tipo === "muitas_tentativas" ? 429 : r.tipo === "em_preparo" ? 409 : 503,
       });
     }
