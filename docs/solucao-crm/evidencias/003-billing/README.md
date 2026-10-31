@@ -89,3 +89,33 @@ Rodada: `node scripts/sondas/asaas-checkout-sandbox.mjs --campos-extras` (só `a
 Conclusões: (1) `externalReference` é aceita e devolvida: é o elo com a organização. (2) `customer` só vale para cliente com telefone e endereço completos, que não temos antes da página; **o adaptador deixou de enviar `customer`** (testes ajustados). Consequência a tratar na Fatia 5: o cliente criado na página pode não ser o `clienteRef` de `garantirCliente`; o `confirmar` deve casar pela `externalReference` (= org), não pelo cliente.
 
 **NÃO foi provado:** pagamento, cartão, redirecionamento ao callback, cobrança no ato, o webhook de volta e o corpo de `invoiceSettings`. Este último provavelmente exige mais campos (`taxes` e serviço/município municipal); conferir na documentação do Asaas quando houver conta PJ. A falha de `pedirNotaFiscal` é melhor esforço.
+
+## Prova manual do pagamento no sandbox (31/10/2026)
+
+O dono pagou o checkout de teste pela página hospedada, com o cartão de teste do sandbox. A página mostrou
+"Pagamento confirmado" (texto do Asaas: o cartão foi aceito e a assinatura criada; **não** significa que houve
+cobrança). A conferência pela API, feita no mesmo dia:
+
+| O que foi conferido | Resultado |
+|---|---|
+| Assinatura criada | `ACTIVE`, cartão de crédito, ciclo `MONTHLY`, valor 49,90, próxima cobrança em 07/12/2026 |
+| Primeira cobrança | `PENDING`, vencimento **07/11/2026 (hoje + 7)**, sem `paymentDate` e sem `confirmedDate` |
+| Cobrança no ato | **Nenhuma.** Nada foi confirmado nem recebido em 31/10/2026 |
+| Cliente | Criado pelo próprio Asaas na página (1 cliente), sem `externalReference` nesta corrida |
+
+**V-1 PASSOU** (primeira cobrança em hoje+7, sem cobrar no ato) e **o cartão foi aceito** pelo Checkout hospedado.
+
+**Ressalvas que continuam:**
+- O texto "Pagamento confirmado" e o botão "Pagar R$ 49,90" são do Asaas e induzem a achar que houve cobrança:
+  a tela **nossa** deve dizer, antes e depois, "você só será cobrado em DD/MM".
+- O redirecionamento ao nosso `callback` não foi exercitado nesta corrida (a página terminou na tela do Asaas com o
+  botão "Acompanhar meu pedido"); fica para a prova pela tela da Fatia 5.
+- `externalReference` não aparece na assinatura nem na cobrança desta corrida: o link manual da sonda não o enviou.
+  Provado antes só como eco da resposta do checkout. A Fatia 5 deve confirmar que ele chega ao webhook e à assinatura.
+- A nota fiscal (`invoiceSettings`) segue não provada (conta pessoa física).
+
+**Decisão:** T-014 e T-015 (adaptador) passam a concluídas; a Fatia 5 está liberada. A exceção ao AC-010.1 deixa de
+ser necessária para o Checkout.
+
+Os registros criados no sandbox (cliente, assinatura e cobrança) ficam até a prova pela tela da Fatia 5; depois
+são removidos.

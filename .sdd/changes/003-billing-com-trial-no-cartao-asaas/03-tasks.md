@@ -37,8 +37,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-013 [IMPL] Aba Cobrança no editor de marcas; planos da marca passam a ler e gravar cobranca_planos (ADR-002); ajustar testes e telas da SP1 que tocavam brand_plans (~60 min) {AC-009.1} deps: T-011, T-012
 
 ### Fatia 4: Adaptador do Asaas e hash do documento (REQ-003)
-- [ ] T-014 [TEST-CONTRACT] Adaptador iniciarTrialComCartao com fetch simulado: corpo do checkout (só cartão, 1ª cobrança em hoje+trial_dias, URLs na marca, assinatura recorrente), nenhum dado de cartão, erro do provedor sem texto livre, pedido de NFS-e (~50 min) {AC-003.1, AC-003.4, AC-008.4, AC-007.1} deps: T-002
-- [ ] T-015 [IMPL] Método no contrato e no adaptador do Asaas por /v3/checkouts, com releitura antes de criar (~60 min) {AC-003.1, AC-003.4, AC-007.1, AC-008.4} deps: T-014
+- [x] T-014 [TEST-CONTRACT] Adaptador iniciarTrialComCartao com fetch simulado: corpo do checkout (só cartão, 1ª cobrança em hoje+trial_dias, URLs na marca, assinatura recorrente), nenhum dado de cartão, erro do provedor sem texto livre, pedido de NFS-e (~50 min) {AC-003.1, AC-003.4, AC-008.4, AC-007.1} deps: T-002
+- [x] T-015 [IMPL] Método no contrato e no adaptador do Asaas por /v3/checkouts, com releitura antes de criar (~60 min) {AC-003.1, AC-003.4, AC-007.1, AC-008.4} deps: T-014
 - [x] T-016 [TEST-UNIT] Hash HMAC do CPF/CNPJ normalizado: determinístico, distinto por chave, nunca devolve o documento (~25 min) {AC-003.5, AC-003.6}
 - [x] T-017 [IMPL] lib/billing-trial/documento-hash.ts e a chave derivada de segredo de servidor (se não houver segredo adequado, env nova em .env.example e lib/env.ts) (~35 min) {AC-003.5, AC-003.6} deps: T-016, T-008
 
