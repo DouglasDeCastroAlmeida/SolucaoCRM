@@ -534,9 +534,13 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     }
     const primeira = dataCivilEmSaoPaulo(p.primeiraCobrancaEm);
     if (primeira < dataCivilEmSaoPaulo(agora())) throw new ErroDoProvedor(null, "data_da_primeira_cobranca_invalida", false);
-    const caminho = `/subscriptions?customer=${encodeURIComponent(p.clienteRef)}&status=ACTIVE&limit=10`;
-    const ativas = ler(listaDoAsaas(comId), await chamar("GET", caminho)).data.filter((s) => s.deleted !== true);
-    if (ativas.length > 0) throw new ErroDoProvedor(null, "assinatura_ja_existe", false);
+    // `clienteRef` vazio = ainda não há cliente nosso (a página do Checkout o cria): sem o filtro
+    // `customer`, o Asaas listaria as assinaturas da CONTA inteira, e a releitura recusaria à toa.
+    if (p.clienteRef !== "") {
+      const caminho = `/subscriptions?customer=${encodeURIComponent(p.clienteRef)}&status=ACTIVE&limit=10`;
+      const ativas = ler(listaDoAsaas(comId), await chamar("GET", caminho)).data.filter((s) => s.deleted !== true);
+      if (ativas.length > 0) throw new ErroDoProvedor(null, "assinatura_ja_existe", false);
+    }
     const minutosParaExpirar = 60;
     const criado = ler(
       z.object({ id: z.string().min(1), link: z.string().min(1) }),
@@ -556,6 +560,26 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     const url = linkSeguro(criado.link);
     if (url === null) throw new ErroDoProvedor(200, "resposta_invalida", false);
     return { url, sessaoId: criado.id, expiraEm: new Date(agora().getTime() + minutosParaExpirar * 60_000) };
+  }
+
+  /**
+   * A assinatura que o Checkout criou para a org, pela `externalReference` (= orgId). ATENÇÃO:
+   * que a página do Checkout PROPAGA a `externalReference` do checkout para a assinatura NÃO foi
+   * provado (a corrida de 31/10/2026 não a enviou); sem isso a busca devolve `null` e a conta
+   * nunca confirma (falha fechada). Provar na Fatia 11.
+   */
+  async function acharAssinaturaDoCheckout(p: { orgId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null> {
+    const orgId = uuidDaOrg(p.orgId);
+    const consulta = new URLSearchParams({ externalReference: orgId, status: "ACTIVE", limit: "10" });
+    const viva = ler(
+      listaDoAsaas(
+        z.object({ id: z.string().min(1), customer: z.string().min(1), deleted: z.boolean().nullish(), dateCreated: z.string().nullish() }),
+      ),
+      await chamar("GET", `/subscriptions?${consulta}`),
+    )
+      .data.filter((s) => s.deleted !== true)
+      .sort((a, b) => (b.dateCreated ?? "").localeCompare(a.dateCreated ?? ""))[0];
+    return viva ? { clienteRef: viva.customer, assinaturaRef: viva.id } : null;
   }
 
   /**
@@ -739,6 +763,7 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     garantirCliente,
     iniciarAssinatura,
     iniciarTrialComCartao,
+    acharAssinaturaDoCheckout,
     pedirNotaFiscal,
     iniciarAjusteProporcional,
     lerPagamentoProporcional,

@@ -43,11 +43,11 @@ Cada tarefa ocupa uma linha:
 - [x] T-017 [IMPL] lib/billing-trial/documento-hash.ts e a chave derivada de segredo de servidor (se não houver segredo adequado, env nova em .env.example e lib/env.ts) (~35 min) {AC-003.5, AC-003.6} deps: T-016, T-008
 
 ### Fatia 5: Cadastro, Checkout e trial de 7 dias (REQ-001, REQ-003, REQ-005)
-- [ ] T-018 [TEST-UNIT] Cadastro por marca com cobrança ligada: planos da marca, organização nasce suspensa por entrada paga, marca desligada intacta, trial repetido do mesmo documento recusado na mesma marca e concedido em outra (~50 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-008, T-017
-- [ ] T-019 [TEST-UNIT] iniciar e confirmar: sucesso vira trial e reativa a org, volta sem concluir mantém suspensa e permite refazer, clique duplo e retorno duplo, checkout vivo reaproveitado, Asaas fora do ar com mensagem clara (~55 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-008.4} deps: T-015
-- [ ] T-020 [TEST-INT] Invariante: dois retornos concorrentes geram uma assinatura; pagamento confirmado reativa org suspensa por cobrança (~40 min) {AC-003.7, AC-005.4} deps: T-008
-- [ ] T-021 [IMPL] signUp, provision e cadastro.ts leem os planos da marca e repassam marca e plano; espelho TypeScript do gatilho (~60 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-018, T-007
-- [ ] T-022 [IMPL] lib/billing-trial/iniciar.ts, confirmar.ts, rota /cobranca/iniciar e ajuste de /cobranca/volta (~60 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4, AC-008.4} deps: T-019, T-020, T-015, T-021
+- [x] T-018 [TEST-UNIT] Cadastro por marca com cobrança ligada: planos da marca, organização nasce suspensa por entrada paga, marca desligada intacta, trial repetido do mesmo documento recusado na mesma marca e concedido em outra (~50 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-008, T-017
+- [x] T-019 [TEST-UNIT] iniciar e confirmar: sucesso vira trial e reativa a org, volta sem concluir mantém suspensa e permite refazer, clique duplo e retorno duplo, checkout vivo reaproveitado, Asaas fora do ar com mensagem clara (~55 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-008.4} deps: T-015
+- [x] T-020 [TEST-INT] Invariante: dois retornos concorrentes geram uma assinatura; pagamento confirmado reativa org suspensa por cobrança (~40 min) {AC-003.7, AC-005.4} deps: T-008
+- [x] T-021 [IMPL] signUp, provision e cadastro.ts leem os planos da marca e repassam marca e plano; espelho TypeScript do gatilho (~60 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-018, T-007
+- [x] T-022 [IMPL] lib/billing-trial/iniciar.ts, confirmar.ts, rota /cobranca/iniciar e ajuste de /cobranca/volta (~60 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4, AC-008.4} deps: T-019, T-020, T-015, T-021
 
 ### Fatia 6: Régua, avisos e estados (REQ-004, REQ-005)
 - [ ] T-023 [TEST-UNIT] Régua pura com relógio injetado: aviso 2 dias e 1 dia antes da 1ª cobrança, sem aviso se cancelou, sem duplicar, atraso com tolerância de 3 dias, suspensão com aviso final de 48 h, cancelamento no trial sem cobrança (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-005.2, AC-005.3, AC-005.5}
