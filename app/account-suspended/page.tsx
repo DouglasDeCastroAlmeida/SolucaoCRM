@@ -136,7 +136,25 @@ export default async function AccountSuspendedPage({
               )}
             </p>
           )}
-          {previaDoTrial && (
+          {previaDoTrial?.confirmando && (
+            <div className="space-y-2" data-testid="hub-trial-confirmando">
+              <h2 className="text-base font-semibold">{t("Confirmando seu pagamento")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.")}
+              </p>
+              {/* POST, não link: reler o Asaas é efeito, e GET é disparado por pré-carregamento. */}
+              <form method="post" action="/cobranca/iniciar">
+                <input type="hidden" name="acao" value="verificar" />
+                <Button type="submit">{t("Verificar agora")}</Button>
+              </form>
+              {previaDoTrial.confirmando.podeTentarDeNovo && (
+                <a href="/cobranca/iniciar" className="text-sm underline underline-offset-4">
+                  {t("Tentar de novo")}
+                </a>
+              )}
+            </div>
+          )}
+          {previaDoTrial && !previaDoTrial.confirmando && (
             <div className="space-y-2" data-testid="hub-trial-com-cartao">
               <p className="text-sm text-muted-foreground">
                 {t("Você só será cobrado em {dia}.").replace("{dia}", diaDaPrimeiraCobranca(previaDoTrial.primeiraCobrancaEm))}

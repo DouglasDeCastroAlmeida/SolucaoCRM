@@ -3,11 +3,12 @@ import { randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
+import { checkRateLimit } from "@/lib/ai/dispatcher/rate-limit";
 import { requireRole } from "@/lib/auth/require-role";
 import { confirmarTrialDoCheckout } from "@/lib/billing-trial/confirmar";
-import { diaDaPrimeiraCobranca, iniciarTrialComCartao, lerPreviaDoTrial } from "@/lib/billing-trial/iniciar";
-import { paginaDeAviso } from "@/lib/billing-trial/pagina";
-import { textoDaPagina } from "@/lib/billing-trial/textos";
+import { diaDaPrimeiraCobranca, iniciarTrialComCartao, lerPreviaDoTrial, MENSAGEM_MUITAS_TENTATIVAS } from "@/lib/billing-trial/iniciar";
+import { paginaDeAviso, type IdiomaDaPagina } from "@/lib/billing-trial/pagina";
+import { AVISO_TENTAR_DE_NOVO, FRASE_CONFIRMANDO, TITULO_CONFIRMANDO, textoDaPagina } from "@/lib/billing-trial/textos";
 import { marcaDaSaida } from "@/lib/branding/saida";
 import { CABECALHO_BRAND_HOST, normalizarHost } from "@/lib/branding/host";
 import { env } from "@/lib/env";
@@ -40,9 +41,29 @@ function para(req: NextRequest, caminho: string, status = 303): NextResponse {
   return NextResponse.redirect(new URL(caminho, baseDaMarca(req)), status);
 }
 
-const CORPO = z.object({ documento: z.string().trim().max(30).optional() });
+const CORPO = z.object({
+  documento: z.string().trim().max(30).optional(),
+  acao: z.enum(["verificar", "tentar_de_novo"]).optional(),
+});
 
 const ACAO = "/cobranca/iniciar";
+
+/** "Estamos confirmando o seu pagamento": a pessoa voltou do cartão e a assinatura ainda não apareceu. */
+async function paginaConfirmando(orgId: string, idioma: IdiomaDaPagina, podeTentarDeNovo: boolean, status = 200): Promise<Response> {
+  const t = (texto: string) => textoDaPagina(texto, idioma);
+  return paginaDeAviso({
+    marca: await marcaDaSaida(orgId),
+    idioma,
+    titulo: t(TITULO_CONFIRMANDO),
+    paragrafos: [t(FRASE_CONFIRMANDO)],
+    enviar: { texto: t("Verificar agora"), acao: ACAO, campos: { acao: "verificar" } },
+    enviarOutro: podeTentarDeNovo
+      ? { texto: t("Tentar de novo"), acao: ACAO, aviso: t(AVISO_TENTAR_DE_NOVO), campos: { acao: "tentar_de_novo" } }
+      : undefined,
+    voltar: { texto: t("Voltar"), href: HUB },
+    status,
+  });
+}
 
 export async function GET(req: NextRequest) {
   const requestId = randomUUID();
@@ -53,6 +74,7 @@ export async function GET(req: NextRequest) {
 
   const previa = await lerPreviaDoTrial(admin, authz.org.orgId);
   if (previa === null) return para(req, HUB);
+  if (previa.confirmando) return paginaConfirmando(authz.org.orgId, authz.user.idioma, previa.confirmando.podeTentarDeNovo);
   const marca = await marcaDaSaida(authz.org.orgId);
   const idioma = authz.user.idioma;
   const t = (texto: string, valores?: Record<string, string>) => textoDaPagina(texto, idioma, valores);
@@ -97,10 +119,38 @@ export async function POST(req: NextRequest) {
 
   // O documento vem do formulário (CPF/CNPJ), conferido de novo em `iniciarTrialComCartao`; a org é a da sessão.
   const formulario = await req.formData().catch(() => null);
-  const lido = CORPO.safeParse({ documento: formulario?.get("documento") ?? undefined });
+  const lido = CORPO.safeParse({ documento: formulario?.get("documento") ?? undefined, acao: formulario?.get("acao") ?? undefined });
   const documento = lido.success ? (lido.data.documento ?? null) : null;
+  const acao = lido.success ? lido.data.acao : undefined;
 
-  const r = await iniciarTrialComCartao(admin, { orgId, baseUrl: baseDaMarca(req), actorUserId: authz.user.id, requestId, documento });
+  if (acao === "verificar") {
+    // "Verificar agora": relê o Asaas pela mesma porta da volta e com a MESMA cota dela.
+    const taxa = await checkRateLimit(`cobranca-volta:${orgId}`, 6, 60);
+    if (!taxa.allowed) {
+      return paginaDeAviso({
+        marca: await marcaDaSaida(orgId),
+        idioma,
+        titulo: t("Não foi possível abrir o cartão"),
+        paragrafos: [t(MENSAGEM_MUITAS_TENTATIVAS)],
+        voltar: { texto: t("Voltar"), href: HUB },
+        status: 429,
+      });
+    }
+    const c = await confirmarTrialDoCheckout(admin, { orgId, resultado: "ok" }).catch(() => null);
+    if (c?.tipo === "confirmada") return para(req, `${HUB}?voltou=1`);
+    if (c?.tipo === "nao_aplica") return para(req, HUB);
+    const previa = await lerPreviaDoTrial(admin, orgId).catch(() => null);
+    return paginaConfirmando(orgId, idioma, previa?.confirmando?.podeTentarDeNovo ?? false);
+  }
+
+  const r = await iniciarTrialComCartao(admin, {
+    orgId,
+    baseUrl: baseDaMarca(req),
+    actorUserId: authz.user.id,
+    requestId,
+    documento,
+    tentarDeNovo: acao === "tentar_de_novo",
+  });
   switch (r.tipo) {
     case "redirecionar":
       return NextResponse.redirect(r.url, 303);
@@ -111,6 +161,8 @@ export async function POST(req: NextRequest) {
     }
     case "nao_aplica":
       return para(req, HUB);
+    case "confirmando":
+      return paginaConfirmando(orgId, idioma, r.podeTentarDeNovo);
     case "pede_documento": {
       const marca = await marcaDaSaida(orgId);
       return paginaDeAviso({

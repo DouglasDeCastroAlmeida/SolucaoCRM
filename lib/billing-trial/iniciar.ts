@@ -14,10 +14,16 @@
  *   3. grava link, sessão, validade e o fim do teste (`trial_ate` = dia da 1ª
  *      cobrança). Falha na fase 2 libera a reserva e a org segue suspensa.
  *
+ * Linha "confirmando" (a pessoa voltou do checkout com `ok` e a assinatura não foi achada;
+ * ver `confirmar.ts`): url nula + sessão guardada. Por `PRAZO_CONFIRMANDO_MS` não se abre
+ * outro checkout (duas assinaturas); passado o prazo, só com `tentarDeNovo` explícito.
+ *
  * Não grava `provedor`/`provedor_cliente_id`: sem cliente conhecido, a linha com
  * provedor pela metade pararia a leitura da régua. Quem liga a assinatura à linha
  * é `confirmar`. O cartão não passa por aqui, só url, sessão e validade (AC-003.4).
  */
+import { randomUUID } from "node:crypto";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
@@ -31,6 +37,7 @@ import { ErroDoProvedor, type AdaptadorDeCobranca } from "@/lib/cobranca/provedo
 import { MENSAGEM_TRIAL_JA_USADO, reservarTrialDoDocumento } from "@/lib/cobranca/trial-documento";
 import type { Intervalo, ProvedorDeCobranca } from "@/lib/cobranca/vocabulario";
 import { urlDeRetorno } from "@/lib/billing-trial/retorno";
+import { sessaoDaTentativa } from "@/lib/billing-trial/sessao";
 import { logger } from "@/lib/logger";
 
 const RESERVA_MS = 2 * 60_000;
@@ -58,6 +65,8 @@ export type ResultadoDoIniciar =
   | { tipo: "nao_aplica" }
   /** Outro clique está abrindo o checkout agora. */
   | { tipo: "em_preparo" }
+  /** A pessoa voltou do cartão e ainda não achamos a assinatura: não abre outro checkout. */
+  | { tipo: "confirmando"; podeTentarDeNovo: boolean }
   | { tipo: "trial_ja_usado"; mensagem: string }
   /** A org ainda não tem CPF/CNPJ válido e nenhum foi informado (ou o informado não confere): a tela pede. */
   | { tipo: "pede_documento"; invalido: boolean }
@@ -99,6 +108,15 @@ export interface PreviaDoTrial {
   primeiraCobrancaEm: Date;
   /** A organização ainda não tem um CPF/CNPJ válido: a tela pede antes de abrir o cartão. */
   precisaDeDocumento: boolean;
+  /** Voltou do cartão e a assinatura ainda não apareceu: a tela confirma em vez de pedir o cartão de novo. */
+  confirmando: { podeTentarDeNovo: boolean } | null;
+}
+
+/** Url nula + sessão guardada = voltou com ok e a assinatura não foi achada (a reserva de um clique tem sessão nula). */
+function estadoConfirmando(l: Pick<Linha, "checkout_url" | "checkout_sessao_id" | "checkout_expira_em">, agora: Date): { podeTentarDeNovo: boolean } | null {
+  if (l.checkout_url !== null || l.checkout_sessao_id === null) return null;
+  const dentroDoPrazo = l.checkout_expira_em !== null && Date.parse(l.checkout_expira_em) > agora.getTime();
+  return { podeTentarDeNovo: !dentroDoPrazo };
 }
 
 /** Só leitura, para a tela de antes: "Você só será cobrado em DD/MM". `null` = a org não está nesse passo. */
@@ -117,6 +135,7 @@ export async function lerPreviaDoTrial(
   const orgLida = await admin.from("organizations").select("cnpj").eq("id", orgId).maybeSingle();
   if (orgLida.error) return null;
   const cnpj = (orgLida.data as { cnpj: string | null } | null)?.cnpj ?? null;
+  const confirmando = estadoConfirmando(linha, agora);
   const vivo = linha.checkout_url !== null && linha.checkout_expira_em !== null && Date.parse(linha.checkout_expira_em) > agora.getTime();
   return {
     planoNome: p.nome,
@@ -124,7 +143,8 @@ export async function lerPreviaDoTrial(
     intervalo: p.intervalo,
     primeiraCobrancaEm: vivo && linha.trial_ate ? new Date(linha.trial_ate) : primeiraCobrancaDe(agora, p.trial_dias),
     // Checkout vivo já passou pela reserva do documento: não pede de novo.
-    precisaDeDocumento: !vivo && (cnpj === null || documentoDoPagador(cnpj) === null),
+    confirmando,
+    precisaDeDocumento: !vivo && confirmando === null && (cnpj === null || documentoDoPagador(cnpj) === null),
   };
 }
 
@@ -139,6 +159,8 @@ export async function iniciarTrialComCartao(
     requestId: string;
     /** O que a pessoa digitou na tela (CPF/CNPJ, com ou sem máscara). Só vale quando o cadastro da org não tem documento válido. */
     documento?: string | null;
+    /** "Tentar de novo" explícito, depois do prazo do "confirmando". */
+    tentarDeNovo?: boolean;
   },
   deps: DependenciasDoIniciar = {},
 ): Promise<ResultadoDoIniciar> {
@@ -159,6 +181,9 @@ export async function iniciarTrialComCartao(
   if (lida.error) return indisponivel;
   const linha = lida.data as Linha | null;
   if (!linha?.trial_com_cartao || !linha.pagamento_inicial_pendente) return { tipo: "nao_aplica" };
+
+  const confirmando = estadoConfirmando(linha, agora);
+  if (confirmando && !(confirmando.podeTentarDeNovo && p.tentarDeNovo)) return { tipo: "confirmando", podeTentarDeNovo: confirmando.podeTentarDeNovo };
 
   const expira = linha.checkout_expira_em === null ? null : Date.parse(linha.checkout_expira_em);
   const reservaOuLinkVivo = expira !== null && expira > agora.getTime();
@@ -210,6 +235,7 @@ export async function iniciarTrialComCartao(
     if (error) logger.error("cobranca: reserva do trial não liberada", { organizationId: orgId, codigo: error.code ?? null });
   };
 
+  const tentativa = randomUUID();
   try {
     // Fase 2. A pessoa já pode ter concluído (aba velha, retorno perdido): confirmar, não abrir outro.
     if (ad.acharAssinaturaDoCheckout && (await ad.acharAssinaturaDoCheckout({ orgId }))) {
@@ -245,9 +271,9 @@ export async function iniciarTrialComCartao(
       orgId,
       plano: { id: plano.id, nome: plano.nome, precoCents: plano.preco_cents, intervalo: plano.intervalo },
       primeiraCobrancaEm,
-      urlDeSucesso: urlDeRetorno(p.baseUrl, orgId, "ok"),
-      urlDeCancelamento: urlDeRetorno(p.baseUrl, orgId, "cancelado"),
-      urlDeExpirado: urlDeRetorno(p.baseUrl, orgId, "expirado"),
+      urlDeSucesso: urlDeRetorno(p.baseUrl, orgId, "ok", tentativa),
+      urlDeCancelamento: urlDeRetorno(p.baseUrl, orgId, "cancelado", tentativa),
+      urlDeExpirado: urlDeRetorno(p.baseUrl, orgId, "expirado", tentativa),
       chaveIdempotencia: `trial:${orgId}:${reserva}`,
     });
 
@@ -257,7 +283,7 @@ export async function iniciarTrialComCartao(
       .from("cobranca_assinaturas")
       .update({
         checkout_url: checkout.url,
-        checkout_sessao_id: checkout.sessaoId,
+        checkout_sessao_id: sessaoDaTentativa(tentativa, checkout.sessaoId),
         checkout_expira_em: (checkout.expiraEm ?? new Date(agora.getTime() + 60 * 60_000)).toISOString(),
         trial_ate: fimDoTeste.toISOString(),
       })

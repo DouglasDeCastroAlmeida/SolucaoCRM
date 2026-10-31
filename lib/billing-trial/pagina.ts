@@ -30,7 +30,9 @@ export interface PaginaDeAviso {
   /** Campo do CPF/CNPJ, quando a organização ainda não tem um documento válido. */
   documento?: { rotulo: string; ajuda: string; erro?: string };
   /** Botão que ENVIA (POST) para o endereço: o efeito nunca sai de um GET. */
-  enviar?: { texto: string; acao: string };
+  enviar?: { texto: string; acao: string; campos?: Record<string, string> };
+  /** Segunda ação, com um aviso antes (ex.: "Tentar de novo" depois do prazo). Também POST. */
+  enviarOutro?: { texto: string; acao: string; aviso: string; campos?: Record<string, string> };
   voltar: { texto: string; href: string };
   status?: number;
 }
@@ -53,6 +55,12 @@ function estilo(marca: PaginaDeAviso["marca"]): string {
   ].join("");
 }
 
+function escondidos(campos: Record<string, string> | undefined): string {
+  return Object.entries(campos ?? {})
+    .map(([nome, valor]) => `<input type="hidden" name="${escapar(nome)}" value="${escapar(valor)}">`)
+    .join("");
+}
+
 export function paginaDeAviso(p: PaginaDeAviso): Response {
   const campo = p.documento
     ? `<p><label for="documento">${escapar(p.documento.rotulo)}</label><input id="documento" name="documento" type="text" inputmode="text" autocomplete="off" maxlength="18" required placeholder="000.000.000-00 / 00.000.000/0000-00"${p.documento.erro ? ' aria-invalid="true" aria-describedby="erro-documento"' : ""}>${p.documento.erro ? `<span id="erro-documento" class="erro" role="alert">${escapar(p.documento.erro)}</span>` : ""}<span class="ajuda">${escapar(p.documento.ajuda)}</span></p>`
@@ -61,7 +69,10 @@ export function paginaDeAviso(p: PaginaDeAviso): Response {
     `<p class="marca">${escapar(p.marca.nome)}</p>`,
     `<h1>${escapar(p.titulo)}</h1>`,
     ...p.paragrafos.map((t) => `<p>${escapar(t)}</p>`),
-    p.enviar ? `<form method="post" action="${escapar(p.enviar.acao)}">${campo}<button type="submit">${escapar(p.enviar.texto)}</button></form>` : "",
+    p.enviar ? `<form method="post" action="${escapar(p.enviar.acao)}">${escondidos(p.enviar.campos)}${campo}<button type="submit">${escapar(p.enviar.texto)}</button></form>` : "",
+    p.enviarOutro
+      ? `<p class="ajuda">${escapar(p.enviarOutro.aviso)}</p><form method="post" action="${escapar(p.enviarOutro.acao)}">${escondidos(p.enviarOutro.campos)}<button type="submit">${escapar(p.enviarOutro.texto)}</button></form>`
+      : "",
     `<p><a href="${escapar(p.voltar.href)}">${escapar(p.voltar.texto)}</a></p>`,
   ].join("");
   return new Response(

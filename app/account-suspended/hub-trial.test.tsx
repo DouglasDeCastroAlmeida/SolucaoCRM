@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const B = "00000000-0000-4000-8000-00000000000b";
-const cena = vi.hoisted(() => ({ idioma: "pt-BR" as "pt-BR" | "es", previa: true }));
+const cena = vi.hoisted(() => ({ idioma: "pt-BR" as "pt-BR" | "es", previa: true, confirmando: null as null | { podeTentarDeNovo: boolean } }));
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/lib/auth/server", () => ({
@@ -30,7 +30,7 @@ vi.mock("@/lib/cobranca/hub", () => ({
 }));
 vi.mock("@/lib/billing-trial/iniciar", () => ({
   lerPreviaDoTrial: async () =>
-    cena.previa ? { planoNome: "Pro", precoCents: 4990, intervalo: "mes", primeiraCobrancaEm: new Date("2026-11-07T15:00:00Z"), precisaDeDocumento: true } : null,
+    cena.previa ? { planoNome: "Pro", precoCents: 4990, intervalo: "mes", primeiraCobrancaEm: new Date("2026-11-07T15:00:00Z"), precisaDeDocumento: true, confirmando: cena.confirmando } : null,
   diaDaPrimeiraCobranca: () => "07/11",
 }));
 vi.mock("@/lib/branding/saida", () => ({ emailDeSuporte: async () => "" }));
@@ -46,6 +46,7 @@ const montar = async () => render(await AccountSuspendedPage({ searchParams: Pro
 beforeEach(() => {
   cena.idioma = "pt-BR";
   cena.previa = true;
+  cena.confirmando = null;
 });
 
 describe("hub: conta à espera do cartão do teste grátis", () => {
@@ -72,5 +73,26 @@ describe("hub: conta à espera do cartão do teste grátis", () => {
     await montar();
 
     expect(screen.queryByTestId("hub-trial-com-cartao")).toBeNull();
+  });
+});
+
+describe("hub: voltou do cartão e a assinatura ainda não apareceu", () => {
+  it("AC-003.7: mostra 'Confirmando seu pagamento' e 'Verificar agora' (POST) no lugar de cadastrar o cartão de novo", async () => {
+    cena.confirmando = { podeTentarDeNovo: false };
+
+    await montar();
+
+    expect(screen.getByText("Confirmando seu pagamento")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Verificar agora" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Cadastrar cartão e começar o teste grátis" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Tentar de novo" })).toBeNull();
+  });
+
+  it("AC-003.7: passado o prazo aparece o caminho explícito 'Tentar de novo'", async () => {
+    cena.confirmando = { podeTentarDeNovo: true };
+
+    await montar();
+
+    expect(screen.getByRole("link", { name: "Tentar de novo" }).getAttribute("href")).toBe("/cobranca/iniciar");
   });
 });

@@ -87,7 +87,7 @@ describe("iniciarTrialComCartao", () => {
     const pedido = c.iniciar.mock.calls[0]![0] as Record<string, unknown>;
     expect(pedido).toMatchObject({ orgId: ORG, clienteRef: "", primeiraCobrancaEm: new Date("2026-11-07T15:00:00Z") });
     expect(String(pedido.urlDeSucesso)).toContain("https://marca.exemplo/cobranca/volta?");
-    expect(c.linha()).toMatchObject({ checkout_url: "https://sandbox.asaas.exemplo/checkoutSession/show/1", checkout_sessao_id: "chk_1" });
+    expect(c.linha()).toMatchObject({ checkout_url: "https://sandbox.asaas.exemplo/checkoutSession/show/1", checkout_sessao_id: expect.stringMatching(/^[0-9a-f-]{36}:chk_1$/) });
     expect(Date.parse(String(c.linha().trial_ate))).toBeGreaterThan(Date.parse("2026-11-07T15:00:00Z"));
     expect(c.linha().provedor_cliente_id).toBeNull();
     expect(auditar).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe("iniciarTrialComCartao", () => {
 
     expect(r).toMatchObject({ tipo: "redirecionar", reaproveitado: false });
     expect(c.iniciar).toHaveBeenCalledTimes(1);
-    expect(c.linha().checkout_sessao_id).toBe("chk_1");
+    expect(c.linha().checkout_sessao_id).toMatch(/:chk_1$/);
   });
 
   it("AC-003.7: a assinatura que o Checkout já criou vira ja_assinou, sem abrir um segundo checkout", async () => {
@@ -266,5 +266,51 @@ describe("a tela de antes", () => {
     const c = cenario({ linha: { pagamento_inicial_pendente: false } });
 
     expect(await lerPreviaDoTrial(c.banco.cliente, ORG, { agora: () => AGORA })).toBeNull();
+  });
+});
+
+describe("iniciarTrialComCartao: voltou do cartão e a assinatura não foi achada", () => {
+  const TENTATIVA = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const MARCADA = {
+    checkout_url: null,
+    checkout_sessao_id: `${TENTATIVA}:chk_1`,
+    checkout_expira_em: "2026-11-01T10:00:00Z",
+  };
+
+  it("AC-003.7: dentro do prazo NÃO abre outro checkout (evita duas assinaturas) e diz que está confirmando", async () => {
+    const c = cenario({ linha: MARCADA });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
+    const insistindo = await iniciarTrialComCartao(c.banco.cliente, { ...P, tentarDeNovo: true }, c.deps);
+
+    expect(r).toEqual({ tipo: "confirmando", podeTentarDeNovo: false });
+    expect(insistindo).toEqual({ tipo: "confirmando", podeTentarDeNovo: false });
+    expect(c.iniciar).not.toHaveBeenCalled();
+    expect(c.banco.escritas.cobranca_assinaturas ?? 0).toBe(0);
+  });
+
+  it("AC-003.7: passado o prazo só um 'Tentar de novo' explícito abre outro checkout", async () => {
+    const c = cenario({ linha: { ...MARCADA, checkout_expira_em: "2026-10-31T14:00:00Z" } });
+
+    const semPedir = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
+    const pedindo = await iniciarTrialComCartao(c.banco.cliente, { ...P, tentarDeNovo: true }, c.deps);
+
+    expect(semPedir).toEqual({ tipo: "confirmando", podeTentarDeNovo: true });
+    expect(pedindo).toMatchObject({ tipo: "redirecionar", reaproveitado: false });
+    expect(c.iniciar).toHaveBeenCalledTimes(1);
+  });
+
+  it("AC-003.2: a prévia do hub avisa que está confirmando e não pede o documento", async () => {
+    const c = cenario({ linha: MARCADA, cnpj: null });
+
+    const previa = await lerPreviaDoTrial(c.banco.cliente, ORG, { agora: () => AGORA });
+
+    expect(previa).toMatchObject({ confirmando: { podeTentarDeNovo: false }, precisaDeDocumento: false });
+  });
+
+  it("AC-003.2: a reserva de um clique (sessão nula) continua sendo 'em preparo', não 'confirmando'", async () => {
+    const c = cenario({ linha: { checkout_url: null, checkout_sessao_id: null, checkout_expira_em: "2026-10-31T15:01:00Z" } });
+
+    expect(await iniciarTrialComCartao(c.banco.cliente, P, c.deps)).toEqual({ tipo: "em_preparo" });
   });
 });

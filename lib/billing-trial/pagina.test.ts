@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { MENSAGEM_ASAAS_FORA, MENSAGEM_MUITAS_TENTATIVAS } from "@/lib/billing-trial/iniciar";
 import { paginaDeAviso } from "@/lib/billing-trial/pagina";
-import { textoDaPagina } from "@/lib/billing-trial/textos";
+import { AVISO_TENTAR_DE_NOVO, FRASE_CONFIRMANDO, TITULO_CONFIRMANDO, textoDaPagina } from "@/lib/billing-trial/textos";
 import { MENSAGEM_TRIAL_JA_USADO } from "@/lib/cobranca/trial-documento";
 
 const MARCA = { nome: "Marca <Teste>", accent: "#112233", accentFg: "#ffffff" };
@@ -20,6 +20,11 @@ const FRASES = [
   "Voltar",
   "por mês",
   "por ano",
+  "Verificar agora",
+  "Tentar de novo",
+  TITULO_CONFIRMANDO,
+  FRASE_CONFIRMANDO,
+  AVISO_TENTAR_DE_NOVO,
   MENSAGEM_ASAAS_FORA,
   MENSAGEM_MUITAS_TENTATIVAS,
   MENSAGEM_TRIAL_JA_USADO,

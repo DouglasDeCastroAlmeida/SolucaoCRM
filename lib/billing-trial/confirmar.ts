@@ -12,12 +12,19 @@
  *     checkout em aberto, no cancelamento ou na expiração, é descartado para a
  *     pessoa refazer o cartão sem perder o cadastro;
  *   - o provedor não respondeu: nada muda, e o cron horário reconcilia.
+ * Retorno com selo carrega a TENTATIVA (`sessao.ts`): só tem efeito se for a sessão
+ * viva da linha; link de checkout antigo não apaga nem confirma o checkout novo.
+ * Retorno `ok` sem assinatura achada (o Asaas pode não ter propagado a
+ * `externalReference`) MARCA a linha como "confirmando" por `PRAZO_CONFIRMANDO_MS`:
+ * url nula + sessão guardada + validade no futuro. Enquanto isso `iniciar` não abre
+ * um segundo checkout (risco de duas assinaturas). Sem coluna nova.
  * O 1º pagamento (dia 8) e as demais mudanças não passam por aqui: são do
  * `sincronizar`, sempre pelo mesmo caminho, o que mantém AC-005.1 e AC-005.4.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ResultadoDeRetorno } from "@/lib/billing-trial/retorno";
+import { sessaoEhDaTentativa } from "@/lib/billing-trial/sessao";
 import { provedorDaInstalacao } from "@/lib/cobranca/configuracao";
 import { adaptador as adaptadorPadrao, modoDoProvedor } from "@/lib/cobranca/provedores";
 import { ErroDoProvedor, type AdaptadorDeCobranca, type Modo } from "@/lib/cobranca/provedores/contrato";
@@ -30,7 +37,11 @@ export interface DependenciasDoConfirmar {
   provedor?: () => Promise<ProvedorDeCobranca | null>;
   modo?: (id: ProvedorDeCobranca) => Promise<Modo | null>;
   sincronizar?: (admin: SupabaseClient, orgId: string) => Promise<ResultadoDaSincronizacao>;
+  agora?: () => Date;
 }
+
+/** Quanto tempo o "ok sem assinatura" segura um novo checkout. */
+export const PRAZO_CONFIRMANDO_MS = 24 * 3_600_000;
 
 export type ResultadoDoConfirmar =
   /** A assinatura existe e a linha aponta para ela. `reativada` = a org suspensa por cobrança voltou agora. */
@@ -48,13 +59,19 @@ interface Linha {
   provedor: ProvedorDeCobranca | null;
   provedor_cliente_id: string | null;
   checkout_sessao_id: string | null;
+  checkout_url: string | null;
 }
 
 const reativou = (r: ResultadoDaSincronizacao) => r.tipo === "aplicada" && r.acao === "reativar";
 
 export async function confirmarTrialDoCheckout(
   admin: SupabaseClient,
-  p: { orgId: string; resultado: ResultadoDeRetorno },
+  p: {
+    orgId: string;
+    resultado: ResultadoDeRetorno;
+    /** Só o retorno selado a traz. Chamada de dentro da sessão (hub, "Verificar agora") não a tem. */
+    tentativa?: string;
+  },
   deps: DependenciasDoConfirmar = {},
 ): Promise<ResultadoDoConfirmar> {
   const { orgId } = p;
@@ -62,7 +79,7 @@ export async function confirmarTrialDoCheckout(
 
   const lida = await admin
     .from("cobranca_assinaturas")
-    .select("trial_com_cartao, pagamento_inicial_pendente, provedor, provedor_cliente_id, checkout_sessao_id")
+    .select("trial_com_cartao, pagamento_inicial_pendente, provedor, provedor_cliente_id, checkout_sessao_id, checkout_url")
     .eq("organization_id", orgId)
     .maybeSingle();
   if (lida.error) throw new Error(`cobranca: leitura da assinatura falhou (${lida.error.code ?? "sem_codigo"})`);
@@ -75,6 +92,23 @@ export async function confirmarTrialDoCheckout(
     return { tipo: "confirmada", reativada: r !== null && reativou(r), primeiraVez: false };
   }
 
+  // Selo de outra tentativa (link velho): sem efeito, a sessão viva é a que manda.
+  if (p.tentativa !== undefined && !sessaoEhDaTentativa(linha.checkout_sessao_id, p.tentativa)) return { tipo: "nao_aplica" };
+  const marcado = linha.checkout_url === null && linha.checkout_sessao_id !== null;
+  const agora = (deps.agora ?? (() => new Date()))();
+
+  /** Registra "voltou com ok e não achamos a assinatura": segura um novo checkout. Só quem ainda não está marcado. */
+  const marcarConfirmando = async () => {
+    if (p.resultado !== "ok" || marcado || linha.checkout_sessao_id === null) return;
+    const { error } = await admin
+      .from("cobranca_assinaturas")
+      .update({ checkout_url: null, checkout_expira_em: new Date(agora.getTime() + PRAZO_CONFIRMANDO_MS).toISOString() })
+      .eq("organization_id", orgId)
+      .eq("pagamento_inicial_pendente", true)
+      .eq("checkout_sessao_id", linha.checkout_sessao_id);
+    if (error) logger.warn("cobranca.trial_confirmando_nao_marcado", { organization_id: orgId, codigo: error.code ?? null });
+  };
+
   const provedor = await (deps.provedor ?? provedorDaInstalacao)();
   const ad = provedor === null ? null : (deps.adaptador ?? adaptadorPadrao)(provedor);
   if (provedor === null || ad === null || !ad.acharAssinaturaDoCheckout) return { tipo: "provedor_fora" };
@@ -84,17 +118,25 @@ export async function confirmarTrialDoCheckout(
     achada = await ad.acharAssinaturaDoCheckout({ orgId });
   } catch (e) {
     logger.warn("cobranca.trial_confirmar_leitura_falhou", { organization_id: orgId, codigo: e instanceof ErroDoProvedor ? e.codigo : "fora_do_adaptador" });
+    await marcarConfirmando();
     return { tipo: "provedor_fora" };
   }
 
   if (achada === null) {
     // Cancelou ou expirou: o link velho não serve mais. Ok sem assinatura ainda (atraso do Asaas): mantém.
-    if (p.resultado === "ok") return { tipo: "pendente", checkoutDescartado: false };
+    if (p.resultado === "ok") {
+      await marcarConfirmando();
+      return { tipo: "pendente", checkoutDescartado: false };
+    }
+    // Já marcado como "confirmando" (a pessoa voltou com ok antes): cancelar/expirar não desfaz a guarda.
+    // Sem sessão guardada só há uma reserva em andamento, que é de quem a abriu.
+    if (marcado || linha.checkout_sessao_id === null) return { tipo: "pendente", checkoutDescartado: false };
     const { error } = await admin
       .from("cobranca_assinaturas")
       .update({ checkout_url: null, checkout_expira_em: null, checkout_sessao_id: null })
       .eq("organization_id", orgId)
-      .eq("pagamento_inicial_pendente", true);
+      .eq("pagamento_inicial_pendente", true)
+      .eq("checkout_sessao_id", linha.checkout_sessao_id);
     if (error) throw new Error(`cobranca: checkout do trial não descartado (${error.code ?? "sem_codigo"})`);
     return { tipo: "pendente", checkoutDescartado: true };
   }

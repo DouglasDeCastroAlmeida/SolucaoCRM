@@ -26,7 +26,16 @@ const orgDaMarca = (id: string) =>
   `insert into public.organizations (id, slug, legal_name, display_name, created_by, brand_id, settings)
      values ('${id}', 'trial-idem-${id.slice(-3)}', 'x', 'x', '${CLIENTE}', '${MARCA}', '{}'::jsonb)`;
 
-/** O mesmo compare-and-set de `confirmarTrialDoCheckout`: devolve quantas linhas ele gravou. */
+/**
+ * O mesmo compare-and-set de `confirmarTrialDoCheckout`: devolve quantas linhas ele gravou.
+ *
+ * LIMITAÇÃO REGISTRADA: este SQL é uma CÓPIA do update de `lib/billing-trial/confirmar.ts`, não a
+ * função real. Chamar `confirmarTrialDoCheckout` aqui pediria um cliente supabase-js/PostgREST
+ * sobre este Postgres, e a suíte só tem `psql` (`gov-helpers`), que é também o que permite segurar
+ * a transação com `pg_sleep` para forçar a corrida. A cópia pode divergir do código: o teste
+ * unitário `lib/billing-trial/confirmar.test.ts` (AC-003.7) cobre a função real contra um banco
+ * falso, e a corrida real com o provedor fica para a prova pela tela (Fatia 11).
+ */
 const confirmacao = (org: string, assinatura: string) =>
   `with u as (
      update public.cobranca_assinaturas
