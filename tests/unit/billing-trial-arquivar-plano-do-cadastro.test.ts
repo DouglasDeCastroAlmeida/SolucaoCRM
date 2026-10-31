@@ -52,6 +52,29 @@ describe("editarPlanoCobravel — arquivar o plano do cadastro", () => {
     expect(h.banco.cadeias.some((c) => c.tabela === "brands")).toBe(false);
   });
 
+  it("AC-001.3: marca com a cobrança ligada: desmarcar o plano do cadastro é 409 state_conflict e nada é gravado", async () => {
+    mundo({ cobra: true, padrao: true });
+    await expect(editarPlanoCobravel(MARCA, PLANO, { padrao_no_cadastro: false }, "u-admin")).rejects.toMatchObject({
+      code: "state_conflict",
+      status: 409,
+    });
+    expect(escritas()).toHaveLength(0);
+  });
+
+  it("AC-001.3: com a cobrança desligada pode desmarcar; e marcar (true) nunca é barrado", async () => {
+    mundo({ cobra: false, padrao: true });
+    await editarPlanoCobravel(MARCA, PLANO, { padrao_no_cadastro: false }, "u-admin");
+    mundo({ cobra: true, padrao: true });
+    await editarPlanoCobravel(MARCA, PLANO, { padrao_no_cadastro: true }, "u-admin");
+    expect(escritas()).toHaveLength(1);
+  });
+
+  it("AC-001.3: desmarcar plano que não é o do cadastro segue livre com a cobrança ligada", async () => {
+    mundo({ cobra: true, padrao: false });
+    await editarPlanoCobravel(MARCA, PLANO, { padrao_no_cadastro: false }, "u-admin");
+    expect(escritas()).toHaveLength(1);
+  });
+
   it("AC-001.3: desarquivar e editar o nome seguem livres com a cobrança ligada", async () => {
     mundo({ cobra: true, padrao: true });
     await editarPlanoCobravel(MARCA, PLANO, { nome: "Novo" }, "u-admin");

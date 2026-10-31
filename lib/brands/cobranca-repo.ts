@@ -163,15 +163,19 @@ export async function editarPlanoCobravel(
   const atual = lido as { preco_cents: number; intervalo: string; arquivado_em: string | null; padrao_no_cadastro: boolean };
 
   const { arquivado, ...resto } = campos;
-  // Arquivar o plano do cadastro de uma marca que COBRA deixaria todo cadastro novo
-  // sem plano (cobranca_marca_sem_plano): a saída é marcar outro plano como o do
-  // cadastro, ou desligar a cobrança, antes de arquivar.
-  if (arquivado === true && atual.arquivado_em === null && atual.padrao_no_cadastro) {
+  // Arquivar OU desmarcar o plano do cadastro de uma marca que COBRA deixaria todo cadastro
+  // novo sem plano (cobranca_marca_sem_plano): a saída é marcar outro plano como o do
+  // cadastro, ou desligar a cobrança, antes.
+  const arquivando = arquivado === true && atual.arquivado_em === null;
+  const desmarcando = resto.padrao_no_cadastro === false;
+  if ((arquivando || desmarcando) && atual.padrao_no_cadastro && atual.arquivado_em === null) {
     const marca = await lerMarca(brandId);
     if (marca.cobranca_ligada) {
       throw new ErroDeMarca(
         "state_conflict",
-        "Este é o plano do cadastro e a cobrança da marca está ligada. Marque outro plano como o do cadastro, ou desligue a cobrança, antes de arquivar.",
+        arquivando
+          ? "Este é o plano do cadastro e a cobrança da marca está ligada. Marque outro plano como o do cadastro, ou desligue a cobrança, antes de arquivar."
+          : "Este é o plano do cadastro e a cobrança da marca está ligada. Marque outro plano como o do cadastro, ou desligue a cobrança, antes de desmarcar este.",
         409,
       );
     }
