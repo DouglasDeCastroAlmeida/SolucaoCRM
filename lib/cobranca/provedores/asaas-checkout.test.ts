@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { ErroDoProvedor, type PlanoParaProvedor } from "./contrato";
+import { CSP_DA_PAGINA } from "@/lib/billing-trial/pagina";
+
 import { criarAdaptadorAsaas } from "./asaas";
 
 /**
@@ -75,6 +77,13 @@ const pedido = (extra: Record<string, unknown> = {}) => ({
 });
 
 describe("Asaas iniciarTrialComCartao", () => {
+  it("AC-003.2: a origem do redirecionamento do POST está coberta pelo form-action da página", async () => {
+    const { adaptador } = montar();
+    const r = await adaptador.iniciarTrialComCartao!(pedido());
+    const formAction = CSP_DA_PAGINA.split(";").map((d) => d.trim()).find((d) => d.startsWith("form-action "))!;
+    expect(formAction.split(" ")).toContain(new URL(r.url).origin);
+  });
+
   it("AC-003.1: cria o checkout só de cartão, recorrente, com a 1a cobrança em hoje+trial e as URLs da marca", async () => {
     const { adaptador, chamadas } = montar();
     const r = await adaptador.iniciarTrialComCartao!(pedido());

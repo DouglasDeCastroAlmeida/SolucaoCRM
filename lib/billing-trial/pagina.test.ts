@@ -65,6 +65,13 @@ describe("páginas de /cobranca/iniciar", () => {
     expect(r.headers.get("Content-Security-Policy")).not.toContain("script-src");
   });
 
+  it("AC-003.2: a CSP é exata: sem script, base-uri none e form-action só self + Checkout do Asaas", () => {
+    const r = paginaDeAviso({ marca: MARCA, idioma: "pt-BR", titulo: "T", paragrafos: [], voltar: { texto: "V", href: "/" } });
+    expect(r.headers.get("Content-Security-Policy")).toBe(
+      "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'self' https://sandbox.asaas.com https://www.asaas.com",
+    );
+  });
+
   it("AC-003.2: cor fora do formato nunca entra no CSS (cai na cor do sistema)", async () => {
     const html = await paginaDeAviso({
       marca: { nome: "M", accent: "red;}</style><script>x", accentFg: "#fff" },
