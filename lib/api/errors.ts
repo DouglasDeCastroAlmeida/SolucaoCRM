@@ -136,6 +136,14 @@ export const ApiErrorCodes = {
   // #2846: cobrança ligada, planos oferecidos e nenhum plano padrão — a empresa
   // não nasce sem plano (doc 146). Quem administra define um padrão.
   plano_obrigatorio: "plano_obrigatorio",
+  // Trial com cartão (mudança 003). PATCH /admin/brands/[id]/cobranca recusa
+  // ligar a cobrança da marca sem plano cobrável com preço (e a migration 0725
+  // levanta o mesmo nome no cadastro quando a marca já cobra sem plano); a saída
+  // é cadastrar o plano na aba Cobrança. Com `details.faltam` dizendo o quê.
+  cobranca_marca_sem_plano: "cobranca_marca_sem_plano",
+  // Mesma rota: a instalação não tem provedor com chave, ou o provedor não faz
+  // trial com cartão (só o Asaas faz). `details.faltam` igual ao de cima.
+  cobranca_provedor_indisponivel: "cobranca_provedor_indisponivel",
   // Cobrança do revendedor, PR 3a (spec §7a–§7g, §13). O provedor fora do ar é
   // 503 e o provedor que recusou é 502: a tela diz "tente de novo" num caso e
   // "confira os dados" no outro.

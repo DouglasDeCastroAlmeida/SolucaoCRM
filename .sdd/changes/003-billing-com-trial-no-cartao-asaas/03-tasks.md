@@ -27,20 +27,20 @@ Cada tarefa ocupa uma linha:
 - [x] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
 - [x] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: brands.cobranca_ligada, cobranca_planos.brand_id, cobranca_assinaturas.trial_com_cartao, CHECK de avisos ampliado, cobranca_trial_documentos, cobranca_reembolsos (~60 min) {AC-001.1, AC-002.1, AC-010.2, AC-003.5, AC-006.5} deps: T-003, T-004, T-005
 - [x] T-007 [IMPL] Ramo novo de fn_trial_na_criacao_da_org e fn_create_tenant_with_owner só para marca com cobrança ligada, com revoke de PUBLIC e anon (~60 min) {AC-001.1, AC-010.2} deps: T-006
-- [ ] T-008 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-006, T-007
+- [x] T-008 [CHECK-SMOKE] pnpm test:db verde em instalação nova e em atualização (~15 min) deps: T-006, T-007
 
 ### Fatia 3: Chave e planos por marca no painel (REQ-001, REQ-009)
-- [ ] T-009 [TEST-UNIT] Rota de liga/desliga da cobrança da marca: recusa sem plano com preço ou sem provedor, desligar não apaga assinatura, auditoria, requireSupportWrite antes do efeito (~40 min) {AC-001.3, AC-001.4, AC-001.5, AC-009.4}
-- [ ] T-010 [TEST-UNIT] Rotas e repositório dos planos cobráveis da marca: CRUD, Zod, só admin da plataforma, auditoria (~40 min) {AC-009.1, AC-009.4}
-- [ ] T-011 [IMPL] Rotas admin de cobrança da marca e planos, erros canônicos e ações de auditoria novas (~60 min) {AC-001.3, AC-001.4, AC-001.5, AC-009.1, AC-009.4} deps: T-008, T-009, T-010
-- [ ] T-012 [TEST-UI] Aba Cobrança do editor de marcas: planos, chave, mensagem do que falta para ligar (~35 min) {AC-009.1, AC-001.3}
-- [ ] T-013 [IMPL] Aba Cobrança no editor de marcas; planos da marca passam a ler e gravar cobranca_planos (ADR-002); ajustar testes e telas da SP1 que tocavam brand_plans (~60 min) {AC-009.1} deps: T-011, T-012
+- [x] T-009 [TEST-UNIT] Rota de liga/desliga da cobrança da marca: recusa sem plano com preço ou sem provedor, desligar não apaga assinatura, auditoria, requireSupportWrite antes do efeito (~40 min) {AC-001.3, AC-001.4, AC-001.5, AC-009.4}
+- [x] T-010 [TEST-UNIT] Rotas e repositório dos planos cobráveis da marca: CRUD, Zod, só admin da plataforma, auditoria (~40 min) {AC-009.1, AC-009.4}
+- [x] T-011 [IMPL] Rotas admin de cobrança da marca e planos, erros canônicos e ações de auditoria novas (~60 min) {AC-001.3, AC-001.4, AC-001.5, AC-009.1, AC-009.4} deps: T-008, T-009, T-010
+- [x] T-012 [TEST-UI] Aba Cobrança do editor de marcas: planos, chave, mensagem do que falta para ligar (~35 min) {AC-009.1, AC-001.3}
+- [x] T-013 [IMPL] Aba Cobrança no editor de marcas; planos da marca passam a ler e gravar cobranca_planos (ADR-002); ajustar testes e telas da SP1 que tocavam brand_plans (~60 min) {AC-009.1} deps: T-011, T-012
 
 ### Fatia 4: Adaptador do Asaas e hash do documento (REQ-003)
 - [ ] T-014 [TEST-CONTRACT] Adaptador iniciarTrialComCartao com fetch simulado: corpo do checkout (só cartão, 1ª cobrança em hoje+trial_dias, URLs na marca, assinatura recorrente), nenhum dado de cartão, erro do provedor sem texto livre, pedido de NFS-e (~50 min) {AC-003.1, AC-003.4, AC-008.4, AC-007.1} deps: T-002
 - [ ] T-015 [IMPL] Método no contrato e no adaptador do Asaas por /v3/checkouts, com releitura antes de criar (~60 min) {AC-003.1, AC-003.4, AC-007.1, AC-008.4} deps: T-014
-- [ ] T-016 [TEST-UNIT] Hash HMAC do CPF/CNPJ normalizado: determinístico, distinto por chave, nunca devolve o documento (~25 min) {AC-003.5, AC-003.6}
-- [ ] T-017 [IMPL] lib/billing-trial/documento-hash.ts e a chave derivada de segredo de servidor (se não houver segredo adequado, env nova em .env.example e lib/env.ts) (~35 min) {AC-003.5, AC-003.6} deps: T-016, T-008
+- [x] T-016 [TEST-UNIT] Hash HMAC do CPF/CNPJ normalizado: determinístico, distinto por chave, nunca devolve o documento (~25 min) {AC-003.5, AC-003.6}
+- [x] T-017 [IMPL] lib/billing-trial/documento-hash.ts e a chave derivada de segredo de servidor (se não houver segredo adequado, env nova em .env.example e lib/env.ts) (~35 min) {AC-003.5, AC-003.6} deps: T-016, T-008
 
 ### Fatia 5: Cadastro, Checkout e trial de 7 dias (REQ-001, REQ-003, REQ-005)
 - [ ] T-018 [TEST-UNIT] Cadastro por marca com cobrança ligada: planos da marca, organização nasce suspensa por entrada paga, marca desligada intacta, trial repetido do mesmo documento recusado na mesma marca e concedido em outra (~50 min) {AC-001.1, AC-001.2, AC-003.5, AC-003.6} deps: T-008, T-017

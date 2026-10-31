@@ -151,6 +151,37 @@ export interface AdaptadorDeCobranca {
     chaveIdempotencia: string;
   }): Promise<{ url: string; expiraEm: Date | null; assinaturaRef: string | null; sessaoId: string | null }>;
   iniciarAjusteProporcional(p: { clienteRef: string; orgId: string; plano: PlanoParaProvedor; valorCents: number; chaveIdempotencia: string; urlDeVolta: string }): Promise<{ pagamentoRef: string; url: string }>;
+  /**
+   * Trial com cartão (mudança 003): abre o Checkout HOSPEDADO do provedor, só
+   * cartão, recorrente, com a 1ª cobrança em `primeiraCobrancaEm` (data civil de
+   * São Paulo) e sem cobrança no ato. O cartão nunca passa por aqui: entra e sai
+   * só url, sessão e validade. As URLs de retorno têm de ser https. Provedor sem
+   * o método = a marca não pode ligar a cobrança. Releitura antes de criar: se o
+   * cliente já tem assinatura viva, recusa com `assinatura_ja_existe` (quem chama
+   * relê a situação em vez de abrir outro checkout).
+   *
+   * LIMITE: essa releitura NÃO protege contra clique duplo — não é atômica e, antes do
+   * pagamento, ainda não existe assinatura ACTIVE para achar. Reaproveitar o checkout vivo é
+   * do `iniciar.ts`, via `sessaoId` guardado com unicidade no banco (T-019/T-022).
+   * `clienteRef` serve só a essa releitura: o Asaas recusa `customer` no checkout de
+   * cliente sem endereço, então a org volta pela `externalReference` (= orgId).
+   */
+  iniciarTrialComCartao?(p: {
+    clienteRef: string;
+    orgId: string;
+    plano: PlanoParaProvedor;
+    primeiraCobrancaEm: Date;
+    urlDeSucesso: string;
+    urlDeCancelamento: string;
+    urlDeExpirado: string;
+    chaveIdempotencia: string;
+  }): Promise<{ url: string; sessaoId: string; expiraEm: Date | null }>;
+  /**
+   * Pede a emissão de NFS-e na confirmação de cada pagamento da assinatura. A
+   * configuração fiscal (município, alíquota) é da conta do provedor; aqui só o
+   * pedido. Melhor esforço: a falha sobe como `ErroDoProvedor` e quem chama avisa.
+   */
+  pedirNotaFiscal?(p: { assinaturaRef: string; descricao: string }): Promise<void>;
   lerPagamentoProporcional(pagamentoRef: string): Promise<"pendente" | "pago" | "encerrado">;
   lerSituacao(p: { clienteRef: string }): Promise<Situacao>;
   /** Atualiza o preço recorrente sem mudar a data de renovação. Pode recusar com ErroDoProvedor não transitório. */

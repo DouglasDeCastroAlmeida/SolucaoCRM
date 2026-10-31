@@ -5,6 +5,8 @@
  */
 import { z } from "zod";
 
+import { edicaoDoPlanoSchema, novoPlanoSchema } from "@/lib/schemas/cobranca-plano";
+
 const hexMinusculo = z.string().regex(/^#[0-9a-f]{6}$/, "Use o formato #rrggbb em minúsculas.");
 const textoCurto = z.string().trim().min(1).max(200);
 
@@ -99,3 +101,24 @@ export const EditarPacoteSchema = z
 export const TrocarMarcaDaOrganizacaoSchema = z.object({ brand_id: z.string().uuid() }).strict();
 
 export const UuidSchema = z.string().uuid();
+
+// ── Cobrança da marca (mudança 003) ─────────────────────────────────────────
+// Os planos cobráveis são os de `cobranca_planos`: a régua é a MESMA da
+// instalação (preço mínimo, intervalo, dias de teste), por isso reaproveita
+// `lib/schemas/cobranca-plano.ts`. `brand_id` nunca vem do corpo: é o do path.
+
+export const LigarCobrancaSchema = z.object({ cobranca_ligada: z.boolean() }).strict();
+
+export const CriarPlanoCobravelSchema = novoPlanoSchema;
+
+export const EditarPlanoCobravelSchema = z
+  .looseObject({ plan_id: z.string().uuid() })
+  .transform((v, ctx) => {
+    const { plan_id, ...resto } = v;
+    const r = edicaoDoPlanoSchema.safeParse(resto);
+    if (!r.success) {
+      for (const i of r.error.issues) ctx.addIssue({ code: "custom", message: i.message, path: i.path });
+      return z.NEVER;
+    }
+    return { plan_id, ...r.data };
+  });

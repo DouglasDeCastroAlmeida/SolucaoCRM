@@ -990,7 +990,7 @@ describe("cancelarNoFim e urlDeGerenciar", () => {
     expect(a.id).toBe("asaas");
     expect(Object.keys(a).sort()).toEqual(
       ["id", "testarChave", "prepararWebhook", "removerWebhooks", "clienteExiste", "verificarWebhook", "garantirCliente",
-        "iniciarAssinatura", "iniciarAjusteProporcional", "lerPagamentoProporcional", "expirarSessao", "lerSituacao", "trocarPlano", "cancelarNoFim", "urlDeGerenciar"].sort(),
+        "iniciarAssinatura", "iniciarTrialComCartao", "pedirNotaFiscal", "iniciarAjusteProporcional", "lerPagamentoProporcional", "expirarSessao", "lerSituacao", "trocarPlano", "cancelarNoFim", "urlDeGerenciar"].sort(),
     );
   });
 });

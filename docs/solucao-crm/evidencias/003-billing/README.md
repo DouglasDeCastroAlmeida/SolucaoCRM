@@ -73,3 +73,19 @@ Ao enviar o cartão na página hospedada, a chamada `POST /checkoutSession/pay` 
 - **Razão:** a sonda parcial (acima) já cobre o que a API alcança; o que falta é um passo humano. Esperar parado bloquearia fatias que não tocam o Checkout.
 - **Limite da exceção:** não vale para código que chame o Checkout (`iniciarTrialComCartao`, `/cobranca/iniciar`, `confirmar`, webhook de retorno). Essas fatias só começam depois de V-1/V-2 provados; se a prova falhar, o design volta (ADR-004, tokenização própria).
 - **Fatia 2 (migration 0725)** é a primeira feita sob esta exceção: não chama o Asaas.
+- **Nota de 30/10/2026:** o adaptador (`lib/cobranca/provedores`) foi escrito antes da prova manual de V-1 e só com `fetch` simulado. T-014 e T-015 só são marcadas concluídas depois da prova; a rota e o `confirmar` (Fatia 5) continuam bloqueados até lá.
+
+## Campos extras do checkout (30/10/2026)
+
+Rodada: `node scripts/sondas/asaas-checkout-sandbox.mjs --campos-extras` (só `api-sandbox.asaas.com`, sem pagamento). Criou um cliente fictício (CPF válido gerado, e-mail `.invalid`), tentou checkouts recorrentes de cartão (MONTHLY, `nextDueDate` hoje+7, callback https), cancelou os checkouts e apagou o cliente (conferido por listagem: 0 clientes, 0 webhooks sobrando).
+
+| Envio no `POST /v3/checkouts` | Resultado |
+|---|---|
+| `customer` + `externalReference` | **400** `invalid_object`: "O campo phone/address/addressNumber/postalCode/province/city deve existir para o customer informado" |
+| só `customer` | **400**, mesmos campos exigidos do cliente |
+| só `externalReference` | **200**; a resposta devolve a `externalReference` igual à enviada |
+| nenhum dos dois | **200**; `customer` volta `null` (preenchido na página, quando alguém paga) |
+
+Conclusões: (1) `externalReference` é aceita e devolvida: é o elo com a organização. (2) `customer` só vale para cliente com telefone e endereço completos, que não temos antes da página; **o adaptador deixou de enviar `customer`** (testes ajustados). Consequência a tratar na Fatia 5: o cliente criado na página pode não ser o `clienteRef` de `garantirCliente`; o `confirmar` deve casar pela `externalReference` (= org), não pelo cliente.
+
+**NÃO foi provado:** pagamento, cartão, redirecionamento ao callback, cobrança no ato, o webhook de volta e o corpo de `invoiceSettings`. Este último provavelmente exige mais campos (`taxes` e serviço/município municipal); conferir na documentação do Asaas quando houver conta PJ. A falha de `pedirNotaFiscal` é melhor esforço.
