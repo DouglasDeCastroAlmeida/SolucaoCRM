@@ -32,6 +32,7 @@ const MENSAGENS: Record<string, string> = {
   pedido_recusado:
     "Quem administra esta instalação não aprovou o pedido. Se você recebeu um convite, use o link que chegou no seu e-mail.",
   plano_obrigatorio: "Escolha um plano para criar a empresa.",
+  cobranca_marca_sem_plano: "Esta empresa ainda não abriu o cadastro com plano. Fale com quem te indicou o sistema.",
 };
 
 /**

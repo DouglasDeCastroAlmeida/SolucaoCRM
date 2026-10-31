@@ -64,6 +64,7 @@ export const DICIONARIO: Traducoes = {
   "Esse plano não está mais disponível. Recarregue a página e escolha outro.": { es: "Ese plan ya no está disponible. Recarga la página y elige otro." },
   "Não foi possível carregar os planos agora. Recarregue a página e escolha um plano.": { es: "No se pudieron cargar los planes ahora. Recarga la página y elige un plan." },
   "Escolha um plano para criar a empresa.": { es: "Elige un plan para crear la empresa." },
+  "Esta empresa ainda não abriu o cadastro com plano. Fale com quem te indicou o sistema.": { es: "Esta empresa aún no abrió el registro con plan. Habla con quien te recomendó el sistema." },
   "0 = entrada paga: a empresa que entra neste plano fica suspensa até o primeiro pagamento.": { es: "0 = entrada pagada: la empresa que entra en este plan queda suspendida hasta el primer pago." },
   "Nenhum plano está marcado para o cadastro. Quem se cadastra precisa escolher um plano, o “Entrar com Google” some da tela de cadastro e empresas criadas sem plano pela integração são recusadas. Use “Usar no cadastro” em um plano.": { es: "Ningún plan está marcado para el registro. Quien se registra debe elegir un plan, “Entrar con Google” desaparece de la pantalla de registro y las empresas creadas sin plan por la integración se rechazan. Usa “Usar en el registro” en un plan." },
   "Com o Google, a empresa começa no plano padrão. Para escolher outro, use e-mail e senha.": { es: "Con Google, la empresa empieza en el plan predeterminado. Para elegir otro, usa correo electrónico y contraseña." },
