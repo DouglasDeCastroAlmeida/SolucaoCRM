@@ -157,7 +157,8 @@ describe("signUp — o plano do cadastro com a cobrança ligada", () => {
       let filtradas = linhas;
       const q = {
         select: vi.fn(() => q),
-        is: vi.fn((col: keyof LinhaDePlano, v: unknown) => { filtradas = filtradas.filter((l) => l[col] === v); return q; }),
+        // As linhas deste arquivo são planos da INSTALAÇÃO: sem `brand_id` na fixture, lê-se nulo.
+        is: vi.fn((col: string, v: unknown) => { filtradas = filtradas.filter((l) => ((l as Record<string, unknown>)[col] ?? null) === v); return q; }),
         eq: vi.fn((col: keyof LinhaDePlano, v: unknown) => { filtradas = filtradas.filter((l) => l[col] === v); return q; }),
         order: vi.fn(async () => (p.erro ? { data: null, error: { code: "57014" } } : {
           data: filtradas.map(({ id }) => ({ id, nome: "Plano", preco_cents: 4990, intervalo: "mes", trial_dias: 0 })), error: null,

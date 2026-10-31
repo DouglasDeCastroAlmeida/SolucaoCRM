@@ -141,6 +141,10 @@ export const ApiErrorCodes = {
   // levanta o mesmo nome no cadastro quando a marca já cobra sem plano); a saída
   // é cadastrar o plano na aba Cobrança. Com `details.faltam` dizendo o quê.
   cobranca_marca_sem_plano: "cobranca_marca_sem_plano",
+  // Trial com cartão (mudança 003, AC-003.5): o CPF/CNPJ já usou o teste grátis
+  // nesta marca. A saída é assinar já, com a cobrança começando hoje; em OUTRA
+  // marca o mesmo documento ganha o teste (a regra é por marca, AC-003.6).
+  trial_ja_usado: "trial_ja_usado",
   // Mesma rota: a instalação não tem provedor com chave, ou o provedor não faz
   // trial com cartão (só o Asaas faz). `details.faltam` igual ao de cima.
   cobranca_provedor_indisponivel: "cobranca_provedor_indisponivel",

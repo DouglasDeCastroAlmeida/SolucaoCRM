@@ -66,6 +66,8 @@ interface PlanoLido extends PlanoParaTroca {
   arquivado_em: string | null;
   /** false = plano negociado: só o dono atribui (Task 4A), a empresa não o vê na troca. */
   oferecido_ao_cliente: boolean;
+  /** Dono do plano: nulo = a instalação; senão, a marca (ADR-002). */
+  brand_id?: string | null;
 }
 
 /**
@@ -87,7 +89,7 @@ export async function lerPainelDaAssinatura(db: SupabaseClient, orgId: string): 
   const [planos, uso, gasto, org, daInstalacao] = await Promise.all([
     db
       .from("cobranca_planos")
-      .select("id, nome, preco_cents, intervalo, max_assentos, max_canais, teto_ia_usd_cents, arquivado_em, oferecido_ao_cliente"),
+      .select("id, nome, preco_cents, intervalo, max_assentos, max_canais, teto_ia_usd_cents, arquivado_em, oferecido_ao_cliente, brand_id"),
     lerUsoDaOrganizacao(db, orgId),
     db.rpc("fn_gasto_de_ia_do_mes", { p_org: orgId }),
     db.from("organizations").select("timezone, cnpj").eq("id", orgId).maybeSingle(),
@@ -133,7 +135,8 @@ export async function lerPainelDaAssinatura(db: SupabaseClient, orgId: string): 
     },
     planosParaTroca: plano
       ? todos
-          .filter((p) => p.arquivado_em === null && p.oferecido_ao_cliente && p.intervalo === plano.intervalo && p.id !== plano.id)
+          // Só o escopo do plano atual: instalação com instalação, marca com a MESMA marca (ADR-002).
+          .filter((p) => p.arquivado_em === null && p.oferecido_ao_cliente && p.intervalo === plano.intervalo && p.id !== plano.id && (p.brand_id ?? null) === (plano.brand_id ?? null))
           .map((p) => ({ id: p.id, nome: p.nome, preco_cents: p.preco_cents, intervalo: p.intervalo,
             max_assentos: p.max_assentos, max_canais: p.max_canais, teto_ia_usd_cents: p.teto_ia_usd_cents }))
       : [],

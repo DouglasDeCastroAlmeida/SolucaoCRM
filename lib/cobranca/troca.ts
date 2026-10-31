@@ -82,6 +82,7 @@ interface Plano {
   max_canais: number | null;
   arquivado_em: string | null;
   oferecido_ao_cliente: boolean;
+  brand_id?: string | null;
 }
 
 const EM_DIVIDA: readonly EstadoDaAssinatura[] = ["em_atraso", "cancelada"];
@@ -111,7 +112,7 @@ async function limparSessaoExpirada(admin: SupabaseClient, orgId: string, sessao
 async function lerPlanoCompleto(admin: SupabaseClient, id: string): Promise<Plano | null | "erro"> {
   const { data, error } = await admin
     .from("cobranca_planos")
-    .select("id, nome, preco_cents, intervalo, max_assentos, max_canais, arquivado_em, oferecido_ao_cliente")
+    .select("id, nome, preco_cents, intervalo, max_assentos, max_canais, arquivado_em, oferecido_ao_cliente, brand_id")
     .eq("id", id)
     .maybeSingle();
   if (error) return "erro";
@@ -193,6 +194,10 @@ export async function trocarPlanoDaOrg(
   const desfazendo = novo !== null && novo.id === atual.plano_id;
   if (!novo || !antigo || (!desfazendo && (novo.arquivado_em !== null || novo.intervalo !== antigo.intervalo))) {
     return recusa(422, "plano_invalido", "Escolha um plano ativo com o mesmo intervalo de cobrança.");
+  }
+  // Instalação com instalação, marca com a MESMA marca: o plano de uma marca nunca serve a outra (ADR-002).
+  if (!desfazendo && (novo.brand_id ?? null) !== (antigo.brand_id ?? null)) {
+    return recusa(422, "plano_invalido", "Este plano não está disponível para a marca desta empresa.");
   }
   // Enquanto houver link de pagamento em aberto, o plano não muda — a menos que
   // dê para expirá-lo no provedor (#2609): aí a troca vale na hora e o link

@@ -28,7 +28,8 @@ export type RecoverOrganizationResult =
         | "provision_failed"
         | "access_revoked"
         | "pedido_recusado"
-        | "plano_obrigatorio";
+        | "plano_obrigatorio"
+        | "cobranca_marca_sem_plano";
     };
 
 /**
@@ -196,7 +197,15 @@ export async function recoverOrganization(name: string, planoId?: string): Promi
       metadata: { reason },
     });
     // A recusa do gatilho (0679) tem saída nesta mesma tela: escolher um plano.
-    return { ok: false, error: reason.includes("plano_obrigatorio") ? "plano_obrigatorio" : "provision_failed" };
+    // A da marca que cobra sem plano nenhum (0725) não tem saída na tela: quem resolve é a marca.
+    return {
+      ok: false,
+      error: reason.includes("plano_obrigatorio")
+        ? "plano_obrigatorio"
+        : reason.includes("cobranca_marca_sem_plano")
+          ? "cobranca_marca_sem_plano"
+          : "provision_failed",
+    };
   }
 
   revalidatePath("/app");

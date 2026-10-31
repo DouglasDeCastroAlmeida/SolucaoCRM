@@ -62,6 +62,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .from("cobranca_planos")
     .select("id, preco_cents, intervalo, arquivado_em")
     .eq("id", id)
+    // Plano de MARCA tem a rota própria (`/admin/brands/[id]/planos-cobranca`): aqui responde 404.
+    .is("brand_id", null)
     .maybeSingle();
   if (erroDeLeitura) return fail("internal_error", "Não foi possível ler o plano", 500, { requestId });
   const atual = lido as PlanoAtual | null;
@@ -96,6 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .from("cobranca_planos")
     .update({ ...campos, ...arquivadoEm, updated_at: agora, updated_by: adminCtx.user.id })
     .eq("id", id)
+    .is("brand_id", null)
     .select(COLUNAS_DO_PLANO)
     .single();
   if (error?.code === "23505") {

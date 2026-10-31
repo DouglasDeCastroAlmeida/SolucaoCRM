@@ -7,11 +7,12 @@ import { RequestsTable } from "@/app/app/lgpd/requests/RequestsTable";
 import { OutrasOrganizacoes } from "@/app/onboarding/_components/OutrasOrganizacoes";
 import { AcoesDaAssinatura } from "@/components/cobranca/AcoesDaAssinatura";
 import { PainelDaAssinatura } from "@/components/cobranca/PainelDaAssinatura";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { orgAtivaSemPortao, requireAuth } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { emailDeSuporte } from "@/lib/branding/saida";
+import { diaDaPrimeiraCobranca, lerPreviaDoTrial } from "@/lib/billing-trial/iniciar";
 import { lerPainelDoHub, oQueOHubMostra } from "@/lib/cobranca/hub";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -92,6 +93,9 @@ export default async function AccountSuspendedPage({
   // o painel de pagamento. Leitura do painel que falha NÃO derruba o hub: cai para "contato".
   const cobrancaLigada = administra && tipoDaAtiva === "cobranca" && (await moduloLigado(admin, "cobranca"));
   const painel = cobrancaLigada ? await lerPainelDoHub(admin, ativa.orgId) : null;
+  // Conta nova à espera do cartão do teste grátis (mudança 003): o caminho é /cobranca/iniciar.
+  // Leitura que falha não derruba o hub (Sair e a LGPD moram aqui): some o atalho e só.
+  const previaDoTrial = cobrancaLigada ? await lerPreviaDoTrial(admin, ativa.orgId).catch(() => null) : null;
   const mostra = oQueOHubMostra({ administra, tipo: tipoDaAtiva, cobrancaLigada, temAssinatura: painel?.assinatura != null });
   const suporte = administra && mostra === "contato" ? await emailDeSuporte() : "";
   const outras = user.organizations
@@ -131,6 +135,35 @@ export default async function AccountSuspendedPage({
                 "Sua conta está suspensa. Fale com quem administra este sistema para saber o motivo e como reativá-la.",
               )}
             </p>
+          )}
+          {previaDoTrial?.confirmando && (
+            <div className="space-y-2" data-testid="hub-trial-confirmando">
+              <h2 className="text-base font-semibold">{t("Confirmando seu pagamento")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.")}
+              </p>
+              {/* POST, não link: reler o Asaas é efeito, e GET é disparado por pré-carregamento. */}
+              <form method="post" action="/cobranca/iniciar">
+                <input type="hidden" name="acao" value="verificar" />
+                <Button type="submit">{t("Verificar agora")}</Button>
+              </form>
+              {previaDoTrial.confirmando.podeTentarDeNovo && (
+                <a href="/cobranca/iniciar" className="text-sm underline underline-offset-4">
+                  {t("Tentar de novo")}
+                </a>
+              )}
+            </div>
+          )}
+          {previaDoTrial && !previaDoTrial.confirmando && (
+            <div className="space-y-2" data-testid="hub-trial-com-cartao">
+              <p className="text-sm text-muted-foreground">
+                {t("Você só será cobrado em {dia}.").replace("{dia}", diaDaPrimeiraCobranca(previaDoTrial.primeiraCobrancaEm))}
+              </p>
+              {/* Link comum, não next/link: é uma rota de servidor, e prefetch não pode abrir nada. */}
+              <a href="/cobranca/iniciar" className={buttonVariants()}>
+                {t("Cadastrar cartão e começar o teste grátis")}
+              </a>
+            </div>
           )}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
             <OutrasOrganizacoes outras={outras} />

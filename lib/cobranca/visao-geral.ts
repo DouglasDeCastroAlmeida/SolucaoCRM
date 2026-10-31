@@ -83,7 +83,8 @@ export async function lerVisaoGeral(admin: SupabaseClient): Promise<DadosDaVisao
       .in("provider", ["stripe", "asaas"])
       .eq("valid_signature", false)
       .gte("received_at", desde24h),
-    admin.from("cobranca_planos").select("id").eq("padrao_no_cadastro", true).is("arquivado_em", null).limit(1).maybeSingle(),
+    // O passo "plano do cadastro" é o da INSTALAÇÃO: o padrão de uma marca não o marca.
+    admin.from("cobranca_planos").select("id").eq("padrao_no_cadastro", true).is("arquivado_em", null).is("brand_id", null).limit(1).maybeSingle(),
     emailConfigurado(),
   ]);
   if (aviso.error || conjunto.error || linhas.error || avisosComErro.error || recusados.error || planoDoCadastro.error) {

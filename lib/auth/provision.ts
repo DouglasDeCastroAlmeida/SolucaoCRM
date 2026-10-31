@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit";
+import { decidirPlanoDaMarca } from "@/lib/cobranca/cadastro";
 import { copiarPacoteParaOrganizacao } from "@/lib/brands/pacote";
 import { MARCA_PADRAO_EMBUTIDA, type Brand } from "@/lib/brands/tipos";
 import { orgPertenceAMarca } from "@/lib/brands/visao";
@@ -146,6 +147,26 @@ export async function ensureTenantForUser(
   const brandId =
     options.brand && options.brand.id !== MARCA_PADRAO_EMBUTIDA.id ? options.brand.id : null;
 
+  // Marca que COBRA (0725): o plano que chega ao gatilho é o da própria marca. Plano
+  // de outra marca (ou da instalação) na metadata cai no padrão da marca, e marca sem
+  // plano recusa aqui com o código canônico, antes de criar a organização. Marca
+  // que não cobra, ou leitura que falha: nada muda — o gatilho do banco segue sendo
+  // a autoridade, então esta checagem é só a recusa antecipada, e não fecha a porta.
+  const planoDaMetadata =
+    typeof user.user_metadata?.cobranca_plan_id === "string" ? user.user_metadata.cobranca_plan_id : undefined;
+  let planoParaOGatilho = planoDaMetadata;
+  if (brandId) {
+    const decisao = await decidirPlanoDaMarca(admin, brandId, planoDaMetadata).catch((erro: unknown) => {
+      logger.warn("signup: leitura do plano da marca falhou — o gatilho decide", {
+        brand_id: brandId,
+        detalhe: erro instanceof Error ? erro.message : String(erro),
+      });
+      return null;
+    });
+    if (decisao?.tipo === "erro") throw new Error(`signup provisioning: ${decisao.erro}`);
+    if (decisao?.tipo === "plano") planoParaOGatilho = decisao.id;
+  }
+
   // ponytail: check-then-insert tem janela de corrida se o mesmo link for
   // confirmado 2x em paralelo (pior caso: org duplicada órfã). Advisory lock
   // por user_id se isso aparecer na prática.
@@ -161,7 +182,7 @@ export async function ensureTenantForUser(
         status: "active",
         created_by: user.id,
         ...(brandId ? { brand_id: brandId } : {}),
-        ...(typeof user.user_metadata?.cobranca_plan_id === "string" ? { settings: { cobranca_signup_plan_id: user.user_metadata.cobranca_plan_id } } : {}),
+        ...(planoParaOGatilho ? { settings: { cobranca_signup_plan_id: planoParaOGatilho } } : {}),
       })
       .select("id, slug")
       .single();

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { argumentos, bancoFalso, operacao, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
+import { argumentos, bancoFalso, filtros, operacao, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
 
 const h = vi.hoisted(() => ({
   ator: "aaaaaaaa-0000-4000-8000-000000000001",
@@ -138,5 +138,24 @@ describe("PATCH /api/v1/admin/cobranca/planos/[id]", () => {
     h.escrita.mockRejectedValueOnce(new EscritaDePlatformAdminNegada("forbidden_scope", "somente leitura"));
     expect((await PATCH(...pedido({ nome: "x" }))).status).toBe(403);
     expect(updates()).toEqual([]);
+  });
+});
+
+describe("PATCH /api/v1/admin/cobranca/planos/[id] — plano de marca não é desta rota", () => {
+  it("AC-009.1: plano que pertence a marca responde 404 e nada é gravado (a leitura só enxerga brand_id nulo)", async () => {
+    m.atual = null; // o banco, com o filtro, não devolve a linha de plano de marca
+    const [req, ctx] = pedido({ nome: "Novo" });
+    const res = await PATCH(req, ctx);
+    expect(res.status).toBe(404);
+    const leitura = h.banco.cadeias.find((c) => c.tabela === "cobranca_planos")!;
+    expect(filtros(leitura)).toEqual(expect.arrayContaining([["eq", "id", ID], ["is", "brand_id", null]]));
+    expect(updates()).toHaveLength(0);
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it("AC-009.1: a escrita leva o mesmo filtro (a leitura não é a única guarda)", async () => {
+    const [req, ctx] = pedido({ nome: "Novo" });
+    expect((await PATCH(req, ctx)).status).toBe(200);
+    expect(filtros(updates()[0]!)).toEqual(expect.arrayContaining([["eq", "id", ID], ["is", "brand_id", null]]));
   });
 });
