@@ -82,7 +82,7 @@ Cada tarefa ocupa uma linha:
 - [ ] T-042 [DOCS] Runbook e roteiro do dono: conta Asaas de produção, dados fiscais com o contador, V-3, texto do arrependimento com advogado, como ligar a marca (~40 min) deps: T-040
 - [ ] T-043 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com o sandbox (~30 min) deps: T-040
 - [ ] T-044 [CHECK-SMOKE] Implantar em produção com todas as marcas desligadas e rodar a sonda (~30 min) deps: T-043, T-041
-- [ ] T-045 [REFACTOR] Limpeza com testes verdes e marcação de brand_plans como supersedida (~25 min) deps: T-044
+- [ ] T-045 [REFACTOR] Limpeza com testes verdes e marcação de brand_plans como supersedida (~25 min) PORTÃO DE RELEASE: nenhuma marca liga a cobrança em produção antes de a hml provar, com pagamento real no sandbox pela nossa rota, que o externalReference chega à assinatura e que a conta é reativada com UMA assinatura (o ligar-cobrança não consegue checar isso; ver evidencias/003-billing/README.md) deps: T-044
 
 ## Estimativa
 

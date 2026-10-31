@@ -129,3 +129,11 @@ O que a Fatia 5 faz: a tela de antes (`/cobranca/iniciar`) pede o CPF ou CNPJ qu
 **Limite que sobra:** o Checkout hospedado do Asaas pede o CPF/CNPJ de novo, na página deles, e nós não vemos o que a pessoa digita ali. Quem digitar na nossa tela um documento e na página do Asaas outro contorna a regra: o cliente criado pelo Asaas fica com um documento diferente do reservado. Também não há prova de que o documento digitado pertence a quem digita (não há consulta à Receita).
 
 **Pendência para a Fatia 11:** depois da volta do checkout, conferir o `cpfCnpj` do cliente criado pela página com o reservado; se divergir, registrar um aviso na Central da plataforma, sem cancelar nada sozinho. Também não existe ainda o caminho "assinar agora, cobrança imediata sem teste" para quem recebeu `trial_ja_usado`: hoje a mensagem só informa, e o caminho pago depende de decisão do dono.
+
+## Portão de release: externalReference
+
+**NENHUMA marca pode ter a cobrança ligada em produção antes de a Fatia 11 provar**, com pagamento real no sandbox pela nossa rota (hml), duas coisas: (1) que o `externalReference` enviado ao Checkout chega à assinatura criada pela página do Asaas; (2) que a conta é reativada com UMA assinatura só.
+
+Por quê: se o Asaas não propagar o `externalReference`, `acharAssinaturaDoCheckout` devolve nada, a volta com `ok` não liga a conta e quem clicasse de novo em "Cadastrar cartão" abriria um segundo checkout (duas assinaturas, cobrança em dobro). Hoje o código segura isso: a volta com `ok` sem assinatura achada marca a linha como "confirmando" por 24 horas (url do checkout nula, sessão guardada e validade no futuro, sem coluna nova) e `iniciar` não abre outro checkout nesse prazo; depois do prazo, só com "Tentar de novo" explícito. Isso reduz o risco, não prova o contrato.
+
+O `ligar-cobrança` (`faltasParaLigar` em `lib/brands/cobranca-repo.ts`) não consegue checar isso: é prova de ambiente, não dado do banco. O portão está escrito em T-045 de `03-tasks.md` e a execução é do dono do produto na hml.
