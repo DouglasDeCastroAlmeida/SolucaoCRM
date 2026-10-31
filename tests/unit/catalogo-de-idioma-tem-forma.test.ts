@@ -87,6 +87,14 @@ describe("todo catálogo de idioma", () => {
   });
 });
 
+/**
+ * Exceção escrita (mudança 003, AC-003.2): leitores que rodam SÓ no servidor e o texto sai como
+ * HTML pronto, então o catálogo nunca entra em pacote de navegador, que é o que esta cerca protege.
+ * `textos.ts` é importado apenas por `app/cobranca/iniciar/route.ts` (um Route Handler); a página
+ * é nova e já serve inglês. Entrada nova aqui exige a mesma prova: nenhum `"use client"` a alcança.
+ */
+const LEITORES_SO_DO_SERVIDOR = ["lib/billing-trial/textos.ts"];
+
 describe("o catálogo não viaja para o navegador antes de ser servido", () => {
   it("nenhum código de produto importa lib/i18n/traducoes", () => {
     // Um idioma em construção não é servido a ninguém. Importar o catálogo
@@ -100,7 +108,8 @@ describe("o catálogo não viaja para o navegador antes de ser servido", () => {
         if (entrada.isDirectory()) varrer(caminho);
         else if (/\.(ts|tsx|js|mjs)$/.test(entrada.name) && !/\.test\./.test(entrada.name)) {
           if (/from\s+["'][^"']*i18n\/traducoes\//.test(readFileSync(caminho, "utf8"))) {
-            importadores.push(relative(RAIZ, caminho));
+            const rel = relative(RAIZ, caminho).split("\\").join("/");
+            if (!LEITORES_SO_DO_SERVIDOR.includes(rel)) importadores.push(rel);
           }
         }
       }

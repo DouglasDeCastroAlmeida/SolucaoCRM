@@ -25,6 +25,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { createAdminClient } from "@/lib/supabase/admin";
 
 import { audit } from "@/lib/audit";
 import { lerEscopoDoCadastro, type EscopoDoCadastro } from "@/lib/cobranca/cadastro";
@@ -149,7 +150,9 @@ export async function lerPreviaDoTrial(
 }
 
 export async function iniciarTrialComCartao(
-  admin: SupabaseClient,
+  // Tipado como o cliente ADMIN de propósito: gravar o documento em `organizations` só funciona com
+  // ele (a RLS recusa o admin do tenant em silêncio), e a cerca de escrita lê o tipo.
+  admin: ReturnType<typeof createAdminClient>,
   p: {
     /** Da SESSÃO. Nunca do corpo ou da query. */
     orgId: string;

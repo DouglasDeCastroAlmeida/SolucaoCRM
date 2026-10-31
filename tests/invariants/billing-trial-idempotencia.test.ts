@@ -36,14 +36,15 @@ const orgDaMarca = (id: string) =>
  * unitário `lib/billing-trial/confirmar.test.ts` (AC-003.7) cobre a função real contra um banco
  * falso, e a corrida real com o provedor fica para a prova pela tela (Fatia 11).
  */
-const confirmacao = (org: string, assinatura: string) =>
+const confirmacao = (org: string, assinatura: string, seguraSegundos = 0) =>
   `with u as (
      update public.cobranca_assinaturas
-        set provedor = 'asaas', provedor_cliente_id = 'cus_idem', provedor_assinatura_id = '${assinatura}',
+        set provedor = 'asaas', provedor_cliente_id = 'cus_idem_${org.slice(-3)}', provedor_assinatura_id = '${assinatura}',
             pagamento_inicial_pendente = false
       where organization_id = '${org}' and pagamento_inicial_pendente = true
       returning 1)
-   select count(*) from u`;
+   ${seguraSegundos > 0 ? `, espera as (select pg_sleep(${seguraSegundos}))
+   select count(*) from u, espera` : "select count(*) from u"}`;
 
 beforeAll(() => {
   criarUsuarios([[CLIENTE, "cliente-0727@invariant.test"]]);
@@ -65,13 +66,13 @@ describe("AC-003.7 — dois retornos concorrentes confirmam uma vez", () => {
 
   it("AC-003.7: duas confirmações simultâneas gravam uma só vez e a org segue com uma única linha de assinatura", async () => {
     const [a, b] = await Promise.all([
-      // A primeira segura a transação por 2 s; a segunda chega 600 ms depois e espera a trava da linha.
-      sessao(`begin; ${confirmacao(ORG_CORRIDA, "sub_a")}; select pg_sleep(2); commit;`),
+      // A primeira segura a trava da linha por 2 s (o update e o pg_sleep são UM comando: `psql -c` só imprime o resultado do último); a segunda chega 600 ms depois e espera a trava da linha.
+      sessao(`${confirmacao(ORG_CORRIDA, "sub_a", 2)};`),
       new Promise((r) => setTimeout(r, 600)).then(() => sessao(`${confirmacao(ORG_CORRIDA, "sub_b")};`)),
     ]);
 
     expect(a.ok && b.ok).toBe(true);
-    const gravadas = [a, b].map((s) => Number(s.saida.trim().split("\n")[0]));
+    const gravadas = [a, b].map((x) => Number(x.saida.trim()));
     expect(gravadas.sort()).toEqual([0, 1]);
     expect(valor(`select count(*) from public.cobranca_assinaturas where organization_id = '${ORG_CORRIDA}';`)).toBe("1");
     expect(valor(`select provedor_assinatura_id in ('sub_a', 'sub_b') from public.cobranca_assinaturas where organization_id = '${ORG_CORRIDA}';`)).toBe("t");
