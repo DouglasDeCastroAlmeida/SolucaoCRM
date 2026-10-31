@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { bancoFalso, valorDoFiltro, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
+import { bancoFalso, filtros, valorDoFiltro, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
 
 const h = vi.hoisted(() => ({ provedor: "stripe" as string | null, lidas: [] as string[] }));
 vi.mock("@/lib/cobranca/configuracao", () => ({ provedorDaInstalacao: async () => h.provedor }));
@@ -148,5 +148,14 @@ describe("checklist com o Asaas (PR 3b)", () => {
     expect(passo(stripe, "aviso")?.href).toBeNull();
     expect(passo(stripe, "compra")?.comoFazer).toContain("4242 4242 4242 4242");
     expect(passo(stripe, "publicar")?.comoFazer).toContain("sk_live_");
+  });
+});
+
+describe("lerVisaoGeral — o plano do cadastro é o da INSTALAÇÃO", () => {
+  it("AC-001.1: a leitura do plano padrão filtra brand_id nulo, para o padrão de uma marca não marcar o passo da instalação", async () => {
+    const b = bancoFalso((c: Cadeia): Resposta => (c.tabela === "cobranca_planos" ? { data: { id: "p" } } : { data: [] }), () => ({ data: [] }));
+    await lerVisaoGeral(b.cliente as never);
+    const leitura = b.cadeias.find((c) => c.tabela === "cobranca_planos")!;
+    expect(filtros(leitura)).toContainEqual(["is", "brand_id", null]);
   });
 });

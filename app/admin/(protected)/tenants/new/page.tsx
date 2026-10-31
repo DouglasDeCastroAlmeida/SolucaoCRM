@@ -20,6 +20,8 @@ export default async function NewTenantPage() {
       .from("cobranca_planos")
       .select("id, nome, preco_cents, intervalo, trial_dias")
       .is("arquivado_em", null)
+      // O tenant nasce na instalação: plano de marca não lhe serve (ADR-002).
+      .is("brand_id", null)
       .order("nome");
     if (error) throw new Error(`planos de cobrança: leitura falhou (${error.code})`);
     planos = (data ?? []) as PlanoParaEscolher[];

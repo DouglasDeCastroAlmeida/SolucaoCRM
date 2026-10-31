@@ -49,11 +49,14 @@ interface Mundo {
   canais: number;
   escrita: Resposta | null;
   rpc: Resposta;
+  /** A linha de `brands` que o escopo do plano consulta (ausente = marca sem cobrança). */
+  marca?: Record<string, unknown> | null;
 }
 let m: Mundo;
 
 function responder(c: Cadeia): Resposta {
   if (c.tabela === "organizations") return { data: m.org };
+  if (c.tabela === "brands") return { data: m.marca ?? null };
   if (c.tabela === "cobranca_planos") return { data: PLANOS.find((p) => p.id === valorDoFiltro(c, "eq", "id")) ?? null };
   if (c.tabela === "user_organizations") return { count: m.assentos };
   if (c.tabela === "channel_sessions") return { count: m.canais };
@@ -276,5 +279,40 @@ describe("DELETE — tornar isenta (PR 2: sem lerSituacao)", () => {
     expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({
       action: "cobranca.isencao_definida", metadata: { plano_id: BASICO.id, reativada: false },
     }));
+  });
+});
+
+describe("POST — plano de marca só serve à empresa da própria marca que cobra", () => {
+  const MARCA_X = "11111111-1111-4111-8111-111111111111";
+  const MARCA_Y = "22222222-2222-4222-8222-222222222222";
+  const DA_MARCA = plano("cccccccc-0000-4000-8000-0000000000aa", { brand_id: MARCA_X });
+  PLANOS.push(DA_MARCA);
+  const recusado = async (id: string) => {
+    const res = await POST(pedido("POST", { plano_id: id }), ctx());
+    expect(res.status).toBe(422);
+    expect((await res.json()).error.code).toBe("plano_invalido");
+    expect(escritas()).toHaveLength(0);
+  };
+
+  it("AC-001.2: empresa da instalação (marca sem cobrança) não recebe plano de marca", async () => {
+    await recusado(DA_MARCA.id);
+  });
+
+  it("AC-001.2: empresa de OUTRA marca que cobra também não", async () => {
+    m.org = { ...m.org, brand_id: MARCA_Y };
+    m.marca = { id: MARCA_Y, cobranca_ligada: true };
+    await recusado(DA_MARCA.id);
+  });
+
+  it("AC-001.2: empresa de marca que cobra não recebe plano da instalação", async () => {
+    m.org = { ...m.org, brand_id: MARCA_X };
+    m.marca = { id: MARCA_X, cobranca_ligada: true };
+    await recusado(BASICO.id);
+  });
+
+  it("AC-001.2: empresa da própria marca que cobra recebe o plano da marca", async () => {
+    m.org = { ...m.org, brand_id: MARCA_X };
+    m.marca = { id: MARCA_X, cobranca_ligada: true };
+    expect((await POST(pedido("POST", { plano_id: DA_MARCA.id }), ctx())).status).toBe(201);
   });
 });

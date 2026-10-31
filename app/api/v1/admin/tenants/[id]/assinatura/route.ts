@@ -30,7 +30,7 @@ import {
   requirePlatformAdminEscrita,
   type PlatformAdminContext,
 } from "@/lib/auth/requirePlatformAdmin";
-import { lerOrgDoTenant, lerPlano, reativarSeSuspensaPorCobranca } from "@/lib/cobranca/dono";
+import { lerOrgDoTenant, lerPlano, planoServeAEmpresa, reativarSeSuspensaPorCobranca } from "@/lib/cobranca/dono";
 import { adaptador } from "@/lib/cobranca/provedores";
 import { trocarPlanoDaOrg } from "@/lib/cobranca/troca";
 import type { EstadoDaAssinatura, ProvedorDeCobranca } from "@/lib/cobranca/vocabulario";
@@ -103,6 +103,9 @@ export async function POST(req: NextRequest, rota: Rota) {
   if (!plano || plano.arquivado_em !== null) {
     return fail("plano_invalido", "Plano não encontrado ou arquivado.", 422, { requestId });
   }
+  const serve = await planoServeAEmpresa(admin, plano, org);
+  if (serve === null) return fail("internal_error", "Não foi possível ler a marca da empresa", 500, { requestId });
+  if (!serve) return fail("plano_invalido", "Este plano não é da marca desta empresa.", 422, { requestId });
 
   const { data: linha, error } = await admin
     .from("cobranca_assinaturas")
