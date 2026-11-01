@@ -1023,6 +1023,16 @@ const HOSTS_DECLARADOS: Record<string, EntradaDeHost> = {
     motivo:
       "endpoint do SANDBOX do Asaas (`lib/cobranca/provedores/asaas.ts`): a chave `$aact_hmlg_` do dono só funciona aqui, e é com ela que ele testa antes de publicar.",
   },
+  "sandbox.asaas.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "página do Checkout do Asaas (SANDBOX) para onde /cobranca/iniciar redireciona a pessoa a pagar (`lib/cobranca/provedores/asaas-origens.ts`, lido pela CSP form-action). Destino do redirecionamento, não marca.",
+  },
+  "www.asaas.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "página do Checkout do Asaas (PRODUÇÃO) para onde /cobranca/iniciar redireciona a pessoa a pagar (`lib/cobranca/provedores/asaas-origens.ts`, lido pela CSP form-action). Destino do redirecionamento, não marca.",
+  },
   "www.tiendanube.com": {
     categoria: "FORNECEDOR",
     motivo:

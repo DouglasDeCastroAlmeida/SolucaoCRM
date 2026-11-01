@@ -91,12 +91,20 @@ export default async function AccountSuspendedPage({
     (user.is_platform_admin && !user.support) || ROLE_RANK[ativa.role] >= ROLE_RANK.admin;
   // Spec da cobrança §9: suspensa POR FALTA DE PAGAMENTO + quem administra →
   // o painel de pagamento. Leitura do painel que falha NÃO derruba o hub: cai para "contato".
-  const cobrancaLigada = administra && tipoDaAtiva === "cobranca" && (await moduloLigado(admin, "cobranca"));
+  const cobrancaLigada =
+    administra && tipoDaAtiva === "cobranca" && (await moduloLigado(admin, "cobranca"));
   const painel = cobrancaLigada ? await lerPainelDoHub(admin, ativa.orgId) : null;
   // Conta nova à espera do cartão do teste grátis (mudança 003): o caminho é /cobranca/iniciar.
   // Leitura que falha não derruba o hub (Sair e a LGPD moram aqui): some o atalho e só.
-  const previaDoTrial = cobrancaLigada ? await lerPreviaDoTrial(admin, ativa.orgId).catch(() => null) : null;
-  const mostra = oQueOHubMostra({ administra, tipo: tipoDaAtiva, cobrancaLigada, temAssinatura: painel?.assinatura != null });
+  const previaDoTrial = cobrancaLigada
+    ? await lerPreviaDoTrial(admin, ativa.orgId).catch(() => null)
+    : null;
+  const mostra = oQueOHubMostra({
+    administra,
+    tipo: tipoDaAtiva,
+    cobrancaLigada,
+    temAssinatura: painel?.assinatura != null,
+  });
   const suporte = administra && mostra === "contato" ? await emailDeSuporte() : "";
   const outras = user.organizations
     .filter((o) => o.organization_id !== ativa.orgId && ehOperante(statusDe.get(o.organization_id)))
@@ -112,7 +120,9 @@ export default async function AccountSuspendedPage({
           <p className="text-base font-medium">{ativa.name}</p>
           {mostra === "pagamento" ? (
             <p className="text-sm text-muted-foreground">
-              {t("A conta foi suspensa por falta de pagamento. Assim que o pagamento for confirmado, tudo volta a funcionar na hora.")}
+              {t(
+                "A conta foi suspensa por falta de pagamento. Assim que o pagamento for confirmado, tudo volta a funcionar na hora.",
+              )}
             </p>
           ) : !administra ? (
             <p className="text-sm text-muted-foreground">
@@ -123,7 +133,7 @@ export default async function AccountSuspendedPage({
               {t("Sua conta está suspensa. Entre em contato com")}{" "}
               <a
                 href={`mailto:${suporte}`}
-                className="underline underline-offset-4 hover:text-foreground transition-colors"
+                className="underline underline-offset-4 transition-colors hover:text-foreground"
               >
                 {suporte}
               </a>{" "}
@@ -140,7 +150,9 @@ export default async function AccountSuspendedPage({
             <div className="space-y-2" data-testid="hub-trial-confirmando">
               <h2 className="text-base font-semibold">{t("Confirmando seu pagamento")}</h2>
               <p className="text-sm text-muted-foreground">
-                {t("Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.")}
+                {t(
+                  "Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.",
+                )}
               </p>
               {/* POST, não link: reler o Asaas é efeito, e GET é disparado por pré-carregamento. */}
               <form method="post" action="/cobranca/iniciar">
@@ -157,7 +169,10 @@ export default async function AccountSuspendedPage({
           {previaDoTrial && !previaDoTrial.confirmando && (
             <div className="space-y-2" data-testid="hub-trial-com-cartao">
               <p className="text-sm text-muted-foreground">
-                {t("Você só será cobrado em {dia}.").replace("{dia}", diaDaPrimeiraCobranca(previaDoTrial.primeiraCobrancaEm))}
+                {t("Você só será cobrado em {dia}.").replace(
+                  "{dia}",
+                  diaDaPrimeiraCobranca(previaDoTrial.primeiraCobrancaEm),
+                )}
               </p>
               {/* Link comum, não next/link: é uma rota de servidor, e prefetch não pode abrir nada. */}
               <a href="/cobranca/iniciar" className={buttonVariants()}>
@@ -179,25 +194,40 @@ export default async function AccountSuspendedPage({
         {mostra === "pagamento" && painel?.assinatura && (
           <section aria-label={t("Pagamento")} className="w-full max-w-xl space-y-4">
             <PainelDaAssinatura dados={painel} idioma={idioma} />
-            <AcoesDaAssinatura
-              estado={painel.assinatura.estado}
-              temProvedor={painel.assinatura.provedor !== null}
-              assinaturasVivas={painel.assinatura.assinaturas_vivas}
-              linkDePagamento={painel.assinatura.link_de_pagamento}
-              cancelaNoFim={painel.assinatura.cancela_no_fim}
-              planosParaTroca={[]}
-              planoAtual={painel.plano ? { id: painel.plano.id, nome: painel.plano.nome, preco_cents: painel.plano.preco_cents, intervalo: painel.plano.intervalo, max_assentos: painel.plano.max_assentos, max_canais: painel.plano.max_canais, teto_ia_usd_cents: painel.plano.teto_ia_usd_cents } : null}
-              periodoPagoDesde={painel.assinatura.periodo_pago_desde}
-              proximoVencimento={painel.assinatura.proximo_vencimento}
-              trocaPagamentoUrl={painel.assinatura.troca_pagamento_url}
-              trocaStatus={painel.assinatura.troca_status}
-              instanteCalculo={new Date().toISOString()}
-              provedor={painel.checkout.provedor}
-              documentoDoCadastro={painel.checkout.documentoDoCadastro}
-              fuso={painel.fuso}
-              voltouDoCheckout={voltou === "1"}
-              noHub
-            />
+            {/* Teste grátis à espera do cartão: o caminho é o do trial (acima). Assinar abriria um 2º checkout e Já paguei não tem o que reler. */}
+            {!previaDoTrial && (
+              <AcoesDaAssinatura
+                estado={painel.assinatura.estado}
+                temProvedor={painel.assinatura.provedor !== null}
+                assinaturasVivas={painel.assinatura.assinaturas_vivas}
+                linkDePagamento={painel.assinatura.link_de_pagamento}
+                cancelaNoFim={painel.assinatura.cancela_no_fim}
+                planosParaTroca={[]}
+                planoAtual={
+                  painel.plano
+                    ? {
+                        id: painel.plano.id,
+                        nome: painel.plano.nome,
+                        preco_cents: painel.plano.preco_cents,
+                        intervalo: painel.plano.intervalo,
+                        max_assentos: painel.plano.max_assentos,
+                        max_canais: painel.plano.max_canais,
+                        teto_ia_usd_cents: painel.plano.teto_ia_usd_cents,
+                      }
+                    : null
+                }
+                periodoPagoDesde={painel.assinatura.periodo_pago_desde}
+                proximoVencimento={painel.assinatura.proximo_vencimento}
+                trocaPagamentoUrl={painel.assinatura.troca_pagamento_url}
+                trocaStatus={painel.assinatura.troca_status}
+                instanteCalculo={new Date().toISOString()}
+                provedor={painel.checkout.provedor}
+                documentoDoCadastro={painel.checkout.documentoDoCadastro}
+                fuso={painel.fuso}
+                voltouDoCheckout={voltou === "1"}
+                noHub
+              />
+            )}
           </section>
         )}
         {administra && (
