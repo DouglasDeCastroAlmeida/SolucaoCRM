@@ -179,7 +179,7 @@ export const CATALOGO_DA_INSTALACAO: readonly ChaveDaInstalacao[] = [
     chave: "COBRANCA_TOLERANCIA_DIAS",
     rotulo: "Dias de tolerância antes de suspender",
     explicacao:
-      "Quantos dias depois do vencimento a empresa ainda usa o sistema antes de ser suspensa. De 5 a 30; o padrão é 7.",
+      "Quantos dias depois do vencimento a empresa ainda usa o sistema antes de ser suspensa. De 3 a 30; o padrão é 7.",
     grupo: "integracao",
     natureza: "numero",
     controle: "edita",

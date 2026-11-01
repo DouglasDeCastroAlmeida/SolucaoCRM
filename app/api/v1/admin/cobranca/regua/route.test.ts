@@ -38,7 +38,7 @@ describe("régua da cobrança", () => {
     expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "cobranca.regua_salva", metadata: { de: 7, para: 10 } }));
   });
 
-  it.each([4, 31, 7.5, "7"])("%j fora de 5 a 30 dias inteiros: 422, nada gravado", async (valor) => {
+  it.each([2, 31, 7.5, "7"])("%j fora de 3 a 30 dias inteiros: 422, nada gravado", async (valor) => {
     expect((await salvar({ tolerancia_dias: valor })).status).toBe(422);
     expect(h.gravar).not.toHaveBeenCalled();
   });

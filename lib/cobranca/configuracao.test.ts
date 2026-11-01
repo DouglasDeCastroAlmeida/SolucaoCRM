@@ -14,12 +14,14 @@ const doEnv = (valor: string) => ({ valor, fonte: "ambiente" as const });
 
 beforeEach(() => valores.clear());
 
-describe("tolerância da régua (D-5: padrão 7, de 5 a 30)", () => {
+describe("tolerância da régua (D-5/D-09: padrão 7, de 3 a 30)", () => {
   it.each([
     [undefined, 7],
     [doBanco("10"), 10],
-    [doBanco("0"), 5],
-    [doBanco("3"), 5],
+    [doBanco("0"), 3],
+    [doBanco("2"), 3],
+    [doBanco("5"), 5],
+    [doBanco("3"), 3],
     [doBanco("45"), 30],
     [doBanco("7.5"), 7],
     [doBanco("sete"), 7],

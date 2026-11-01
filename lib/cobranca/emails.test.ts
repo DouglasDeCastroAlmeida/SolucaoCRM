@@ -156,3 +156,65 @@ describe("emailDoAdminDaEmpresa (o e-mail do cliente quando o dono gera o link)"
     await expect(emailDoAdminDaEmpresa(admin, ORG)).rejects.toThrow("donos ilegíveis (57014)");
   });
 });
+
+describe("enviarAvisoAosAdmins: a marca da organização (mudança 003)", () => {
+  const MARCA = "bbbbbbbb-0000-4000-8000-0000000000b1";
+  /** admins ana; a empresa pertence à marca MARCA, com os dados que o caso pedir. */
+  const daMarca = (p: { dominios?: Array<{ host: string; kind: string }>; marca?: Record<string, unknown> | null; orgSemMarca?: boolean; leituraFalha?: boolean }) =>
+    montar((c) => {
+      if (p.leituraFalha && c.tabela !== "user_organizations") return { error: { code: "57014", message: "timeout" } };
+      if (c.tabela === "organizations") return { data: p.orgSemMarca ? { brand_id: null } : { brand_id: MARCA } };
+      if (c.tabela === "brand_domains") return { data: p.dominios ?? [] };
+      if (c.tabela === "brands") return { data: p.marca === undefined ? { sender_name: "Loja da Ana", reply_to: "ajuda@loja.exemplo" } : p.marca };
+      return { data: [{ user_id: "ana" }] };
+    });
+
+  it("AC-004.5: o botão abre no host da marca da empresa, não no da instalação", async () => {
+    const { admin } = daMarca({ dominios: [{ host: "painel.loja.exemplo", kind: "proprio" }] });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+    expect(h.enviar.mock.calls[0]?.[0].html).toContain('href="https://painel.loja.exemplo/app/settings/billing"');
+    expect(h.enviar.mock.calls[0]?.[0].html).not.toContain("crm.exemplo.com");
+  });
+
+  it("AC-004.5: domínio próprio vence o subdomínio quando a marca tem os dois", async () => {
+    const { admin } = daMarca({ dominios: [{ host: "loja.plataforma.exemplo", kind: "subdominio" }, { host: "painel.loja.exemplo", kind: "proprio" }] });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+    expect(h.enviar.mock.calls[0]?.[0].html).toContain("https://painel.loja.exemplo/");
+  });
+
+  it("AC-004.5: a consulta da marca filtra a organização e a marca de fonte confiável, nunca do texto do aviso", async () => {
+    const { admin, banco } = daMarca({ dominios: [{ host: "painel.loja.exemplo", kind: "proprio" }] });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+    expect(filtros(banco.cadeias.find((c) => c.tabela === "organizations")!)).toEqual([["eq", "id", ORG]]);
+    expect(filtros(banco.cadeias.find((c) => c.tabela === "brand_domains")!)).toContainEqual(["eq", "brand_id", MARCA]);
+  });
+
+  it("AC-004.5: o remetente e o responder-para são os da marca", async () => {
+    const { admin } = daMarca({ dominios: [{ host: "painel.loja.exemplo", kind: "proprio" }] });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+    expect(h.enviar.mock.calls[0]?.[0]).toMatchObject({ fromName: "Loja da Ana", replyTo: "ajuda@loja.exemplo" });
+  });
+
+  it("AC-004.5: marca sem remetente próprio usa o nome da marca resolvida", async () => {
+    const { admin } = daMarca({ dominios: [{ host: "painel.loja.exemplo", kind: "proprio" }], marca: { sender_name: null, reply_to: null } });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+    expect(h.enviar.mock.calls[0]?.[0].fromName).toBe("Revenda");
+    expect(h.enviar.mock.calls[0]?.[0].replyTo).toBeUndefined();
+  });
+
+  it("AC-004.5: empresa sem marca, ou marca sem domínio ativo, ou leitura da marca falhando: cai no host da instalação e o aviso sai", async () => {
+    for (const caso of [{ orgSemMarca: true }, { dominios: [] }, { leituraFalha: true }]) {
+      h.enviar.mockClear();
+      const { admin } = daMarca(caso);
+      await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "pt-BR" }, TEXTO, null);
+      expect(h.enviar.mock.calls[0]?.[0].html).toContain('href="https://crm.exemplo.com/app/settings/billing"');
+    }
+  });
+
+  it("AC-010.4: o rótulo do botão e o rodapé saem do dicionário no idioma da empresa", async () => {
+    const { admin } = daMarca({ dominios: [{ host: "painel.loja.exemplo", kind: "proprio" }] });
+    await enviarAvisoAosAdmins(admin, { id: ORG, idioma: "es" }, TEXTO, null);
+    expect(h.enviar.mock.calls[0]?.[0].html).toContain("Abrir plan y facturación");
+    expect(h.enviar.mock.calls[0]?.[0].html).toContain('lang="es"');
+  });
+});

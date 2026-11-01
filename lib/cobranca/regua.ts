@@ -11,18 +11,24 @@
  *   - teste grátis vencido sem pagamento vira dívida (não é acesso eterno), e
  *     NÃO espera a tolerância de D-5 quando não há cobrança em jogo (nenhuma
  *     assinatura viva no provedor): o limite é o aviso final + 48 h (#2753);
- *   - a tolerância nunca fica abaixo de 5 dias, digite o dono o que digitar;
+ *   - a tolerância nunca fica abaixo de 3 dias, digite o dono o que digitar, e o
+ *     trial com cartão (mudança 003) tem sempre 3, com acesso completo até lá;
+ *   - trial com cartão avisa 2 dias e 1 dia (datas civis de São Paulo) antes da
+ *     1ª cobrança, nunca a quem cancelou e nunca duas vezes o mesmo aviso;
  *   - suspensão administrativa é do dono: a régua não avisa nem reativa.
  */
 import type { AvisoDaRegua, EstadoDaAssinatura } from "@/lib/cobranca/vocabulario";
 import { ehOperante, tipoDaSuspensao } from "@/lib/organizacao/operante";
 
 /**
- * Boleto e Pix levam até 1 dia útil, e um fim de semana entra no meio (D-5).
- * O piso vale para a dívida de QUEM TEM PAGAMENTO no jogo — nunca para o trial
+ * O piso da tolerância. Desceu de 5 para 3 na mudança 003 (D-09): o valor que
+ * uma instalação já configurou (5 a 30) continua valendo, só o mínimo aceito
+ * mudou. Vale para a dívida de QUEM TEM PAGAMENTO no jogo — nunca para o trial
  * vencido, que a régua separa em `dividaDoTeste` (#2753).
  */
-export const PISO_DA_TOLERANCIA_DIAS = 5;
+export const PISO_DA_TOLERANCIA_DIAS = 3;
+/** Atraso do cartão do trial: acesso completo por 3 dias, qualquer que seja a tolerância da instalação. */
+export const TOLERANCIA_DO_CARTAO_DIAS = 3;
 
 const HORA_MS = 3_600_000;
 const DIA_MS = 24 * HORA_MS;
@@ -30,6 +36,9 @@ const JANELA_DO_AVISO_FINAL_MS = 2 * DIA_MS;
 const ESPERA_DEPOIS_DO_AVISO_FINAL_MS = 48 * HORA_MS;
 const LEITURA_FRESCA_MS = HORA_MS;
 const ANTECEDENCIA_DO_FIM_DO_TESTE_MS = 3 * DIA_MS;
+/** São Paulo não tem horário de verão desde 2019: o dia civil é o instante menos 3 h. */
+const DESLOCAMENTO_DE_SAO_PAULO_MS = 3 * HORA_MS;
+const diaCivilEmSaoPaulo = (instante: number) => Math.floor((instante - DESLOCAMENTO_DE_SAO_PAULO_MS) / DIA_MS);
 /** Suspensa e ainda devendo: um lembrete por semana, com o caminho para pagar no e-mail. */
 const LEMBRETE_DA_SUSPENSAO_MS = 7 * DIA_MS;
 
@@ -47,6 +56,8 @@ export interface AssinaturaNaRegua {
   readonly relidaEm: Date | null;
   /** Plano com entrada paga (D-16): nunca houve teste grátis, mesmo com `trial_ate` gravado na criação. */
   readonly entradaPendente: boolean;
+  /** Trial com cartão (mudança 003): a 1ª cobrança está agendada no provedor para `trialAte`. */
+  readonly trialComCartao: boolean;
 }
 
 export interface OrgNaRegua {
@@ -58,7 +69,7 @@ export interface OrgNaRegua {
  * De onde vem a dívida — muda a frase do aviso E se a tolerância de D-5 vale
  * (`dividaDoTeste` em `decidirRegua`): "teste" nunca pagou nada (#2753).
  */
-export type OrigemDaDivida = "atraso" | "teste" | "cancelamento";
+export type OrigemDaDivida = "atraso" | "teste" | "cancelamento" | "cartao";
 
 export type AcaoDaRegua =
   | { tipo: "nada" }
@@ -132,9 +143,10 @@ export function decidirRegua(
     // (D-16) grava `trial_ate` = criação sem ter havido teste.
     const dividaDoTeste =
       !a.entradaPendente &&
+      !a.trialComCartao &&
       (!a.temProvedor ||
         (a.assinaturasVivas === 0 && a.trialAte !== null && vencida !== null && vencida.getTime() === a.trialAte.getTime()));
-    const origem: OrigemDaDivida = estado === "cancelada" ? "cancelamento" : dividaDoTeste ? "teste" : "atraso";
+    const origem: OrigemDaDivida = estado === "cancelada" ? "cancelamento" : dividaDoTeste ? "teste" : a.trialComCartao ? "cartao" : "atraso";
     if (suspensaPorCobranca) {
       // Um e-mail de "suspensa" e silêncio para sempre não recupera receita: um
       // lembrete por semana. `debitoDesde` = agora − 7 d faz a função SQL aceitar
@@ -146,7 +158,8 @@ export function decidirRegua(
           : NADA,
       );
     }
-    const tolerancia = Math.max(PISO_DA_TOLERANCIA_DIAS, Math.trunc(toleranciaConfigurada)) * DIA_MS;
+    const tolerancia =
+      (a.trialComCartao ? TOLERANCIA_DO_CARTAO_DIAS : Math.max(PISO_DA_TOLERANCIA_DIAS, Math.trunc(toleranciaConfigurada))) * DIA_MS;
     const limite = Math.max(
       // A tolerância é para a dívida de quem tem pagamento no jogo; a do teste
       // vencido é zero, e `prazo_extra_ate` continua valendo para as duas.
@@ -177,6 +190,17 @@ export function decidirRegua(
   }
 
   const fimDoTeste = a.trialAte?.getTime() ?? null;
+  if (estado === "trial" && a.trialComCartao) {
+    // Quem cancelou não será cobrado: aviso de cobrança seria mentira. O aviso é
+    // por DIA CIVIL (a pessoa lê "amanhã"), e o `ultimoAviso` é o que impede a repetição.
+    if (a.cancelaNoFim || fimDoTeste === null || fimDoTeste <= t) return decisao(NADA);
+    const diasAteACobranca = diaCivilEmSaoPaulo(fimDoTeste) - diaCivilEmSaoPaulo(t);
+    const aviso: AvisoDaRegua | null =
+      diasAteACobranca === 1 ? "trial_cobra_amanha" : diasAteACobranca === 2 ? "trial_cobra_em_2_dias" : null;
+    const jaDado = a.ultimoAviso === "trial_cobra_amanha" || a.ultimoAviso === aviso;
+    if (aviso === null || jaDado) return decisao(NADA);
+    return decisao({ tipo: "avisar", aviso, debitoDesde: null, data: new Date(fimDoTeste), origem: "teste" });
+  }
   if (
     estado === "trial" &&
     a.assinaturasVivas === 0 &&

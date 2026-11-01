@@ -1,8 +1,8 @@
 /**
  * PATCH /api/v1/admin/cobranca/regua — a única escritora de
  * `COBRANCA_TOLERANCIA_DIAS` (spec da cobrança do revendedor §7g, §10, D-5).
- * De 5 a 30 dias inteiros: abaixo de 5, quem paga boleto na sexta seria
- * suspenso na segunda; a régua também tem o piso no código.
+ * De 3 a 30 dias inteiros (D-09; o piso era 5 antes da mudança 003 e os valores já
+ * gravados seguem valendo); a régua também tem o piso no código.
  */
 import { randomUUID } from "node:crypto";
 
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest) {
   if (!(await moduloLigado(createAdminClient(), "cobranca"))) return fail("not_found", "Not found", 404, { requestId });
   const corpo = corpoSchema.safeParse(await req.json().catch(() => null));
   if (!corpo.success) {
-    return fail("validation_failed", "A tolerância vai de 5 a 30 dias.", 422, { requestId, details: corpo.error.flatten() });
+    return fail("validation_failed", "A tolerância vai de 3 a 30 dias.", 422, { requestId, details: corpo.error.flatten() });
   }
   const para = corpo.data.tolerancia_dias;
   const de = await toleranciaDias();

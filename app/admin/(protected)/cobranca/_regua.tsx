@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 
-const MINIMO = 5;
+const MINIMO = 3;
 const MAXIMO = 30;
 
 /** A Régua (spec §7g, D-5): a tolerância, e a linha do tempo que a empresa vai viver com ela. */
@@ -43,7 +43,7 @@ export function ReguaDaCobranca({ tolerancia }: { tolerancia: number }) {
       <div className="space-y-1">
         <Label htmlFor="tolerancia">{t("Dias de tolerância")}</Label>
         <Input id="tolerancia" type="number" min={MINIMO} max={MAXIMO} value={dias} onChange={(e) => setDias(e.target.value)} className="w-28" />
-        <p className="text-xs text-muted-foreground">{t("De 5 a 30 dias. Abaixo de 5, quem paga boleto na sexta seria suspenso antes de o pagamento compensar.")}</p>
+        <p className="text-xs text-muted-foreground">{t("De 3 a 30 dias. Abaixo de 3, o pagamento nem teria tempo de compensar antes da suspensão.")}</p>
       </div>
       <ol className="space-y-1 text-sm">
         <li>{t("Dia 0: aviso de pagamento não identificado, com o link para pagar.")}</li>

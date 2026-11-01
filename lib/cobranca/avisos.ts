@@ -35,11 +35,17 @@ export function diaEMes(data: Date, idioma: Idioma, fuso: string | null): string
   }
 }
 
+/** "R$ 49,90" no idioma da empresa. O plano é cobrado em reais (`MOEDAS`), então a moeda não é parâmetro. */
+function valorEmReais(centavos: number, idioma: Idioma): string {
+  return new Intl.NumberFormat(idioma, { style: "currency", currency: "BRL" }).format(centavos / 100);
+}
+
 export function textoDoAviso(
   assunto: AssuntoDoAviso,
-  o: { data: Date | null; origem: OrigemDaDivida; idioma: Idioma; fuso: string | null },
+  o: { data: Date | null; origem: OrigemDaDivida; idioma: Idioma; fuso: string | null; valorCents?: number | null },
 ): TextoDoAviso {
   const t = (texto: string) => traduzir(texto, o.idioma);
+  const valor = o.valorCents == null ? null : valorEmReais(o.valorCents, o.idioma);
   const comData = (texto: string) => t(texto).replace("{data}", o.data === null ? "" : diaEMes(o.data, o.idioma, o.fuso));
   switch (assunto) {
     case "trial_acabando":
@@ -49,6 +55,13 @@ export function textoDoAviso(
         severidade: "info",
       };
     case "venceu":
+      if (o.origem === "cartao") {
+        return {
+          titulo: comData("Não conseguimos cobrar o seu cartão em {data}"),
+          corpo: t("Troque o cartão em Plano e cobrança para manter o acesso completo."),
+          severidade: "warn",
+        };
+      }
       return o.origem === "teste"
         ? {
             titulo: comData("Seu teste grátis acabou em {data}"),
@@ -68,9 +81,11 @@ export function textoDoAviso(
         corpo: t(
           o.origem === "cancelamento"
             ? "Você cancelou a assinatura. Assine de novo em Plano e cobrança para continuar usando."
-            : o.origem === "teste"
-              ? "Seu teste grátis terminou e não identificamos pagamento. Assine em Plano e cobrança até a data da suspensão para manter a conta ativa."
-              : "A suspensão acontece se o pagamento não for confirmado até lá. Pague pelo link para evitar.",
+            : o.origem === "cartao"
+              ? "A suspensão acontece se a cobrança não for paga até lá. Troque o cartão em Plano e cobrança para evitar."
+              : o.origem === "teste"
+                ? "Seu teste grátis terminou e não identificamos pagamento. Assine em Plano e cobrança até a data da suspensão para manter a conta ativa."
+                : "A suspensão acontece se o pagamento não for confirmado até lá. Pague pelo link para evitar.",
         ),
         severidade: "critical",
       };
@@ -84,17 +99,24 @@ export function textoDoAviso(
         ),
         severidade: "critical",
       };
-    // Trial com cartão (mudança 003): textos mínimos; a régua passa a emiti-los na T-025.
+    // Trial com cartão (mudança 003): a régua os emite 2 dias e 1 dia antes da 1ª cobrança.
     case "trial_cobra_em_2_dias":
       return {
         titulo: comData("Seu cartão será cobrado em 2 dias, em {data}"),
-        corpo: t("Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado."),
+        // Com o valor quando o plano é legível; sem inventar número quando não é.
+        corpo:
+          valor === null
+            ? t("Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado.")
+            : t("Valor: {valor}. Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado.").replace("{valor}", valor),
         severidade: "info",
       };
     case "trial_cobra_amanha":
       return {
         titulo: comData("Seu cartão será cobrado amanhã, {data}"),
-        corpo: t("Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado."),
+        corpo:
+          valor === null
+            ? t("Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado.")
+            : t("Valor: {valor}. Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado.").replace("{valor}", valor),
         severidade: "warn",
       };
     case "liberada":
