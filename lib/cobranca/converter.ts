@@ -71,6 +71,7 @@ export async function converterCortesia(admin: SupabaseClient, orgId: string, de
     .from("cobranca_planos")
     .select("trial_dias")
     .eq("id", planos.padraoId)
+    .eq("brand_id", escopo.brandId)
     .maybeSingle();
   if (erroDoPlano || !plano) throw new Error("cobranca: leitura do plano falhou");
 
