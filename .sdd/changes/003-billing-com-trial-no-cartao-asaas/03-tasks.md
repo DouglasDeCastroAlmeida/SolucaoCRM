@@ -50,11 +50,11 @@ Cada tarefa ocupa uma linha:
 - [x] T-022 [IMPL] lib/billing-trial/iniciar.ts, confirmar.ts, rota /cobranca/iniciar e ajuste de /cobranca/volta (~60 min) {AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4, AC-008.4} deps: T-019, T-020, T-015, T-021
 
 ### Fatia 6: Régua, avisos e estados (REQ-004, REQ-005)
-- [ ] T-023 [TEST-UNIT] Régua pura com relógio injetado: aviso 2 dias e 1 dia antes da 1ª cobrança, sem aviso se cancelou, sem duplicar, atraso com tolerância de 3 dias, suspensão com aviso final de 48 h, cancelamento no trial sem cobrança (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-005.2, AC-005.3, AC-005.5}
-- [ ] T-024 [TEST-UNIT] E-mails e avisos na Central: nome, remetente e link no host da marca, pt/en/es pelo dicionário, sem texto fixo de marca (~40 min) {AC-004.5, AC-010.4}
-- [ ] T-025 [IMPL] Avisos novos no vocabulário, régua, avisos e e-mails com host da marca; piso da tolerância de 5 para 3 sem mudar valores já configurados (~60 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-004.5, AC-005.2, AC-005.3, AC-005.5, AC-010.4} deps: T-023, T-024, T-008
-- [ ] T-026 [TEST-INT] Conta cancelada depois de pagar: acesso até o fim do período e dados mantidos 90 dias antes de anonimizar (~40 min) {AC-005.6} deps: T-008
-- [ ] T-027 [IMPL] Conferir e, se faltar, ligar o prazo de 90 dias e a anonimização da conta cancelada (~45 min) {AC-005.6} deps: T-026
+- [x] T-023 [TEST-UNIT] Régua pura com relógio injetado: aviso 2 dias e 1 dia antes da 1ª cobrança, sem aviso se cancelou, sem duplicar, atraso com tolerância de 3 dias, suspensão com aviso final de 48 h, cancelamento no trial sem cobrança (~50 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-005.2, AC-005.3, AC-005.5}
+- [x] T-024 [TEST-UNIT] E-mails e avisos na Central: nome, remetente e link no host da marca, pt/en/es pelo dicionário, sem texto fixo de marca (~40 min) {AC-004.5, AC-010.4}
+- [x] T-025 [IMPL] Avisos novos no vocabulário, régua, avisos e e-mails com host da marca; piso da tolerância de 5 para 3 sem mudar valores já configurados (~60 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-004.5, AC-005.2, AC-005.3, AC-005.5, AC-010.4} deps: T-023, T-024, T-008
+- [x] T-026 [TEST-INT] Conta cancelada depois de pagar: acesso até o fim do período e dados mantidos 90 dias antes de anonimizar (~40 min) {AC-005.6} deps: T-008
+- [x] T-027 [IMPL] Conferir e, se faltar, ligar o prazo de 90 dias e a anonimização da conta cancelada (~45 min) {AC-005.6} deps: T-026
 
 ### Fatia 7: Cortesia e conversão (REQ-002)
 - [ ] T-028 [TEST-INT] Cortesia: cron, rodada, régua e webhook não avisam, atrasam nem suspendem org sem assinatura (~40 min) {AC-002.2} deps: T-008
