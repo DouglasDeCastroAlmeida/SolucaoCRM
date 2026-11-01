@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 
 import { GET } from "./route";
 
-const VAZIA = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0 };
+const VAZIA = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0 };
 const chamar = () => GET(new NextRequest("http://localhost/api/v1/cron/cobranca"));
 
 beforeEach(() => {
@@ -40,6 +40,12 @@ describe("cron da cobrança", () => {
     await chamar();
     expect(h.audit).toHaveBeenCalledOnce();
     expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "cobranca.rodada", metadata: { ...VAZIA, relidas: 3, suspensas: 1 } }));
+  });
+
+  it("AC-005.6: rodada que só avisou a plataforma para revisar uma exclusão é rodada com efeito e audita", async () => {
+    h.rodada.mockResolvedValue({ ...VAZIA, exclusoesParaRevisar: 1 });
+    await chamar();
+    expect(h.audit).toHaveBeenCalledOnce();
   });
 
   it("rodada vazia (ou só com leituras que falharam) não audita", async () => {

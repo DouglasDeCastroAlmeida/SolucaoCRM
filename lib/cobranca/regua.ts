@@ -38,7 +38,7 @@ const LEITURA_FRESCA_MS = HORA_MS;
 const ANTECEDENCIA_DO_FIM_DO_TESTE_MS = 3 * DIA_MS;
 /** São Paulo não tem horário de verão desde 2019: o dia civil é o instante menos 3 h. */
 const DESLOCAMENTO_DE_SAO_PAULO_MS = 3 * HORA_MS;
-const diaCivilEmSaoPaulo = (instante: number) => Math.floor((instante - DESLOCAMENTO_DE_SAO_PAULO_MS) / DIA_MS);
+export const diaCivilEmSaoPaulo = (instante: number) => Math.floor((instante - DESLOCAMENTO_DE_SAO_PAULO_MS) / DIA_MS);
 /** Suspensa e ainda devendo: um lembrete por semana, com o caminho para pagar no e-mail. */
 const LEMBRETE_DA_SUSPENSAO_MS = 7 * DIA_MS;
 

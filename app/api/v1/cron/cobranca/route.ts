@@ -28,7 +28,7 @@ async function handle(req: NextRequest) {
   if (!(await moduloLigado(admin, "cobranca"))) return ok({ pulado: "modulo_desligado" }, { requestId });
 
   const resumo = await rodadaDaCobranca(admin);
-  const efeito = resumo.relidas + resumo.avisos + resumo.suspensas + resumo.reativadas + resumo.canceladas + resumo.avisosDeIa;
+  const efeito = resumo.relidas + resumo.avisos + resumo.suspensas + resumo.reativadas + resumo.canceladas + resumo.avisosDeIa + resumo.exclusoesParaRevisar;
   if (efeito > 0) {
     await audit({
       action: "cobranca.rodada",
