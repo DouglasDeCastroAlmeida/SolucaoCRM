@@ -252,7 +252,20 @@ describe("trial com cartão: avisos antes da 1ª cobrança", () => {
   });
 
   it("AC-004.1: trial com cartão nunca recebe trial_acabando (a cobrança está agendada no provedor)", () => {
-    expect(decidir(cartao({ assinaturasVivas: 0, trialAte: new Date("2026-10-12T15:00:00Z") })).acao).toMatchObject({ aviso: "trial_cobra_em_2_dias" });
+    expect(decidir(cartao({ assinaturasVivas: 0 })).acao).toMatchObject({ aviso: "trial_cobra_em_2_dias" });
+  });
+
+  it("AC-004.1: ⭐ entrada pendente (cartão ainda não informado): nenhum aviso de cobrança", () => {
+    expect(decidir(cartao({ entradaPendente: true, assinaturasVivas: 0 })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-001.4: ⭐ entrada pendente com a org suspensa por cobrança: a régua NÃO reativa (quem reativa é a confirmação do Checkout)", () => {
+    const d = decidir(cartao({ entradaPendente: true, assinaturasVivas: 0 }), SUSPENSA_POR_COBRANCA);
+    expect(d.acao).toEqual({ tipo: "nada" });
+  });
+
+  it("depois da confirmação (entrada não mais pendente) a org suspensa por cobrança é reativada", () => {
+    expect(decidir(cartao(), SUSPENSA_POR_COBRANCA).acao).toEqual({ tipo: "reativar" });
   });
 });
 
@@ -287,6 +300,21 @@ describe("cancelamento", () => {
     const cancelou = a({ estado: "trial", trialComCartao: true, cancelaNoFim: true, trialAte: em(30) });
     expect(decidir(cancelou).acao).toEqual({ tipo: "nada" });
     expect(decidir({ ...cancelou, trialAte: em(60) }).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-005.5: ⭐ cancelou pela rota real (o Asaas apaga na hora): cancelada, sem cancelaNoFim, sem vencimento; o acesso segue até o fim do teste", () => {
+    const real = a({ estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0, proximoVencimento: null, vencidaDesde: null, trialAte: em(24 * 5) });
+    const d = decidir(real);
+    expect(d.acao).toEqual({ tipo: "nada" });
+    expect(d.gravarVencidaDesde).toBeNull();
+  });
+
+  it("AC-005.5: ⭐ cancelou pela rota real e o teste acabou: a dívida começa no fim do teste, não na rodada", () => {
+    const fim = ha(24);
+    const real = a({ estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0, proximoVencimento: null, vencidaDesde: null, trialAte: fim });
+    const d = decidir(real);
+    expect(d.gravarVencidaDesde).toEqual(fim);
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", debitoDesde: fim, origem: "cancelamento" });
   });
 
   it("AC-005.5: acabado o teste de quem cancelou, vira dívida de cancelamento (acesso encerra), sem cobrança", () => {

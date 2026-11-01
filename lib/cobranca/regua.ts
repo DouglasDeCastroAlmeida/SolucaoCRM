@@ -56,7 +56,12 @@ export interface AssinaturaNaRegua {
   readonly relidaEm: Date | null;
   /** Plano com entrada paga (D-16): nunca houve teste grátis, mesmo com `trial_ate` gravado na criação. */
   readonly entradaPendente: boolean;
-  /** Trial com cartão (mudança 003): a 1ª cobrança está agendada no provedor para `trialAte`. */
+  /**
+   * Trial com cartão (mudança 003): a 1ª cobrança está agendada no provedor para `trialAte`.
+   * A flag nunca é limpa: depois da 1ª cobrança paga, atrasos futuros também usam a
+   * tolerância fixa de 3 dias e o texto "Troque o cartão", ignorando a tolerância da
+   * instalação. É intencional (ADR-005: "a assinatura trial_com_cartao nasce com 3").
+   */
   readonly trialComCartao: boolean;
 }
 
@@ -114,6 +119,23 @@ export function decidirRegua(
     estado = "em_atraso";
     vencida = a.trialAte ?? agora;
     gravar = vencida;
+  }
+
+  // Trial com cartão cujo Checkout ainda não foi confirmado: a empresa nasce suspensa
+  // por cobrança e SEM cartão. Reativar (ou avisar "será cobrado") aqui daria acesso a
+  // quem abandonou o Checkout. Quem reativa é `confirmar` (billing-trial), depois do
+  // compare-and-set em `pagamento_inicial_pendente`.
+  if (a.trialComCartao && a.entradaPendente) return decisao(NADA);
+
+  // Cancelou o trial com cartão: o Asaas apaga a assinatura na hora (cancelada, sem
+  // `cancelaNoFim`, sem vencimento). Nada foi cobrado e o acesso vai até o fim do teste;
+  // depois dele a dívida de cancelamento nasce em `trialAte`, nunca em `agora`.
+  if (estado === "cancelada" && a.trialComCartao && a.proximoVencimento === null && a.trialAte !== null) {
+    if (a.trialAte.getTime() > t) return decisao(NADA);
+    if (vencida === null) {
+      vencida = a.trialAte;
+      gravar = a.trialAte;
+    }
   }
 
   const suspensaPorCobranca = suspensao === "cobranca";
