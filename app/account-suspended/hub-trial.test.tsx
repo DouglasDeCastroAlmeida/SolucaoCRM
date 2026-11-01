@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const B = "00000000-0000-4000-8000-00000000000b";
-const cena = vi.hoisted(() => ({ idioma: "pt-BR" as "pt-BR" | "es", previa: true, confirmando: null as null | { podeTentarDeNovo: boolean } }));
+const cena = vi.hoisted(() => ({ idioma: "pt-BR" as "pt-BR" | "es", previa: true, comPainel: false, confirmando: null as null | { podeTentarDeNovo: boolean } }));
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/lib/auth/server", () => ({
@@ -25,14 +25,17 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 vi.mock("@/lib/instalacao/modulos", () => ({ moduloLigado: async () => true }));
 vi.mock("@/lib/cobranca/hub", () => ({
-  lerPainelDoHub: async () => null,
-  oQueOHubMostra: () => "contato",
+  lerPainelDoHub: async () =>
+    cena.comPainel ? { assinatura: { estado: "trial", provedor: "asaas", assinaturas_vivas: 0 }, plano: null, checkout: {}, fuso: "UTC" } : null,
+  oQueOHubMostra: () => (cena.comPainel ? "pagamento" : "contato"),
 }));
 vi.mock("@/lib/billing-trial/iniciar", () => ({
   lerPreviaDoTrial: async () =>
     cena.previa ? { planoNome: "Pro", precoCents: 4990, intervalo: "mes", primeiraCobrancaEm: new Date("2026-11-07T15:00:00Z"), precisaDeDocumento: true, confirmando: cena.confirmando } : null,
   diaDaPrimeiraCobranca: () => "07/11",
 }));
+vi.mock("@/components/cobranca/PainelDaAssinatura", () => ({ PainelDaAssinatura: () => <p /> }));
+vi.mock("@/components/cobranca/AcoesDaAssinatura", () => ({ AcoesDaAssinatura: () => <button>Assinar</button> }));
 vi.mock("@/lib/branding/saida", () => ({ emailDeSuporte: async () => "" }));
 vi.mock("@/app/actions/auth/signOut", () => ({ signOut: vi.fn() }));
 vi.mock("@/app/app/lgpd/requests/RequestsTable", () => ({ RequestsTable: () => <p /> }));
@@ -46,6 +49,7 @@ const montar = async () => render(await AccountSuspendedPage({ searchParams: Pro
 beforeEach(() => {
   cena.idioma = "pt-BR";
   cena.previa = true;
+  cena.comPainel = false;
   cena.confirmando = null;
 });
 
@@ -94,5 +98,25 @@ describe("hub: voltou do cartão e a assinatura ainda não apareceu", () => {
     await montar();
 
     expect(screen.getByRole("link", { name: "Tentar de novo" }).getAttribute("href")).toBe("/cobranca/iniciar");
+  });
+});
+
+describe("hub: os dois caminhos de pagamento não convivem", () => {
+  it("AC-003.2: com o trial à espera do cartão o Assinar do painel some e fica só o botão do trial", async () => {
+    cena.comPainel = true;
+
+    await montar();
+
+    expect(screen.getByRole("link", { name: "Cadastrar cartão e começar o teste grátis" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Assinar" })).toBeNull();
+  });
+
+  it("AC-003.2: sem trial pendente o painel de pagamento segue com as suas ações", async () => {
+    cena.comPainel = true;
+    cena.previa = false;
+
+    await montar();
+
+    expect(screen.getByRole("button", { name: "Assinar" })).toBeTruthy();
   });
 });

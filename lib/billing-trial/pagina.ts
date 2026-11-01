@@ -10,6 +10,10 @@
  */
 import type { MarcaDeSaida } from "@/lib/branding/saida";
 import { NEUTROS_DE_SAIDA } from "@/lib/branding/saida";
+import { ASAAS_ORIGENS_DO_CHECKOUT } from "@/lib/cobranca/provedores/asaas-origens";
+
+/** `form-action` = a própria página mais o Checkout do provedor: o 303 do POST também passa por ela. */
+export const CSP_DA_PAGINA = `default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'self' ${ASAAS_ORIGENS_DO_CHECKOUT.join(" ")}`;
 
 function escapar(texto: string): string {
   return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -85,8 +89,7 @@ export function paginaDeAviso(p: PaginaDeAviso): Response {
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
         // Sem script. Só o estilo da própria página (a cor da marca) vem inline.
-        "Content-Security-Policy":
-          "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+        "Content-Security-Policy": CSP_DA_PAGINA,
       },
     },
   );
