@@ -322,6 +322,22 @@ describe("cancelamento", () => {
     expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", origem: "cancelamento" });
   });
 
+  it("AC-005.6: ⭐ pagou a 1ª cobrança e cancelou (flag do cartão ainda ligada, teste já vencido): o acesso segue até o proximo_vencimento gravado", () => {
+    const pagouECancelou = a({
+      estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0,
+      trialAte: ha(24 * 20), proximoVencimento: em(24 * 10), vencidaDesde: null,
+    });
+    const d = decidir(pagouECancelou);
+    expect(d.acao).toEqual({ tipo: "nada" });
+    expect(d.gravarVencidaDesde).toBeNull();
+  });
+
+  it("AC-005.6: pagou, cancelou e o período pago acabou: a dívida conta do proximo_vencimento, não do fim do teste", () => {
+    const fim = ha(24);
+    const d = decidir(a({ estado: "cancelada", trialComCartao: true, assinaturasVivas: 0, trialAte: ha(24 * 40), proximoVencimento: fim }));
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", debitoDesde: fim, origem: "cancelamento" });
+  });
+
   it("AC-005.6: cancelada depois de pagar mantém o acesso até o fim do período pago", () => {
     expect(decidir(a({ estado: "cancelada", cancelaNoFim: true, proximoVencimento: em(24 * 5) })).acao).toEqual({ tipo: "nada" });
   });

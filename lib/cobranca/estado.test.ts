@@ -232,3 +232,15 @@ describe("aplicarLeitura — o resto da linha", () => {
     expect(aplicarLeitura(atual(), situacao(), AGORA).limparCheckout).toBe(false);
   });
 });
+
+describe("pagou e cancelou: o fim do período pago sobrevive à assinatura apagada (AC-005.6)", () => {
+  it("AC-005.6: ⭐ o Asaas apaga a assinatura (cancelada, sem vencimento): o proximo_vencimento GRAVADO na última leitura é mantido", () => {
+    const r = aplicarLeitura(
+      atual({ estado: "ativa", trialAte: ANTEONTEM, proximoVencimento: MES_QUE_VEM }),
+      situacao({ cancelada: true, jaPagou: true, proximoVencimento: null }),
+      AGORA,
+    );
+    expect(r.estado).toBe("cancelada");
+    expect(r.proximoVencimento).toEqual(MES_QUE_VEM);
+  });
+});
