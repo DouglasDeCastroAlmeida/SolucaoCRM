@@ -145,3 +145,36 @@ Conta cancelada depois de pagar: o acesso termina no fim do período pago (régu
 ## Pendência: entrada abandonada nunca expira
 
 Conta `trial_com_cartao` com entrada pendente abandonada (criou a conta, nunca informou o cartão) nunca expira: a régua não limpa nem avisa essa conta. É fail-safe, pois ela nunca ganha acesso sem cartão (a org nasce suspensa por cobrança e só a confirmação do Checkout a reativa). Tratar na Fatia 8 ou 11.
+
+## Cenário da prova do externalReference (hml)
+
+Preparado em 31/10/2026 SÓ na homologação (hml.corretora.io, imagem 868148f51). Nada em produção. Tudo marcado `[teste-003]`. Para a limpeza depois da prova, este é o inventário completo.
+
+**O que NÃO foi simulado.** A organização nasceu pelo caminho real do cadastro por marca: usuário criado e confirmado pelo GoTrue, `/login/continuar` (o mesmo botão do e-mail de confirmação) e `ensureTenantForUser` com a marca A. O gatilho `fn_trial_na_criacao_da_org` gravou a linha de `cobranca_assinaturas` (trial, `trial_com_cartao=true`, `pagamento_inicial_pendente=true`) e suspendeu a organização por cobrança. Nenhum `update` de `brand_id` nem de assinatura foi feito à mão.
+
+**O único atalho.** O e-mail de confirmação não existe (domínio `.invalid`): o link de confirmação foi gerado pela API admin do GoTrue (`generate_link`, service role da hml, só para isso), com `org_name` e `brand_id` nos metadados como o `signUp` real grava. Configuração e dados de cobrança foram escritos só pela API e pela tela do app, com a sessão de platform admin.
+
+**Inventário (o que criar/mudar e como desfazer):**
+
+| O quê | Identificação | Desfazer |
+|---|---|---|
+| Módulo "Cobrança dos seus clientes" LIGADO na instalação | `/admin/sistema` | desligar o interruptor (estava desligado) |
+| Provedor Asaas SANDBOX conectado (chave `$aact_hmlg_`, webhook criado automaticamente no Asaas) | `POST /api/v1/admin/cobranca/conexao` | reconectar com outra chave ou apagar o aviso no painel do Asaas sandbox |
+| Marca A (`marca-a`, id `c55c58d8-f74f-48bc-8147-4bb99cf93a44`) com `cobranca_ligada=true` | PATCH `/admin/brands/{id}/cobranca` | `{"cobranca_ligada": false}` |
+| Marca A com `cadastro_aberto=true` (estava `false`) | PATCH `/admin/brands/{id}` | `{"cadastro_aberto": false}` |
+| Plano `[teste-003] Plano de teste` (R$ 49,90/mês, 7 dias, padrão no cadastro), id `139983a5-c10a-44bb-8937-71a95771144e` | `/admin/brands/{id}/planos-cobranca` | arquivar (`arquivado: true`) |
+| Organização `[teste-003] Empresa Exemplo`, id `96260062-bcb0-4fb0-9a58-523768a8751f`, marca A | `organizations` | apagar a organização (ou anonimizar) depois de cancelar a assinatura no Asaas sandbox |
+| Usuário dono da organização | e-mail `dono.teste003.<timestamp>@exemplo-003.invalid` (valor só em `~/.secrets/teste-003-hml.env`) | apagar em Auth |
+| Cliente, checkout e assinatura no Asaas sandbox | `externalReference` = id da organização | cancelar/apagar no painel do sandbox |
+
+O modo de cadastro da instalação foi aberto por segundos para o passo de confirmação e VOLTOU a "somente convite" no mesmo comando (conferido relendo a tela).
+
+**Rodar a prova:**
+
+1. `node scripts/sondas/preparar-checkout-hml.mjs` refaz a abertura do checkout (login como dono pela marca A, hub, `/cobranca/iniciar`, POST) e salva a URL em `~/.secrets/teste-003-checkout-url.txt`. O checkout vale 60 minutos.
+2. O dono abre a URL no navegador e paga com cartão de teste do sandbox (o reCAPTCHA barra robôs).
+3. `node scripts/sondas/conferir-pagamento-hml.mjs` imprime PASSOU/FALHOU por item (A1 a A4 no Asaas, B1 a B4 no banco da hml).
+
+Telas nossas (e-mail e CPF mascarados): [hub de conta suspensa](evidence/003-billing/pagamento-hml/01-hub-conta-suspensa.png), [aviso e pedido do documento](evidence/003-billing/pagamento-hml/02-iniciar-aviso-e-documento.png), [documento preenchido](evidence/003-billing/pagamento-hml/03-iniciar-documento-preenchido.png) e [depois do clique](evidence/003-billing/pagamento-hml/04-iniciar-apos-clicar.png).
+
+**Achado da preparação (defeito real, fora do escopo desta preparação): o navegador não segue o redirecionamento do "Continuar para o cartão".** A página de aviso de `/cobranca/iniciar` responde com CSP `form-action 'self'` (`lib/billing-trial/pagina.ts`, linha da CSP). O Chrome aplica `form-action` também ao redirecionamento 303 do formulário para `sandbox.asaas.com`: o POST chega ao servidor (o checkout é criado), mas o navegador o bloqueia ("Sending form data ... violates ... form-action 'self'") e a pessoa fica parada na mesma tela. Evidência: [04-iniciar-apos-clicar.png](evidence/003-billing/pagamento-hml/04-iniciar-apos-clicar.png) e a linha `AVISO` do script. Quem paga hoje precisa abrir a URL do checkout por fora. O conserto provável é incluir o host do checkout do Asaas na `form-action` (ou responder com uma página/GET intermediária); fica para a Fatia 11 e para uma tarefa nova.
