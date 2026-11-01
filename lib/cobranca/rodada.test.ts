@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { bancoFalso, valorDoFiltro, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
 
 const h = vi.hoisted(() => ({ sincronizar: vi.fn(), aplicarRegua: vi.fn() }));
+const exclusao = vi.hoisted(() => ({ avisar: vi.fn() }));
+vi.mock("./exclusao-pendente", () => ({ avisarContasParaRevisarExclusao: exclusao.avisar }));
 vi.mock("./sincronizar", () => ({ sincronizar: h.sincronizar, aplicarRegua: h.aplicarRegua }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
@@ -37,6 +39,7 @@ beforeEach(() => {
   banco = bancoFalso(responder, rpc);
   h.sincronizar.mockResolvedValue({ tipo: "aplicada", estado: "ativa", mudou: false, acao: "nada" });
   h.aplicarRegua.mockResolvedValue("nada");
+  exclusao.avisar.mockResolvedValue(0);
 });
 
 const rodar = () => rodadaDaCobranca(banco.cliente as never);
@@ -71,7 +74,7 @@ describe("rodadaDaCobranca", () => {
     m.todas = ["A", "B", "C", "D"];
     h.sincronizar.mockResolvedValue({ tipo: "aplicada", estado: "em_atraso", mudou: false, acao: "suspender" });
     h.aplicarRegua.mockImplementation(async (_db: unknown, org: string) => ({ B: "avisar", C: "reativar", D: "cancelar_no_provedor" })[org] ?? "nada");
-    expect(await rodar()).toEqual({ relidas: 1, falhas: 0, avisos: 1, suspensas: 1, reativadas: 1, canceladas: 1, avisosDeIa: 0 });
+    expect(await rodar()).toEqual({ relidas: 1, falhas: 0, avisos: 1, suspensas: 1, reativadas: 1, canceladas: 1, avisosDeIa: 0, exclusoesParaRevisar: 0 });
   });
 
   it("⭐ empresa sem provedor na fila: a ação da régua que sincronizar já executou entra no resumo", async () => {
@@ -107,5 +110,22 @@ describe("rodadaDaCobranca", () => {
     expect(avisos.map((a) => a.args.p_org)).toEqual(["A"]);
     expect(String(avisos[0]?.args.p_corpo)).toContain("US$ 8.50 de US$ 10.00");
     expect(r.avisosDeIa).toBe(1);
+  });
+});
+
+describe("rodadaDaCobranca: aviso de exclusão a revisar", () => {
+  it("AC-005.6: entra no resumo, com o relógio injetado", async () => {
+    exclusao.avisar.mockResolvedValue(2);
+    const agora = () => new Date("2027-02-01T12:00:00Z");
+    const resumo = await rodadaDaCobranca(banco.cliente as never, { agora });
+    expect(resumo.exclusoesParaRevisar).toBe(2);
+    expect(exclusao.avisar).toHaveBeenCalledWith(banco.cliente, agora);
+  });
+
+  it("AC-005.6: se o aviso falhar, a rodada segue e conta a falha", async () => {
+    exclusao.avisar.mockRejectedValue(new Error("banco fora"));
+    const resumo = await rodadaDaCobranca(banco.cliente as never);
+    expect(resumo.falhas).toBe(1);
+    expect(resumo.exclusoesParaRevisar).toBe(0);
   });
 });

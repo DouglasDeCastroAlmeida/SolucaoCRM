@@ -138,6 +138,14 @@ Por quê: se o Asaas não propagar o `externalReference`, `acharAssinaturaDoChec
 
 O `ligar-cobrança` (`faltasParaLigar` em `lib/brands/cobranca-repo.ts`) não consegue checar isso: é prova de ambiente, não dado do banco. O portão está escrito em T-045 de `03-tasks.md` e a execução é do dono do produto na hml.
 
+## AC-005.6: PARCIAL (decisão do dono, Fatia 6)
+
+Conta cancelada depois de pagar: o acesso termina no fim do período pago (régua: aviso final de 48 h e suspensão por cobrança) e os dados ficam preservados, nada é apagado nem anonimizado. **Não há exclusão nem anonimização automática.** Passados 90 dias do fim do período pago (`proximo_vencimento`), ou do fim do teste para quem cancelou nele (`vencida_desde`/`trial_ate`), a plataforma recebe UM aviso, uma vez só, em Admin › Incidentes (tipo `cobranca.conta_cancelada_revisar_exclusao`, ação `revisar_exclusao`; o nome da empresa aparece só ali, para o admin da plataforma). A exclusão é decisão manual por `excluirOrganizacao` (`lib/tenants/exclusao.ts`). Código: `lib/cobranca/exclusao-pendente.ts`, chamado pela rodada horária; o dia é o civil de São Paulo. Sem coluna nova nem migration.
+
+## Pendência: entrada abandonada nunca expira
+
+Conta `trial_com_cartao` com entrada pendente abandonada (criou a conta, nunca informou o cartão) nunca expira: a régua não limpa nem avisa essa conta. É fail-safe, pois ela nunca ganha acesso sem cartão (a org nasce suspensa por cobrança e só a confirmação do Checkout a reativa). Tratar na Fatia 8 ou 11.
+
 ## Cenário da prova do externalReference (hml)
 
 Preparado em 31/10/2026 SÓ na homologação (hml.corretora.io, imagem 868148f51). Nada em produção. Tudo marcado `[teste-003]`. Para a limpeza depois da prova, este é o inventário completo.

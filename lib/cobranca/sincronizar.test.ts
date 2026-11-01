@@ -16,7 +16,7 @@ vi.mock("@/lib/cobranca/configuracao", () => ({ toleranciaDias: async () => 7 })
 
 import { ErroDoProvedor } from "@/lib/cobranca/provedores/contrato";
 
-import { sincronizar, type DependenciasDaCobranca } from "./sincronizar";
+import { aplicarRegua, sincronizar, type DependenciasDaCobranca } from "./sincronizar";
 
 const ORG = "bbbbbbbb-0000-4000-8000-000000000001";
 const AGORA = new Date("2026-10-10T12:00:00Z");
@@ -436,5 +436,50 @@ describe("sincronizar — entrada paga (plano sem dias de teste)", () => {
     expect(r).toMatchObject({ tipo: "sem_provedor" });
     expect(r).not.toMatchObject({ acao: "reativar" });
     expect(rpcs("fn_reativar_organizacao")).toEqual([]);
+  });
+});
+
+describe("aplicarRegua: trial com cartão (mudança 003)", () => {
+  const trialComCartao = (p: Record<string, unknown> = {}) => ({
+    ...LINHA, estado: "trial", trial_com_cartao: true, trial_ate: new Date(AGORA.getTime() + 48 * HORA).toISOString(), ...p,
+  });
+
+  it("AC-004.1: a 2 dias da 1ª cobrança grava o aviso e manda e-mail com o valor do plano e a data", async () => {
+    m.linha = trialComCartao();
+    expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("avisar");
+    const aviso = rpcs("fn_cobranca_registrar_aviso")[0]?.args;
+    expect(aviso).toMatchObject({ p_org: ORG, p_aviso: "trial_cobra_em_2_dias", p_desde: null, p_severidade: "info" });
+    expect(aviso?.p_titulo).toBe("Seu cartão será cobrado em 2 dias, em 12/10");
+    expect(String(aviso?.p_corpo)).toContain("R$ 49,90");
+    expect(enviarAviso).toHaveBeenCalledOnce();
+  });
+
+  it("AC-004.4: a função do banco recusou por duplicidade (aviso já gravado): não manda e-mail de novo", async () => {
+    m.linha = trialComCartao();
+    m.avisoGanho = false;
+    expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("nada");
+    expect(enviarAviso).not.toHaveBeenCalled();
+  });
+
+  it("AC-004.3: quem cancelou não recebe aviso nem e-mail", async () => {
+    m.linha = trialComCartao({ cancela_no_fim: true });
+    expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("nada");
+    expect(rpcs("fn_cobranca_registrar_aviso")).toEqual([]);
+    expect(enviarAviso).not.toHaveBeenCalled();
+  });
+
+  it("AC-004.1: sem o preço do plano legível o aviso sai mesmo assim, só com a data", async () => {
+    m.linha = trialComCartao();
+    m.plano = null;
+    expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("avisar");
+    expect(String(rpcs("fn_cobranca_registrar_aviso")[0]?.args.p_corpo)).not.toContain("R$");
+  });
+
+  it("AC-005.2: cobrança que falhou: aviso 'venceu' pelo cartão, com o texto de trocar o cartão", async () => {
+    m.linha = trialComCartao({ estado: "em_atraso", vencida_desde: ha(2), assinaturas_vivas: 1 });
+    expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("avisar");
+    const aviso = rpcs("fn_cobranca_registrar_aviso")[0]?.args;
+    expect(aviso).toMatchObject({ p_aviso: "venceu" });
+    expect(String(aviso?.p_corpo)).toContain("cartão");
   });
 });

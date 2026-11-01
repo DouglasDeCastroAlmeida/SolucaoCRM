@@ -56,7 +56,7 @@ const COLUNAS =
   "organization_id, plano_id, plano_agendado_id, estado, trial_ate, provedor, provedor_cliente_id, provedor_assinatura_id, " +
   "vencida_desde, proximo_vencimento, cancela_no_fim, prazo_extra_ate, ultimo_aviso, ultimo_aviso_em, relida_em, " +
   "link_de_pagamento, assinaturas_vivas, checkout_url, checkout_expira_em, checkout_sessao_id, periodo_pago_desde, " +
-  "plano_troca_pendente_id, troca_id, troca_status, troca_pagamento_ref, troca_reserva_ate, pagamento_inicial_pendente, updated_at";
+  "plano_troca_pendente_id, troca_id, troca_status, troca_pagamento_ref, troca_reserva_ate, pagamento_inicial_pendente, trial_com_cartao, updated_at";
 
 interface Linha {
   checkout_url: string | null;
@@ -70,6 +70,7 @@ interface Linha {
   /** Com a troca `aguardando_pagamento`: o fim do período em que o ajuste foi calculado. */
   troca_reserva_ate: string | null;
   pagamento_inicial_pendente: boolean;
+  trial_com_cartao: boolean;
   organization_id: string;
   plano_id: string;
   plano_agendado_id: string | null;
@@ -350,6 +351,13 @@ async function registrarAviso(
   return data === true;
 }
 
+/** O valor que o aviso de cobrança cita; `null` quando não dá para ler (o aviso sai só com a data). */
+async function precoDoPlano(admin: SupabaseClient, planoId: string): Promise<number | null> {
+  const { data, error } = await admin.from("cobranca_planos").select("preco_cents").eq("id", planoId).maybeSingle();
+  const preco = (data as { preco_cents?: unknown } | null)?.preco_cents;
+  return error || typeof preco !== "number" ? null : preco;
+}
+
 const mudou = (data: unknown) => (data as { changed?: unknown } | null)?.changed === true;
 
 export async function aplicarRegua(
@@ -383,6 +391,7 @@ export async function aplicarRegua(
       ultimoAvisoEm: emData(linha.ultimo_aviso_em),
       relidaEm: emData(linha.relida_em),
       entradaPendente: linha.pagamento_inicial_pendente === true,
+      trialComCartao: linha.trial_com_cartao === true,
     },
     { status: org.status, suspendedKind: org.suspended_kind },
     agora,
@@ -447,7 +456,8 @@ export async function aplicarRegua(
       return "suspender";
     }
     case "avisar": {
-      const texto = textoDoAviso(acao.aviso, { ...contexto, data: acao.data, origem: acao.origem });
+      const valorCents = acao.aviso === "trial_cobra_em_2_dias" || acao.aviso === "trial_cobra_amanha" ? await precoDoPlano(admin, linha.plano_id) : null;
+      const texto = textoDoAviso(acao.aviso, { ...contexto, data: acao.data, origem: acao.origem, valorCents });
       if (!(await registrarAviso(admin, orgId, acao.aviso, acao.debitoDesde, texto))) return "nada";
       await enviar(admin, { id: orgId, idioma }, texto, linha.link_de_pagamento);
       return "avisar";

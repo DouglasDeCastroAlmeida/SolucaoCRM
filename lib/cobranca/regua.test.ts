@@ -20,7 +20,7 @@ function a(p: Partial<AssinaturaNaRegua> = {}): AssinaturaNaRegua {
   return {
     estado: "ativa", temProvedor: true, cancelaNoFim: false, assinaturasVivas: 1, trialAte: null,
     vencidaDesde: null, proximoVencimento: null, prazoExtraAte: null, ultimoAviso: null, ultimoAvisoEm: null,
-    relidaEm: ha(0.25), entradaPendente: false, ...p,
+    relidaEm: ha(0.25), entradaPendente: false, trialComCartao: false, ...p,
   };
 }
 const decidir = (x: AssinaturaNaRegua, org: OrgNaRegua = ATIVA, tolerancia = 7) => decidirRegua(x, org, AGORA, tolerancia);
@@ -101,8 +101,13 @@ describe("a suspensão", () => {
     expect(decidir(comAvisoFinal(8, 49, { temProvedor: false, relidaEm: null })).acao.tipo).toBe("suspender");
   });
 
-  it("⭐ tolerância configurada em 0 vale 5 (piso): 4 dias de atraso não suspendem", () => {
-    expect(decidir(comAvisoFinal(4, 49), ATIVA, 0).acao).toEqual({ tipo: "nada" });
+  it("AC-005.2: ⭐ tolerância configurada em 0 vale 3 (piso): 2 dias de atraso não suspendem e 4 suspendem", () => {
+    expect(decidir(comAvisoFinal(2, 40), ATIVA, 0).acao).toEqual({ tipo: "nada" });
+    expect(decidir(comAvisoFinal(4, 49), ATIVA, 0).acao.tipo).toBe("suspender");
+  });
+
+  it("AC-005.2: valor já configurado em organização existente (5 ou 7) segue valendo: 4 dias de atraso com tolerância 5 não suspendem", () => {
+    expect(decidir(comAvisoFinal(4, 49), ATIVA, 5).acao).toEqual({ tipo: "nada" });
   });
 
   it("prazo extra até amanhã segura a suspensão", () => {
@@ -201,5 +206,146 @@ describe("o tipo da suspensão manda", () => {
     expect(decidir(a(), REDIGIDA).acao).toEqual({ tipo: "cancelar_no_provedor" });
     expect(decidir(a({ cancelaNoFim: true }), REDIGIDA).acao).toEqual({ tipo: "nada" });
     expect(decidir(a({ temProvedor: false }), REDIGIDA).acao).toEqual({ tipo: "nada" });
+  });
+});
+
+/** Trial com cartão (mudança 003): a 1ª cobrança cai em `trialAte`; datas civis de São Paulo (UTC-3). */
+describe("trial com cartão: avisos antes da 1ª cobrança", () => {
+  // AGORA = 10/10 09:00 em São Paulo. A cobrança de 12/10 (qualquer hora) está a 2 dias civis; a de 11/10, a 1.
+  const cartao = (p: Partial<AssinaturaNaRegua> = {}) =>
+    a({ estado: "trial", trialComCartao: true, assinaturasVivas: 1, trialAte: new Date("2026-10-12T15:00:00Z"), ...p });
+
+  it("AC-004.1: a 2 dias da 1ª cobrança avisa trial_cobra_em_2_dias, com a data da cobrança", () => {
+    expect(decidir(cartao()).acao).toEqual({
+      tipo: "avisar", aviso: "trial_cobra_em_2_dias", debitoDesde: null, data: new Date("2026-10-12T15:00:00Z"), origem: "teste",
+    });
+  });
+
+  it("AC-004.2: a 1 dia da 1ª cobrança avisa trial_cobra_amanha, com a data da cobrança", () => {
+    const d = decidir(cartao({ trialAte: new Date("2026-10-11T15:00:00Z"), ultimoAviso: "trial_cobra_em_2_dias", ultimoAvisoEm: ha(24) }));
+    expect(d.acao).toEqual({
+      tipo: "avisar", aviso: "trial_cobra_amanha", debitoDesde: null, data: new Date("2026-10-11T15:00:00Z"), origem: "teste",
+    });
+  });
+
+  it("AC-004.1: o dia civil é o de São Paulo, não o de UTC: 02:00 UTC de 13/10 ainda é 12/10 (2 dias civis)", () => {
+    expect(decidir(cartao({ trialAte: new Date("2026-10-13T02:00:00Z") })).acao).toMatchObject({ aviso: "trial_cobra_em_2_dias" });
+  });
+
+  it("AC-004.1: com mais de 2 dias para a cobrança ainda não avisa", () => {
+    expect(decidir(cartao({ trialAte: new Date("2026-10-13T15:00:00Z") })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-004.3: quem cancelou antes do dia do aviso não recebe nenhum dos dois", () => {
+    expect(decidir(cartao({ cancelaNoFim: true })).acao).toEqual({ tipo: "nada" });
+    expect(decidir(cartao({ cancelaNoFim: true, trialAte: new Date("2026-10-11T15:00:00Z") })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-004.4: aviso já dado não se repete na rodada seguinte", () => {
+    expect(decidir(cartao({ ultimoAviso: "trial_cobra_em_2_dias", ultimoAvisoEm: ha(1) })).acao).toEqual({ tipo: "nada" });
+    const amanha = cartao({ trialAte: new Date("2026-10-11T15:00:00Z"), ultimoAviso: "trial_cobra_amanha", ultimoAvisoEm: ha(1) });
+    expect(decidir(amanha).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-004.1: o aviso de 2 dias é só do trial com cartão: o teste antigo (sem trialComCartao) não recebe", () => {
+    expect(decidir(cartao({ trialComCartao: false })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-004.1: trial com cartão nunca recebe trial_acabando (a cobrança está agendada no provedor)", () => {
+    expect(decidir(cartao({ assinaturasVivas: 0 })).acao).toMatchObject({ aviso: "trial_cobra_em_2_dias" });
+  });
+
+  it("AC-004.1: ⭐ entrada pendente (cartão ainda não informado): nenhum aviso de cobrança", () => {
+    expect(decidir(cartao({ entradaPendente: true, assinaturasVivas: 0 })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-001.4: ⭐ entrada pendente com a org suspensa por cobrança: a régua NÃO reativa (quem reativa é a confirmação do Checkout)", () => {
+    const d = decidir(cartao({ entradaPendente: true, assinaturasVivas: 0 }), SUSPENSA_POR_COBRANCA);
+    expect(d.acao).toEqual({ tipo: "nada" });
+  });
+
+  it("depois da confirmação (entrada não mais pendente) a org suspensa por cobrança é reativada", () => {
+    expect(decidir(cartao(), SUSPENSA_POR_COBRANCA).acao).toEqual({ tipo: "reativar" });
+  });
+});
+
+describe("trial com cartão: atraso e suspensão", () => {
+  const atrasada = (dias: number, p: Partial<AssinaturaNaRegua> = {}) =>
+    a({ estado: "em_atraso", trialComCartao: true, vencidaDesde: ha(dias * 24), trialAte: ha(dias * 24), assinaturasVivas: 0, ...p });
+
+  it("AC-005.2: cobrança que falhou avisa 'venceu' pelo cartão, com acesso mantido", () => {
+    expect(decidir(atrasada(0.1), ATIVA, 7).acao).toMatchObject({ tipo: "avisar", aviso: "venceu", origem: "cartao" });
+  });
+
+  it("AC-005.2: a tolerância do cartão é de 3 dias mesmo com 30 configurados, e nada de tolerância zero do teste", () => {
+    const d = decidir(atrasada(1, { ultimoAviso: "venceu", ultimoAvisoEm: ha(24) }), ATIVA, 30);
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", origem: "cartao" });
+  });
+
+  it("AC-005.3: aos 3 dias, com o aviso final dado há 48 h ou mais, suspende", () => {
+    expect(decidir(atrasada(3.1, { ultimoAviso: "suspende_em_breve", ultimoAvisoEm: ha(49) }), ATIVA, 30).acao).toMatchObject({ tipo: "suspender", origem: "cartao" });
+  });
+
+  it("AC-005.3: aos 3 dias sem aviso final gravado há 48 h, ainda não suspende", () => {
+    expect(decidir(atrasada(3.1, { ultimoAviso: "suspende_em_breve", ultimoAvisoEm: ha(47) }), ATIVA, 30).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-005.3: antes dos 3 dias não suspende nem com aviso final antigo", () => {
+    expect(decidir(atrasada(2, { ultimoAviso: "suspende_em_breve", ultimoAvisoEm: ha(40) }), ATIVA, 30).acao).toEqual({ tipo: "nada" });
+  });
+});
+
+describe("cancelamento", () => {
+  it("AC-005.5: cancelou durante o trial: segue sem aviso nem cobrança até o fim do teste", () => {
+    const cancelou = a({ estado: "trial", trialComCartao: true, cancelaNoFim: true, trialAte: em(30) });
+    expect(decidir(cancelou).acao).toEqual({ tipo: "nada" });
+    expect(decidir({ ...cancelou, trialAte: em(60) }).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-005.5: ⭐ cancelou pela rota real (o Asaas apaga na hora): cancelada, sem cancelaNoFim, sem vencimento; o acesso segue até o fim do teste", () => {
+    const real = a({ estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0, proximoVencimento: null, vencidaDesde: null, trialAte: em(24 * 5) });
+    const d = decidir(real);
+    expect(d.acao).toEqual({ tipo: "nada" });
+    expect(d.gravarVencidaDesde).toBeNull();
+  });
+
+  it("AC-005.5: ⭐ cancelou pela rota real e o teste acabou: a dívida começa no fim do teste, não na rodada", () => {
+    const fim = ha(24);
+    const real = a({ estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0, proximoVencimento: null, vencidaDesde: null, trialAte: fim });
+    const d = decidir(real);
+    expect(d.gravarVencidaDesde).toEqual(fim);
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", debitoDesde: fim, origem: "cancelamento" });
+  });
+
+  it("AC-005.5: acabado o teste de quem cancelou, vira dívida de cancelamento (acesso encerra), sem cobrança", () => {
+    const d = decidir(a({ estado: "cancelada", trialComCartao: true, cancelaNoFim: true, proximoVencimento: null, vencidaDesde: ha(1) }));
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", origem: "cancelamento" });
+  });
+
+  it("AC-005.6: ⭐ pagou a 1ª cobrança e cancelou (flag do cartão ainda ligada, teste já vencido): o acesso segue até o proximo_vencimento gravado", () => {
+    const pagouECancelou = a({
+      estado: "cancelada", trialComCartao: true, cancelaNoFim: false, assinaturasVivas: 0,
+      trialAte: ha(24 * 20), proximoVencimento: em(24 * 10), vencidaDesde: null,
+    });
+    const d = decidir(pagouECancelou);
+    expect(d.acao).toEqual({ tipo: "nada" });
+    expect(d.gravarVencidaDesde).toBeNull();
+  });
+
+  it("AC-005.6: pagou, cancelou e o período pago acabou: a dívida conta do proximo_vencimento, não do fim do teste", () => {
+    const fim = ha(24);
+    const d = decidir(a({ estado: "cancelada", trialComCartao: true, assinaturasVivas: 0, trialAte: ha(24 * 40), proximoVencimento: fim }));
+    expect(d.acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", debitoDesde: fim, origem: "cancelamento" });
+  });
+
+  it("AC-005.6: cancelada depois de pagar mantém o acesso até o fim do período pago", () => {
+    expect(decidir(a({ estado: "cancelada", cancelaNoFim: true, proximoVencimento: em(24 * 5) })).acao).toEqual({ tipo: "nada" });
+  });
+
+  it("AC-005.6: vencido o período pago, a conta cancelada recebe o aviso final e depois é suspensa", () => {
+    const vencida = { estado: "cancelada" as const, proximoVencimento: ha(1) };
+    expect(decidir(a(vencida)).acao).toMatchObject({ tipo: "avisar", aviso: "suspende_em_breve", origem: "cancelamento" });
+    const comAviso = a({ ...vencida, proximoVencimento: ha(60), ultimoAviso: "suspende_em_breve", ultimoAvisoEm: ha(49) });
+    expect(decidir(comAviso).acao.tipo).toBe("suspender");
   });
 });

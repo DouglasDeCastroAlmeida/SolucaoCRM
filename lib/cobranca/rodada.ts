@@ -14,6 +14,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { avisarContasParaRevisarExclusao } from "@/lib/cobranca/exclusao-pendente";
 import type { AcaoDaRegua } from "@/lib/cobranca/regua";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { normalizarIdioma, type Idioma } from "@/lib/i18n/idiomas";
@@ -30,6 +31,8 @@ export interface ResumoDaRodada {
   reativadas: number;
   canceladas: number;
   avisosDeIa: number;
+  /** Contas canceladas há 90 dias que a plataforma foi avisada para revisar a exclusão (AC-005.6). */
+  exclusoesParaRevisar: number;
 }
 
 export const LIMITE_DA_RECONCILIACAO = 50;
@@ -44,7 +47,7 @@ interface Reconciliavel {
 const instante = (v: string | null) => (v === null ? Number.MIN_SAFE_INTEGER : Date.parse(v));
 
 export async function rodadaDaCobranca(admin: SupabaseClient, deps: DependenciasDaCobranca = {}): Promise<ResumoDaRodada> {
-  const resumo: ResumoDaRodada = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0 };
+  const resumo: ResumoDaRodada = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0 };
   const contar = (acao: AcaoDaRegua["tipo"]) => {
     if (acao === "avisar") resumo.avisos += 1;
     else if (acao === "suspender") resumo.suspensas += 1;
@@ -95,6 +98,11 @@ export async function rodadaDaCobranca(admin: SupabaseClient, deps: Dependencias
   }
 
   resumo.avisosDeIa = await avisarTetoDeIa(admin);
+  try {
+    resumo.exclusoesParaRevisar = await avisarContasParaRevisarExclusao(admin, deps.agora);
+  } catch (e) {
+    falhou("plataforma", e);
+  }
   return resumo;
 }
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_APP_NAME } from "@/lib/branding";
+
 import { diaEMes, textoDoAviso } from "./avisos";
 
 /**
@@ -63,5 +65,48 @@ describe("textoDoAviso", () => {
 
   it("fala espanhol", () => {
     expect(textoDoAviso("venceu", { ...base, origem: "atraso", idioma: "es" }).titulo).toBe("No identificamos el pago del 05/10");
+  });
+});
+
+describe("textoDoAviso: trial com cartão (mudança 003)", () => {
+  const base = { data: MEIA_NOITE_E_MEIA_UTC, idioma: "pt-BR" as const, fuso: SP, origem: "teste" as const };
+
+  it("AC-004.1: 2 dias antes: título com a data e corpo com o valor e como cancelar", () => {
+    const t = textoDoAviso("trial_cobra_em_2_dias", { ...base, valorCents: 4990 });
+    expect(t.titulo).toBe("Seu cartão será cobrado em 2 dias, em 05/10");
+    expect(t.corpo).toBe("Valor: R$ 49,90. Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado.");
+    expect(t.severidade).toBe("info");
+  });
+
+  it("AC-004.2: 1 dia antes: título com a data e corpo com o valor", () => {
+    const t = textoDoAviso("trial_cobra_amanha", { ...base, valorCents: 4990 });
+    expect(t.titulo).toBe("Seu cartão será cobrado amanhã, 05/10");
+    expect(t.corpo).toContain("Valor: R$ 49,90.");
+    expect(t.severidade).toBe("warn");
+  });
+
+  it("AC-004.1: sem valor conhecido, o corpo não inventa número", () => {
+    expect(textoDoAviso("trial_cobra_em_2_dias", { ...base, valorCents: null }).corpo).not.toContain("Valor");
+  });
+
+  it("AC-010.4: em espanhol sai pelo dicionário, com o valor", () => {
+    const t = textoDoAviso("trial_cobra_amanha", { ...base, idioma: "es", valorCents: 4990 });
+    expect(t.titulo).toBe("Tu tarjeta será cobrada mañana, 05/10");
+    expect(t.corpo).toMatch(/^Valor: /);
+    expect(t.corpo).toContain("cancela hoy");
+  });
+
+  it("AC-005.2: cobrança do cartão que falhou pede para trocar o cartão (aviso, aviso final e suspensão)", () => {
+    expect(textoDoAviso("venceu", { ...base, origem: "cartao" }).corpo).toContain("Troque o cartão");
+    expect(textoDoAviso("suspende_em_breve", { ...base, origem: "cartao" }).corpo).toContain("Troque o cartão");
+    expect(textoDoAviso("suspensa", { ...base, origem: "cartao" }).titulo).toBe("Conta suspensa por falta de pagamento");
+  });
+
+  it("AC-010.4: nenhum texto leva nome de marca nem cor fixos", () => {
+    for (const assunto of ["trial_cobra_em_2_dias", "trial_cobra_amanha", "venceu", "suspende_em_breve", "suspensa"] as const) {
+      const t = textoDoAviso(assunto, { ...base, origem: "cartao", valorCents: 100 });
+      expect(`${t.titulo} ${t.corpo}`).not.toMatch(/#[0-9a-f]{3,8}/i);
+      expect(`${t.titulo} ${t.corpo}`).not.toContain(DEFAULT_APP_NAME);
+    }
   });
 });

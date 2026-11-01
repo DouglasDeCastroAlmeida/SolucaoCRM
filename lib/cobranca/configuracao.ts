@@ -12,9 +12,9 @@
 import { PROVEDORES_DE_COBRANCA, type ProvedorDeCobranca } from "@/lib/cobranca/vocabulario";
 import { valorDaInstalacao, type ValorDaInstalacao } from "@/lib/instalacao/config";
 
-/** D-5: 7 dias por padrão, ajustável de 5 a 30. O piso mora aqui também (boleto + fim de semana). */
+/** D-5/D-09: 7 dias por padrão, ajustável de 3 a 30. O piso mora aqui também; valores já gravados (5 a 30) seguem valendo. */
 export const TOLERANCIA_PADRAO_DIAS = 7;
-export const TOLERANCIA_MINIMA_DIAS = 5;
+export const TOLERANCIA_MINIMA_DIAS = 3;
 export const TOLERANCIA_MAXIMA_DIAS = 30;
 
 function doBanco(v: ValorDaInstalacao): string | null {

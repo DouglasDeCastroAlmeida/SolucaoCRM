@@ -80,14 +80,54 @@ export async function emailDoAdminDaEmpresa(admin: SupabaseClient, orgId: string
   return (await emailsDosAdmins(admin, orgId, { semProvisorio: true, exceto: donos, estrito: true }))[0] ?? null;
 }
 
+interface EnderecoDaMarca {
+  /** Origem (https://host) onde a empresa abre o painel; a da instalação quando a marca não tem domínio ativo. */
+  readonly base: string;
+  readonly remetente: string | null;
+  readonly responderPara: string | null;
+}
+
+/**
+ * O host, o remetente e o responder-para da MARCA da empresa (AC-004.5). Marca é
+ * dado global, mas quem a escolhe é `organizations.brand_id`, lido aqui pelo id
+ * da empresa que a régua já resolveu — nunca do texto do aviso. Melhor esforço:
+ * qualquer falha cai na origem da instalação, porque o aviso tem de sair.
+ * Domínio próprio vence o subdomínio da plataforma.
+ */
+async function enderecoDaMarca(admin: SupabaseClient, orgId: string): Promise<EnderecoDaMarca> {
+  const daInstalacao: EnderecoDaMarca = { base: base(), remetente: null, responderPara: null };
+  try {
+    const org = await admin.from("organizations").select("brand_id").eq("id", orgId).maybeSingle();
+    const brandId = (org.data as { brand_id?: unknown } | null)?.brand_id;
+    if (org.error || typeof brandId !== "string") return daInstalacao;
+    const [dominios, marca] = await Promise.all([
+      admin.from("brand_domains").select("host, kind").eq("brand_id", brandId).eq("status", "active"),
+      admin.from("brands").select("sender_name, reply_to").eq("id", brandId).eq("status", "active").maybeSingle(),
+    ]);
+    if (marca.error || !marca.data) return daInstalacao;
+    const lista = Array.isArray(dominios.data) ? (dominios.data as Array<{ host?: unknown; kind?: unknown }>) : [];
+    const hosts = lista.filter((d): d is { host: string; kind: string } => typeof d.host === "string" && d.host !== "");
+    const host = (hosts.find((d) => d.kind === "proprio") ?? hosts[0])?.host;
+    const dados = marca.data as { sender_name?: string | null; reply_to?: string | null };
+    return {
+      base: host ? `https://${host}` : daInstalacao.base,
+      remetente: dados.sender_name?.trim() || null,
+      responderPara: dados.reply_to?.trim() || null,
+    };
+  } catch {
+    return daInstalacao;
+  }
+}
+
 async function enviarParaCada(
   para: readonly string[],
   email: { subject: string; html: string; text: string },
   fromName: string,
   contexto: Record<string, unknown>,
+  replyTo?: string | null,
 ): Promise<void> {
   for (const to of para) {
-    const r = await sendEmail({ to, subject: email.subject, html: email.html, text: email.text, fromName, tags: [{ name: "tipo", value: "cobranca" }] });
+    const r = await sendEmail({ to, subject: email.subject, html: email.html, text: email.text, fromName, ...(replyTo ? { replyTo } : {}), tags: [{ name: "tipo", value: "cobranca" }] });
     if (!r.ok) logger.warn("cobranca.email_nao_saiu", { ...contexto, erro: r.error ?? "desconhecido", via: r.via ?? null });
   }
 }
@@ -103,6 +143,7 @@ export async function enviarAvisoAosAdmins(
     if (para.length === 0) return;
     const t = (s: string) => traduzir(s, org.idioma);
     const marca = await marcaDaSaida(org.id);
+    const destino = await enderecoDaMarca(admin, org.id);
     const email = buildEmailDaCobranca({
       titulo: texto.titulo,
       corpo: texto.corpo,
@@ -110,10 +151,10 @@ export async function enviarAvisoAosAdmins(
       idioma: org.idioma,
       botao: linkDePagamento
         ? { rotulo: t("Pagar agora"), href: linkDePagamento }
-        : { rotulo: t("Abrir plano e cobrança"), href: `${base()}/app/settings/billing` },
+        : { rotulo: t("Abrir plano e cobrança"), href: `${destino.base}/app/settings/billing` },
       rodape: t("Você recebe este aviso porque administra esta empresa."),
     });
-    await enviarParaCada(para, email, marca.nome, { organization_id: org.id });
+    await enviarParaCada(para, email, destino.remetente ?? marca.nome, { organization_id: org.id }, destino.responderPara);
   } catch (e) {
     logger.warn("cobranca.email_nao_saiu", { organization_id: org.id, erro: e instanceof Error ? e.message : "desconhecido" });
   }
