@@ -4,7 +4,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { argumentos, bancoFalso, operacao, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
+import { argumentos, bancoFalso, filtros, operacao, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
 
 const h = vi.hoisted(() => ({ cobra: true as boolean, padrao: "plano-1" as string | null }));
 vi.mock("@/lib/cobranca/cadastro", () => ({
@@ -22,7 +22,8 @@ interface Mundo {
   org: Record<string, unknown> | null;
   linha: Record<string, unknown> | null;
   insercao: { code: string; message: string } | null;
-  suspensao: { changed: boolean } | null;
+  suspensao: { changed: boolean; motivo?: string } | null;
+  erroRpc: { code: string; message: string } | null;
 }
 let m: Mundo;
 let banco: BancoFalso;
@@ -40,8 +41,8 @@ function responder(c: Cadeia): Resposta {
 beforeEach(() => {
   h.cobra = true;
   h.padrao = "plano-1";
-  m = { org: { id: ORG, brand_id: MARCA }, linha: null, insercao: null, suspensao: { changed: true } };
-  banco = bancoFalso(responder, () => ({ data: m.suspensao }));
+  m = { org: { id: ORG, brand_id: MARCA }, linha: null, insercao: null, suspensao: { changed: true }, erroRpc: null };
+  banco = bancoFalso(responder, () => (m.erroRpc ? { error: m.erroRpc } : { data: m.suspensao }));
 });
 
 const converter = () => converterCortesia(banco.cliente as never, ORG, { agora: () => AGORA, ator: "u-admin" });
@@ -87,6 +88,36 @@ describe("converterCortesia", () => {
     h.padrao = null;
     expect(await converter()).toEqual({ tipo: "marca_sem_plano" });
     expect(inseriu()).toBe(false);
+  });
+});
+
+describe("converterCortesia: falha e retomada", () => {
+  it("AC-002.3: RPC falha depois do insert -> assinatura desfeita (filtrada pela org) e erro lançado", async () => {
+    m.erroRpc = { code: "XX000", message: "boom" };
+    await expect(converter()).rejects.toThrow(/suspensão/);
+    const del = banco.cadeias.find((c) => c.tabela === "cobranca_assinaturas" && operacao(c) === "delete")!;
+    expect(del).toBeDefined();
+    expect(filtros(del)).toEqual(expect.arrayContaining([["eq", "organization_id", ORG], ["eq", "trial_com_cartao", true]]));
+  });
+
+  it("AC-002.3: assinatura pendente com a org ainda ativa -> repete só a suspensão", async () => {
+    m.linha = { organization_id: ORG, plano_id: "plano-1", pagamento_inicial_pendente: true, trial_com_cartao: true };
+    m.org = { id: ORG, brand_id: MARCA, status: "active" };
+    expect(await converter()).toMatchObject({ tipo: "convertida", planoId: "plano-1", suspensa: true });
+    expect(inseriu()).toBe(false);
+    expect(banco.rpcs[0]).toMatchObject({ nome: "fn_suspender_organizacao" });
+  });
+
+  it("AC-002.3: assinatura pendente com a org já suspensa -> ja_cobrada", async () => {
+    m.linha = { organization_id: ORG, plano_id: "plano-1", pagamento_inicial_pendente: true, trial_com_cartao: true };
+    m.org = { id: ORG, brand_id: MARCA, status: "suspended" };
+    expect(await converter()).toEqual({ tipo: "ja_cobrada" });
+    expect(banco.rpcs).toEqual([]);
+  });
+
+  it("AC-002.3: suspensão administrativa prevalece (changed:false) é informada, não escondida", async () => {
+    m.suspensao = { changed: false, motivo: "administrativa_prevalece" };
+    expect(await converter()).toMatchObject({ tipo: "convertida", suspensa: false });
   });
 });
 

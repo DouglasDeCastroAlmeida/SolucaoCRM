@@ -60,6 +60,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-028 [TEST-INT] Cortesia: cron, rodada, régua e webhook não avisam, atrasam nem suspendem org sem assinatura (~40 min) {AC-002.2} deps: T-008
 - [x] T-029 [TEST-UNIT] Rota de conversão de cortesia em cobrada: só admin da plataforma, auditoria, requireSupportWrite (~30 min) {AC-002.3, AC-009.4}
 - [x] T-030 [IMPL] Rota de conversão e estado "cortesia" derivado para o painel (~45 min) {AC-002.2, AC-002.3, AC-009.4} deps: T-028, T-029
+  - Nota: o botão "Converter" na tela e o uso de `estadoNoPainelDeContas` no painel ficam para T-038/T-039 (aqui só rota e regra).
 
 ### Fatia 8: Cancelar, trocar, reembolso e nota (REQ-006, REQ-007)
 - [ ] T-031 [TEST-UNIT] Cancelar no trial e ativa mostrando até quando vale; trocar de plano com pró-rata mantendo a data de renovação (~40 min) {AC-006.1, AC-006.2}

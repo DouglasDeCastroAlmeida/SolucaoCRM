@@ -43,7 +43,7 @@ beforeEach(() => {
   h.escrita = true;
   h.suporte = null;
   h.ordem = [];
-  h.converter.mockResolvedValue({ tipo: "convertida", marcaId: "m1", planoId: "p1" });
+  h.converter.mockResolvedValue({ tipo: "convertida", marcaId: "m1", planoId: "p1", suspensa: true });
 });
 
 describe("POST /admin/cobranca/organizacoes/[id]/converter", () => {

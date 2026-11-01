@@ -56,9 +56,9 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
       resourceType: "organization",
       resourceId: id,
       requestId,
-      metadata: { brand_id: r.marcaId, plano_id: r.planoId },
+      metadata: { brand_id: r.marcaId, plano_id: r.planoId, suspensa: r.suspensa },
     });
-    return ok({ converted: true, brand_id: r.marcaId, plano_id: r.planoId }, { requestId });
+    return ok({ converted: true, brand_id: r.marcaId, plano_id: r.planoId, suspended: r.suspensa }, { requestId });
   } catch (err) {
     logger.error("cobranca.conversao_falhou", { organization_id: id, erro: err instanceof Error ? err.message : "desconhecido" });
     return fail("internal_error", "Não foi possível converter a empresa.", 500, { requestId });
