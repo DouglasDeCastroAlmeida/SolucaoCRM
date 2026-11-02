@@ -46,18 +46,29 @@ export async function conciliarTrialsPendentes(
   const resumo: ResumoDaConciliacaoDoTrial = { confirmadas: 0, reativadas: 0, divergencias: 0, falhas: 0 };
   const agora = (deps.agora ?? (() => new Date()))().getTime();
 
+  // O filtro mora NO BANCO: linha descartada por `confirmar` (cancelou/expirou) fica com
+  // `pagamento_inicial_pendente=true` e sem id para sempre; com o teto antes do filtro, 50 delas
+  // esconderiam um trial pago com retorno perdido. As vivas (sem validade ou com a validade mais
+  // longe) vêm primeiro.
+  const limiar = new Date(agora - TOLERANCIA_DO_CHECKOUT_VENCIDO_MS).toISOString();
   const { data, error } = await admin
     .from("cobranca_assinaturas")
     .select("organization_id, checkout_provedor_id, checkout_url, checkout_expira_em")
     .eq("trial_com_cartao", true)
     .eq("pagamento_inicial_pendente", true)
+    .or("checkout_provedor_id.not.is.null,checkout_url.not.is.null")
+    .or(`checkout_expira_em.is.null,checkout_expira_em.gt.${limiar}`)
+    .order("checkout_expira_em", { ascending: false, nullsFirst: true })
     .limit(LIMITE_DA_CONCILIACAO_DO_TRIAL);
   if (error) throw new Error(`cobranca: trials pendentes ilegíveis (${error.code ?? "sem_codigo"})`);
 
-  const fila = ((data ?? []) as Candidata[]).filter((l) => {
+  // Rede de segurança: o banco já filtrou; aqui cai o que o filtro não prova (url sem uuid, validade vencida).
+  const lidas = (data ?? []) as Candidata[];
+  const fila = lidas.filter((l) => {
     if ((l.checkout_provedor_id ?? idDoCheckoutDaUrl(l.checkout_url)) === null) return false;
     return l.checkout_expira_em === null || Date.parse(l.checkout_expira_em) > agora - TOLERANCIA_DO_CHECKOUT_VENCIDO_MS;
   });
+  if (fila.length < lidas.length) logger.info("cobranca.conciliacao_do_trial_puladas", { puladas: lidas.length - fila.length });
 
   for (const { organization_id: orgId } of fila) {
     try {

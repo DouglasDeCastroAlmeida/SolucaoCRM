@@ -121,6 +121,41 @@ describe("conciliarTrialsPendentes", () => {
     expect(c.tabela("cobranca_assinaturas")[0]).toEqual(depois);
   });
 
+  it("AC-008.3: com mais de 50 linhas mortas na tabela, o trial pago com retorno perdido ainda entra na fila", async () => {
+    const mortas = Array.from({ length: 60 }, (_, i) =>
+      i % 2 === 0
+        ? pendente(`00000000-0000-4000-8000-${String(i).padStart(12, "0")}`, { checkout_provedor_id: null, checkout_url: null, checkout_expira_em: null })
+        : pendente(`00000000-0000-4000-8000-${String(i).padStart(12, "0")}`, { checkout_expira_em: "2026-09-01T00:00:00Z" }),
+    );
+    const c = cenario([...mortas, pendente(A)], async () => ACHADA);
+
+    const r = await conciliarTrialsPendentes(c.banco.cliente, c.deps);
+
+    expect(r.confirmadas).toBe(1);
+    expect(c.tabela("cobranca_assinaturas").find((l) => l.organization_id === A)).toMatchObject({ pagamento_inicial_pendente: false });
+  });
+
+  it("AC-008.3: linha antiga só com checkout_url (sem a coluna do id) entra na fila", async () => {
+    const c = cenario([pendente(A, { checkout_provedor_id: null, checkout_url: `https://sandbox.asaas.exemplo/checkoutSession/show?id=${CK}` })], async () => ACHADA);
+
+    const r = await conciliarTrialsPendentes(c.banco.cliente, c.deps);
+
+    expect(r.confirmadas).toBe(1);
+  });
+
+  it("AC-008.2: corrida — o retorno do usuário grava primeiro (o compare-and-set volta vazio): a nota não sai em dobro e a rodada não conta de novo", async () => {
+    // O retorno do navegador ganha a corrida entre a leitura da linha e a gravação da conciliação.
+    const c = cenario([pendente(A)], async () => {
+      Object.assign(c.tabela("cobranca_assinaturas")[0]!, { pagamento_inicial_pendente: false, provedor: "asaas", provedor_cliente_id: "cus_da_pagina" });
+      return ACHADA;
+    });
+
+    const r = await conciliarTrialsPendentes(c.banco.cliente, c.deps);
+
+    expect(r.confirmadas).toBe(0);
+    expect(c.deps.pedirNota).not.toHaveBeenCalled();
+  });
+
   it("uma empresa que falha não derruba as outras: vira contagem", async () => {
     let n = 0;
     const c = cenario([pendente(A), pendente(B)], async () => {
