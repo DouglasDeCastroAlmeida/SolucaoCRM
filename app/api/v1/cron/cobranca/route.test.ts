@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }));
 
 import { GET } from "./route";
 
-const VAZIA = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0 };
+const VAZIA = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0, trialsConfirmados: 0, divergencias: 0 };
 const chamar = () => GET(new NextRequest("http://localhost/api/v1/cron/cobranca"));
 
 beforeEach(() => {
@@ -44,6 +44,18 @@ describe("cron da cobrança", () => {
 
   it("AC-005.6: rodada que só avisou a plataforma para revisar uma exclusão é rodada com efeito e audita", async () => {
     h.rodada.mockResolvedValue({ ...VAZIA, exclusoesParaRevisar: 1 });
+    await chamar();
+    expect(h.audit).toHaveBeenCalledOnce();
+  });
+
+  it("AC-008.3: rodada que só corrigiu um trial pago com retorno perdido deixa registro (a correção fica registrada)", async () => {
+    h.rodada.mockResolvedValue({ ...VAZIA, trialsConfirmados: 1, reativadas: 1 });
+    await chamar();
+    expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "cobranca.rodada", metadata: expect.objectContaining({ trialsConfirmados: 1 }) }));
+  });
+
+  it("AC-008.5: rodada que só abriu aviso de divergência audita; a repetida (contagem 0) não", async () => {
+    h.rodada.mockResolvedValue({ ...VAZIA, divergencias: 1 });
     await chamar();
     expect(h.audit).toHaveBeenCalledOnce();
   });

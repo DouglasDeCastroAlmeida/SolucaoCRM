@@ -4,6 +4,8 @@ import { bancoFalso, valorDoFiltro, type BancoFalso, type Cadeia, type Resposta 
 
 const h = vi.hoisted(() => ({ sincronizar: vi.fn(), aplicarRegua: vi.fn() }));
 const exclusao = vi.hoisted(() => ({ avisar: vi.fn() }));
+const trial = vi.hoisted(() => ({ conciliar: vi.fn() }));
+vi.mock("@/lib/billing-trial/conciliar", () => ({ conciliarTrialsPendentes: trial.conciliar }));
 vi.mock("./exclusao-pendente", () => ({ avisarContasParaRevisarExclusao: exclusao.avisar }));
 vi.mock("./sincronizar", () => ({ sincronizar: h.sincronizar, aplicarRegua: h.aplicarRegua }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
@@ -40,12 +42,32 @@ beforeEach(() => {
   h.sincronizar.mockResolvedValue({ tipo: "aplicada", estado: "ativa", mudou: false, acao: "nada" });
   h.aplicarRegua.mockResolvedValue("nada");
   exclusao.avisar.mockResolvedValue(0);
+  trial.conciliar.mockResolvedValue({ confirmadas: 0, reativadas: 0, divergencias: 0, falhas: 0 });
 });
 
 const rodar = () => rodadaDaCobranca(banco.cliente as never);
 const orgsSincronizadas = () => h.sincronizar.mock.calls.map((c) => c[1]);
 
 describe("rodadaDaCobranca", () => {
+  it("AC-008.3: a rodada concilia o trial com cartão cujo retorno nunca voltou e soma a correção no resumo", async () => {
+    trial.conciliar.mockResolvedValue({ confirmadas: 2, reativadas: 1, divergencias: 1, falhas: 1 });
+
+    const r = await rodar();
+
+    expect(trial.conciliar).toHaveBeenCalledTimes(1);
+    expect(r).toMatchObject({ trialsConfirmados: 2, reativadas: 1, divergencias: 1, falhas: 1 });
+  });
+
+  it("AC-008.5: conciliação do trial que estoura não derruba a rodada: vira falha e a reconciliação segue", async () => {
+    trial.conciliar.mockRejectedValue(new Error("banco fora"));
+    m.reconciliaveis = [{ organization_id: "A", relida_em: null, precisa_reler: true }];
+
+    const r = await rodar();
+
+    expect(r.falhas).toBe(1);
+    expect(orgsSincronizadas()).toEqual(["A"]);
+  });
+
   it("⭐ relê só quem precisa, nunca lida primeiro, no máximo 50", async () => {
     m.reconciliaveis = [
       ...Array.from({ length: 58 }, (_, i) => ({ organization_id: `lida-${i}`, relida_em: new Date(Date.UTC(2026, 9, 1, i)).toISOString(), precisa_reler: true })),
@@ -74,7 +96,7 @@ describe("rodadaDaCobranca", () => {
     m.todas = ["A", "B", "C", "D"];
     h.sincronizar.mockResolvedValue({ tipo: "aplicada", estado: "em_atraso", mudou: false, acao: "suspender" });
     h.aplicarRegua.mockImplementation(async (_db: unknown, org: string) => ({ B: "avisar", C: "reativar", D: "cancelar_no_provedor" })[org] ?? "nada");
-    expect(await rodar()).toEqual({ relidas: 1, falhas: 0, avisos: 1, suspensas: 1, reativadas: 1, canceladas: 1, avisosDeIa: 0, exclusoesParaRevisar: 0 });
+    expect(await rodar()).toEqual({ relidas: 1, falhas: 0, avisos: 1, suspensas: 1, reativadas: 1, canceladas: 1, avisosDeIa: 0, exclusoesParaRevisar: 0, trialsConfirmados: 0, divergencias: 0 });
   });
 
   it("⭐ empresa sem provedor na fila: a ação da régua que sincronizar já executou entra no resumo", async () => {

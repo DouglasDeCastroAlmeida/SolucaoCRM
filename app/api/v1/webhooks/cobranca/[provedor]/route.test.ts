@@ -201,3 +201,39 @@ describe("webhook da cobrança pelo Asaas (PR 3b)", () => {
     expect(h.baldes).toEqual([]);
   });
 });
+
+describe("webhook do trial com cartão: segurança e ordem (mudança 003, AC-008.1 e AC-008.2)", () => {
+  it("AC-008.1: token inválido do Asaas é recusado sem alterar nada de cobrança (nem emite sinal, nem toca a assinatura)", async () => {
+    h.sinal = null;
+
+    const res = await doAsaas({ "asaas-access-token": "errado" });
+
+    expect(res.status).toBe(401);
+    expect(emits()).toEqual([]);
+    expect(h.banco.cadeias.filter((c) => c.tabela === "cobranca_assinaturas")).toEqual([]);
+  });
+
+  it("AC-008.2: o mesmo evento entregue duas vezes emite um sinal só", async () => {
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+    m.duplicado = true;
+    m.statusExistente = "processed";
+
+    const segunda = await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(segunda.status).toBe(200);
+    expect(emits()).toHaveLength(1);
+  });
+
+  it("AC-008.2: eventos fora de ordem emitem só o sinal da empresa (sem estado no payload): quem decide é a releitura, igual em qualquer ordem", async () => {
+    h.sinal = { eventoId: "evt_2", tipo: "PAYMENT_RECEIVED", clienteRef: "cus_1" };
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+    h.sinal = { eventoId: "evt_1", tipo: "SUBSCRIPTION_UPDATED", clienteRef: "cus_1" };
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(emits().map((e) => Object.keys(e.args.p_payload as object).sort())).toEqual([
+      ["evento_id", "provedor", "tipo"],
+      ["evento_id", "provedor", "tipo"],
+    ]);
+    expect(emits().every((e) => e.args.p_entity_id === ORG)).toBe(true);
+  });
+});

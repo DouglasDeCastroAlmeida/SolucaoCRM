@@ -70,8 +70,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-035 [IMPL] lib/billing-trial/nota.ts, link da nota na tela e ajustes de cancelar e trocar (~55 min) {AC-006.1, AC-006.2, AC-007.2, AC-007.3} deps: T-031, T-033, T-015
 
 ### Fatia 9: Confiabilidade do webhook e da conciliação (REQ-008)
-- [ ] T-036 [TEST-UNIT] Webhook com token inválido recusado, evento repetido ou fora de ordem com o mesmo estado final, conciliação corrige webhook perdido, divergência sem solução abre aviso e não muda acesso (~50 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5}
-- [ ] T-037 [IMPL] Ajustes de sincronizar e rodada para o trial com cartão e aviso de divergência na Central (~55 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5} deps: T-036, T-022
+- [x] T-036 [TEST-UNIT] Webhook com token inválido recusado, evento repetido ou fora de ordem com o mesmo estado final, conciliação corrige webhook perdido, divergência sem solução abre aviso e não muda acesso (~50 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5}
+- [x] T-037 [IMPL] Ajustes de sincronizar e rodada para o trial com cartão e aviso de divergência na Central (~55 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5} deps: T-036, T-022
 
 ### Fatia 10: Painel de contas (REQ-009)
 - [ ] T-038 [TEST-UI] Painel de contas: filtro por estado e por marca, detalhes com plano, datas e link do Asaas (~40 min) {AC-009.2, AC-009.3}

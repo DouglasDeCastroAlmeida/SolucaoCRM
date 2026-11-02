@@ -55,6 +55,10 @@ export function bancoDeCobrancaFalso(
           filtros.push({ coluna, valor });
           return q;
         },
+        /** Sem efeito: o dublê não tem volume que precise de teto. */
+        limit() {
+          return q;
+        },
         async executar() {
           if (acao === "select") return { data: linhas.filter((l) => casa(l, filtros)).map((l) => ({ ...l })), error: null };
           escritas[nome] = (escritas[nome] ?? 0) + 1;
