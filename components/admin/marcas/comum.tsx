@@ -6,7 +6,7 @@ export async function chamar(
   url: string,
   method: string,
   body?: unknown,
-): Promise<{ ok: boolean; data?: unknown; erro?: string }> {
+): Promise<{ ok: boolean; data?: unknown; erro?: string; status?: number }> {
   try {
     const res = await fetch(url, {
       method,
@@ -14,7 +14,7 @@ export async function chamar(
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const json = (await res.json().catch(() => ({}))) as { data?: unknown; error?: { message?: string } };
-    if (!res.ok) return { ok: false, erro: json.error?.message ?? "Não foi possível concluir." };
+    if (!res.ok) return { ok: false, status: res.status, erro: json.error?.message ?? "Não foi possível concluir." };
     return { ok: true, data: json.data };
   } catch {
     return { ok: false, erro: "Sem conexão. Tente de novo." };

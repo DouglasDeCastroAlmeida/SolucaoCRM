@@ -8,6 +8,11 @@
  * Erros esperados viram `ErroDeMarca` com código estável; o resto propaga.
  */
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  anexarCobrancaAsContas,
+  type AssinaturaParaOPainel,
+  type OrgParaOPainel,
+} from "@/lib/cobranca/contas-do-painel";
 import { invalidarMarcaDoHost } from "@/lib/branding/marca-do-host";
 
 export class ErroDeMarca extends Error {
@@ -259,7 +264,7 @@ export async function listarContasComMarca(opts: {
 }): Promise<Linha[]> {
   let query = createAdminClient()
     .from("organizations")
-    .select("id, name, slug, status, brand_id, created_at, brands(id, name, slug, is_default)")
+    .select("id, name, slug, status, suspended_kind, brand_id, created_at, brands(id, name, slug, is_default)")
     .order("created_at", { ascending: false })
     .limit(opts.limit);
   if (opts.brandId) query = query.eq("brand_id", opts.brandId);
@@ -271,4 +276,29 @@ export async function listarContasComMarca(opts: {
   const { data, error } = await query;
   if (error) lancar(error, "listar contas");
   return (data ?? []) as Linha[];
+}
+
+/**
+ * Contas com a cobrança de cada uma (AC-009.2/009.3). As organizações vêm do
+ * filtro acima; assinatura e plano são lidos só para os ids dessa página.
+ */
+export async function listarContasComCobranca(opts: { brandId?: string; q?: string; limit: number }): Promise<Linha[]> {
+  const orgs = await listarContasComMarca(opts);
+  if (orgs.length === 0) return [];
+  const admin = createAdminClient();
+  const ids = orgs.map((o) => String(o.id));
+  const { data: ass, error: erroAss } = await admin
+    .from("cobranca_assinaturas")
+    .select("organization_id, estado, plano_id, trial_ate, proximo_vencimento, link_de_pagamento")
+    .in("organization_id", ids);
+  if (erroAss) lancar(erroAss, "listar assinaturas");
+  const assinaturas = (ass ?? []) as AssinaturaParaOPainel[];
+  const planoIds = [...new Set(assinaturas.map((a) => a.plano_id).filter((x): x is string => !!x))];
+  let planos: Array<{ id: string; nome: string }> = [];
+  if (planoIds.length > 0) {
+    const { data, error } = await admin.from("cobranca_planos").select("id, nome").in("id", planoIds);
+    if (error) lancar(error, "listar planos");
+    planos = (data ?? []) as Array<{ id: string; nome: string }>;
+  }
+  return anexarCobrancaAsContas(orgs as unknown as OrgParaOPainel[], assinaturas, planos);
 }

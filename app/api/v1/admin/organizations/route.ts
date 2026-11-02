@@ -10,7 +10,7 @@ import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
-import { listarContasComMarca } from "@/lib/brands/admin-repo";
+import { listarContasComCobranca } from "@/lib/brands/admin-repo";
 import { respostaDeErro } from "@/lib/brands/rota";
 
 const querySchema = z.object({
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   if (!query.success) return fail("validation_failed", "Filtro inválido.", 400, { requestId });
 
   try {
-    const linhas = await listarContasComMarca({
+    const linhas = await listarContasComCobranca({
       brandId: query.data.brand_id,
       q: query.data.q || undefined,
       limit: query.data.limit,

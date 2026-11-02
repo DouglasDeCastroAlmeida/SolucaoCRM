@@ -37,7 +37,7 @@ beforeEach(() => {
     "GET /api/v1/admin/brands/b2/planos-cobranca": { status: 200, body: { data: [] } },
     "GET /api/v1/admin/brands/b2/cobranca": { status: 200, body: { data: { cobranca_ligada: false, faltam: [] } } },
     "GET /api/v1/admin/vertical-packs": { status: 200, body: { data: PACOTES } },
-    "GET /api/v1/admin/organizations": { status: 200, body: { data: CONTAS } },
+    "GET /api/v1/admin/organizations?limit=200": { status: 200, body: { data: CONTAS } },
   };
   vi.stubGlobal(
     "fetch",
@@ -166,7 +166,7 @@ describe("AC-008.5: contas (UI)", () => {
     await screen.findAllByRole("option", { name: "Clínica Sol" });
     await u.selectOptions(screen.getByLabelText(/filtrar por marca/i), "b2");
     await waitFor(() =>
-      expect(chamadas.some((c) => c.method === "GET" && c.url === "/api/v1/admin/organizations?brand_id=b2")).toBe(true),
+      expect(chamadas.some((c) => c.method === "GET" && c.url === "/api/v1/admin/organizations?brand_id=b2&limit=200")).toBe(true),
     );
   });
 
