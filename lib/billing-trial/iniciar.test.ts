@@ -173,7 +173,7 @@ describe("iniciarTrialComCartao", () => {
   it("AC-008.4: o clique seguinte à falha tenta de novo (a reserva não ficou presa)", async () => {
     const c = cenario({ falha: new ErroDoProvedor(503, "indisponivel", true) });
     await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
-    c.iniciar.mockImplementationOnce(async () => ({ url: "https://sandbox.asaas.exemplo/checkoutSession/show/9", sessaoId: "chk_9", expiraEm: null }));
+    c.iniciar.mockImplementationOnce(async () => ({ url: "https://sandbox.asaas.exemplo/checkoutSession/show/9", sessaoId: "chk_9", expiraEm: null, checkoutId: null }));
 
     const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
 

@@ -585,11 +585,16 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
       hasMore: z.boolean().nullish(),
     });
     const iguais: { id: string; customer: string }[] = [];
+    let esgotou = true;
     for (let n = 0; n < PAGINAS_DA_BUSCA; n++) {
       const r = ler(pagina, await chamar("GET", `/subscriptions?limit=${TAMANHO_DA_PAGINA}&offset=${n * TAMANHO_DA_PAGINA}`));
       for (const s of r.data) if (s.deleted !== true && s.checkoutSession?.toLowerCase() === alvo) iguais.push(s);
-      if (r.hasMore !== true || r.data.length < TAMANHO_DA_PAGINA) break;
+      if (r.hasMore !== true || r.data.length < TAMANHO_DA_PAGINA) {
+        esgotou = false;
+        break;
+      }
     }
+    if (esgotou && iguais.length === 0) logger.warn("cobranca.busca_checkout_teto", { organization_id: p.orgId, paginas: PAGINAS_DA_BUSCA });
     if (iguais.length > 1) throw new ErroDoProvedor(null, "assinatura_ambigua", false);
     return iguais[0] ? { clienteRef: iguais[0].customer, assinaturaRef: iguais[0].id } : null;
   }
