@@ -175,15 +175,17 @@ export interface AdaptadorDeCobranca {
     urlDeCancelamento: string;
     urlDeExpirado: string;
     chaveIdempotencia: string;
-  }): Promise<{ url: string; sessaoId: string; expiraEm: Date | null }>;
+  }): Promise<{ url: string; sessaoId: string; expiraEm: Date | null; checkoutId: string | null }>;
   /**
-   * Acha a assinatura que o Checkout hospedado criou para a organização, pela
-   * `externalReference` (= orgId): o cliente que a PÁGINA cria pode não ser o
-   * `clienteRef` que temos, então o retorno e o `confirmar` casam a organização
-   * por aqui, nunca pelo cliente. Só assinatura viva; `null` = ainda não existe
-   * (pessoa não concluiu). Falha do provedor sobe como `ErroDoProvedor`.
+   * Acha a assinatura que o Checkout hospedado criou, pelo `checkoutSession` dela = `checkoutId`
+   * (o uuid do checkout que NÓS abrimos, guardado em `cobranca_assinaturas.checkout_provedor_id`).
+   * Não pela `externalReference`: o Asaas não a propaga (medido em 2/11/2026). O cliente que a
+   * PÁGINA cria pode não ser o `clienteRef` que temos. `checkoutId` vem do nosso banco, nunca de
+   * query. `null` = ainda não existe (pessoa não concluiu). Mais de uma assinatura para o mesmo
+   * checkout sobe `ErroDoProvedor` `assinatura_ambigua`: quem chama não escolhe uma. Falha do
+   * provedor sobe como `ErroDoProvedor`.
    */
-  acharAssinaturaDoCheckout?(p: { orgId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null>;
+  acharAssinaturaDoCheckout?(p: { orgId: string; checkoutId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null>;
   /**
    * Pede a emissão de NFS-e na confirmação de cada pagamento da assinatura. A
    * configuração fiscal (município, alíquota) é da conta do provedor; aqui só o

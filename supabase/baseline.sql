@@ -61578,3 +61578,13 @@ create view public.external_db_connections_safe
 
 revoke all on public.external_db_connections_safe from anon;
 grant select on public.external_db_connections_safe to authenticated;
+
+-- ---- id do checkout do provedor (migration 0726) ----
+-- Cópia literal da migration 0726 (mudança 003). Aditiva e idempotente; nenhuma função nova.
+
+alter table public.cobranca_assinaturas
+  add column if not exists checkout_provedor_id text
+  check (checkout_provedor_id is null or char_length(checkout_provedor_id) between 1 and 100);
+
+comment on column public.cobranca_assinaturas.checkout_provedor_id is
+  'Id do checkout hospedado do provedor (checkoutSession da assinatura que ele cria). Achar a assinatura por aqui, nunca por externalReference (o Asaas não a propaga). Nulo em linhas anteriores: vale o uuid da checkout_url.';

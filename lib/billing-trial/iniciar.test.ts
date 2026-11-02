@@ -28,6 +28,7 @@ import {
 const ORG = "6f1c2a7e-3b4d-4e5f-8a9b-0c1d2e3f4a5b";
 const OUTRA_ORG = "22222222-2222-4222-8222-222222222222";
 const MARCA = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const CK = "5b7c0e6a-1d2f-4a3b-9c8d-7e6f5a4b3c2d";
 const PLANO = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const AGORA = new Date("2026-10-31T15:00:00Z");
 const CPF = "529.982.247-25";
@@ -50,6 +51,7 @@ function cenario(opcoes: { linha?: Record<string, unknown>; cnpj?: string | null
           checkout_url: null,
           checkout_expira_em: null,
           checkout_sessao_id: null,
+          checkout_provedor_id: null,
           updated_at: "v0",
           ...opcoes.linha,
         },
@@ -59,10 +61,10 @@ function cenario(opcoes: { linha?: Record<string, unknown>; cnpj?: string | null
     { unicas: { cobranca_trial_documentos: ["brand_id", "documento_hash"] } },
   );
   let n = 0;
-  const iniciar = vi.fn(async (_p: unknown): Promise<{ url: string; sessaoId: string; expiraEm: Date | null }> => {
+  const iniciar = vi.fn(async (_p: unknown): Promise<{ url: string; sessaoId: string; expiraEm: Date | null; checkoutId: string | null }> => {
     if (opcoes.falha) throw opcoes.falha;
     n += 1;
-    return { url: `https://sandbox.asaas.exemplo/checkoutSession/show/${n}`, sessaoId: `chk_${n}`, expiraEm: new Date(AGORA.getTime() + 60 * 60_000) };
+    return { url: `https://sandbox.asaas.exemplo/checkoutSession/show/${n}`, sessaoId: `chk_${n}`, expiraEm: new Date(AGORA.getTime() + 60 * 60_000), checkoutId: CK };
   });
   const achar = vi.fn(async () => opcoes.assinatura ?? null);
   const ad = { iniciarTrialComCartao: iniciar, acharAssinaturaDoCheckout: achar } as unknown as AdaptadorDeCobranca;
@@ -125,13 +127,36 @@ describe("iniciarTrialComCartao", () => {
   });
 
   it("AC-003.7: a assinatura que o Checkout já criou vira ja_assinou, sem abrir um segundo checkout", async () => {
-    const c = cenario({ assinatura: { clienteRef: "cus_da_pagina", assinaturaRef: "sub_1" } });
+    const c = cenario({ assinatura: { clienteRef: "cus_da_pagina", assinaturaRef: "sub_1" }, linha: { checkout_provedor_id: CK } });
 
     const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
 
+    expect(c.achar).toHaveBeenCalledWith({ orgId: ORG, checkoutId: CK });
     expect(r).toEqual({ tipo: "ja_assinou" });
     expect(c.iniciar).not.toHaveBeenCalled();
     expect(c.linha().checkout_expira_em).toBeNull();
+  });
+
+  it("AC-003.7: linha de antes da coluna: o checkout anterior é achado pelo uuid da checkout_url vencida", async () => {
+    const c = cenario({
+      assinatura: { clienteRef: "cus_da_pagina", assinaturaRef: "sub_1" },
+      linha: { checkout_url: `https://sandbox.asaas.exemplo/checkoutSession/show?id=${CK}`, checkout_expira_em: "2026-10-31T14:00:00Z", checkout_sessao_id: "t:chk_0" },
+    });
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
+
+    expect(c.achar).toHaveBeenCalledWith({ orgId: ORG, checkoutId: CK });
+    expect(r).toEqual({ tipo: "ja_assinou" });
+  });
+
+  it("AC-003.2: a primeira vez não tem checkout anterior para achar e grava o id do checkout novo na linha", async () => {
+    const c = cenario();
+
+    const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
+
+    expect(r.tipo).toBe("redirecionar");
+    expect(c.achar).not.toHaveBeenCalled();
+    expect(c.linha().checkout_provedor_id).toBe(CK);
   });
 
   it("AC-008.4: Asaas fora do ar devolve a mensagem de tentar de novo, libera a reserva e não grava link nem audita", async () => {
@@ -148,7 +173,7 @@ describe("iniciarTrialComCartao", () => {
   it("AC-008.4: o clique seguinte à falha tenta de novo (a reserva não ficou presa)", async () => {
     const c = cenario({ falha: new ErroDoProvedor(503, "indisponivel", true) });
     await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
-    c.iniciar.mockImplementationOnce(async () => ({ url: "https://sandbox.asaas.exemplo/checkoutSession/show/9", sessaoId: "chk_9", expiraEm: null }));
+    c.iniciar.mockImplementationOnce(async () => ({ url: "https://sandbox.asaas.exemplo/checkoutSession/show/9", sessaoId: "chk_9", expiraEm: null, checkoutId: null }));
 
     const r = await iniciarTrialComCartao(c.banco.cliente, P, c.deps);
 

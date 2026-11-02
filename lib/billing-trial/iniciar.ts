@@ -8,7 +8,7 @@
  *      leem a mesma versão e só um grava; o outro vê `em_preparo`. Checkout vivo
  *      (guardado com a sessão) é devolvido de novo, sem abrir outro;
  *   2. fora de transação: assinatura que o Checkout já criou para a org (achada
- *      pela `externalReference`) vira `ja_assinou` em vez de um segundo checkout;
+ *      pelo `checkoutSession` do checkout anterior da linha) vira `ja_assinou` em vez de um segundo checkout;
  *      documento (o do cadastro, ou o digitado na tela de antes; sem nenhum, a
  *      tela o pede) reserva o trial da marca; então o checkout, com `externalReference` = org;
  *   3. grava link, sessão, validade e o fim do teste (`trial_ate` = dia da 1ª
@@ -29,6 +29,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
 
 import { audit } from "@/lib/audit";
 import { lerEscopoDoCadastro, type EscopoDoCadastro } from "@/lib/cobranca/cadastro";
+import { idDoCheckoutDaUrl } from "@/lib/cobranca/checkout-id";
 import { provedorDaInstalacao } from "@/lib/cobranca/configuracao";
 import { documentoDoPagador } from "@/lib/cobranca/documento";
 import { limiteDoProvedorPorOrg } from "@/lib/cobranca/falhas";
@@ -84,11 +85,12 @@ interface Linha {
   checkout_url: string | null;
   checkout_expira_em: string | null;
   checkout_sessao_id: string | null;
+  checkout_provedor_id: string | null;
   updated_at: string;
 }
 
 const COLUNAS =
-  "plano_id, trial_com_cartao, pagamento_inicial_pendente, trial_ate, provedor_cliente_id, checkout_url, checkout_expira_em, checkout_sessao_id, updated_at";
+  "plano_id, trial_com_cartao, pagamento_inicial_pendente, trial_ate, provedor_cliente_id, checkout_url, checkout_expira_em, checkout_sessao_id, checkout_provedor_id, updated_at";
 
 /** A data da 1ª cobrança de quem abrir o checkout agora: hoje + dias do teste (a data civil de São Paulo vem do adaptador). */
 export function primeiraCobrancaDe(agora: Date, trialDias: number): Date {
@@ -241,7 +243,9 @@ export async function iniciarTrialComCartao(
   const tentativa = randomUUID();
   try {
     // Fase 2. A pessoa já pode ter concluído (aba velha, retorno perdido): confirmar, não abrir outro.
-    if (ad.acharAssinaturaDoCheckout && (await ad.acharAssinaturaDoCheckout({ orgId }))) {
+    // Pelo id do checkout ANTERIOR (o novo ainda não existe); sem ele (primeira vez) não há o que achar.
+    const anterior = linha.checkout_provedor_id ?? idDoCheckoutDaUrl(linha.checkout_url);
+    if (anterior !== null && ad.acharAssinaturaDoCheckout && (await ad.acharAssinaturaDoCheckout({ orgId, checkoutId: anterior }))) {
       await liberar();
       return { tipo: "ja_assinou" };
     }
@@ -287,6 +291,7 @@ export async function iniciarTrialComCartao(
       .update({
         checkout_url: checkout.url,
         checkout_sessao_id: sessaoDaTentativa(tentativa, checkout.sessaoId),
+        checkout_provedor_id: checkout.checkoutId,
         checkout_expira_em: (checkout.expiraEm ?? new Date(agora.getTime() + 60 * 60_000)).toISOString(),
         trial_ate: fimDoTeste.toISOString(),
       })

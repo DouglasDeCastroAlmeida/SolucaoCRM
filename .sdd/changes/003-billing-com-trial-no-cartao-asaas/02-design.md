@@ -151,6 +151,11 @@ Cortesia: **não há coluna**. Org sem linha em `cobranca_assinaturas` é isenta
 - Razão: a `CPF_ENCRYPTION_KEY` também cifra CPF e tem outro ciclo de rotação; um pepper próprio deixa girar uma sem apagar a outra.
 - Consequência: girar o pepper (ou a `CPF_ENCRYPTION_KEY`, se for a que vale) zera a memória de "já teve trial" e todos podem ganhar outro; a rotação deve ser comunicada. Testes: `lib/billing-trial/documento-hash.test.ts` e `tests/unit/env-pepper-do-trial.test.ts`.
 
+### ADR-007 (2/11/2026): achar a assinatura por `checkoutSession`, não por `externalReference`
+- Contexto: provado no sandbox, o Asaas não propaga a `externalReference` do checkout para a assinatura nem para o cliente; cada assinatura criada pelo Checkout traz `checkoutSession` = uuid do checkout (o mesmo da URL). O filtro `?checkoutSession=` é ignorado e não há `GET /checkouts/{id}`.
+- Decisão: `acharAssinaturaDoCheckout({ orgId, checkoutId })` pagina `GET /subscriptions` (100 por página, no máximo 5) e compara `checkoutSession` no cliente. O `checkoutId` vem do banco (`cobranca_assinaturas.checkout_provedor_id`, migration 0726; linha anterior à coluna: uuid da `checkout_url` enquanto existir; sem id algum, nada é perguntado e a org segue suspensa). Duas assinaturas para o mesmo checkout: `assinatura_ambigua`, não reativa e não escolhe (alerta no log de erro).
+- Consequências: o id sobrevive ao "confirmando"; a busca custa até 5 chamadas por conferência (o checkout recém-pago está no topo); a `externalReference` segue enviada, só não é chave.
+
 ## Riscos e casos extremos
 
 - **Checkout do Asaas não aceita D+7 ou anual:** coberto por T-001 (sonda no sandbox) antes de qualquer código; falha ⇒ volta ao design.
