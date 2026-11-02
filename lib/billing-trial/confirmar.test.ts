@@ -14,6 +14,7 @@ const ORG = "6f1c2a7e-3b4d-4e5f-8a9b-0c1d2e3f4a5b";
 const T = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 const VELHA = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const AGORA = new Date("2026-10-31T15:00:00Z");
+const CK = "5b7c0e6a-1d2f-4a3b-9c8d-7e6f5a4b3c2d";
 const ACHADA = { clienteRef: "cus_da_pagina", assinaturaRef: "sub_1" };
 
 function cenario(opcoes: { assinatura?: typeof ACHADA | null; falha?: Error; linha?: Record<string, unknown> } = {}) {
@@ -28,6 +29,7 @@ function cenario(opcoes: { assinatura?: typeof ACHADA | null; falha?: Error; lin
         checkout_url: "https://sandbox.asaas.exemplo/checkoutSession/show/1",
         checkout_expira_em: "2026-10-31T16:00:00Z",
         checkout_sessao_id: `${T}:chk_1`,
+        checkout_provedor_id: CK,
         updated_at: "v0",
         ...opcoes.linha,
       },
@@ -193,5 +195,51 @@ describe("confirmarTrialDoCheckout", () => {
     const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok", tentativa: T }, c.deps);
 
     expect(r).toEqual({ tipo: "confirmada", reativada: true, primeiraVez: true });
+  });
+
+  it("AC-003.2: acha a assinatura pelo id do checkout guardado, mesmo com a checkout_url já zerada (confirmando)", async () => {
+    const c = cenario({ linha: { checkout_url: null } });
+
+    const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, c.deps);
+
+    expect(c.achar).toHaveBeenCalledWith({ orgId: ORG, checkoutId: CK });
+    expect(r).toMatchObject({ tipo: "confirmada", primeiraVez: true });
+  });
+
+  it("AC-003.2: linha de antes da coluna cai no uuid da checkout_url", async () => {
+    const c = cenario({ linha: { checkout_provedor_id: null, checkout_url: `https://sandbox.asaas.exemplo/checkoutSession/show?id=${CK.toUpperCase()}` } });
+
+    await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, c.deps);
+
+    expect(c.achar).toHaveBeenCalledWith({ orgId: ORG, checkoutId: CK });
+  });
+
+  it("AC-003.3: sem id de checkout algum não há como achar: nada é perguntado, a conta não reativa e fica confirmando", async () => {
+    const c = cenario({ linha: { checkout_provedor_id: null, checkout_url: "https://sandbox.asaas.exemplo/checkoutSession/show/1" } });
+
+    const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, c.deps);
+
+    expect(r).toEqual({ tipo: "pendente", checkoutDescartado: false });
+    expect(c.achar).not.toHaveBeenCalled();
+    expect(c.sincroniza).not.toHaveBeenCalled();
+    expect(c.linha()).toMatchObject({ pagamento_inicial_pendente: true, provedor: null, checkout_url: null });
+  });
+
+  it("AC-003.3: duas assinaturas para o mesmo checkout: não reativa nem escolhe uma", async () => {
+    const c = cenario({ falha: new ErroDoProvedor(null, "assinatura_ambigua", false) });
+
+    const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, c.deps);
+
+    expect(r).toEqual({ tipo: "provedor_fora" });
+    expect(c.linha()).toMatchObject({ pagamento_inicial_pendente: true, provedor: null });
+    expect(c.sincroniza).not.toHaveBeenCalled();
+  });
+
+  it("AC-003.3: cancelado descarta também o id do checkout, para o próximo checkout ter o seu", async () => {
+    const c = cenario({ assinatura: null });
+
+    await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "cancelado" }, c.deps);
+
+    expect(c.linha().checkout_provedor_id).toBeNull();
   });
 });

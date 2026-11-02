@@ -130,7 +130,16 @@ O que a Fatia 5 faz: a tela de antes (`/cobranca/iniciar`) pede o CPF ou CNPJ qu
 
 **Pendência para a Fatia 11:** depois da volta do checkout, conferir o `cpfCnpj` do cliente criado pela página com o reservado; se divergir, registrar um aviso na Central da plataforma, sem cancelar nada sozinho. Também não existe ainda o caminho "assinar agora, cobrança imediata sem teste" para quem recebeu `trial_ja_usado`: hoje a mensagem só informa, e o caminho pago depende de decisão do dono.
 
-## Portão de release: externalReference
+## Prova do externalReference: RESULTADO (2/11/2026)
+
+Pagamento real no sandbox do Asaas pela nossa rota: **o Asaas NÃO propaga a `externalReference` do checkout** para a assinatura nem para o cliente (os dois vieram com `externalReference` nula). O que existe de fato é o campo `checkoutSession` na assinatura, igual ao uuid do `?id=` da URL do checkout que guardamos. Medido: `GET /v3/subscriptions?checkoutSession=<uuid>` IGNORA o filtro (devolve todas), `GET /v3/checkouts/{id}` dá 404 e `payments?checkoutSession` devolve 0. A 1ª cobrança veio PENDING com vencimento hoje+7 (correto).
+
+**Decisão:** achar a assinatura pelo `checkoutSession` (ADR-007 em `02-design.md`): `acharAssinaturaDoCheckout({ orgId, checkoutId })` pagina `GET /v3/subscriptions?limit=100&offset=N` (até 5 páginas) e compara no cliente. O id do checkout fica em `cobranca_assinaturas.checkout_provedor_id` (migration 0726) e sobrevive ao estado "confirmando". A 'Prova' continua valendo como portão, agora para essa regra: re-prova na hml.
+
+## Portão de release: externalReference (reescrito pelo resultado acima)
+
+> A premissa desta seção caiu em 2/11/2026: o par (1) abaixo é lido como "o `checkoutSession` da assinatura é o id do checkout que abrimos", não mais como `externalReference`.
+
 
 **NENHUMA marca pode ter a cobrança ligada em produção antes de a Fatia 11 provar**, com pagamento real no sandbox pela nossa rota (hml), duas coisas: (1) que o `externalReference` enviado ao Checkout chega à assinatura criada pela página do Asaas; (2) que a conta é reativada com UMA assinatura só.
 

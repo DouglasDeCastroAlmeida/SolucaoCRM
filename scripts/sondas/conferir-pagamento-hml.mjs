@@ -2,14 +2,15 @@
 // Mudança 003 - confere, DEPOIS do pagamento de teste, o que o pagamento deixou na homologação.
 /* eslint-disable no-console */
 // Lado Asaas (sandbox, chave lida do arquivo de segredos em tempo de execução, só leitura):
-//   A1 existe assinatura com externalReference = id da organização; A2 é ACTIVE;
+//   A1 existe assinatura cujo checkoutSession é o id do checkout da organização (o Asaas NÃO propaga a
+//   externalReference; o id vem de cobranca_assinaturas.checkout_provedor_id na hml, ou de TESTE003_CHECKOUT_ID); A2 é ACTIVE;
 //   A3 a primeira cobrança é PENDING, vence no fim do teste e não foi confirmada;
-//   A4 há UMA só assinatura (por externalReference e pelo cliente).
+//   A4 há UMA só assinatura (por checkoutSession e pelo cliente).
 // Lado banco da hml (service role, SÓ LEITURA, filtrado pelo id da organização de teste):
 //   B1 a organização saiu da suspensão; B2 a linha de cobranca_assinaturas tem provedor, cliente e
 //   assinatura preenchidos; B3 pagamento_inicial_pendente = false; B4 a assinatura do banco é a do Asaas.
 // Imprime PASSOU/FALHOU por item (sem chave, token, e-mail ou ids completos). Exit 0 se tudo passou, 1 se não.
-// Uso: node scripts/sondas/conferir-pagamento-hml.mjs [<organization_id>]
+// Uso: [TESTE003_CHECKOUT_ID=<uuid do checkout>] node scripts/sondas/conferir-pagamento-hml.mjs [<organization_id>]
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -74,7 +75,7 @@ try {
     (
       await banco(
         "cobranca_assinaturas",
-        `select=provedor,modo,provedor_cliente_id,provedor_assinatura_id,pagamento_inicial_pendente,trial_ate,estado&organization_id=eq.${orgId}`,
+        `select=provedor,modo,provedor_cliente_id,provedor_assinatura_id,pagamento_inicial_pendente,trial_ate,estado,checkout_provedor_id&organization_id=eq.${orgId}`,
       )
     )[0] ?? null;
 } catch (e) {
@@ -83,14 +84,20 @@ try {
 }
 
 // --- Asaas ---
+// O filtro ?checkoutSession= é IGNORADO pelo Asaas (devolve todas): pagina e compara aqui.
+const checkoutId = (process.env.TESTE003_CHECKOUT_ID ?? linha?.checkout_provedor_id ?? "").toLowerCase();
 let assinaturas = [];
 try {
-  assinaturas = (await asaas(`/subscriptions?externalReference=${encodeURIComponent(orgId)}&limit=100`)).data ?? [];
+  for (let offset = 0; offset < 500 && checkoutId; offset += 100) {
+    const pagina = await asaas(`/subscriptions?limit=100&offset=${offset}`);
+    assinaturas.push(...(pagina.data ?? []).filter((x) => String(x.checkoutSession ?? "").toLowerCase() === checkoutId && x.deleted !== true));
+    if (!pagina.hasMore) break;
+  }
 } catch (e) {
   console.log(`(Asaas não respondeu: ${e.message})`);
 }
 const sub = assinaturas[0] ?? null;
-item("A1", "existe assinatura com externalReference = id da organização", assinaturas.length > 0 && sub.externalReference === orgId);
+item("A1", "existe assinatura com checkoutSession = id do checkout da organização", assinaturas.length > 0, checkoutId ? "" : "sem id de checkout (defina TESTE003_CHECKOUT_ID)");
 item("A2", "a assinatura está ACTIVE", sub?.status === "ACTIVE", sub ? `status ${sub.status}` : "sem assinatura");
 
 const fimDoTeste = linha?.trial_ate ? diaSp(linha.trial_ate) : null;
@@ -115,10 +122,10 @@ if (sub?.customer) {
   try {
     doCliente = (await asaas(`/subscriptions?customer=${encodeURIComponent(sub.customer)}&limit=100`)).data ?? [];
   } catch {
-    // a contagem por externalReference já vale
+    // a contagem por checkoutSession já vale
   }
 }
-item("A4", "há UMA só assinatura (por externalReference e pelo cliente)", assinaturas.length === 1 && doCliente.length === 1, `${assinaturas.length} / ${doCliente.length}`);
+item("A4", "há UMA só assinatura (por checkoutSession e pelo cliente)", assinaturas.length === 1 && doCliente.length === 1, `${assinaturas.length} / ${doCliente.length}`);
 
 // --- banco da hml ---
 item("B1", "a organização saiu da suspensão", org?.status === "active", org ? `status ${org.status}` : "organização não lida");

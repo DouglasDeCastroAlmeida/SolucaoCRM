@@ -150,12 +150,12 @@ describe("Asaas iniciarTrialComCartao", () => {
     );
   });
 
-  it("AC-003.4: a resposta devolve só url, sessão e validade", async () => {
+  it("AC-003.4: a resposta devolve só url, sessão, id do checkout e validade", async () => {
     const { adaptador } = montar({
       checkout: () => Response.json({ id: "chk_1", link: LINK, creditCard: { number: "4111" } }),
     });
     const r = await adaptador.iniciarTrialComCartao!(pedido());
-    expect(Object.keys(r).sort()).toEqual(["expiraEm", "sessaoId", "url"]);
+    expect(Object.keys(r).sort()).toEqual(["checkoutId", "expiraEm", "sessaoId", "url"]);
   });
 
   it("AC-003.1: releitura antes de criar: com assinatura ativa do cliente não cria outro checkout", async () => {

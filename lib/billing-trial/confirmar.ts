@@ -2,7 +2,7 @@
  * A volta do Checkout (mudança 003, AC-003.2, AC-003.3, AC-003.7, AC-005.1, AC-005.4).
  *
  * Retorno e webhook só ACORDAM a leitura: a verdade é a assinatura que o Asaas
- * tem para a organização, achada pela `externalReference` (= org), nunca pelo
+ * tem para a organização, achada pelo `checkoutSession` (= id do checkout guardado na linha; o Asaas não propaga a `externalReference`), nunca pelo
  * cliente (a página do Checkout cria o dela). Três desfechos:
  *   - a assinatura existe: a linha ganha provedor, cliente e assinatura por
  *     compare-and-set em `pagamento_inicial_pendente` (dois retornos concorrentes:
@@ -14,8 +14,7 @@
  *   - o provedor não respondeu: nada muda, e o cron horário reconcilia.
  * Retorno com selo carrega a TENTATIVA (`sessao.ts`): só tem efeito se for a sessão
  * viva da linha; link de checkout antigo não apaga nem confirma o checkout novo.
- * Retorno `ok` sem assinatura achada (o Asaas pode não ter propagado a
- * `externalReference`) MARCA a linha como "confirmando" por `PRAZO_CONFIRMANDO_MS`:
+ * Retorno `ok` sem assinatura achada (atraso do Asaas, ou linha sem id de checkout) MARCA a linha como "confirmando" por `PRAZO_CONFIRMANDO_MS`:
  * url nula + sessão guardada + validade no futuro. Enquanto isso `iniciar` não abre
  * um segundo checkout (risco de duas assinaturas). Sem coluna nova.
  * O 1º pagamento (dia 8) e as demais mudanças não passam por aqui: são do
@@ -25,6 +24,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { ResultadoDeRetorno } from "@/lib/billing-trial/retorno";
 import { sessaoEhDaTentativa } from "@/lib/billing-trial/sessao";
+import { idDoCheckoutDaUrl } from "@/lib/cobranca/checkout-id";
 import { provedorDaInstalacao } from "@/lib/cobranca/configuracao";
 import { adaptador as adaptadorPadrao, modoDoProvedor } from "@/lib/cobranca/provedores";
 import { ErroDoProvedor, type AdaptadorDeCobranca, type Modo } from "@/lib/cobranca/provedores/contrato";
@@ -60,6 +60,7 @@ interface Linha {
   provedor_cliente_id: string | null;
   checkout_sessao_id: string | null;
   checkout_url: string | null;
+  checkout_provedor_id: string | null;
 }
 
 const reativou = (r: ResultadoDaSincronizacao) => r.tipo === "aplicada" && r.acao === "reativar";
@@ -79,7 +80,7 @@ export async function confirmarTrialDoCheckout(
 
   const lida = await admin
     .from("cobranca_assinaturas")
-    .select("trial_com_cartao, pagamento_inicial_pendente, provedor, provedor_cliente_id, checkout_sessao_id, checkout_url")
+    .select("trial_com_cartao, pagamento_inicial_pendente, provedor, provedor_cliente_id, checkout_sessao_id, checkout_url, checkout_provedor_id")
     .eq("organization_id", orgId)
     .maybeSingle();
   if (lida.error) throw new Error(`cobranca: leitura da assinatura falhou (${lida.error.code ?? "sem_codigo"})`);
@@ -113,10 +114,16 @@ export async function confirmarTrialDoCheckout(
   const ad = provedor === null ? null : (deps.adaptador ?? adaptadorPadrao)(provedor);
   if (provedor === null || ad === null || !ad.acharAssinaturaDoCheckout) return { tipo: "provedor_fora" };
 
-  let achada: { clienteRef: string; assinaturaRef: string } | null;
+  // A ligação é o id do checkout (o Asaas não propaga a externalReference). Linha de antes da coluna:
+  // o uuid da URL enquanto ela existir. Sem id nenhum não há como achar: segue como "pendente", nunca reativa.
+  const checkoutId = linha.checkout_provedor_id ?? idDoCheckoutDaUrl(linha.checkout_url);
+  let achada: { clienteRef: string; assinaturaRef: string } | null = null;
   try {
-    achada = await ad.acharAssinaturaDoCheckout({ orgId });
+    if (checkoutId !== null) achada = await ad.acharAssinaturaDoCheckout({ orgId, checkoutId });
   } catch (e) {
+    if (e instanceof ErroDoProvedor && e.codigo === "assinatura_ambigua") {
+      logger.error("cobranca.trial_assinatura_ambigua", { organization_id: orgId });
+    }
     logger.warn("cobranca.trial_confirmar_leitura_falhou", { organization_id: orgId, codigo: e instanceof ErroDoProvedor ? e.codigo : "fora_do_adaptador" });
     await marcarConfirmando();
     return { tipo: "provedor_fora" };
@@ -133,7 +140,7 @@ export async function confirmarTrialDoCheckout(
     if (marcado || linha.checkout_sessao_id === null) return { tipo: "pendente", checkoutDescartado: false };
     const { error } = await admin
       .from("cobranca_assinaturas")
-      .update({ checkout_url: null, checkout_expira_em: null, checkout_sessao_id: null })
+      .update({ checkout_url: null, checkout_expira_em: null, checkout_sessao_id: null, checkout_provedor_id: null })
       .eq("organization_id", orgId)
       .eq("pagamento_inicial_pendente", true)
       .eq("checkout_sessao_id", linha.checkout_sessao_id);

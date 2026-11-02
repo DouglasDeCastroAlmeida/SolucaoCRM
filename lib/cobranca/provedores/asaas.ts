@@ -24,6 +24,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 import { z } from "zod";
 
+import { ehIdDeCheckout, idDoCheckoutDaUrl } from "@/lib/cobranca/checkout-id";
 import { documentoDoPagador } from "@/lib/cobranca/documento";
 import { FUSO_PADRAO } from "@/lib/cobranca/fuso";
 import { logger } from "@/lib/logger";
@@ -131,6 +132,8 @@ function uuidDaOrg(id: string): string {
   if (!lido.success) throw new ErroDoProvedor(null, "org_invalida", false);
   return lido.data;
 }
+const PAGINAS_DA_BUSCA = 5;
+const TAMANHO_DA_PAGINA = 100;
 const listaDoAsaas = <T extends z.ZodType>(item: T) => z.object({ data: z.array(item) });
 
 const DATA_CIVIL = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -559,27 +562,36 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     );
     const url = linkSeguro(criado.link);
     if (url === null) throw new ErroDoProvedor(200, "resposta_invalida", false);
-    return { url, sessaoId: criado.id, expiraEm: new Date(agora().getTime() + minutosParaExpirar * 60_000) };
+    // O `checkoutSession` das assinaturas é o uuid da URL do checkout; sem ele na URL, o id do POST.
+    const checkoutId = idDoCheckoutDaUrl(url) ?? (ehIdDeCheckout(criado.id) ? criado.id.toLowerCase() : null);
+    return { url, sessaoId: criado.id, expiraEm: new Date(agora().getTime() + minutosParaExpirar * 60_000), checkoutId };
   }
 
   /**
-   * A assinatura que o Checkout criou para a org, pela `externalReference` (= orgId). ATENÇÃO:
-   * que a página do Checkout PROPAGA a `externalReference` do checkout para a assinatura NÃO foi
-   * provado (a corrida de 31/10/2026 não a enviou); sem isso a busca devolve `null` e a conta
-   * nunca confirma (falha fechada). Provar na Fatia 11.
+   * A assinatura que o Checkout criou, pelo `checkoutSession` (= id do checkout). Medido no sandbox
+   * (2/11/2026): a `externalReference` NÃO chega à assinatura nem ao cliente, e `?checkoutSession=`
+   * é IGNORADO como filtro (devolve todas) — então pagina `GET /subscriptions` e compara no
+   * CLIENTE. Mais recente primeiro; para depois de `PAGINAS_DA_BUSCA` páginas (pagamento recém-feito
+   * está no topo). Duas assinaturas do mesmo checkout não existem; se aparecerem, não escolhe.
    */
-  async function acharAssinaturaDoCheckout(p: { orgId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null> {
-    const orgId = uuidDaOrg(p.orgId);
-    const consulta = new URLSearchParams({ externalReference: orgId, status: "ACTIVE", limit: "10" });
-    const viva = ler(
-      listaDoAsaas(
-        z.object({ id: z.string().min(1), customer: z.string().min(1), deleted: z.boolean().nullish(), dateCreated: z.string().nullish() }),
+  async function acharAssinaturaDoCheckout(p: { orgId: string; checkoutId: string }): Promise<{ clienteRef: string; assinaturaRef: string } | null> {
+    uuidDaOrg(p.orgId);
+    if (!ehIdDeCheckout(p.checkoutId)) throw new ErroDoProvedor(null, "checkout_invalido", false);
+    const alvo = p.checkoutId.toLowerCase();
+    const pagina = z.object({
+      data: z.array(
+        z.object({ id: z.string().min(1), customer: z.string().min(1), deleted: z.boolean().nullish(), checkoutSession: z.string().nullish() }),
       ),
-      await chamar("GET", `/subscriptions?${consulta}`),
-    )
-      .data.filter((s) => s.deleted !== true)
-      .sort((a, b) => (b.dateCreated ?? "").localeCompare(a.dateCreated ?? ""))[0];
-    return viva ? { clienteRef: viva.customer, assinaturaRef: viva.id } : null;
+      hasMore: z.boolean().nullish(),
+    });
+    const iguais: { id: string; customer: string }[] = [];
+    for (let n = 0; n < PAGINAS_DA_BUSCA; n++) {
+      const r = ler(pagina, await chamar("GET", `/subscriptions?limit=${TAMANHO_DA_PAGINA}&offset=${n * TAMANHO_DA_PAGINA}`));
+      for (const s of r.data) if (s.deleted !== true && s.checkoutSession?.toLowerCase() === alvo) iguais.push(s);
+      if (r.hasMore !== true || r.data.length < TAMANHO_DA_PAGINA) break;
+    }
+    if (iguais.length > 1) throw new ErroDoProvedor(null, "assinatura_ambigua", false);
+    return iguais[0] ? { clienteRef: iguais[0].customer, assinaturaRef: iguais[0].id } : null;
   }
 
   /**
