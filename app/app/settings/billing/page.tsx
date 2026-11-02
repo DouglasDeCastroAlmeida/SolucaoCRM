@@ -6,6 +6,8 @@ import { emailDeSuporte } from "@/lib/branding/saida";
 import { Card } from "@/components/ui/card";
 import { AcoesDaAssinatura } from "@/components/cobranca/AcoesDaAssinatura";
 import { PainelDaAssinatura } from "@/components/cobranca/PainelDaAssinatura";
+import { lerLinkDaNota } from "@/lib/billing-trial/nota";
+import { reembolsoDisponivel } from "@/lib/billing-trial/reembolso";
 import { lerPainelDaAssinatura } from "@/lib/cobranca/painel";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { moduloLigado } from "@/lib/instalacao/modulos";
@@ -34,6 +36,11 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const painel = (await moduloLigado(admin, "cobranca"))
     ? await lerPainelDaAssinatura(admin, activeOrg.orgId)
     : null;
+  // Só quem já pagou tem nota e janela de reembolso; as duas leituras nunca lançam (falha = sem link, sem botão).
+  const jaPagou = painel?.assinatura?.estado === "ativa" && painel.assinatura.provedor !== null;
+  const [notaUrl, reembolso] = jaPagou
+    ? await Promise.all([lerLinkDaNota(admin, activeOrg.orgId), reembolsoDisponivel(admin, activeOrg.orgId)])
+    : [null, null];
   const suporte = painel ? null : await emailDeSuporte();
   return (
     <div className="flex h-full flex-col gap-6 p-6">
@@ -46,7 +53,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       </header>
       {painel ? (
         <>
-          <PainelDaAssinatura dados={painel} idioma={idioma} />
+          <PainelDaAssinatura dados={painel} idioma={idioma} notaUrl={notaUrl} />
           {painel.assinatura && (
             <AcoesDaAssinatura
               estado={painel.assinatura.estado}
@@ -66,6 +73,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               voltouDoCheckout={(await searchParams).voltou === "1"}
               noHub={false}
               fuso={painel.fuso}
+              reembolsoAte={reembolso?.ate?.toISOString() ?? null}
             />
           )}
         </>

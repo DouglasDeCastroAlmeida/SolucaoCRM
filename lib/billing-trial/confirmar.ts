@@ -22,6 +22,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { pedirNotaDaAssinatura } from "@/lib/billing-trial/nota";
 import type { ResultadoDeRetorno } from "@/lib/billing-trial/retorno";
 import { sessaoEhDaTentativa } from "@/lib/billing-trial/sessao";
 import { idDoCheckoutDaUrl } from "@/lib/cobranca/checkout-id";
@@ -38,6 +39,8 @@ export interface DependenciasDoConfirmar {
   modo?: (id: ProvedorDeCobranca) => Promise<Modo | null>;
   sincronizar?: (admin: SupabaseClient, orgId: string) => Promise<ResultadoDaSincronizacao>;
   agora?: () => Date;
+  /** O pedido de NFS-e (melhor esforço; nunca trava a confirmação). */
+  pedirNota?: (admin: SupabaseClient, p: { orgId: string; provedor: ProvedorDeCobranca; assinaturaRef: string }) => Promise<unknown>;
 }
 
 /** Quanto tempo o "ok sem assinatura" segura um novo checkout. */
@@ -174,6 +177,14 @@ export async function confirmarTrialDoCheckout(
     reativada = reativou(await sincroniza(admin, orgId));
   } catch (e) {
     logger.warn("cobranca.trial_confirmar_sincronizar_falhou", { organization_id: orgId, erro: e instanceof Error ? e.name : "desconhecido" });
+  }
+  // AC-007.1/007.3: a nota é pedida UMA vez, quando a assinatura nasce. Falha não trava a conta: o aviso vai à Central.
+  if (gravada.data !== null) {
+    try {
+      await (deps.pedirNota ?? ((a, n) => pedirNotaDaAssinatura(a, n)))(admin, { orgId, provedor, assinaturaRef: achada.assinaturaRef });
+    } catch (e) {
+      logger.warn("cobranca.trial_nota_nao_pedida", { organization_id: orgId, erro: e instanceof Error ? e.name : "desconhecido" });
+    }
   }
   return { tipo: "confirmada", reativada, primeiraVez: gravada.data !== null };
 }

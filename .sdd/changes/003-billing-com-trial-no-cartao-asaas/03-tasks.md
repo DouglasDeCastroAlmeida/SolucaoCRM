@@ -63,11 +63,11 @@ Cada tarefa ocupa uma linha:
   - Nota: o botão "Converter" na tela e o uso de `estadoNoPainelDeContas` no painel ficam para T-038/T-039 (aqui só rota e regra).
 
 ### Fatia 8: Cancelar, trocar, reembolso e nota (REQ-006, REQ-007)
-- [ ] T-031 [TEST-UNIT] Cancelar no trial e ativa mostrando até quando vale; trocar de plano com pró-rata mantendo a data de renovação (~40 min) {AC-006.1, AC-006.2}
-- [ ] T-032 [TEST-UNIT] Reembolso: janela de 7 dias após a 1ª cobrança paga, pedido único por pagamento, fora da janela recusado na rota e sem botão (~45 min) {AC-006.3, AC-006.4, AC-006.5}
-- [ ] T-033 [TEST-UNIT] Link da NFS-e lido do Asaas e falha de emissão que não trava o pagamento e avisa a Central (~35 min) {AC-007.2, AC-007.3}
-- [ ] T-034 [IMPL] lib/billing-trial/reembolso.ts, rota, item na Central, cancelamento da conta e botão Pedir reembolso (~60 min) {AC-006.3, AC-006.4, AC-006.5} deps: T-032, T-008
-- [ ] T-035 [IMPL] lib/billing-trial/nota.ts, link da nota na tela e ajustes de cancelar e trocar (~55 min) {AC-006.1, AC-006.2, AC-007.2, AC-007.3} deps: T-031, T-033, T-015
+- [x] T-031 [TEST-UNIT] Cancelar no trial e ativa mostrando até quando vale; trocar de plano com pró-rata mantendo a data de renovação (~40 min) {AC-006.1, AC-006.2}
+- [x] T-032 [TEST-UNIT] Reembolso: janela de 7 dias após a 1ª cobrança paga, pedido único por pagamento, fora da janela recusado na rota e sem botão (~45 min) {AC-006.3, AC-006.4, AC-006.5}
+- [x] T-033 [TEST-UNIT] Link da NFS-e lido do Asaas e falha de emissão que não trava o pagamento e avisa a Central (~35 min) {AC-007.2, AC-007.3}
+- [x] T-034 [IMPL] lib/billing-trial/reembolso.ts, rota, item na Central, cancelamento da conta e botão Pedir reembolso (~60 min) {AC-006.3, AC-006.4, AC-006.5} deps: T-032, T-008
+- [x] T-035 [IMPL] lib/billing-trial/nota.ts, link da nota na tela e ajustes de cancelar e trocar (~55 min) {AC-006.1, AC-006.2, AC-007.2, AC-007.3} deps: T-031, T-033, T-015
 
 ### Fatia 9: Confiabilidade do webhook e da conciliação (REQ-008)
 - [ ] T-036 [TEST-UNIT] Webhook com token inválido recusado, evento repetido ou fora de ordem com o mesmo estado final, conciliação corrige webhook perdido, divergência sem solução abre aviso e não muda acesso (~50 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5}
