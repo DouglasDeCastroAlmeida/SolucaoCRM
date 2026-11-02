@@ -5,6 +5,7 @@
  * ou ids do provedor.
  */
 import { estadoNoPainelDeContas } from "@/lib/cobranca/converter";
+import { estaSuspensa } from "@/lib/organizacao/operante";
 import { ASAAS_ORIGENS_DO_CHECKOUT } from "@/lib/cobranca/provedores/asaas-origens";
 import type { EstadoDaAssinatura } from "@/lib/cobranca/vocabulario";
 
@@ -38,7 +39,7 @@ export function estadoDaContaNoPainel(
   org: { status: string; suspended_kind: string | null },
 ): EstadoDaContaNoPainel {
   const base = estadoNoPainelDeContas(assinatura);
-  if (assinatura && base !== "cancelada" && org.status === "suspended" && org.suspended_kind === "cobranca") return "suspensa";
+  if (assinatura && base !== "cancelada" && estaSuspensa(org.status) && org.suspended_kind === "cobranca") return "suspensa";
   return base;
 }
 
