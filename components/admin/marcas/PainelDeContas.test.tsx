@@ -138,3 +138,18 @@ describe("AC-009.2: converter cortesia em cobrada", () => {
     expect(screen.queryByRole("button", { name: /confirmar conversão/i })).toBeNull();
   });
 });
+
+describe("AC-009.2: limite da lista", () => {
+  it("AC-009.2: com exatamente 200 contas avisa que ha mais; com menos nao avisa", async () => {
+    const muitas = Array.from({ length: 200 }, (_, i) => ({ id: `x${i}`, name: `Conta ${i}`, brand_id: "b1", brands: { name: "Marca Um" }, cobranca: COBR("ativa") }));
+    respostas["GET /api/v1/admin/organizations?limit=200"] = { status: 200, body: { data: muitas } };
+    render(<PainelDeContas />);
+    expect((await screen.findByRole("status")).textContent).toMatch(/200 contas mais recentes/i);
+  });
+
+  it("AC-009.2: abaixo do limite nao mostra o aviso", async () => {
+    render(<PainelDeContas />);
+    await screen.findByText("Loja Mar");
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});

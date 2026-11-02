@@ -48,6 +48,7 @@ export const DICIONARIO: Traducoes = {
   "Escolha a marca": { es: "Elige la marca" },
   "Todas as marcas": { es: "Todas las marcas" },
   "Contas de todas as marcas": { es: "Cuentas de todas las marcas" },
+  "Mostrando as 200 contas mais recentes; filtre por marca para ver as demais.": { es: "Mostrando las 200 cuentas más recientes; filtra por marca para ver las demás." },
   // Painel de contas: cobrança (mudança 003, AC-009.2 e AC-009.3)
   "Filtrar por marca": { es: "Filtrar por marca" },
   "Filtrar por estado": { es: "Filtrar por estado" },

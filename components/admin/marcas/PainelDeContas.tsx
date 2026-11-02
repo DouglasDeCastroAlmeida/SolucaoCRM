@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ImpersonateButton } from "@/components/admin/ImpersonateButton";
 import { useT } from "@/hooks/i18n/useT";
+import { useIdioma } from "@/lib/i18n/IdiomaProvider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -45,20 +46,22 @@ const ROTULO_DO_ESTADO: Record<EstadoDaConta, string> = {
 const ESTADOS = Object.keys(ROTULO_DO_ESTADO) as EstadoDaConta[];
 const CAMPO = "h-11 rounded-md border bg-background px-2 text-sm md:h-9";
 const TOQUE = "min-h-11 md:min-h-8";
+const LIMITE_DA_LISTA = 200;
 
 function nomeDaMarca(c: Conta): string {
   const b = Array.isArray(c.brands) ? c.brands[0] : c.brands;
   return b?.name ?? "Marca padrão";
 }
 
-function data(iso: string | null): string {
+function data(iso: string | null, idioma: string): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString(idioma, { timeZone: "UTC" });
 }
 
 function Detalhes({ conta, cobranca }: { conta: Conta; cobranca: Cobranca }) {
   const t = useT();
+  const idioma = useIdioma();
   return (
     <div role="group" aria-label={`${t("Detalhes de")} ${conta.name}`} className="mt-2 space-y-1 rounded-md border p-3 text-sm">
       <p>
@@ -71,11 +74,11 @@ function Detalhes({ conta, cobranca }: { conta: Conta; cobranca: Cobranca }) {
       </p>
       <p>
         <span className="text-muted-foreground">{t("Teste até")}: </span>
-        <span>{data(cobranca.trial_ate)}</span>
+        <span>{data(cobranca.trial_ate, idioma)}</span>
       </p>
       <p>
         <span className="text-muted-foreground">{t("Próximo vencimento")}: </span>
-        <span>{data(cobranca.proximo_vencimento)}</span>
+        <span>{data(cobranca.proximo_vencimento, idioma)}</span>
       </p>
       {cobranca.link_asaas ? (
         <p>
@@ -205,7 +208,7 @@ export function PainelDeContas() {
   const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async (brandId: string) => {
-    const url = "/api/v1/admin/organizations?" + (brandId ? `brand_id=${encodeURIComponent(brandId)}&` : "") + "limit=200";
+    const url = "/api/v1/admin/organizations?" + (brandId ? `brand_id=${encodeURIComponent(brandId)}&` : "") + `limit=${LIMITE_DA_LISTA}`;
     const r = await chamar(url, "GET");
     if (!r.ok) return setErro(r.erro ?? null);
     setContas(Array.isArray(r.data) ? (r.data as Conta[]) : []);
@@ -268,6 +271,11 @@ export function PainelDeContas() {
           </select>
         </div>
       </div>
+      {contas.length >= LIMITE_DA_LISTA ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("Mostrando as 200 contas mais recentes; filtre por marca para ver as demais.")}
+        </p>
+      ) : null}
       <Erro texto={erro} />
       <table className="w-full text-sm">
         <caption className="sr-only">{t("Contas de todas as marcas")}</caption>

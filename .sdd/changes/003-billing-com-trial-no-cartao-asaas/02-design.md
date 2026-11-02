@@ -172,6 +172,8 @@ Cortesia: **não há coluna**. Org sem linha em `cobranca_assinaturas` é isenta
 - **Segurança:** cartão fora do servidor; chave do Asaas só em segredo de servidor, nunca em query, log, auditoria ou Sentry; rotas mutantes de admin com `requireSupportWrite(`; reembolso exige papel e janela validada no servidor.
 - **Rollback (< 2 min):** desligar `cobranca_ligada` na marca devolve o comportamento anterior sem apagar assinatura; imagem anterior pelo `deploy.sh`; migrations só aditivas.
 
+- **Painel de contas (AC-009.2):** a lista pede as 200 contas mais recentes (teto da rota) e o filtro por estado roda na tela sobre elas; com 200 exatas a tela avisa para filtrar por marca. Filtro por estado no servidor fica para quando uma instalação passar disso.
+
 ## Estratégia de testes
 
 Camada mais baixa que prova cada critério; testes citam o ID (`it('AC-003.1: ...')`). Sem rodar suíte neste PC: só `vitest <um arquivo>`; o resto no CI.

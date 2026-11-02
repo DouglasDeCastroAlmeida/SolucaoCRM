@@ -296,7 +296,7 @@ export async function listarContasComCobranca(opts: { brandId?: string; q?: stri
   const planoIds = [...new Set(assinaturas.map((a) => a.plano_id).filter((x): x is string => !!x))];
   let planos: Array<{ id: string; nome: string }> = [];
   if (planoIds.length > 0) {
-    const { data, error } = await admin.from("cobranca_planos").select("id, nome").in("id", planoIds);
+    const { data, error } = await admin.from("cobranca_planos").select("id, nome, brand_id").in("id", planoIds);
     if (error) lancar(error, "listar planos");
     planos = (data ?? []) as Array<{ id: string; nome: string }>;
   }
