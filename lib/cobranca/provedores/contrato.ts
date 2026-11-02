@@ -192,6 +192,13 @@ export interface AdaptadorDeCobranca {
    * pedido. Melhor esforço: a falha sobe como `ErroDoProvedor` e quem chama avisa.
    */
   pedirNotaFiscal?(p: { assinaturaRef: string; descricao: string }): Promise<void>;
+  /**
+   * A 1ª cobrança PAGA da assinatura e o fim do dia civil (São Paulo) em que foi
+   * confirmada: o marco da janela de arrependimento de 7 dias. `null` = nada pago.
+   */
+  lerPrimeiroPagamento?(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date } | null>;
+  /** Link (https) da NFS-e AUTORIZADA do pagamento mais recente; `null` = ainda não há. Melhor esforço. */
+  lerLinkDaNota?(assinaturaRef: string): Promise<string | null>;
   lerPagamentoProporcional(pagamentoRef: string): Promise<"pendente" | "pago" | "encerrado">;
   lerSituacao(p: { clienteRef: string }): Promise<Situacao>;
   /** Atualiza o preço recorrente sem mudar a data de renovação. Pode recusar com ErroDoProvedor não transitório. */

@@ -103,7 +103,11 @@ const cobrancaDoAsaas = z.object({
   dueDate: z.string(),
   subscription: z.string().nullish(),
   invoiceUrl: z.string().nullish(),
+  /** Quando o pagamento foi confirmado/recebido (data civil). Ausente em cobrança em aberto. */
+  confirmedDate: z.string().nullish(),
+  paymentDate: z.string().nullish(),
 });
+const notaDoAsaas = z.object({ id: z.string().min(1), status: z.string(), pdfUrl: z.string().nullish() });
 type CobrancaDoAsaas = z.infer<typeof cobrancaDoAsaas>;
 /** Data civil `AAAA-MM-DD` ordena como texto. */
 const porVencimento = (a: CobrancaDoAsaas, b: CobrancaDoAsaas) => a.dueDate.localeCompare(b.dueDate);
@@ -616,6 +620,30 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     });
   }
 
+  /**
+   * A 1ª cobrança PAGA da assinatura e quando (fim do dia civil de São Paulo da
+   * confirmação; sem data, o vencimento). É o marco da janela de arrependimento.
+   * `null` = nada pago ainda.
+   */
+  async function lerPrimeiroPagamento(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date } | null> {
+    const primeira = (await cobrancasDaAssinatura(assinaturaRef)).find((c) => PAGO.has(c.status));
+    if (!primeira) return null;
+    const dia = primeira.confirmedDate ?? primeira.paymentDate ?? primeira.dueDate;
+    return { pagamentoRef: primeira.id, pagoEm: fimDoDiaEmSaoPaulo(DATA_CIVIL.test(dia) ? dia : primeira.dueDate) };
+  }
+
+  /**
+   * O PDF da NFS-e do pagamento confirmado mais recente. ATENÇÃO: `GET /invoices?payment=`
+   * e os campos `status`/`pdfUrl` NÃO foram provados no sandbox (conta de pessoa física).
+   * Melhor esforço: só nota AUTORIZADA vira link; a falha sobe e quem chama engole.
+   */
+  async function lerLinkDaNota(assinaturaRef: string): Promise<string | null> {
+    const ultima = (await cobrancasDaAssinatura(assinaturaRef)).filter((c) => PAGO.has(c.status)).at(-1);
+    if (!ultima) return null;
+    const notas = ler(listaDoAsaas(notaDoAsaas), await chamar("GET", `/invoices?payment=${encodeURIComponent(ultima.id)}&limit=10`)).data;
+    return linkSeguro(notas.find((n) => n.status === "AUTHORIZED")?.pdfUrl);
+  }
+
   async function iniciarAjusteProporcional(p: Parameters<AdaptadorDeCobranca["iniciarAjusteProporcional"]>[0]) {
     const externalReference = `upgrade:${uuidDaOrg(p.orgId)}:${p.chaveIdempotencia}`;
     const consulta = new URLSearchParams({ customer: p.clienteRef, externalReference, limit: "10" });
@@ -782,6 +810,8 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
     iniciarTrialComCartao,
     acharAssinaturaDoCheckout,
     pedirNotaFiscal,
+    lerPrimeiroPagamento,
+    lerLinkDaNota,
     iniciarAjusteProporcional,
     lerPagamentoProporcional,
     expirarSessao,

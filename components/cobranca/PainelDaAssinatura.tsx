@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { linkDePagamentoSeguro } from "@/lib/cobranca/link";
 import type { DadosDoPainel } from "@/lib/cobranca/painel";
 import { formatadorDeData } from "@/lib/cobranca/fuso";
 import { ROTULO_DO_ESTADO } from "@/lib/cobranca/rotulos";
@@ -7,9 +8,10 @@ import type { Idioma } from "@/lib/i18n/idiomas";
 
 /**
  * O resumo de assinatura da empresa (spec da cobrança §9).
- * Sem hooks: é desenhado pelo servidor, no idioma de quem abriu.
+ * Sem hooks: é desenhado pelo servidor, no idioma de quem abriu. `notaUrl` é o link da
+ * NFS-e que o Asaas emitiu (AC-007.2); sem nota (ainda não saiu, ou falhou) nada aparece.
  */
-export function PainelDaAssinatura({ dados, idioma }: { dados: DadosDoPainel; idioma: Idioma }) {
+export function PainelDaAssinatura({ dados, idioma, notaUrl = null }: { dados: DadosDoPainel; idioma: Idioma; notaUrl?: string | null }) {
   const t = (texto: string) => traduzir(texto, idioma);
   const data = formatadorDeData(idioma, dados.fuso, { dateStyle: "short" });
   const brl = new Intl.NumberFormat(idioma, { style: "currency", currency: "BRL" });
@@ -35,6 +37,7 @@ export function PainelDaAssinatura({ dados, idioma }: { dados: DadosDoPainel; id
   const { assinatura: a, plano: p, uso } = dados;
   const dia = (v: string | null) => (v ? data.format(new Date(v)) : "");
   const situacao = situacaoDaAssinatura(a, t, dia);
+  const linkDaNota = linkDePagamentoSeguro(notaUrl);
 
   return (
     <Card className="max-w-xl space-y-4 p-6">
@@ -47,6 +50,13 @@ export function PainelDaAssinatura({ dados, idioma }: { dados: DadosDoPainel; id
         </p>
       </div>
       <p className="text-sm font-medium">{situacao}</p>
+      {linkDaNota && (
+        <p className="text-sm">
+          <a className="underline" href={linkDaNota} target="_blank" rel="noopener noreferrer">
+            {t("Ver nota fiscal")}
+          </a>
+        </p>
+      )}
       {a.plano_agendado && (
         <p className="text-sm">
           {t("Novo plano a partir de")} {dia(a.proximo_vencimento)}: {a.plano_agendado.nome}
@@ -85,6 +95,8 @@ function situacaoDaAssinatura(
   switch (a.estado) {
     case "trial":
       if (!a.trial_ate) return t(ROTULO_DO_ESTADO.trial);
+      // Cancelou no teste: o acesso vai até o último dia dele e nada é cobrado (AC-006.1).
+      if (a.cancela_no_fim) return `${t("Cancelada, acesso até")} ${dia(a.trial_ate)}`;
       return `${t("Teste grátis até")} ${dia(a.trial_ate)}${a.assinaturas_vivas > 0 ? ` · ${t("1ª cobrança agendada")}` : ""}`;
     case "ativa":
       return a.cancela_no_fim && a.proximo_vencimento ? `${t("Cancelada, acesso até")} ${dia(a.proximo_vencimento)}` : t(ROTULO_DO_ESTADO.ativa);

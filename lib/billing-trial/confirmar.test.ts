@@ -143,6 +143,28 @@ describe("confirmarTrialDoCheckout", () => {
     expect(c.linha().pagamento_inicial_pendente).toBe(false);
   });
 
+  it("AC-007.1: pede a NFS-e uma vez, quando a assinatura nasce; o segundo retorno não pede de novo", async () => {
+    const c = cenario();
+    const pedirNota = vi.fn(async () => "pedida" as const);
+
+    await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, { ...c.deps, pedirNota });
+    await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, { ...c.deps, pedirNota });
+
+    expect(pedirNota).toHaveBeenCalledTimes(1);
+    expect(pedirNota).toHaveBeenCalledWith(c.banco.cliente, { orgId: ORG, provedor: "asaas", assinaturaRef: "sub_1" });
+  });
+
+  it("AC-007.3: nota que falha ou lança não trava a confirmação nem a reativação", async () => {
+    const c = cenario();
+    const pedirNota = vi.fn(async () => {
+      throw new Error("nota fora");
+    });
+
+    const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, { ...c.deps, pedirNota });
+
+    expect(r).toEqual({ tipo: "confirmada", reativada: true, primeiraVez: true });
+  });
+
   it("AC-003.2: conta que não é trial com cartão não é tocada", async () => {
     const c = cenario({ linha: { trial_com_cartao: false } });
 

@@ -20,6 +20,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
+interface Linha {
+  provedor: ProvedorDeCobranca | null;
+  provedor_assinatura_id: string | null;
+  proximo_vencimento: string | null;
+  cancela_no_fim: boolean;
+  estado: string | null;
+  trial_ate: string | null;
+}
+
+/** Até quando o acesso vale (AC-006.1): o fim do período pago; no teste (nada pago ainda), o último dia do teste. */
+const acessoAte = (l: Pick<Linha, "proximo_vencimento" | "estado" | "trial_ate">) =>
+  l.proximo_vencimento ?? (l.estado === "trial" ? l.trial_ate : null);
+
 export async function POST() {
   const supportDenied = await requireSupportWrite();
   if (supportDenied) return supportDenied;
@@ -33,17 +46,17 @@ export async function POST() {
   const lerLinha = () =>
     admin
       .from("cobranca_assinaturas")
-      .select("provedor, provedor_assinatura_id, proximo_vencimento, cancela_no_fim")
+      .select("provedor, provedor_assinatura_id, proximo_vencimento, cancela_no_fim, estado, trial_ate")
       .eq("organization_id", orgId)
       .maybeSingle();
   const { data, error } = await lerLinha();
   if (error) return fail("internal_error", "Não foi possível ler a assinatura.", 500, { requestId });
-  const linha = data as { provedor: ProvedorDeCobranca | null; provedor_assinatura_id: string | null; proximo_vencimento: string | null; cancela_no_fim: boolean } | null;
+  const linha = data as Linha | null;
   if (!linha) return fail("not_found", "Sua empresa não tem plano de cobrança.", 404, { requestId });
   if (!linha.provedor || !linha.provedor_assinatura_id) {
     return fail("state_conflict", "Não há assinatura paga para cancelar.", 409, { requestId });
   }
-  if (linha.cancela_no_fim) return ok({ changed: false, acesso_ate: linha.proximo_vencimento }, { requestId });
+  if (linha.cancela_no_fim) return ok({ changed: false, acesso_ate: acessoAte(linha) }, { requestId });
   if (!(await limiteDoProvedorPorOrg(orgId))) {
     return fail("rate_limited", "Muitas tentativas seguidas. Aguarde um minuto e tente de novo.", 429, { requestId, headers: { "Retry-After": "60" } });
   }
@@ -75,6 +88,7 @@ export async function POST() {
     logger.error("cobranca: releitura depois de cancelar falhou", { requestId, organizationId: orgId, erro: e instanceof Error ? e.name : "desconhecido" }),
   );
   const depois = await lerLinha();
-  const ate = (depois.data as { proximo_vencimento: string | null } | null)?.proximo_vencimento ?? linha.proximo_vencimento;
+  const relida = depois.data as Linha | null;
+  const ate = (relida ? acessoAte(relida) : null) ?? acessoAte(linha);
   return ok({ changed: true, acesso_ate: ate }, { requestId });
 }

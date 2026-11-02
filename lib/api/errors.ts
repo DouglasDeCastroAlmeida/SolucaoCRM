@@ -148,6 +148,9 @@ export const ApiErrorCodes = {
   // Mesma rota: a instalação não tem provedor com chave, ou o provedor não faz
   // trial com cartão (só o Asaas faz). `details.faltam` igual ao de cima.
   cobranca_provedor_indisponivel: "cobranca_provedor_indisponivel",
+  // Reembolso de arrependimento (mudança 003, AC-006.4): fora dos 7 dias da 1ª cobrança
+  // paga, ou nada pago ainda. A rota recusa; a tela nem mostra o botão.
+  reembolso_fora_da_janela: "reembolso_fora_da_janela",
   // Cobrança do revendedor, PR 3a (spec §7a–§7g, §13). O provedor fora do ar é
   // 503 e o provedor que recusou é 502: a tela diz "tente de novo" num caso e
   // "confira os dados" no outro.

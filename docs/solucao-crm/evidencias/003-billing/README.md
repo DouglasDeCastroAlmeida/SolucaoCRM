@@ -153,7 +153,15 @@ Conta cancelada depois de pagar: o acesso termina no fim do período pago (régu
 
 ## Pendência: entrada abandonada nunca expira
 
-Conta `trial_com_cartao` com entrada pendente abandonada (criou a conta, nunca informou o cartão) nunca expira: a régua não limpa nem avisa essa conta. É fail-safe, pois ela nunca ganha acesso sem cartão (a org nasce suspensa por cobrança e só a confirmação do Checkout a reativa). Tratar na Fatia 8 ou 11.
+Conta `trial_com_cartao` com entrada pendente abandonada (criou a conta, nunca informou o cartão) nunca expira: a régua não limpa nem avisa essa conta. É fail-safe, pois ela nunca ganha acesso sem cartão (a org nasce suspensa por cobrança e só a confirmação do Checkout a reativa). **Decisão da Fatia 8 (2/11/2026): fica DOCUMENTADA, não implementada aqui.** Nenhum critério de aceite (AC-006.x, AC-007.x) nem tarefa da Fatia 8 a cobre, e expirar conta é decisão de produto (prazo, aviso prévio, o que acontece com o cadastro), não mero reparo. Segue fail-safe. Candidata natural: a Fatia 11, junto da sonda de produção, ou uma mudança própria.
+
+## Fatia 8: cancelar, trocar, reembolso e nota (2/11/2026)
+
+- **Cancelar (AC-006.1).** A rota `cancelar` já cancelava no Asaas e na conta; o que faltava era dizer até quando vale no TESTE: sem pagamento não há `proximo_vencimento`, então a resposta e o painel passam a usar `trial_ate`. Conta ativa segue com o fim do período pago.
+- **Trocar (AC-006.2).** Nada novo no código: a pró-rata existente (`troca.ts`) já mantinha a data de renovação. O teste novo (`tests/unit/billing-trial-cancelar.test.ts`) fixa que nenhuma escrita toca `proximo_vencimento` nem `trial_ate`.
+- **Reembolso (AC-006.3 a 006.5).** `lib/billing-trial/reembolso.ts` + `POST /api/v1/cobranca/assinatura/reembolso`. A janela é de 7 dias a partir do FIM do dia civil (São Paulo) da confirmação da 1ª cobrança paga, lida do Asaas (`confirmedDate`, senão `paymentDate`, senão o vencimento). Um pedido por cobrança (`cobranca_reembolsos`, único por organização + cobrança). O item da Central da plataforma é uma linha em `incidents` (tipo `cobranca.reembolso_pedido`, Admin › Incidentes). **A devolução do dinheiro é manual, no painel do Asaas**: o sistema não chama estorno. A conta é cancelada pelo mesmo caminho do cancelamento (DELETE da assinatura no Asaas), então o acesso segue a régua (fim do período pago); se o dono quiser corte imediato no reembolso, é decisão a tomar.
+- **Nota (AC-007.2 e 007.3).** `lib/billing-trial/nota.ts`. O pedido de emissão (`invoiceSettings`) sai UMA vez, quando a assinatura nasce em `confirmar.ts`; **o corpo desse pedido continua NÃO provado** (sandbox é pessoa física), assim como `GET /invoices?payment=` e os campos `status`/`pdfUrl` que o link usa: melhor esforço, a falha vira `incidents` `cobranca.nota_fiscal_falhou` (um por empresa) e a conta segue ativa. Provar com conta PJ antes de contar com a nota.
+- **Sem migration.** A `cobranca_reembolsos` já veio na 0725.
 
 ## Cenário da prova do externalReference (hml)
 

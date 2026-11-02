@@ -1280,6 +1280,8 @@ export const AUDIT_ACTIONS = [
   "brand.cobranca_changed",
   /** Cortesia convertida em cobrada pelo admin da plataforma (mudança 003; metadata: brand_id, plano_id). */
   "cobranca.org_convertida",
+  /** Pedido de reembolso de arrependimento (mudança 003; metadata: pagamento_ref). Um por cobrança. */
+  "cobranca.reembolso_pedido",
   "vertical_pack.saved",
   /** Troca de marca de uma organização (RPC `fn_set_org_brand`, só admin da plataforma). */
   "org.brand_changed",

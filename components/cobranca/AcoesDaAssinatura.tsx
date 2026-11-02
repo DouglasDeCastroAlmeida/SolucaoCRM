@@ -43,6 +43,8 @@ export interface PropsDasAcoes {
   provedor: ProvedorDeCobranca | null;
   /** CNPJ do cadastro, já conferido e sem máscara: pré-preenche o documento que o Asaas exige. */
   documentoDoCadastro: string | null;
+  /** Até quando vale o reembolso de arrependimento (7 dias da 1ª cobrança paga). Ausente ou nulo = sem botão (AC-006.4). */
+  reembolsoAte?: string | null;
 }
 
 const BASE = "/api/v1/cobranca/assinatura";
@@ -67,6 +69,7 @@ const FRASE_DO_ERRO: Record<string, string> = {
   troca_pendente: "Conclua ou aguarde a cobrança proporcional antes de solicitar outra troca de plano.",
   pagamento_nao_registrado: "A cobrança foi iniciada, mas não conseguimos registrar o pagamento. Tente novamente; se houver uma cobrança aberta, fale com o suporte.",
   periodo_indisponivel: "Não foi possível calcular o período pago. Atualize a assinatura e tente novamente.",
+  reembolso_fora_da_janela: "O prazo de 7 dias depois do primeiro pagamento já passou.",
 };
 const FRASE_GENERICA = "Não foi possível concluir agora. Tente de novo.";
 type Leitura = { estado: EstadoDaAssinatura | null; assinaturas_vivas: number; org_operante: boolean };
@@ -87,6 +90,7 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
   const [trocando, setTrocando] = useState(false);
   const [novo, setNovo] = useState(p.planosParaTroca[0]?.id ?? "");
   const [cancelando, setCancelando] = useState(false);
+  const [pedindoReembolso, setPedindoReembolso] = useState(false);
   const [documento, setDocumento] = useState(p.documentoDoCadastro ?? "");
   // A fatura do Asaas que o Assinar acabou de gerar: abre numa NOVA aba, por um link
   // que a pessoa clica (popup aberto depois de um await é bloqueado no Safari).
@@ -133,6 +137,7 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
   // "Já paguei" só onde há o que reler: quem nunca assinou (teste que acabou) não pagou nada.
   const podeDizerQuePagou = (emDivida && p.temProvedor) || p.noHub || aguardandoAsaas || p.trocaPagamentoUrl !== null;
   const podeTrocar = p.planosParaTroca.length > 0 && (p.estado === "trial" || p.estado === "ativa") && !p.cancelaNoFim && p.trocaStatus !== "criando";
+  const podeReembolsar = p.reembolsoAte != null && !p.cancelaNoFim;
   const podeCancelar = p.temProvedor && p.assinaturasVivas > 0 && !p.cancelaNoFim && (p.estado === "ativa" || p.estado === "trial");
 
   async function agir(acao: () => Promise<void>) {
@@ -316,6 +321,11 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
             {t(p.trocaStatus === "criando" ? "Estamos preparando o ajuste proporcional. Aguarde alguns segundos." : "Há um ajuste proporcional esperando pagamento. Escolher outro plano cancela esse ajuste.")}
           </p>
         )}
+        {podeReembolsar && !pedindoReembolso && (
+          <Button variant="ghost" disabled={ocupado} onClick={() => setPedindoReembolso(true)}>
+            {t("Pedir reembolso")}
+          </Button>
+        )}
         {podeCancelar && !cancelando && (
           <Button variant="ghost" disabled={ocupado} onClick={() => setCancelando(true)}>
             {t("Cancelar assinatura")}
@@ -392,7 +402,11 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
 
       {cancelando && (
         <div className="space-y-2 rounded-md border p-3 text-sm">
-          <p>{t("Você mantém o acesso até o fim do período já pago. Não há reembolso proporcional.")}</p>
+          <p>
+            {p.estado === "trial"
+              ? t("Você não será cobrado. O acesso continua até o fim do teste grátis.")
+              : t("Você mantém o acesso até o fim do período já pago. Não há reembolso proporcional.")}
+          </p>
           <Button
             variant="destructive"
             disabled={ocupado}
@@ -406,6 +420,28 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
             }
           >
             {t("Confirmar cancelamento")}
+          </Button>
+        </div>
+      )}
+
+      {pedindoReembolso && podeReembolsar && (
+        <div className="space-y-2 rounded-md border p-3 text-sm">
+          <p>
+            {t("Você pode pedir a devolução do primeiro pagamento até {data}. Ao confirmar, a sua conta é cancelada e a nossa equipe faz a devolução.").replace("{data}", dia(p.reembolsoAte ?? null))}
+          </p>
+          <Button
+            variant="destructive"
+            disabled={ocupado}
+            onClick={() =>
+              void agir(async () => {
+                await apiClient.post(`${BASE}/reembolso`, {});
+                setPedindoReembolso(false);
+                setRecado(t("Pedido de reembolso registrado. Sua conta foi cancelada e a devolução será feita pela nossa equipe."));
+                router.refresh();
+              })
+            }
+          >
+            {t("Confirmar pedido de reembolso")}
           </Button>
         </div>
       )}
