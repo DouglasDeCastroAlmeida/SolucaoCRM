@@ -33,7 +33,21 @@ export async function POST() {
 
   const r = await pedirReembolso(admin, orgId);
   if (r.tipo === "recusado") return fail(r.code, r.message, r.status, { requestId });
-  if (r.tipo === "ja_pedido") return ok({ changed: false }, { requestId });
+  if (r.tipo === "ja_pedido") {
+    // O retry que finalmente cancelou a conta é uma mutação: audita (o pedido em si já foi auditado antes).
+    if (r.cancelou) {
+      void audit({
+        action: "cobranca.assinatura_cancelada",
+        actorUserId: authz.user.id,
+        organizationId: orgId,
+        resourceType: "cobranca_assinatura",
+        resourceId: orgId,
+        requestId,
+        metadata: { motivo: "reembolso_pedido", pagamento_ref: r.pagamentoRef },
+      });
+    }
+    return ok({ changed: false }, { requestId });
+  }
   void audit({
     action: "cobranca.reembolso_pedido",
     actorUserId: authz.user.id,

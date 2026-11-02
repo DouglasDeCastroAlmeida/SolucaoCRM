@@ -28,7 +28,7 @@ beforeEach(() => {
   h.suporte = null;
   h.banco = bancoFalso();
   h.papel.mockResolvedValue({ ok: true, user: { id: "admin-1" }, org: { orgId: ORG } });
-  h.pedir.mockResolvedValue({ tipo: "criado", pagamentoRef: "pay_1" });
+  h.pedir.mockResolvedValue({ tipo: "criado", pagamentoRef: "pay_1", cancelou: true });
 });
 
 describe("POST /cobranca/assinatura/reembolso", () => {
@@ -48,7 +48,7 @@ describe("POST /cobranca/assinatura/reembolso", () => {
   });
 
   it("⭐ AC-006.5: segundo pedido da mesma cobrança responde 200 sem nova auditoria", async () => {
-    h.pedir.mockResolvedValue({ tipo: "ja_pedido", pagamentoRef: "pay_1" });
+    h.pedir.mockResolvedValue({ tipo: "ja_pedido", pagamentoRef: "pay_1", cancelou: false });
     const res = await POST();
     expect(res.status).toBe(200);
     expect((await res.json()).data).toEqual({ changed: false });
@@ -61,6 +61,13 @@ describe("POST /cobranca/assinatura/reembolso", () => {
     expect(res.status).toBe(422);
     expect((await res.json()).error.code).toBe("reembolso_fora_da_janela");
     expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it("retry que finalmente cancelou a conta audita o cancelamento (sem repetir o pedido)", async () => {
+    h.pedir.mockResolvedValue({ tipo: "ja_pedido", pagamentoRef: "pay_1", cancelou: true });
+    await POST();
+    expect(h.audit).toHaveBeenCalledTimes(1);
+    expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "cobranca.assinatura_cancelada", metadata: { motivo: "reembolso_pedido", pagamento_ref: "pay_1" } }));
   });
 
   it("papel abaixo de admin: a resposta do guarda, sem tocar o pedido", async () => {

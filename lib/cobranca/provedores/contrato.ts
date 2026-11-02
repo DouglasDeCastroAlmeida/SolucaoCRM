@@ -193,10 +193,10 @@ export interface AdaptadorDeCobranca {
    */
   pedirNotaFiscal?(p: { assinaturaRef: string; descricao: string }): Promise<void>;
   /**
-   * A 1ª cobrança PAGA da assinatura e o fim do dia civil (São Paulo) em que foi
-   * confirmada: o marco da janela de arrependimento de 7 dias. `null` = nada pago.
+   * A 1ª cobrança PAGA da assinatura e o dia civil (São Paulo) em que foi
+   * confirmada (`pagoEm` = início do dia, `pagoAte` = fim): o marco da janela de arrependimento de 7 dias. `null` = nada pago.
    */
-  lerPrimeiroPagamento?(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date } | null>;
+  lerPrimeiroPagamento?(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date; pagoAte: Date } | null>;
   /** Link (https) da NFS-e AUTORIZADA do pagamento mais recente; `null` = ainda não há. Melhor esforço. */
   lerLinkDaNota?(assinaturaRef: string): Promise<string | null>;
   lerPagamentoProporcional(pagamentoRef: string): Promise<"pendente" | "pago" | "encerrado">;

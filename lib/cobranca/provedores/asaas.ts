@@ -621,15 +621,17 @@ export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobran
   }
 
   /**
-   * A 1ª cobrança PAGA da assinatura e quando (fim do dia civil de São Paulo da
-   * confirmação; sem data, o vencimento). É o marco da janela de arrependimento.
+   * A 1ª cobrança PAGA da assinatura e quando (o dia civil de São Paulo da
+   * confirmação, do início `pagoEm` ao fim `pagoAte`; sem data, o vencimento). É o marco da janela de arrependimento.
    * `null` = nada pago ainda.
    */
-  async function lerPrimeiroPagamento(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date } | null> {
+  async function lerPrimeiroPagamento(assinaturaRef: string): Promise<{ pagamentoRef: string; pagoEm: Date; pagoAte: Date } | null> {
     const primeira = (await cobrancasDaAssinatura(assinaturaRef)).find((c) => PAGO.has(c.status));
     if (!primeira) return null;
     const dia = primeira.confirmedDate ?? primeira.paymentDate ?? primeira.dueDate;
-    return { pagamentoRef: primeira.id, pagoEm: fimDoDiaEmSaoPaulo(DATA_CIVIL.test(dia) ? dia : primeira.dueDate) };
+    const fim = fimDoDiaEmSaoPaulo(DATA_CIVIL.test(dia) ? dia : primeira.dueDate);
+    // O dia civil inteiro: do primeiro segundo (fim - 24h + 1s) ao último.
+    return { pagamentoRef: primeira.id, pagoEm: new Date(fim.getTime() - 24 * 3_600_000 + 1000), pagoAte: fim };
   }
 
   /**

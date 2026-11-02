@@ -48,8 +48,9 @@ describe("Asaas lerPrimeiroPagamento", () => {
     const r = await adaptador.lerPrimeiroPagamento!("sub_1");
 
     expect(r?.pagamentoRef).toBe("pay_1");
-    // Fim do dia 09/10 em São Paulo (UTC-3): a janela é do dia civil, não da hora.
-    expect(r?.pagoEm.toISOString()).toBe("2026-10-10T02:59:59.000Z");
+    // O dia 09/10 em São Paulo (UTC-3): a janela é do dia civil, não da hora.
+    expect(r?.pagoEm.toISOString()).toBe("2026-10-09T03:00:00.000Z");
+    expect(r?.pagoAte.toISOString()).toBe("2026-10-10T02:59:59.000Z");
     expect(caminhos).toEqual(["GET /payments?subscription=sub_1&limit=100"]);
   });
 
@@ -62,7 +63,9 @@ describe("Asaas lerPrimeiroPagamento", () => {
   it("AC-006.4: paga sem data de confirmação cai no vencimento (nunca inventa uma data melhor)", async () => {
     const { adaptador } = montar({ pagamentos: [pg("pay_1", "RECEIVED", "2026-10-08")] });
 
-    expect((await adaptador.lerPrimeiroPagamento!("sub_1"))?.pagoEm.toISOString()).toBe("2026-10-09T02:59:59.000Z");
+    const r = await adaptador.lerPrimeiroPagamento!("sub_1");
+    expect(r?.pagoEm.toISOString()).toBe("2026-10-08T03:00:00.000Z");
+    expect(r?.pagoAte.toISOString()).toBe("2026-10-09T02:59:59.000Z");
   });
 });
 

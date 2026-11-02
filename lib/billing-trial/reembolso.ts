@@ -25,10 +25,13 @@ export const JANELA_DO_REEMBOLSO_DIAS = 7;
 export const TIPO_DO_ITEM_DE_REEMBOLSO = "cobranca.reembolso_pedido";
 const DIA_MS = 24 * 3_600_000;
 
-/** `pagoEm` até exatamente 7 dias depois. Pagamento no futuro (relógio torto) não abre a janela. */
-export function dentroDaJanelaDeReembolso(pagoEm: Date, agora: Date): boolean {
-  const passou = agora.getTime() - pagoEm.getTime();
-  return passou >= 0 && passou <= JANELA_DO_REEMBOLSO_DIAS * DIA_MS;
+/**
+ * Do INÍCIO do dia civil do pagamento até 7 dias depois do FIM desse dia (a favor de
+ * quem pede). Comparar com o início impede o relógio torto (pagamento em dia futuro)
+ * e, ao mesmo tempo, não faz a pessoa esperar a meia-noite para o botão abrir.
+ */
+export function dentroDaJanelaDeReembolso(pagoEm: Date, pagoAte: Date, agora: Date): boolean {
+  return agora.getTime() >= pagoEm.getTime() && agora.getTime() <= pagoAte.getTime() + JANELA_DO_REEMBOLSO_DIAS * DIA_MS;
 }
 
 export interface DependenciasDoReembolso {
@@ -38,7 +41,8 @@ export interface DependenciasDoReembolso {
 }
 
 export type ResultadoDoReembolso =
-  | { tipo: "criado" | "ja_pedido"; pagamentoRef: string }
+  /** `cancelou`: ESTA chamada cancelou a conta (num retry de `ja_pedido`, quem chama audita). */
+  | { tipo: "criado" | "ja_pedido"; pagamentoRef: string; cancelou: boolean }
   | { tipo: "recusado"; status: number; code: string; message: string };
 
 interface Linha {
@@ -71,8 +75,8 @@ export async function reembolsoDisponivel(
     if (!linha || linha === "erro" || !linha.provedor || !linha.provedor_assinatura_id || linha.cancela_no_fim) return fechado;
     const ad = (deps.adaptador ?? adaptadorPadrao)(linha.provedor);
     const pago = ad.lerPrimeiroPagamento ? await ad.lerPrimeiroPagamento(linha.provedor_assinatura_id) : null;
-    if (!pago || !dentroDaJanelaDeReembolso(pago.pagoEm, (deps.agora ?? (() => new Date()))())) return fechado;
-    return { disponivel: true, ate: new Date(pago.pagoEm.getTime() + JANELA_DO_REEMBOLSO_DIAS * DIA_MS) };
+    if (!pago || !dentroDaJanelaDeReembolso(pago.pagoEm, pago.pagoAte, (deps.agora ?? (() => new Date()))())) return fechado;
+    return { disponivel: true, ate: new Date(pago.pagoAte.getTime() + JANELA_DO_REEMBOLSO_DIAS * DIA_MS) };
   } catch (e) {
     logger.warn("cobranca.reembolso_botao_nao_lido", { organization_id: orgId, erro: e instanceof Error ? e.name : "desconhecido" });
     return fechado;
@@ -89,14 +93,14 @@ export async function pedirReembolso(admin: SupabaseClient, orgId: string, deps:
   const ad = (deps.adaptador ?? adaptadorPadrao)(linha.provedor);
   if (!ad.lerPrimeiroPagamento) return recusa(409, "state_conflict", "O provedor de pagamento não permite pedir reembolso por aqui.");
 
-  let pago: { pagamentoRef: string; pagoEm: Date } | null;
+  let pago: { pagamentoRef: string; pagoEm: Date; pagoAte: Date } | null;
   try {
     pago = await ad.lerPrimeiroPagamento(linha.provedor_assinatura_id);
   } catch (e) {
     if (!(e instanceof ErroDoProvedor)) throw e;
     return recusa(503, "provedor_indisponivel", "O provedor de pagamento não respondeu. Nada mudou; tente de novo.");
   }
-  if (!pago || !dentroDaJanelaDeReembolso(pago.pagoEm, agora)) {
+  if (!pago || !dentroDaJanelaDeReembolso(pago.pagoEm, pago.pagoAte, agora)) {
     return recusa(422, "reembolso_fora_da_janela", "O prazo de 7 dias depois do primeiro pagamento já passou.");
   }
 
@@ -104,7 +108,16 @@ export async function pedirReembolso(admin: SupabaseClient, orgId: string, deps:
   const repetido = erroDoPedido?.code === "23505";
   if (erroDoPedido && !repetido) return recusa(500, "internal_error", "Não foi possível registrar o pedido.");
 
-  if (!repetido) {
+  if (repetido) {
+    // O outro pedido pode estar sendo desfeito (item da Central que falhou): só vale se a linha segue de pé.
+    const { data: viva } = await admin
+      .from("cobranca_reembolsos")
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("pagamento_ref", pago.pagamentoRef)
+      .maybeSingle();
+    if (!viva) return recusa(409, "state_conflict", "O pedido anterior não foi concluído. Tente de novo.");
+  } else {
     // Só ids: o item da Central não carrega dado pessoal (o nome da empresa vem da relação, só para o admin da plataforma).
     const { error: erroDoItem } = await admin.from("incidents").insert({
       organization_id: orgId,
@@ -119,6 +132,7 @@ export async function pedirReembolso(admin: SupabaseClient, orgId: string, deps:
     }
   }
 
+  let cancelou = false;
   if (!linha.cancela_no_fim) {
     try {
       await ad.cancelarNoFim(linha.provedor_assinatura_id);
@@ -126,6 +140,7 @@ export async function pedirReembolso(admin: SupabaseClient, orgId: string, deps:
       if (!(e instanceof ErroDoProvedor)) throw e;
       return recusa(503, "provedor_indisponivel", "O pedido foi registrado, mas não conseguimos cancelar agora. Clique de novo para concluir.");
     }
+    cancelou = true;
     const { error } = await admin
       .from("cobranca_assinaturas")
       .update({ cancela_no_fim: true, updated_at: agora.toISOString() })
@@ -136,5 +151,5 @@ export async function pedirReembolso(admin: SupabaseClient, orgId: string, deps:
       logger.error("cobranca.reembolso_releitura_falhou", { organization_id: orgId, erro: e instanceof Error ? e.name : "desconhecido" }),
     );
   }
-  return { tipo: repetido ? "ja_pedido" : "criado", pagamentoRef: pago.pagamentoRef };
+  return { tipo: repetido ? "ja_pedido" : "criado", pagamentoRef: pago.pagamentoRef, cancelou };
 }

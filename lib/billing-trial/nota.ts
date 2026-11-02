@@ -78,7 +78,12 @@ export async function pedirNotaDaAssinatura(
   }
 }
 
-/** Um aviso por empresa, em qualquer situação: resolvido o aviso, a falha seguinte não o reabre. */
+/**
+ * Um aviso por empresa, em qualquer situação: resolvido o aviso, a falha seguinte não o reabre.
+ * Leitura-antes-de-gravar: sob concorrência (dois retornos ao mesmo tempo) pode sair um aviso
+ * a mais, nunca um a menos. `incidents` não tem índice único por (empresa, tipo) e criá-lo
+ * pediria migration só para isto; a pior consequência é uma linha duplicada na Central.
+ */
 async function avisarAPlataforma(admin: SupabaseClient, orgId: string, codigo: string): Promise<void> {
   try {
     const { data } = await admin.from("incidents").select("id").eq("organization_id", orgId).eq("type", TIPO_DO_AVISO_DE_NOTA).limit(1);
