@@ -29,7 +29,7 @@ const h = vi.hoisted(() => {
       listarPacotes: vi.fn(),
       criarPacote: vi.fn(),
       editarPacote: vi.fn(),
-      listarContasComMarca: vi.fn(),
+      listarContasComCobranca: vi.fn(),
     },
     rpc: vi.fn(),
     ordem: [] as string[],
@@ -98,7 +98,7 @@ beforeEach(() => {
   h.repo.editarPlano.mockResolvedValue({ id: ID2 });
   h.repo.criarPacote.mockResolvedValue({ id: ID2, slug: "p" });
   h.repo.editarPacote.mockResolvedValue({ id: ID2 });
-  h.repo.listarContasComMarca.mockResolvedValue([]);
+  h.repo.listarContasComCobranca.mockResolvedValue([]);
   h.rpc.mockResolvedValue({ error: null });
 });
 
@@ -215,7 +215,7 @@ describe("AC-008.5 / AC-003.5: contas e troca de marca", () => {
   it("AC-008.5: lista contas aceitando filtro de marca só pela query", async () => {
     const res = await getContas(req("GET", undefined, `http://localhost/x?brand_id=${ID2}&limit=10`));
     expect(res.status).toBe(200);
-    expect(h.repo.listarContasComMarca).toHaveBeenCalledWith({ brandId: ID2, q: undefined, limit: 10 });
+    expect(h.repo.listarContasComCobranca).toHaveBeenCalledWith({ brandId: ID2, q: undefined, limit: 10 });
     expect((await getContas(req("GET", undefined, "http://localhost/x?brand_id=nao-uuid"))).status).toBe(400);
   });
 

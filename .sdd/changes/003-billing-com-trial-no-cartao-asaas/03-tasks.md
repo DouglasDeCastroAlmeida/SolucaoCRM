@@ -74,8 +74,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-037 [IMPL] Ajustes de sincronizar e rodada para o trial com cartão e aviso de divergência na Central (~55 min) {AC-008.1, AC-008.2, AC-008.3, AC-008.5} deps: T-036, T-022
 
 ### Fatia 10: Painel de contas (REQ-009)
-- [ ] T-038 [TEST-UI] Painel de contas: filtro por estado e por marca, detalhes com plano, datas e link do Asaas (~40 min) {AC-009.2, AC-009.3}
-- [ ] T-039 [IMPL] Filtros e detalhes no PainelDeContas (~50 min) {AC-009.2, AC-009.3} deps: T-038, T-030
+- [x] T-038 [TEST-UI] Painel de contas: filtro por estado e por marca, detalhes com plano, datas e link do Asaas (~40 min) {AC-009.2, AC-009.3}
+- [x] T-039 [IMPL] Filtros e detalhes no PainelDeContas (~50 min) {AC-009.2, AC-009.3} deps: T-038, T-030
 
 ### Fatia 11: Prova pela tela e liberação segura (REQ-002, REQ-010)
 - [ ] T-040 [TEST-E2E] Jornada pela tela na homologação com o sandbox: cadastro, Checkout, trial, aviso, cobrança, atraso, suspensão e reativação, com evidência em evidence/ (~60 min) {AC-010.3} deps: T-022, T-025, T-034
