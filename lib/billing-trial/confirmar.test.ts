@@ -252,7 +252,7 @@ describe("confirmarTrialDoCheckout", () => {
 
     const r = await confirmarTrialDoCheckout(c.banco.cliente, { orgId: ORG, resultado: "ok" }, c.deps);
 
-    expect(r).toEqual({ tipo: "provedor_fora" });
+    expect(r).toEqual({ tipo: "provedor_fora", motivo: "assinatura_ambigua" });
     expect(c.linha()).toMatchObject({ pagamento_inicial_pendente: true, provedor: null });
     expect(c.sincroniza).not.toHaveBeenCalled();
   });

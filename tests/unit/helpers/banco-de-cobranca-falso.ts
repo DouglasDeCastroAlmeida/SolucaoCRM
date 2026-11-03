@@ -15,6 +15,17 @@ export interface BancoFalso {
   escritas: Record<string, number>;
 }
 
+function casaOu(l: Linha, expr: string): boolean {
+  return expr.split(",").some((termo) => {
+    const m = /^([a-z_]+).(is.null|not.is.null|gt.(.+))$/.exec(termo);
+    if (!m) throw new Error(`dublê: filtro .or() não suportado: ${termo}`);
+    const v = l[m[1]!];
+    if (m[2] === "is.null") return v == null;
+    if (m[2] === "not.is.null") return v != null;
+    return v != null && Date.parse(String(v)) > Date.parse(m[3]!);
+  });
+}
+
 export function bancoDeCobrancaFalso(
   tabelas: Record<string, Linha[]>,
   opcoes: { unicas?: Record<string, string[]> } = {},
@@ -31,6 +42,9 @@ export function bancoDeCobrancaFalso(
       let acao: "select" | "update" | "insert" = "select";
       let valores: Linha = {};
       let devolve = false;
+      let teto: number | null = null;
+      let ordem: { coluna: string; asc: boolean } | null = null;
+      const grupos: string[] = [];
       const q = {
         select() {
           if (acao === "select") acao = "select";
@@ -55,8 +69,31 @@ export function bancoDeCobrancaFalso(
           filtros.push({ coluna, valor });
           return q;
         },
+        /** Vários `.or()` se combinam em E, como no PostgREST. Aceita `col.is.null`, `col.not.is.null` e `col.gt.<valor>`. */
+        or(expr: string) {
+          grupos.push(expr);
+          return q;
+        },
+        order(coluna: string, o?: { ascending?: boolean }) {
+          ordem = { coluna, asc: o?.ascending !== false };
+          return q;
+        },
+        limit(n: number) {
+          teto = n;
+          return q;
+        },
         async executar() {
-          if (acao === "select") return { data: linhas.filter((l) => casa(l, filtros)).map((l) => ({ ...l })), error: null };
+          if (acao === "select") {
+            let r = linhas.filter((l) => casa(l, filtros) && grupos.every((g) => casaOu(l, g)));
+            if (ordem) {
+              const { coluna, asc } = ordem;
+              // nulos primeiro, como o PostgREST faz em ordem descendente
+              const chave = (l: Linha) => (l[coluna] == null ? Infinity : Date.parse(String(l[coluna])));
+              r = [...r].sort((a, b) => (asc ? chave(a) - chave(b) : chave(b) - chave(a)));
+            }
+            if (teto !== null) r = r.slice(0, teto);
+            return { data: r.map((l) => ({ ...l })), error: null };
+          }
           escritas[nome] = (escritas[nome] ?? 0) + 1;
           if (acao === "insert") {
             const chave = opcoes.unicas?.[nome];

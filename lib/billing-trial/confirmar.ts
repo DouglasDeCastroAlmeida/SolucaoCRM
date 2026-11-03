@@ -53,8 +53,8 @@ export type ResultadoDoConfirmar =
   | { tipo: "pendente"; checkoutDescartado: boolean }
   /** A org não é um trial com cartão (ou não existe linha): nada a fazer. */
   | { tipo: "nao_aplica" }
-  /** O provedor não respondeu: nada mudou. */
-  | { tipo: "provedor_fora" };
+  /** O provedor não respondeu: nada mudou. `motivo` = a leitura voltou, mas o que ela diz não se resolve sozinho. */
+  | { tipo: "provedor_fora"; motivo?: "assinatura_ambigua" };
 
 interface Linha {
   trial_com_cartao: boolean;
@@ -75,6 +75,11 @@ export async function confirmarTrialDoCheckout(
     resultado: ResultadoDeRetorno;
     /** Só o retorno selado a traz. Chamada de dentro da sessão (hub, "Verificar agora") não a tem. */
     tentativa?: string;
+    /**
+     * Chamada da conciliação horária (não do navegador): só CONFIRMA. Sem assinatura achada não marca
+     * "confirmando" nem descarta o checkout — quem pode estar pagando agora não é atrapalhado.
+     */
+    conciliacao?: boolean;
   },
   deps: DependenciasDoConfirmar = {},
 ): Promise<ResultadoDoConfirmar> {
@@ -103,7 +108,7 @@ export async function confirmarTrialDoCheckout(
 
   /** Registra "voltou com ok e não achamos a assinatura": segura um novo checkout. Só quem ainda não está marcado. */
   const marcarConfirmando = async () => {
-    if (p.resultado !== "ok" || marcado || linha.checkout_sessao_id === null) return;
+    if (p.conciliacao || p.resultado !== "ok" || marcado || linha.checkout_sessao_id === null) return;
     const { error } = await admin
       .from("cobranca_assinaturas")
       .update({ checkout_url: null, checkout_expira_em: new Date(agora.getTime() + PRAZO_CONFIRMANDO_MS).toISOString() })
@@ -121,15 +126,17 @@ export async function confirmarTrialDoCheckout(
   // o uuid da URL enquanto ela existir. Sem id nenhum não há como achar: segue como "pendente", nunca reativa.
   const checkoutId = linha.checkout_provedor_id ?? idDoCheckoutDaUrl(linha.checkout_url);
   let achada: { clienteRef: string; assinaturaRef: string } | null = null;
+  let ambigua = false;
   try {
     if (checkoutId !== null) achada = await ad.acharAssinaturaDoCheckout({ orgId, checkoutId });
   } catch (e) {
     if (e instanceof ErroDoProvedor && e.codigo === "assinatura_ambigua") {
       logger.error("cobranca.trial_assinatura_ambigua", { organization_id: orgId });
+      ambigua = true;
     }
     logger.warn("cobranca.trial_confirmar_leitura_falhou", { organization_id: orgId, codigo: e instanceof ErroDoProvedor ? e.codigo : "fora_do_adaptador" });
     await marcarConfirmando();
-    return { tipo: "provedor_fora" };
+    return ambigua ? { tipo: "provedor_fora", motivo: "assinatura_ambigua" } : { tipo: "provedor_fora" };
   }
 
   if (achada === null) {
@@ -140,7 +147,7 @@ export async function confirmarTrialDoCheckout(
     }
     // Já marcado como "confirmando" (a pessoa voltou com ok antes): cancelar/expirar não desfaz a guarda.
     // Sem sessão guardada só há uma reserva em andamento, que é de quem a abriu.
-    if (marcado || linha.checkout_sessao_id === null) return { tipo: "pendente", checkoutDescartado: false };
+    if (p.conciliacao || marcado || linha.checkout_sessao_id === null) return { tipo: "pendente", checkoutDescartado: false };
     const { error } = await admin
       .from("cobranca_assinaturas")
       .update({ checkout_url: null, checkout_expira_em: null, checkout_sessao_id: null, checkout_provedor_id: null })

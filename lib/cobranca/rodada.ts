@@ -1,7 +1,10 @@
 /**
  * A RODADA HORÁRIA DA COBRANÇA (spec da cobrança do revendedor §8).
  *
- * Três passos, nesta ordem:
+ * Quatro passos, nesta ordem:
+ *  0. trial com cartão pendente — acha pelo id do checkout a assinatura de quem pagou e o retorno
+ *     nunca voltou, e reativa pelo caminho do `sincronizar` (mudança 003, AC-008.3). Duas assinaturas
+ *     para o mesmo checkout viram aviso na Central, sem mexer no acesso (AC-008.5);
  *  1. reconciliação — relê pela API quem `fn_cobranca_reconciliaveis` marca
  *     `precisa_reler`: 50 por rodada, a nunca lida primeiro. Cura o webhook
  *     perdido, o provedor que desistiu de avisar e a VPS que ficou fora do ar;
@@ -14,6 +17,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { conciliarTrialsPendentes } from "@/lib/billing-trial/conciliar";
 import { avisarContasParaRevisarExclusao } from "@/lib/cobranca/exclusao-pendente";
 import type { AcaoDaRegua } from "@/lib/cobranca/regua";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -33,6 +37,10 @@ export interface ResumoDaRodada {
   avisosDeIa: number;
   /** Contas canceladas há 90 dias que a plataforma foi avisada para revisar a exclusão (AC-005.6). */
   exclusoesParaRevisar: number;
+  /** Trials com cartão cuja assinatura a rodada achou e confirmou (o retorno do Checkout nunca voltou). */
+  trialsConfirmados: number;
+  /** Avisos novos de divergência sem solução abertos na Central (o acesso não muda). */
+  divergencias: number;
 }
 
 export const LIMITE_DA_RECONCILIACAO = 50;
@@ -47,7 +55,7 @@ interface Reconciliavel {
 const instante = (v: string | null) => (v === null ? Number.MIN_SAFE_INTEGER : Date.parse(v));
 
 export async function rodadaDaCobranca(admin: SupabaseClient, deps: DependenciasDaCobranca = {}): Promise<ResumoDaRodada> {
-  const resumo: ResumoDaRodada = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0 };
+  const resumo: ResumoDaRodada = { relidas: 0, falhas: 0, avisos: 0, suspensas: 0, reativadas: 0, canceladas: 0, avisosDeIa: 0, exclusoesParaRevisar: 0, trialsConfirmados: 0, divergencias: 0 };
   const contar = (acao: AcaoDaRegua["tipo"]) => {
     if (acao === "avisar") resumo.avisos += 1;
     else if (acao === "suspender") resumo.suspensas += 1;
@@ -58,6 +66,16 @@ export async function rodadaDaCobranca(admin: SupabaseClient, deps: Dependencias
     resumo.falhas += 1;
     logger.error("cobranca.rodada_falhou", { organization_id: org, erro: e instanceof Error ? e.message : "desconhecido" });
   };
+
+  try {
+    const t = await conciliarTrialsPendentes(admin, { adaptador: deps.adaptador, agora: deps.agora });
+    resumo.trialsConfirmados = t.confirmadas;
+    resumo.reativadas += t.reativadas;
+    resumo.divergencias = t.divergencias;
+    resumo.falhas += t.falhas;
+  } catch (e) {
+    falhou("trial_pendente", e);
+  }
 
   const { data: conjunto, error } = await admin.rpc("fn_cobranca_reconciliaveis");
   if (error) throw new Error(`cobranca: reconciliáveis ilegíveis (${error.code ?? "sem_codigo"})`);
