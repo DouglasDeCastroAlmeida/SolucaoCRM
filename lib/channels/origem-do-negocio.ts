@@ -62,7 +62,15 @@ export const ORIGEM_DO_WHATSAPP_OPERADOR: OrigemDoNascimento = {
   motivo: "primeira mensagem enviada pelo celular",
 };
 
+/** O negócio que nasce de um e-mail recebido (canal de e-mail, mudança 005). */
+export const ORIGEM_DO_EMAIL: OrigemDoNascimento = {
+  rotulo: "E-mail",
+  source: "email",
+  motivo: "primeira mensagem recebida por e-mail",
+};
+
 export function origemDoNegocioPeloCanal(canal: string | null | undefined): OrigemDoNascimento {
+  if (canal === "email") return ORIGEM_DO_EMAIL;
   const rede = SOCIAL_NETWORKS.find((r) => r.inbox && r.id === canal);
   if (!rede) return ORIGEM_DO_WHATSAPP;
   return {

@@ -76,7 +76,8 @@ vi.mock("@/lib/supabase/admin", () => ({
     return {
       // Poda sem nada a fazer: o que este arquivo mede é a varredura.
       rpc: async () => ({ data: 0, error: null }),
-      from: (t: string) => (t === "conversation_drafts" ? rascunhosVazios() : cascata.from(t)),
+      // `email_ignorados` (canal de e-mail, mudança 005) é a mesma poda por DELETE do admin client.
+      from: (t: string) => (t === "conversation_drafts" || t === "email_ignorados" ? rascunhosVazios() : cascata.from(t)),
     };
   },
 }));

@@ -42,17 +42,17 @@ Cada tarefa ocupa uma linha:
 - [x] T-018 [IMPL] components/connections/email/AssistenteDeConexao.tsx, CanalEmailClient.tsx e aba nova em ConexoesShell (~60 min) {AC-001.1, AC-001.2} deps: T-016, T-017
 
 ### Fatia 4: Receber e-mails como conversa (REQ-002, REQ-003, REQ-006, REQ-007)
-- [ ] T-019 [TEST-UNIT] Regra de e-mail automático: lista de inscrição, bulk, auto-resposta, no-reply e falha de entrega ignorados com motivo; contato conhecido nunca ignorado (~40 min) {AC-003.1, AC-003.2, AC-003.5}
-- [ ] T-020 [IMPL] lib/channels/email/automatico.ts (~30 min) {AC-003.1, AC-003.2, AC-003.5} deps: T-019
-- [ ] T-021 [TEST-UNIT] Leitura de MIME (texto, anexos com limite, Message-ID, In-Reply-To, References, assunto) e HTML malicioso sem script, formulário, iframe, estilo ou imagem remota (~50 min) {AC-007.3}
-- [ ] T-022 [IMPL] parse.ts e html-seguro.ts, com mailparser e sanitize-html pinados no package.json (~55 min) {AC-007.3} deps: T-021
-- [ ] T-023 [TEST-UNIT] Ingestão com servidor IMAP simulado: aparece como mensagem com assunto, texto e anexos; remetente novo cria contato, conhecido reaproveita; resposta fica na mesma conversa; só o que chegou depois da conexão; spam e lixeira nunca lidos (~55 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4}
+- [x] T-019 [TEST-UNIT] Regra de e-mail automático: lista de inscrição, bulk, auto-resposta, no-reply e falha de entrega ignorados com motivo; contato conhecido nunca ignorado (~40 min) {AC-003.1, AC-003.2, AC-003.5}
+- [x] T-020 [IMPL] lib/channels/email/automatico.ts (~30 min) {AC-003.1, AC-003.2, AC-003.5} deps: T-019
+- [x] T-021 [TEST-UNIT] Leitura de MIME (texto, anexos com limite, Message-ID, In-Reply-To, References, assunto) e HTML malicioso sem script, formulário, iframe, estilo ou imagem remota (~50 min) {AC-007.3}
+- [x] T-022 [IMPL] parse.ts e html-seguro.ts, com mailparser e sanitize-html pinados no package.json (~55 min) {AC-007.3} deps: T-021
+- [x] T-023 [TEST-UNIT] Ingestão com servidor IMAP simulado: aparece como mensagem com assunto, texto e anexos; remetente novo cria contato, conhecido reaproveita; resposta fica na mesma conversa; só o que chegou depois da conexão; spam e lixeira nunca lidos (~55 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4}
 - [ ] T-024 [TEST-INT] Invariante: o mesmo e-mail visto duas vezes gera uma só mensagem, cursor por UID avança, UIDVALIDITY mudou não reimporta o passado (~45 min) {AC-002.5, AC-002.6} deps: T-008
-- [ ] T-025 [IMPL] lib/channels/email/ingest.ts: contato por e-mail, fn_upsert_email_conversation, INSERT com 23505 como duplicado, marcarConversaComMensagem, aplicarEfeitosPosEntrada (~60 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6} deps: T-020, T-022, T-023, T-024, T-008
-- [ ] T-026 [TEST-UNIT] Lista de ignorados com remetente, assunto, data e motivo; promover relê pelo UID e vira conversa; "não é cliente" ignora os próximos e tira a conversa da lista (~45 min) {AC-003.3, AC-003.4}
-- [ ] T-027 [IMPL] Rotas de ignorados e de remetentes, poda dos ignorados no cron data-retention (~50 min) {AC-003.3, AC-003.4} deps: T-025, T-026
-- [ ] T-028 [TEST-UNIT] Rodada: senha recusada pausa a caixa, avisa na Central e por e-mail e não tenta de novo; falha de rede retoma de onde parou; e-mail malformado ou grande pulado com motivo; prazo encerra a rodada; EMAIL_CANAL desligado não lê nem envia (~55 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-008.3}
-- [ ] T-029 [IMPL] lib/channels/email/rodada.ts com trava por caixa e rodízio, rota app/api/v1/cron/email-rodada, linha no docker/scheduler/entrypoint.sh e EMAIL_CANAL em lib/env.ts e .env.example (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-008.3} deps: T-025, T-028
+- [x] T-025 [IMPL] lib/channels/email/ingest.ts: contato por e-mail, fn_upsert_email_conversation, INSERT com 23505 como duplicado, marcarConversaComMensagem, aplicarEfeitosPosEntrada (~60 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6} deps: T-020, T-022, T-023, T-024, T-008
+- [x] T-026 [TEST-UNIT] Lista de ignorados com remetente, assunto, data e motivo; promover relê pelo UID e vira conversa; "não é cliente" ignora os próximos e tira a conversa da lista (~45 min) {AC-003.3, AC-003.4}
+- [x] T-027 [IMPL] Rotas de ignorados e de remetentes, poda dos ignorados no cron data-retention (~50 min) {AC-003.3, AC-003.4} deps: T-025, T-026
+- [x] T-028 [TEST-UNIT] Rodada: senha recusada pausa a caixa, avisa na Central e por e-mail e não tenta de novo; falha de rede retoma de onde parou; e-mail malformado ou grande pulado com motivo; prazo encerra a rodada; EMAIL_CANAL desligado não lê nem envia (~55 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-008.3}
+- [x] T-029 [IMPL] lib/channels/email/rodada.ts com trava por caixa e rodízio, rota app/api/v1/cron/email-rodada, linha no docker/scheduler/entrypoint.sh e EMAIL_CANAL em lib/env.ts e .env.example (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-008.3} deps: T-025, T-028
 
 ### Fatia 5: Responder por e-mail com a conta protegida (REQ-004, REQ-005, REQ-006)
 - [ ] T-030 [TEST-UNIT] Adaptador de envio com SMTP simulado: assunto "Re:", In-Reply-To e References da última mensagem, citação, assinatura da caixa, anexos dentro do limite e recusa acima dele, enviada sem recibo de leitura, falha com causa e tentar de novo (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-006.5}
@@ -79,6 +79,13 @@ Cada tarefa ocupa uma linha:
 - [ ] T-047 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com servidor de e-mail real (~30 min) deps: T-044
 - [ ] T-048 [CHECK-SMOKE] Implantar em produção sem caixas conectadas e rodar a sonda (~30 min) deps: T-047, T-045
 - [ ] T-049 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-048
+
+## Dívida conhecida (revisão da Fatia 4; tratar na Fatia 5/6, não implementada)
+
+- Sugestão 2: mensagem que sempre lança no `ingerir` (erro determinístico de banco) trava o cursor para sempre, com recuo de até 30 min e só log. Pular o UID com `registrarIgnorado` depois de N falhas no mesmo UID (rodada.ts).
+- Sugestão 3: `avancarCursor` (estado.ts) faz UPDATE incondicional; o cursor nunca retroceder depende só da trava. Tornar garantia do banco (`.lt("ultimo_uid", n)` ou `greatest`). O AC-002.6 do invariante é tautológico; a prova real está em rodada.test.ts.
+- Sugestão 8: anexo guardado com o Content-Type original (pode ser text/html ou image/svg+xml) no bucket privado. Forçar download (Content-Disposition) ou normalizar o tipo na Fatia 5, quando o anexo for exibido.
+- Sugestão 9: "não é cliente" por `endereco` (sem `conversation_id`) grava o bloqueio mas não arquiva conversas existentes. O AC-003.4 está coberto pelo caminho com `conversation_id`; documentar ou arquivar também por endereço.
 
 ## Estimativa
 

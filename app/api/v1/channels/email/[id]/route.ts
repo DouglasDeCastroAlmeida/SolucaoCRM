@@ -21,6 +21,8 @@ import {
 } from "@/lib/channels/email/caixa";
 import { verificarCaixa } from "@/lib/channels/email/conexao";
 import { respostaDaFalhaDeConexao, semSegredo, tentativasEsgotadas } from "@/lib/channels/email/rotas";
+import { resolverAvisoSenhaRecusada } from "@/lib/channels/email/avisos";
+import { lerEstado, retomar } from "@/lib/channels/email/estado";
 import { gravarSenhaDaCaixa, ultimosQuatro } from "@/lib/channels/email/segredo";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { requireSupportWrite } from "@/lib/impersonate/support";
@@ -97,6 +99,22 @@ export async function PATCH(
   if (error) {
     logger.error("[email.alterar] gravar a configuração falhou", { requestId, erro: semSegredo(error, d.senha ?? "") });
     return fail("internal_error", t("Não foi possível salvar a caixa agora. Tente de novo."), 500, { requestId });
+  }
+
+  // Senha nova de uma caixa que estava pausada por senha recusada: volta a ler de onde parou.
+  if (d.senha !== undefined) {
+    try {
+      const estado = await lerEstado(admin, orgId, id);
+      if (estado?.pausaMotivo === "senha_recusada" || estado?.pausaMotivo === "senha_ausente") {
+        await retomar(admin, orgId, id);
+        await resolverAvisoSenhaRecusada(admin, orgId, id);
+      }
+    } catch (erro) {
+      logger.warn("[email.alterar] retomar a caixa depois da senha nova falhou", {
+        requestId,
+        erro: erro instanceof Error ? erro.message.slice(0, 120) : "desconhecido",
+      });
+    }
   }
 
   void audit({

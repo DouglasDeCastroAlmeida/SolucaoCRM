@@ -65,6 +65,11 @@ CRONS="
 * * * * *|45|api/v1/cron/campaign-worker
 */5 * * * *|60|api/v1/cron/webhook-log-retention
 */5 * * * *|45|api/v1/cron/channel-health
+# A LEITURA DAS CAIXAS DE E-MAIL (mudança 005). Minuto a minuto: o e-mail novo precisa aparecer em até
+# 3 minutos. Prazo de 45 s dentro da rota (rodízio entre caixas, trava por caixa); o timeout de 50 s
+# do agendador cobre a rodada com folga. Sem caixa conectada, a rodada não abre conexão nenhuma;
+# EMAIL_CANAL=desligado a faz responder 200 sem ler.
+* * * * *|50|api/v1/cron/email-rodada
 # A JANELA DE MANUTENÇÃO (#2388). Minuto a minuto porque o que ela decide é a
 # borda de um horário ESCOLHIDO POR UMA PESSOA: perder a abertura ou a retomada
 # por causa de uma varredura a cada 5 minutos seria o defeito inteiro. Barata:

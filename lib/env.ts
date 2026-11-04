@@ -286,6 +286,14 @@ const schema = z.object({
   // é `canalGraphParceiroLigado()` em `lib/channels/graph-parceiro/credentials.ts`.
   DATAFY_ENABLED: z.string().optional().default(""),
 
+  // ─── Canal de e-mail (mudança 005) — LIGADO POR PADRÃO ───
+  //
+  // Só `desligado` para a leitura das caixas e o envio por e-mail (a chave de rollback:
+  // nada é apagado, o resto do produto segue igual). Vazio ou qualquer outro valor = ligado,
+  // então um `.env` antigo, sem a variável, continua como está. Quem lê é
+  // `emailCanalLigado()` em `lib/channels/email/chave.ts`.
+  EMAIL_CANAL: z.string().optional().default(""),
+
   // Upstash Redis
   UPSTASH_REDIS_REST_URL: required("UPSTASH_REDIS_REST_URL"),
   UPSTASH_REDIS_REST_TOKEN: required("UPSTASH_REDIS_REST_TOKEN"),
