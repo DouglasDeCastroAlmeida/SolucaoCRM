@@ -18,8 +18,8 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Prova de leitura e envio em contas reais, antes de qualquer código (REQ-009)
-- [ ] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): numa conta Gmail com senha de app e numa conta de outro provedor, entrar por IMAP, ler a caixa de entrada, enviar por SMTP e ver a mensagem chegar; grava evidência (~60 min) {AC-009.1}
-- [ ] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/005-email/ e decidir: passou segue; falhou para a esteira e volta ao design (V-6) (~20 min) {AC-009.1} deps: T-001
+- [x] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): numa conta Gmail com senha de app e numa conta de outro provedor, entrar por IMAP, ler a caixa de entrada, enviar por SMTP e ver a mensagem chegar; grava evidência (~60 min) {AC-009.1}
+- [x] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/005-email/ e decidir: passou segue; falhou para a esteira e volta ao design (V-6) (~20 min) {AC-009.1} deps: T-001
 
 ### Fatia 2: Banco aditivo, provider na matriz e isolamento (REQ-007, REQ-008, REQ-009)
 - [ ] T-003 [TEST-INT] Invariante: CHECKs aceitam provider email e canal email, única por (organização, endereço), isolamento entre 2 organizações nas tabelas novas, funções novas sem EXECUTE para PUBLIC e anon, senha sem coluna legível ao cliente (~55 min) {AC-007.4, AC-009.2} deps: T-002
