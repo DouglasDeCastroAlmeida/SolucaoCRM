@@ -1,0 +1,49 @@
+{
+  "passo": "teto",
+  "quando": "2026-11-04T20:18:06.934Z",
+  "resultados": [
+    {
+      "id": "08.teto-1",
+      "descricao": "o teto diário foi reduzido a 1 pela tela",
+      "resultado": "PASSOU",
+      "detalhe": "original 200/30s"
+    },
+    {
+      "id": "08.teto-1.medida",
+      "descricao": "tela \"teto-1\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "08.duas-respostas-sob-teto.medida",
+      "descricao": "tela \"duas-respostas-sob-teto\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "08.fila",
+      "descricao": "a resposta acima do teto ficou na fila (status queued) em vez de ser enviada",
+      "resultado": "PASSOU",
+      "detalhe": "2 na fila; saídas: sent,sent,queued,queued"
+    },
+    {
+      "id": "08.aviso",
+      "descricao": "a conversa mostra o aviso de adiamento com a hora (AC-005.1)",
+      "resultado": "PASSOU",
+      "detalhe": "texto de aviso visível: true"
+    },
+    {
+      "id": "08.restaurado",
+      "descricao": "o teto e o intervalo voltaram ao original",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "08.teto-restaurado.medida",
+      "descricao": "tela \"teto-restaurado\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    }
+  ],
+  "achados": []
+}

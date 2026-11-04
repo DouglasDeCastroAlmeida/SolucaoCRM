@@ -1,0 +1,85 @@
+{
+  "passo": "ignorar",
+  "quando": "2026-11-04T19:43:19.822Z",
+  "resultados": [
+    {
+      "id": "04.conhecido",
+      "descricao": "contato conhecido nunca é ignorado: o automático dele vira conversa (AC-003.5)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "04.lista-ignorada",
+      "descricao": "e-mail de lista/em massa de remetente novo NÃO virou conversa (AC-003.1)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "04.auto-ignorada",
+      "descricao": "resposta automática de remetente novo NÃO virou conversa (AC-003.1)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "04.inbox-sem-os-ignorados.medida",
+      "descricao": "tela \"inbox-sem-os-ignorados\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "04.tela-ignorados",
+      "descricao": "existe tela com a lista de ignorados (remetente, assunto, data, motivo) (AC-003.3)",
+      "resultado": "FALHOU",
+      "detalhe": "nenhuma tela das rotas de Conexões/Inbox/Configurações menciona 'ignorados'"
+    },
+    {
+      "id": "04.api-ignorados",
+      "descricao": "(API, diagnóstico) a lista de ignorados do servidor traz o e-mail de lista com motivo",
+      "resultado": "PASSOU",
+      "detalhe": "status 200, 2 ignorado(s), campos id,caixa_id,remetente,assunto,recebido_em,motivo, motivo \"lista_de_inscricao\""
+    },
+    {
+      "id": "04.api-promover",
+      "descricao": "(API, diagnóstico) promover o ignorado o transforma em conversa",
+      "resultado": "PASSOU",
+      "detalhe": "status 200 {\"data\":{\"conversation_id\":\"a1a3c5e8-dea3-44f9-8382-979a8d19fb8b\"}}"
+    },
+    {
+      "id": "04.promovido-na-tela",
+      "descricao": "o promovido aparece no Inbox",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "04.promovido.medida",
+      "descricao": "tela \"promovido\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "04.api-nao-cliente",
+      "descricao": "(API, diagnóstico) 'não é cliente' aceita o remetente",
+      "resultado": "PASSOU",
+      "detalhe": "status 200 {\"data\":{\"endereco\":\"***@***\",\"conversas_arquivadas\":0}}"
+    },
+    {
+      "id": "04.nao-cliente-vale",
+      "descricao": "o próximo e-mail do remetente marcado 'não é cliente' NÃO vira conversa (AC-003.4)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "04.apos-nao-cliente.medida",
+      "descricao": "tela \"apos-nao-cliente\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "04.btn-nao-cliente",
+      "descricao": "a conversa de e-mail oferece 'Não é cliente' na tela (AC-003.4)",
+      "resultado": "FALHOU",
+      "detalhe": "0 botão(ões) encontrados"
+    }
+  ],
+  "achados": []
+}

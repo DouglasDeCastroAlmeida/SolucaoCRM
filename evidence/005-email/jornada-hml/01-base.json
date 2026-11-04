@@ -1,6 +1,6 @@
 {
   "passo": "base",
-  "quando": "2026-11-04T19:03:39.474Z",
+  "quando": "2026-11-04T19:27:58.560Z",
   "resultados": [
     {
       "id": "01.versao",
@@ -24,7 +24,7 @@
       "id": "01.antigo",
       "descricao": "o e-mail ANTIGO está na caixa do servidor antes da conexão",
       "resultado": "PASSOU",
-      "detalhe": "assunto marcado T044-mw2hit6x"
+      "detalhe": "assunto marcado T044-mw2ie92j"
     }
   ],
   "achados": []

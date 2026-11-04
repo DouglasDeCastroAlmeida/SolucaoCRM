@@ -1,6 +1,6 @@
 {
   "passo": "conectar",
-  "quando": "2026-11-04T19:10:15.430Z",
+  "quando": "2026-11-04T19:31:33.456Z",
   "resultados": [
     {
       "id": "02.tab",
@@ -42,7 +42,7 @@
       "id": "02.testar",
       "descricao": "Testar entra na caixa, envia o e-mail de teste e mostra 'Deu certo'",
       "resultado": "PASSOU",
-      "detalhe": "ok em 2445 ms "
+      "detalhe": "ok em 1921 ms "
     },
     {
       "id": "02.testado.medida",
@@ -57,16 +57,40 @@
       "detalhe": ""
     },
     {
-      "id": "02.conectar-falhou.medida",
-      "descricao": "tela \"conectar-falhou\" sem rolagem lateral e sem botão fora da janela",
+      "id": "02.cartao",
+      "descricao": "a caixa aparece com endereço, estado Conectada, limites e botão Pausar (AC-001.5)",
+      "resultado": "PASSOU",
+      "detalhe": "***@*** |  | Leitura: mail.corretora.io:993 · Envio: mail.corretora.io:465 |  | Conectada |  | Senha: ••••WKal · Limite por dia: 200 · Intervalo entre envios: 30 s |  | Assinatura: -- Equipe de teste 005 |  | Pausar | Configurar"
+    },
+    {
+      "id": "02.senha-nao-volta",
+      "descricao": "a senha não aparece no cartão (só ••••últimos4)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "02.cartao.medida",
+      "descricao": "tela \"cartao\" sem rolagem lateral e sem botão fora da janela",
       "resultado": "PASSOU",
       "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
     },
     {
-      "id": "02.conectar",
-      "descricao": "Conectar grava a caixa e ela aparece em Conexões",
-      "resultado": "FALHOU",
-      "detalhe": "erro cifra indisponível nesta instalação — a chave não foi gravada"
+      "id": "02.banco",
+      "descricao": "existe 1 linha de caixa de e-mail na organização",
+      "resultado": "PASSOU",
+      "detalhe": "status WORKING"
+    },
+    {
+      "id": "02.sem-antigo",
+      "descricao": "o e-mail ANTIGO não virou conversa depois das rodadas do cron (AC-001.5)",
+      "resultado": "PASSOU",
+      "detalhe": "assunto antigo ausente do Inbox"
+    },
+    {
+      "id": "02.inbox-sem-antigo.medida",
+      "descricao": "tela \"inbox-sem-antigo\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
     }
   ],
   "achados": []

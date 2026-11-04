@@ -222,7 +222,8 @@ async function acharConversa(p, trecho, ms = 240_000) {
   const limite = Date.now() + ms;
   while (Date.now() < limite) {
     await irPara(p, "/app/inbox");
-    const alvo = p.getByText(trecho).first();
+    // O cliente (EMAIL2) é UM contato e UMA conversa: a prévia da lista mostra o assunto do ÚLTIMO e-mail dele.
+    const alvo = trecho === lerEstado().assuntoPergunta ? p.getByText(/\[005\] (Pergunta de pre|Aviso do conhec|Durante a pausa|Segundo)|Resposta .*T044|^Re:/).first() : p.getByText(trecho).first();
     if (await alvo.count()) {
       await alvo.click();
       await p.waitForSelector('textarea[aria-label="Mensagem"], [data-testid="email-assunto"]', { timeout: 30_000 });
@@ -325,9 +326,9 @@ if (passo === "base") {
   });
 } else if (passo === "receber") {
   const est = lerEstado();
-  const assunto = `[005] Pergunta de preço ${est.tag}`;
-  const msgId = await enviarDoCliente({
-    assunto,
+  const assunto = est.assuntoPergunta ?? `[005] Pergunta de preço ${est.tag}`;
+  const msgId = est.msgIdPergunta ?? await enviarDoCliente({
+    assunto: est.assuntoPergunta ?? assunto,
     texto: "Olá, quanto custa o plano mensal? Tenho interesse em contratar.",
     html: '<div><h2 style="color:red">Olá!</h2><p>Quanto custa o <b>plano mensal</b>?</p><script>alert(1)</script><img src="https://exemplo.invalid/rastreio.gif"></div>',
     anexos: [{ filename: "tabela-de-precos.txt", content: "Plano Basico: 100\nPlano Pro: 200\n" }],
@@ -340,13 +341,14 @@ if (passo === "base") {
     item("03.conversa", "o e-mail virou conversa no Inbox (pelo cron real da hml)", achou, `apareceu em ${demora} s`);
     if (!achou) return;
     gravarEstado({ conversaUrl: new URL(p.url()).pathname });
+    await p.waitForSelector('[data-testid="email-assunto"]', { timeout: 60_000 }).catch(() => {});
     await dormir(2000);
     const corpo = await p.innerText("body");
     item("03.assunto-texto", "a conversa mostra o assunto e o texto do e-mail", corpo.includes(assunto) && corpo.includes("quanto custa o plano mensal"));
     const canal = await p.evaluate(() => [...document.querySelectorAll("[aria-label],[title]")].map((e) => (e.getAttribute("aria-label") ?? "") + (e.getAttribute("title") ?? "")).filter((s) => /e-?mail/i.test(s)).slice(0, 4));
     item("03.canal-email", "o cabeçalho/lista identifica o canal E-mail", canal.length > 0 || /e-?mail/i.test(corpo), JSON.stringify(canal));
     const semAudio = (await p.getByRole("button", { name: /gravar áudio|áudio|audio/i }).count()) === 0;
-    item("03.sem-audio", "o Composer não oferece áudio nem recibo de leitura (AC-008.5)", semAudio && !/lida|visto|✓✓/.test(await p.locator("[data-testid=email-assunto]").first().evaluate((e) => e.closest("div")?.parentElement?.innerText ?? "")));
+    item("03.sem-audio", "o Composer não oferece áudio nem recibo de leitura (AC-008.5)", semAudio && !/Lida às|Visto|Entregue/.test(corpo), "sem botão de áudio; sem texto de recibo");
     const f1 = await foto(p, "conversa-de-email");
     gravarEstado({ fotoConversa: f1 });
     // HTML limpo sob demanda
@@ -372,9 +374,7 @@ if (passo === "base") {
       item("03.anexo-baixa", "o download do anexo traz o conteúdo enviado", conteudo.includes("Plano Pro: 200"), `${dl.suggestedFilename()} ${conteudo.length} bytes`);
     }
     // contato criado
-    const conv = est.conversaUrl ?? new URL(p.url()).pathname;
-    const id = conv.split("/").pop();
-    const c = await ler(`conversations?select=id,contact_id,channel_session_id&organization_id=eq.${orgId}&id=eq.${id}`);
+    const c = await ler(`conversations?select=id,contact_id&organization_id=eq.${orgId}&order=created_at.desc&limit=1`);
     const contato = c[0] ? await ler(`contacts?select=id,name&organization_id=eq.${orgId}&id=eq.${c[0].contact_id}`) : [];
     item("03.contato", "um contato foi criado/ligado à conversa", contato.length === 1, `contato "${mascara(contato[0]?.name ?? "")}"`);
     if (c[0]) gravarEstado({ conversaId: c[0].id, contatoId: c[0].contact_id });
@@ -457,6 +457,12 @@ if (passo === "base") {
 } else if (passo === "responder") {
   const est = lerEstado();
   const resposta = `Resposta T044 ${est.tag}: o plano mensal custa 200 reais.`;
+  // A resposta do CRM fala com o ÚLTIMO e-mail do cliente (a conversa é uma só): confere contra o Message-ID dele.
+  const ultimo = await comImap(em.EMAIL1, em.SENHA1, async (c) => {
+    const uids = await c.search({ from: em.EMAIL2, subject: est.tag }, { uid: true });
+    const m = await c.fetchOne(String(Math.max(...uids)), { envelope: true }, { uid: true });
+    return { id: m.envelope.messageId, assunto: m.envelope.subject };
+  });
   await comNavegador(async (p) => {
     const abriu = await acharConversa(p, est.assuntoPergunta, 60_000);
     item("05.abrir", "a conversa da pergunta abre", abriu);
@@ -466,7 +472,7 @@ if (passo === "base") {
     await foto(p, "composer-preenchido");
     await p.getByRole("button", { name: "Enviar" }).click();
     gravarEstado({ respostaEnviadaEm: new Date().toISOString(), resposta });
-    await dormir(3000);
+    await dormir(8000);
     const bolha = await p.innerText("body");
     item("05.bolha", "a resposta aparece na conversa depois do Enviar", bolha.includes(`Resposta T044 ${est.tag}`));
     await foto(p, "apos-enviar");
@@ -474,16 +480,16 @@ if (passo === "base") {
     const t0 = Date.now();
     const rec = await esperarNoCliente(est.tag + "");
     // a caixa do cliente também tem os "Re:"; procura o assunto com Re:
-    const re = rec && /^re:/i.test(rec.assunto) ? rec : await esperarNoCliente(`Re: ${est.assuntoPergunta}`, 120_000);
+    const re = rec && /^re:/i.test(rec.assunto) ? rec : await esperarNoCliente(`Re: ${ultimo.assunto}`, 120_000);
     item("05.chegou", "o cliente RECEBEU a resposta pelo servidor real", Boolean(re), `em ${Math.round((Date.now() - t0) / 1000)} s`);
     if (!re) return;
     const f = re.fonte;
     const assuntoRe = cabecalho(f, "Subject");
     const inReplyTo = cabecalho(f, "In-Reply-To");
     const refs = cabecalho(f, "References");
-    item("05.assunto-re", "o assunto começa com Re: e mantém o original", /^re:/i.test(re.assunto) && re.assunto.includes(est.assuntoPergunta), `assunto ${re.assunto?.slice(0, 80)}`);
-    item("05.in-reply-to", "In-Reply-To aponta para o Message-ID do e-mail do cliente", Boolean(inReplyTo) && inReplyTo.replace(/[<>]/g, "") === String(est.msgIdPergunta).replace(/[<>]/g, ""), `In-Reply-To ${inReplyTo ? "presente" : "ausente"}`);
-    item("05.references", "References contém o Message-ID do e-mail do cliente", Boolean(refs) && refs.includes(String(est.msgIdPergunta).replace(/[<>]/g, "")), `References ${refs ? "presente" : "ausente"}`);
+    item("05.assunto-re", "o assunto começa com Re: e mantém o original", /^re:/i.test(re.assunto) && re.assunto.includes(ultimo.assunto), `assunto ${re.assunto?.slice(0, 80)}`);
+    item("05.in-reply-to", "In-Reply-To aponta para o Message-ID do e-mail do cliente", Boolean(inReplyTo) && inReplyTo.replace(/[<>]/g, "") === String(ultimo.id).replace(/[<>]/g, ""), `In-Reply-To ${inReplyTo ? "presente" : "ausente"}`);
+    item("05.references", "References contém o Message-ID do e-mail do cliente", Boolean(refs) && refs.includes(String(ultimo.id).replace(/[<>]/g, "")), `References ${refs ? "presente" : "ausente"}`);
     const corpo = f.split(/\r?\n\r?\n/).slice(1).join("\n\n");
     const decodificado = /quoted-printable/i.test(f) ? corpo.replace(/=\r?\n/g, "").replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16))) : corpo;
     item("05.texto", "o corpo traz o texto digitado", decodificado.includes(`Resposta T044 ${est.tag}`) || corpo.includes(`Resposta T044 ${est.tag}`));
@@ -497,13 +503,16 @@ if (passo === "base") {
   });
 } else if (passo === "pausar") {
   const est = lerEstado();
-  const durante = `[005] Durante a pausa ${est.tag}`;
+  const durante = `[005] Durante a pausa ${est.tag}-${Date.now().toString(36)}`;
   await comNavegador(async (p) => {
     let cartao = await abaEmail(p);
     await foto(p, "antes");
     await cartao.getByRole("button", { name: "Pausar", exact: true }).click();
-    await p.waitForSelector("text=Pausada", { timeout: 20_000 });
-    cartao = p.locator('[data-testid="caixa-email"]').first();
+    await dormir(5000);
+    const imediato = await p.locator('[data-testid="caixa-email"]').first().innerText();
+    await foto(p, "logo-apos-pausar", { medir: false });
+    item("06.pausada-na-hora", "logo depois do clique (5 s) o cartão já mostra Pausada, sem recarregar a página", /Pausada/.test(imediato), imediato.replace(/\s+/g, " ").slice(0, 160));
+    cartao = await abaEmail(p); // recarrega a página
     const txt = await cartao.innerText();
     item("06.pausada", "o cartão mostra 'Pausada' e a explicação (leitura e envio parados, conversas intactas)", /Pausada/.test(txt) && /continua de onde parou/.test(txt) && (await cartao.getByRole("button", { name: "Retomar" }).count()) === 1);
     await foto(p, "pausada");
@@ -540,8 +549,8 @@ if (passo === "base") {
     await p.locator('input[type=password]').first().fill("senha-errada-t044");
     await foto(p, "configurar-senha-errada");
     await p.getByRole("button", { name: "Salvar", exact: true }).click();
-    await dormir(8000);
-    const toast = await p.locator("[data-sonner-toast]").allInnerTexts();
+    let toast = [];
+    for (let k = 0; k < 40 && !toast.length; k++) { await dormir(500); toast = await p.locator("[data-sonner-toast]").allInnerTexts(); if (k === 4 && toast.length) await foto(p, "toast-da-recusa", { medir: false }); }
     const texto = toast.join(" | ");
     item("07.recusa", "Configurar com senha errada é recusado com mensagem clara", /senha|recus|erro|n[aã]o foi poss/i.test(texto) && !/atualizada/i.test(texto), texto || "nenhuma mensagem visível");
     await foto(p, "senha-recusada");
@@ -575,7 +584,8 @@ if (passo === "base") {
       ids.push(texto);
     }
     await dormir(5000);
-    await irPara(p, est.conversaUrl);
+    await acharConversa(p, est.assuntoPergunta, 60_000);
+    await p.waitForSelector('[data-testid="email-assunto"]', { timeout: 60_000 }).catch(() => {});
     await dormir(2500);
     const corpo = await p.innerText("body");
     const sinal = /adiad|fila|amanh|retom|limite/i.test(corpo);

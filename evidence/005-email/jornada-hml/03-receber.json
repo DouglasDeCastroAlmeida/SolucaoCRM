@@ -1,0 +1,73 @@
+{
+  "passo": "receber",
+  "quando": "2026-11-04T19:36:33.718Z",
+  "resultados": [
+    {
+      "id": "03.conversa",
+      "descricao": "o e-mail virou conversa no Inbox (pelo cron real da hml)",
+      "resultado": "PASSOU",
+      "detalhe": "apareceu em 21 s"
+    },
+    {
+      "id": "03.assunto-texto",
+      "descricao": "a conversa mostra o assunto e o texto do e-mail",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "03.canal-email",
+      "descricao": "o cabeçalho/lista identifica o canal E-mail",
+      "resultado": "PASSOU",
+      "detalhe": "[\"E-mailE-mail\",\"E-mailE-mail\"]"
+    },
+    {
+      "id": "03.sem-audio",
+      "descricao": "o Composer não oferece áudio nem recibo de leitura (AC-008.5)",
+      "resultado": "PASSOU",
+      "detalhe": "sem botão de áudio; sem texto de recibo"
+    },
+    {
+      "id": "03.conversa-de-email.medida",
+      "descricao": "tela \"conversa-de-email\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "03.btn-html",
+      "descricao": "o botão 'Ver com formatação' existe e o HTML não é carregado antes do clique",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "03.html-limpo",
+      "descricao": "o HTML aparece num iframe sandbox='' sem script nem imagem remota",
+      "resultado": "PASSOU",
+      "detalhe": "sandbox=\"\", script false, img remota false"
+    },
+    {
+      "id": "03.html-sob-demanda.medida",
+      "descricao": "tela \"html-sob-demanda\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "03.anexo-link",
+      "descricao": "o anexo aparece como link de download",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "03.anexo-baixa",
+      "descricao": "o download do anexo traz o conteúdo enviado",
+      "resultado": "PASSOU",
+      "detalhe": "tabela-de-precos.txt 33 bytes"
+    },
+    {
+      "id": "03.contato",
+      "descricao": "um contato foi criado/ligado à conversa",
+      "resultado": "PASSOU",
+      "detalhe": "contato \"\""
+    }
+  ],
+  "achados": []
+}

@@ -1,0 +1,2 @@
+Plano Basico: 100
+Plano Pro: 200

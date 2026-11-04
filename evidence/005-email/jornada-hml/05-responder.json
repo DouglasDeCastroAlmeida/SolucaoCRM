@@ -1,0 +1,79 @@
+{
+  "passo": "responder",
+  "quando": "2026-11-04T19:56:25.077Z",
+  "resultados": [
+    {
+      "id": "05.abrir",
+      "descricao": "a conversa da pergunta abre",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "05.composer-preenchido.medida",
+      "descricao": "tela \"composer-preenchido\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "05.bolha",
+      "descricao": "a resposta aparece na conversa depois do Enviar",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "05.apos-enviar.medida",
+      "descricao": "tela \"apos-enviar\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "05.chegou",
+      "descricao": "o cliente RECEBEU a resposta pelo servidor real",
+      "resultado": "PASSOU",
+      "detalhe": "em 1 s"
+    },
+    {
+      "id": "05.assunto-re",
+      "descricao": "o assunto começa com Re: e mantém o original",
+      "resultado": "PASSOU",
+      "detalhe": "assunto Re: [005] Aviso do conhecido T044-mw2ie92j"
+    },
+    {
+      "id": "05.in-reply-to",
+      "descricao": "In-Reply-To aponta para o Message-ID do e-mail do cliente",
+      "resultado": "PASSOU",
+      "detalhe": "In-Reply-To presente"
+    },
+    {
+      "id": "05.references",
+      "descricao": "References contém o Message-ID do e-mail do cliente",
+      "resultado": "PASSOU",
+      "detalhe": "References presente"
+    },
+    {
+      "id": "05.texto",
+      "descricao": "o corpo traz o texto digitado",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "05.assinatura",
+      "descricao": "o corpo traz a assinatura da caixa",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "05.sem-recibo",
+      "descricao": "o e-mail enviado não pede recibo de leitura",
+      "resultado": "PASSOU",
+      "detalhe": "nenhum cabeçalho de recibo"
+    },
+    {
+      "id": "05.message-id",
+      "descricao": "o e-mail enviado tem Message-ID próprio",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    }
+  ],
+  "achados": []
+}

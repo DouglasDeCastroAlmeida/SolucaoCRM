@@ -1,0 +1,28 @@
+[
+  {
+    "status": "sent",
+    "retomada": null,
+    "chaves": []
+  },
+  {
+    "status": "sent",
+    "retomada": null,
+    "chaves": []
+  },
+  {
+    "status": "queued",
+    "retomada": null,
+    "chaves": [
+      "adiar_ate",
+      "queued_reason"
+    ]
+  },
+  {
+    "status": "queued",
+    "retomada": null,
+    "chaves": [
+      "adiar_ate",
+      "queued_reason"
+    ]
+  }
+]
