@@ -23,14 +23,14 @@ marcou atraso de verdade (o sandbox só cobra o cartão no vencimento, 09/11). O
 |---|---|---|---|
 | 0 | Cadastro de conta nova na marca de teste | **NÃO MEDIDO** | A instalação está em `signup_mode = so_convite`; abri-la é decisão do dono e a sonda não mexe nisso. A marca tem `cadastro_aberto = true`, mas a política da instalação fecha tudo. |
 | 1 | Checkout do Asaas sandbox, primeira cobrança em hoje+7, aviso "Você só será cobrado em DD/MM" | **PASSOU antes (2/11), não refeito** | `evidence/003-billing/pagamento-hml/` e a seção "Prova do externalReference" do README. |
-| 2 | Estado de partida: trial com cartão, empresa ativa, faixa "Seu teste grátis termina em 7 dias" | PASSOU | `01-base-*.png` |
-| 3 | Aviso "Seu cartão será cobrado em 2 dias, em 05/11" (cron real) | PASSOU | `02-trial-aviso-*.png`, Central e faixa na tela |
-| 4 | Aviso "Seu cartão será cobrado amanhã, 04/11" | PASSOU | `03-trial-amanha-*.png` |
-| 5 | Primeira cobrança paga: sem faixa, plano "Em dia", sem aviso | PASSOU (simulado no banco) | `04-cobrou-*.png`. A cobrança real no Asaas: **NÃO MEDIDO** |
-| 6 | Atraso: aviso "Não conseguimos cobrar o seu cartão…", empresa segue ativa (tolerância de 3 dias) | PASSOU (simulado) | `05-atraso-*.png` |
-| 7 | Aviso final "suspende em breve", empresa segue ativa | PASSOU (simulado) | `06-aviso-final-*.png` |
-| 8 | Suspensão: /app cai em `/account-suspended`, "Conta suspensa", "Em atraso desde 30/10/2026", botão Pagar agora | PASSOU (simulado) | `07-suspende-hub.png` |
-| 9 | Reativação: régua reativa, /app abre, painel volta | PASSOU (simulado) | `08-reativa-*.png` |
+| 2 | Estado de partida: trial com cartão, empresa ativa, faixa "Seu teste grátis termina em 7 dias" | PASSOU | [base-app](evidence/003-billing/jornada-hml/01-base-app.png), [base-plano](evidence/003-billing/jornada-hml/01-base-plano.png) |
+| 3 | Aviso "Seu cartão será cobrado em 2 dias, em 05/11" (cron real) | PASSOU | [trial-aviso-app](evidence/003-billing/jornada-hml/02-trial-aviso-app.png), [trial-aviso-central](evidence/003-billing/jornada-hml/02-trial-aviso-central.png), [trial-aviso-plano](evidence/003-billing/jornada-hml/02-trial-aviso-plano.png), Central e faixa na tela |
+| 4 | Aviso "Seu cartão será cobrado amanhã, 04/11" | PASSOU | [trial-amanha-app](evidence/003-billing/jornada-hml/03-trial-amanha-app.png), [trial-amanha-central](evidence/003-billing/jornada-hml/03-trial-amanha-central.png), [trial-amanha-plano](evidence/003-billing/jornada-hml/03-trial-amanha-plano.png) |
+| 5 | Primeira cobrança paga: sem faixa, plano "Em dia", sem aviso | PASSOU (simulado no banco) | [cobrou-app](evidence/003-billing/jornada-hml/04-cobrou-app.png), [cobrou-plano](evidence/003-billing/jornada-hml/04-cobrou-plano.png). A cobrança real no Asaas: **NÃO MEDIDO** |
+| 6 | Atraso: aviso "Não conseguimos cobrar o seu cartão…", empresa segue ativa (tolerância de 3 dias) | PASSOU (simulado) | [atraso-app](evidence/003-billing/jornada-hml/05-atraso-app.png), [atraso-central](evidence/003-billing/jornada-hml/05-atraso-central.png), [atraso-plano](evidence/003-billing/jornada-hml/05-atraso-plano.png) |
+| 7 | Aviso final "suspende em breve", empresa segue ativa | PASSOU (simulado) | [aviso-final-app](evidence/003-billing/jornada-hml/06-aviso-final-app.png), [aviso-final-central](evidence/003-billing/jornada-hml/06-aviso-final-central.png) |
+| 8 | Suspensão: /app cai em `/account-suspended`, "Conta suspensa", "Em atraso desde 30/10/2026", botão Pagar agora | PASSOU (simulado) | [suspende-hub](evidence/003-billing/jornada-hml/07-suspende-hub.png) |
+| 9 | Reativação: régua reativa, /app abre, painel volta | PASSOU (simulado) | [reativa-app](evidence/003-billing/jornada-hml/08-reativa-app.png), [reativa-central](evidence/003-billing/jornada-hml/08-reativa-central.png), [reativa-plano](evidence/003-billing/jornada-hml/08-reativa-plano.png) |
 | 10 | Restauração da linha original e limpeza | PASSOU | `09-restaurar.json` |
 
 Medidas: em todas as telas, largura do conteúdo = largura da janela (1100 px) e nenhum botão ou faixa fora da janela;
