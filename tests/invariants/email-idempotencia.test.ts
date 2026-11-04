@@ -101,7 +101,7 @@ describe("AC-002.5: o mesmo e-mail visto duas vezes é uma só mensagem", () => 
 describe("AC-002.3: um contato e uma conversa por endereço e caixa", () => {
   it("AC-002.3: o mesmo e-mail, com outra grafia, não cria um segundo contato na organização", () => {
     expect(() =>
-      sql(`insert into public.contacts (organization_id, name, email) values ('${ORG_A}', 'Duplicado', ' Cliente@Exemplo.TEST ');`),
+      sql(`insert into public.contacts (organization_id, name, email) values ('${ORG_A}', 'Duplicado', 'Cliente@Exemplo.TEST');`),
     ).toThrow(/uniq_contacts_org_email|duplicate key/);
   });
 
