@@ -260,7 +260,7 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
             {t("Gerenciar pagamento")}
           </Button>
         )}
-        {link && mostrarPagarAgora({ provedor: p.provedor, estado: p.estado, temProvedor: p.temProvedor, assinaturasVivas: p.assinaturasVivas, temLink: true }) && (
+        {(p.noHub || mostrarPagarAgora({ provedor: p.provedor, estado: p.estado, temProvedor: p.temProvedor, assinaturasVivas: p.assinaturasVivas, temLink: link !== null })) && link && (
           <Button asChild>
             <a href={link} target="_blank" rel="noopener noreferrer">
               {/* Asaas em dia: o link é a cobrança seguinte, gerada até 40 dias antes. "Pagar agora" ao lado de "Em dia" leria como dívida. */}
