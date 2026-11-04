@@ -18,3 +18,9 @@ Medidas por ferramenta em todas as telas: largura do conteúdo igual à da janel
 - O texto do aviso de atraso (AC-001.1/001.2) está provado por teste unitário; o e-mail não saiu porque a hml não tem Resend configurado.
 - O hub de conta suspensa com "Pagar agora" já foi fotografado na jornada 003, antes da 010; não foi refeito aqui.
 - Duas tentativas deram tempo esgotado de rede ao abrir `/app` na hml e foram repetidas; o resultado acima é o da repetição.
+
+## Todas as capturas
+[partida: app](evidence/010-cobranca-ajustes/01-base-app.png) · [partida: plano](evidence/010-cobranca-ajustes/01-base-plano.png) ·
+[teste: app](evidence/010-cobranca-ajustes/02-trial-aviso-app.png) · [teste: Central](evidence/010-cobranca-ajustes/02-trial-aviso-central.png) · [teste: plano](evidence/010-cobranca-ajustes/02-trial-aviso-plano.png) ·
+[atraso: app](evidence/010-cobranca-ajustes/05-atraso-app.png) · [atraso: Central](evidence/010-cobranca-ajustes/05-atraso-central.png) · [atraso: plano](evidence/010-cobranca-ajustes/05-atraso-plano.png) ·
+[restauração](evidence/010-cobranca-ajustes/09-restaurar.json)
