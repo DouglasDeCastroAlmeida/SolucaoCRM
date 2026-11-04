@@ -1,0 +1,73 @@
+{
+  "passo": "conectar",
+  "quando": "2026-11-04T19:10:15.430Z",
+  "resultados": [
+    {
+      "id": "02.tab",
+      "descricao": "Conexões tem a aba E-mail e, sem caixa, o assistente já abre",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "02.aba-vazia.medida",
+      "descricao": "tela \"aba-vazia\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.gmail",
+      "descricao": "escolher Gmail mostra os 3 passos da senha de app e os servidores do Gmail",
+      "resultado": "PASSOU",
+      "detalhe": "3 passos"
+    },
+    {
+      "id": "02.gmail.medida",
+      "descricao": "tela \"gmail\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.conectar-travado",
+      "descricao": "Conectar fica desabilitado até o Testar (AC-001.3)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "02.preenchido.medida",
+      "descricao": "tela \"preenchido\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.testar",
+      "descricao": "Testar entra na caixa, envia o e-mail de teste e mostra 'Deu certo'",
+      "resultado": "PASSOU",
+      "detalhe": "ok em 2445 ms "
+    },
+    {
+      "id": "02.testado.medida",
+      "descricao": "tela \"testado\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.conectar-liberado",
+      "descricao": "depois do Testar o botão Conectar é liberado",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "02.conectar-falhou.medida",
+      "descricao": "tela \"conectar-falhou\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.conectar",
+      "descricao": "Conectar grava a caixa e ela aparece em Conexões",
+      "resultado": "FALHOU",
+      "detalhe": "erro cifra indisponível nesta instalação — a chave não foi gravada"
+    }
+  ],
+  "achados": []
+}
