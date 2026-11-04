@@ -1287,6 +1287,10 @@ export const AUDIT_ACTIONS = [
   "org.brand_changed",
   /** O gancho de e-mail de acesso não conseguiu enviar (só hash do e-mail e código fixo no metadata). */
   "auth.email_hook_send_failed",
+  // Canal de e-mail (mudança 005): a caixa foi conectada / teve assinatura, teto, intervalo ou senha
+  // trocados. Nunca levam a senha: só endereço, servidores e o que mudou.
+  "channel.email_connected",
+  "channel.email_updated",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

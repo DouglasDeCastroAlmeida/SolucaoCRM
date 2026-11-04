@@ -364,6 +364,10 @@ export const ApiErrorCodes = {
   campanha_conteudo_invalido: "campanha_conteudo_invalido", // 422: texto vazio ou variável que não existe
   campanha_base_legal_invalida: "campanha_base_legal_invalida", // 422: interesse legítimo sem referência da LIA
 
+  // Canal de e-mail (mudança 005). A causa em português vai em `message`; a classificação em `details.causa`.
+  email_conexao_recusada: "email_conexao_recusada", // 422: não entrou na caixa ou o servidor recusou o teste
+  email_destino_proibido: "email_destino_proibido", // 422: servidor/porta que a guarda de destino não deixa alcançar
+
   // 500 / upstream
   internal_error: "internal_error",
   upstream_unavailable: "upstream_unavailable",

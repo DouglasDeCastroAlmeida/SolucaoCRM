@@ -888,6 +888,17 @@ const HOSTS_DECLARADOS: Record<string, EntradaDeHost> = {
     motivo:
       "é o serviço da conta ChatGPT que o operador abre para conectar a assinatura. O produto não faz requests para este host; a consulta do catálogo e a inferência SIWC usam a API pública oficial em api.openai.com.",
   },
+  // ── Canal de e-mail (mudança 005): servidores do Gmail pré-preenchidos no assistente ──
+  "imap.gmail.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "servidor de leitura (IMAP) do Gmail, pré-preenchido no assistente de conexão da caixa de e-mail (`components/connections/email/AssistenteDeConexao.tsx`): o produto entra nele com a senha de app da pessoa. Trocar pelo domínio do revendedor faria a caixa do Gmail não conectar.",
+  },
+  "smtp.gmail.com": {
+    categoria: "FORNECEDOR",
+    motivo:
+      "servidor de envio (SMTP) do Gmail, pré-preenchido no assistente de conexão da caixa de e-mail (`components/connections/email/AssistenteDeConexao.tsx`): as respostas saem por ele. Trocar pelo domínio do revendedor faria o envio pelo Gmail não funcionar.",
+  },
   // ── Web Push: o serviço de push do navegador, destino do envio ──
   "fcm.googleapis.com": {
     categoria: "FORNECEDOR",

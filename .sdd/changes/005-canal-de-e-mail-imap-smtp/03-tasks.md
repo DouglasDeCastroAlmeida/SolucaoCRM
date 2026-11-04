@@ -30,16 +30,16 @@ Cada tarefa ocupa uma linha:
 - [ ] T-008 [CHECK-SMOKE] pnpm test:db em instalação nova e em atualização, pnpm lint:channels e o teste de matriz verdes (~20 min) deps: T-006, T-007
 
 ### Fatia 3: Conectar a caixa com segurança (REQ-001, REQ-007)
-- [ ] T-009 [TEST-UNIT] Destino seguro: recusa loopback, link-local, metadata, RFC1918, CGNAT e multicast, aceita só as portas 143, 993, 465 e 587, fixa o IP resolvido com o servername original, DNS que resolve para IP especial é recusado (~45 min) {AC-001.4}
-- [ ] T-010 [IMPL] lib/channels/email/destino-seguro.ts (~40 min) {AC-001.4} deps: T-009
-- [ ] T-011 [TEST-UNIT] Conexão com servidores simulados: sucesso entra e envia o e-mail de teste, senha recusada, servidor não encontrado, porta fechada, verificação em duas etapas desligada, cada causa em português claro (~50 min) {AC-001.3, AC-001.4}
-- [ ] T-012 [IMPL] lib/channels/email/conexao.ts com imapflow e nodemailer, TLS verificado e IP fixado, mensagens a partir de lib/net/alcance.ts (~60 min) {AC-001.3, AC-001.4} deps: T-010, T-011, T-008
-- [ ] T-013 [TEST-UNIT] Senha cifrada, só os 4 últimos em claro, nunca em resposta de API, log, auditoria ou Sentry (varredura de respostas e do log do worker) (~40 min) {AC-007.1, AC-007.2}
-- [ ] T-014 [IMPL] lib/channels/email/segredo.ts com encryptWebhookSecret e decryptWebhookSecret (~35 min) {AC-007.1, AC-007.2} deps: T-013, T-008
-- [ ] T-015 [TEST-UNIT] Rotas de testar, conectar e alterar a caixa: Zod, só admin recusa o resto, requireSupportWrite antes do efeito, auditoria, nada importado ao conectar (~50 min) {AC-001.5, AC-001.6, AC-007.5}
-- [ ] T-016 [IMPL] Rotas /api/v1/channels/email (testar, criar, PATCH), erros canônicos e ações de auditoria novas (~60 min) {AC-001.5, AC-001.6, AC-007.5} deps: T-012, T-014, T-015
-- [ ] T-017 [TEST-UI] Assistente de conexão: Gmail com servidores preenchidos e passos da senha de app, outro provedor com os campos, testar antes de conectar, erro claro (~45 min) {AC-001.1, AC-001.2}
-- [ ] T-018 [IMPL] components/connections/email/AssistenteDeConexao.tsx, CanalEmailClient.tsx e aba nova em ConexoesShell (~60 min) {AC-001.1, AC-001.2} deps: T-016, T-017
+- [x] T-009 [TEST-UNIT] Destino seguro: recusa loopback, link-local, metadata, RFC1918, CGNAT e multicast, aceita só as portas 143, 993, 465 e 587, fixa o IP resolvido com o servername original, DNS que resolve para IP especial é recusado (~45 min) {AC-001.4}
+- [x] T-010 [IMPL] lib/channels/email/destino-seguro.ts (~40 min) {AC-001.4} deps: T-009
+- [x] T-011 [TEST-UNIT] Conexão com servidores simulados: sucesso entra e envia o e-mail de teste, senha recusada, servidor não encontrado, porta fechada, verificação em duas etapas desligada, cada causa em português claro (~50 min) {AC-001.3, AC-001.4}
+- [x] T-012 [IMPL] lib/channels/email/conexao.ts com imapflow e nodemailer, TLS verificado e IP fixado, mensagens a partir de lib/net/alcance.ts (~60 min) {AC-001.3, AC-001.4} deps: T-010, T-011, T-008
+- [x] T-013 [TEST-UNIT] Senha cifrada, só os 4 últimos em claro, nunca em resposta de API, log, auditoria ou Sentry (varredura de respostas e do log do worker) (~40 min) {AC-007.1, AC-007.2}
+- [x] T-014 [IMPL] lib/channels/email/segredo.ts com encryptWebhookSecret e decryptWebhookSecret (~35 min) {AC-007.1, AC-007.2} deps: T-013, T-008
+- [x] T-015 [TEST-UNIT] Rotas de testar, conectar e alterar a caixa: Zod, só admin recusa o resto, requireSupportWrite antes do efeito, auditoria, nada importado ao conectar (~50 min) {AC-001.5, AC-001.6, AC-007.5}
+- [x] T-016 [IMPL] Rotas /api/v1/channels/email (testar, criar, PATCH), erros canônicos e ações de auditoria novas (~60 min) {AC-001.5, AC-001.6, AC-007.5} deps: T-012, T-014, T-015
+- [x] T-017 [TEST-UI] Assistente de conexão: Gmail com servidores preenchidos e passos da senha de app, outro provedor com os campos, testar antes de conectar, erro claro (~45 min) {AC-001.1, AC-001.2}
+- [x] T-018 [IMPL] components/connections/email/AssistenteDeConexao.tsx, CanalEmailClient.tsx e aba nova em ConexoesShell (~60 min) {AC-001.1, AC-001.2} deps: T-016, T-017
 
 ### Fatia 4: Receber e-mails como conversa (REQ-002, REQ-003, REQ-006, REQ-007)
 - [ ] T-019 [TEST-UNIT] Regra de e-mail automático: lista de inscrição, bulk, auto-resposta, no-reply e falha de entrega ignorados com motivo; contato conhecido nunca ignorado (~40 min) {AC-003.1, AC-003.2, AC-003.5}
