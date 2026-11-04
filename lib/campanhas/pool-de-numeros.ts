@@ -8,6 +8,8 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { aceitaEnvioEmLote } from "@/lib/channels/capabilities";
+
 /** Os números EXTRAS gravados para a campanha (sem o principal). */
 export async function lerPoolExtra(
   admin: SupabaseClient,
@@ -56,11 +58,15 @@ export async function gravarPool(
   if (desejados.length > 0) {
     const { data, error } = await admin
       .from("channel_sessions")
-      .select("id")
+      .select("id, provider")
       .eq("organization_id", entrada.organizationId)
       .in("id", desejados);
     if (error) throw new Error(`pool de números: conexões — ${error.message}`);
-    validos = (data ?? []).map((l) => (l as { id: string }).id);
+    // Canal que só responde (capacidade `envioEmLote` falsa) não entra no pool: recusado como
+    // qualquer id que não seja uma conexão utilizável desta organização.
+    validos = (data ?? [])
+      .filter((l) => aceitaEnvioEmLote((l as { provider: string | null }).provider))
+      .map((l) => (l as { id: string }).id);
   }
   const recusados = desejados.filter((id) => !validos.includes(id));
 
@@ -89,4 +95,25 @@ export async function gravarPool(
   }
 
   return { ok: recusados.length === 0, recusados, gravados: validos };
+}
+
+/**
+ * A conexão PRINCIPAL da campanha serve para envio em lote? `so_responde` = canal que só
+ * responde a quem escreveu (capacidade `envioEmLote` falsa); `nao_encontrada` = não é uma
+ * conexão desta organização. Sempre conferida contra a organização (client de service role).
+ */
+export async function conexaoAceitaCampanha(
+  admin: SupabaseClient,
+  organizationId: string,
+  channelSessionId: string,
+): Promise<"ok" | "nao_encontrada" | "so_responde"> {
+  const { data, error } = await admin
+    .from("channel_sessions")
+    .select("id, provider")
+    .eq("organization_id", organizationId)
+    .eq("id", channelSessionId)
+    .maybeSingle();
+  if (error) throw new Error(`conexão da campanha: ${error.message}`);
+  if (!data) return "nao_encontrada";
+  return aceitaEnvioEmLote((data as { provider: string | null }).provider) ? "ok" : "so_responde";
 }

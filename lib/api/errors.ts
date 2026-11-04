@@ -367,6 +367,8 @@ export const ApiErrorCodes = {
   // Canal de e-mail (mudança 005). A causa em português vai em `message`; a classificação em `details.causa`.
   email_conexao_recusada: "email_conexao_recusada", // 422: não entrou na caixa ou o servidor recusou o teste
   email_destino_proibido: "email_destino_proibido", // 422: servidor/porta que a guarda de destino não deixa alcançar
+  email_so_responde: "email_so_responde", // 422: canal que só responde dentro de conversa (capacidade iniciaConversa falsa)
+  email_envio_em_lote: "email_envio_em_lote", // 422: campanha/follow-up em lote apontando para canal que só responde (envioEmLote falsa)
 
   // 500 / upstream
   internal_error: "internal_error",

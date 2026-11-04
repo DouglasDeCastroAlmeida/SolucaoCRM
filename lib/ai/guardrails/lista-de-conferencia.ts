@@ -101,6 +101,16 @@ export const CONFERENCIAS_DE_SAIDA: readonly ConferenciaDeSaida[] = [
      camada: null,
   },
   {
+    nome: "ai_approval",
+    rotulo: "Pedir aprovação de uma pessoa antes de enviar",
+    oQueProtege:
+      "Neste canal, o texto escrito pela IA fica como rascunho até uma pessoa aprovar; só então sai.",
+    escolha: null,
+    porQueNaoSeDesliga:
+      "Neste canal cada mensagem sai da caixa de e-mail do próprio cliente, então nada escrito pela IA deve sair sem alguém conferir.",
+    camada: null,
+  },
+  {
     nome: "pacing",
     rotulo: "Segurar o ritmo de envio",
     oQueProtege:

@@ -333,3 +333,51 @@ describe("rodada: a chave EMAIL_CANAL", () => {
     aviso.mockRestore();
   });
 });
+
+describe("rodada: a fila de envio", () => {
+  const semear = () => {
+    preparar({ mensagens: [] });
+    banco.tabelas.organizations = [{ id: ORG, status: "active" }];
+    banco.tabelas.channel_sessions = [
+      { id: CAIXA.id, organization_id: ORG, provider: "email", email_address: CAIXA.endereco, email_config: CAIXA.config, status: "WORKING", archived_at: null, metadata: {} },
+    ];
+  };
+
+  it("AC-005.3: a rodada drena a fila de cada caixa lida e conta o que saiu", async () => {
+    semear();
+    const drenar = vi.fn().mockResolvedValue({ enviadas: 2, falhas: 1 });
+    const r = await rodarRodada(banco.client, { ...deps, drenarFila: drenar as never });
+    expect(drenar).toHaveBeenCalledTimes(1);
+    expect(drenar.mock.calls[0]![1]).toBe(ORG);
+    expect(drenar.mock.calls[0]![2]).toMatchObject({ id: CAIXA.id });
+    expect(r.caixas[0]).toMatchObject({ enviadas: 2, falhasDeEnvio: 1 });
+  });
+
+  it("AC-008.3: com EMAIL_CANAL desligado a fila também não sai", async () => {
+    semear();
+    const drenar = vi.fn();
+    await rodarImplicito(drenar);
+    expect(drenar).not.toHaveBeenCalled();
+  });
+
+  it("falha ao drenar não derruba a rodada nem esconde o que foi lido", async () => {
+    semear();
+    const drenar = vi.fn().mockRejectedValue(new Error("banco fora"));
+    const r = await rodarRodada(banco.client, { ...deps, drenarFila: drenar as never });
+    expect(r.caixas).toHaveLength(1);
+    expect(r.caixas[0]).toMatchObject({ desfecho: "lida", enviadas: 0 });
+  });
+
+  it("caixa cuja senha foi recusada na leitura não envia a fila", async () => {
+    semear();
+    abrir.mockRejectedValue(new FalhaDeLeitura("senha_recusada"));
+    const drenar = vi.fn();
+    const r = await rodarRodada(banco.client, { ...deps, drenarFila: drenar as never });
+    expect(r.caixas[0]).toMatchObject({ desfecho: "senha_recusada" });
+    expect(drenar).not.toHaveBeenCalled();
+  });
+
+  async function rodarImplicito(drenar: ReturnType<typeof vi.fn>) {
+    return rodarRodada(banco.client, { ...deps, canalLigado: () => false, drenarFila: drenar as never });
+  }
+});

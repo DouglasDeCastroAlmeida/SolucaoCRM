@@ -196,6 +196,11 @@ export interface OutboundEnvelope extends ChannelTenantScope {
    */
   providerConversationId?: string | null;
   /**
+   * A conversa do CRM em que a mensagem sai. Só o canal que monta o fio a partir do
+   * histórico (e-mail: assunto, `In-Reply-To`, citação) lê; os demais ignoram.
+   */
+  conversationId?: string;
+  /**
    * A mensagem que ESTA responde, pelo id que o PROVIDER conhece.
    *
    * É o `external_id` da linha citada (para WhatsApp, o `wamid`) — não o `id`

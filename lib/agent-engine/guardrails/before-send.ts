@@ -243,6 +243,16 @@ export interface GateContext {
    */
   clinicalClaimEnforced?: boolean;
   /**
+   * Arma o `aiApprovalGate`: o envio REAL (`runBeforeSend`) o liga; a prévia e o rascunho do
+   * assistido usam a cadeia pura sem ele — o rascunho que uma pessoa vai aprovar precisa nascer.
+   */
+  aiApprovalEnforced?: boolean;
+  /**
+   * Uma pessoa aprovou este texto (envio da resposta aprovada). Ausente = não aprovou: a direção
+   * segura é vetar.
+   */
+  approvedByPerson?: boolean;
+  /**
    * Arma o `spinningGate`. **Ausente = ARMADO** — a direção segura aqui é a
    * oposta do `internalVocabularyEnforced` logo acima, e a assimetria é
    * deliberada: aquele protege o CLIENTE de uma palavra feia, este protege o
@@ -866,6 +876,28 @@ export const messagingWindowGate: Gate = {
   },
 };
 
+/**
+ * Gate 2.5 — aprovação humana da IA (capacidade `iaSoComAprovacao`, ex.: e-mail, onde cada
+ * mensagem sai da caixa do próprio cliente). Resposta de pessoa e resposta aprovada passam; o
+ * texto que o modelo escreveu e ninguém aprovou é vetado. Fica logo depois dos vetos de
+ * conformidade irrevogáveis e antes do anti-ban, que só faz sentido se o envio for acontecer.
+ */
+export const aiApprovalGate: Gate = {
+  name: 'ai_approval',
+  evaluate: (ctx) => {
+    if (ctx.aiApprovalEnforced !== true) return { pass: true, skipped: 'not_applicable' };
+    if (!capabilitiesOf(ctx.provider).iaSoComAprovacao) return { pass: true, skipped: 'not_applicable' };
+    if (ctx.approvedByPerson === true) return { pass: true };
+    return {
+      pass: false,
+      code: 'ai_approval_required',
+      reason:
+        'neste canal toda resposta da IA precisa ser aprovada por uma pessoa antes de sair. ' +
+        'Encerre o turno sem enviar: o texto fica como rascunho para aprovação.',
+    };
+  },
+};
+
 const spinningGate: Gate = {
   name: 'spinning',
   evaluate: (ctx) => {
@@ -919,8 +951,12 @@ const spinningGate: Gate = {
  * assistente. Nasce DESARMADO (ver `GateContext.clinicalClaimEnforced`): só arma no turno
  * do agente de uma organização que ligou a camada `afirmacao_clinica`, então a v8 não
  * muda o destino de nenhum envio de quem não ligou.
+ * v10 = insere `aiApprovalGate` entre `lgpd` e `pacing` — a rede por baixo do modo assistido
+ * forçado nos canais em que a IA só rascunha (e-mail). Nasce DESARMADO (ver
+ * `GateContext.aiApprovalEnforced`): só o envio real o arma, e só tem efeito em canal com a
+ * capacidade `iaSoComAprovacao`, então nenhum envio de outro canal muda de destino — muda o TRACE.
  */
-export const BEFORE_SEND_CHAIN_VERSION = 9;
+export const BEFORE_SEND_CHAIN_VERSION = 10;
 
 /**
  * Gate 6.3 — CONFERÊNCIA DE FATO (#2231): a afirmação de FATO da resposta
@@ -959,6 +995,8 @@ export const factualClaimGate: Gate = {
  * precedência é invariante de segurança/compliance, não config de runtime.
  *   (1) stop/opt-out/force_human — irrevogável, 1ª linha (regra dura nº 2);
  *   (2) lgpd — anonimização/base legal de prospecção, veto de conformidade HARD (F4-09);
+ *   (2.5) ai_approval — canal em que a IA só rascunha: texto do modelo sem aprovação humana é
+ *         vetado; só o envio real o arma (prévia e rascunho usam a cadeia sem ele);
  *   (3) pacing — janela/throttle/warm-up/caps anti-ban (F2-11);
  *   (4) spinning — template idêntico em massa (F2-12);
  *   (5) promise — validação determinística de preço/desconto/parcelamento (F4-01);
@@ -978,6 +1016,7 @@ export const factualClaimGate: Gate = {
 export const BEFORE_SEND_GATES: readonly Gate[] = [
   stopGate,
   lgpdGate,
+  aiApprovalGate,
   pacingGate,
   messagingWindowGate,
   spinningGate,
@@ -1445,6 +1484,8 @@ export async function runBeforeSend(args: RunBeforeSendArgs): Promise<BeforeSend
         : {}),
       internalVocabularyEnforced: args.enforceInternalVocabulary ?? false,
       clinicalClaimEnforced: args.enforceClinicalClaim ?? false,
+      aiApprovalEnforced: true,
+      approvedByPerson: args.approvedReply !== undefined,
       ...(args.agenda !== undefined ? { agenda: args.agenda } : {}),
       ...(args.followup !== undefined ? { followup: args.followup } : {}),
     };

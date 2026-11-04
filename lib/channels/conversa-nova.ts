@@ -36,7 +36,7 @@
  * (`sessaoProntaParaEnvio`), como antes desta issue. Travar o atendimento por
  * causa de um seletor vazio seria trocar um defeito por outro.
  */
-import { transportaMensagem } from "./capabilities";
+import { podeIniciarConversa, transportaMensagem } from "./capabilities";
 import { canalDesativado } from "./desativado";
 import { lerEstadoDoCanal } from "./estado";
 import { ehNomeDeSessaoE2E } from "./sessoes-e2e";
@@ -68,6 +68,8 @@ export function candidatosParaConversaNova<T extends CanalObservado>(
   return canais.filter(
     (c) =>
       transportaMensagem(c.provider) &&
+      // Canal que só responde (e-mail) não abre conversa com quem nunca escreveu, tenha ou não telefone.
+      podeIniciarConversa(c.provider) &&
       !!c.phone_number &&
       !c.archived_at &&
       !canalDesativado(c.metadata ?? null) &&

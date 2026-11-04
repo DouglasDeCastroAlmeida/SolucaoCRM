@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ensureConversation, sessaoProntaParaEnvio } from "@/lib/automation/start-conversation";
+import { podeIniciarConversa } from "@/lib/channels/capabilities";
 import { encontrarContatoPorTelefone } from "@/lib/channels/contato-por-telefone";
 import { phoneLookupVariants, canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { parseDialablePhone } from "@/lib/messaging/contact-card";
@@ -87,12 +88,17 @@ export async function openSharedContactConversation(
   if (!sessionId) throw new Error("session_not_found");
   const { data: session, error: sessErr } = await admin
     .from("channel_sessions")
-    .select("id")
+    .select("id, provider")
     .eq("organization_id", organizationId)
     .eq("id", sessionId)
     .maybeSingle();
   if (sessErr) throw new Error(sessErr.message);
   if (!session) throw new Error("session_not_found");
+  // Canal que só responde (capacidade `iniciaConversa` falsa) não abre conversa com quem nunca
+  // escreveu. Antes de resolver o contato: nada é criado.
+  if (!podeIniciarConversa((session as { provider?: string | null }).provider)) {
+    throw new Error("channel_cannot_start_conversation");
+  }
 
   const contactId = await resolveContactId(admin, organizationId, input);
   // Abrir conversa com pessoal é escrita para fora da operação (spec 21, etapa

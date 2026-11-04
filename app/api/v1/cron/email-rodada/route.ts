@@ -6,7 +6,7 @@
  * mora em `lib/channels/email/rodada.ts`; esta rota é o relógio, a guarda e a trilha.
  *
  * - `EMAIL_CANAL=desligado`: responde 200 sem abrir conexão nenhuma (AC-008.3).
- * - Auditoria: UMA linha por organização que teve efeito (leu, ignorou ou pausou uma caixa).
+ * - Auditoria: UMA linha por organização que teve efeito (leu, ignorou, enviou da fila ou pausou uma caixa).
  *   Rodada vazia, a de 1 minuto numa instalação sem caixa, NÃO audita (doutrina de cron).
  * - Nenhum conteúdo de e-mail em log nem na auditoria: só contagens.
  *
@@ -44,7 +44,7 @@ async function handle(req: NextRequest): Promise<Response> {
 
   const porOrganizacao = new Map<string, ResumoDaCaixa[]>();
   for (const c of resultado.caixas) {
-    if (c.lidas > 0 || c.desfecho === "senha_recusada") {
+    if (c.lidas > 0 || c.enviadas > 0 || c.falhasDeEnvio > 0 || c.desfecho === "senha_recusada") {
       porOrganizacao.set(c.organizationId, [...(porOrganizacao.get(c.organizationId) ?? []), c]);
     }
   }
@@ -61,6 +61,8 @@ async function handle(req: NextRequest): Promise<Response> {
         ingeridas: caixas.reduce((n, c) => n + c.ingeridas, 0),
         ignoradas: caixas.reduce((n, c) => n + c.ignoradas, 0),
         puladas: caixas.reduce((n, c) => n + c.puladas, 0),
+        enviadas: caixas.reduce((n, c) => n + c.enviadas, 0),
+        falhas_de_envio: caixas.reduce((n, c) => n + c.falhasDeEnvio, 0),
         senha_recusada: caixas.filter((c) => c.desfecho === "senha_recusada").length,
       },
     });
@@ -73,6 +75,7 @@ async function handle(req: NextRequest): Promise<Response> {
       lidas: resultado.caixas.reduce((n, c) => n + c.lidas, 0),
       ingeridas: resultado.caixas.reduce((n, c) => n + c.ingeridas, 0),
       ignoradas: resultado.caixas.reduce((n, c) => n + c.ignoradas, 0),
+      enviadas: resultado.caixas.reduce((n, c) => n + c.enviadas, 0),
     },
     { requestId },
   );

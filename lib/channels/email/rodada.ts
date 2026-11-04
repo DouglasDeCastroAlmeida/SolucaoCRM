@@ -44,6 +44,7 @@ import {
   soltarTrava,
   type EstadoDaCaixa,
 } from "./estado";
+import { drenarFilaDaCaixa, type ResumoDaFila } from "./fila";
 import { ingerirEmail, registrarIgnorado } from "./ingest";
 import { abrirLeitorImap, FalhaDeLeitura, type AbrirLeitor, type LeitorDeCaixa } from "./leitura-imap";
 import { lerEmail } from "./parse";
@@ -70,6 +71,8 @@ export interface DependenciasDaRodada {
   ingerir?: typeof ingerirEmail;
   avisarSenhaRecusada?: typeof avisarSenhaRecusada;
   canalLigado?: () => boolean;
+  /** Envia o que ficou na fila da caixa (teto, intervalo). Padrão: `drenarFilaDaCaixa`. */
+  drenarFila?: (admin: SupabaseClient, organizationId: string, caixa: CaixaDeEmail, deps?: { agora?: () => Date }) => Promise<ResumoDaFila>;
   prazoMs?: number;
   tetoPorRodada?: number;
   tamanhoMaximoBytes?: number;
@@ -94,6 +97,10 @@ export interface ResumoDaCaixa {
   ignoradas: number;
   puladas: number;
   prazoEsgotado: boolean;
+  /** Mensagens da fila de envio que saíram nesta rodada. */
+  enviadas: number;
+  /** Mensagens da fila que o servidor recusou nesta rodada. */
+  falhasDeEnvio: number;
 }
 
 const resumoVazio = (caixaId: string, organizationId: string, desfecho: DesfechoDaCaixa): ResumoDaCaixa => ({
@@ -106,6 +113,8 @@ const resumoVazio = (caixaId: string, organizationId: string, desfecho: Desfecho
   ignoradas: 0,
   puladas: 0,
   prazoEsgotado: false,
+  enviadas: 0,
+  falhasDeEnvio: 0,
 });
 
 function configDeConexao(caixa: CaixaDeEmail, senha: string): ConfigDaCaixa {
@@ -315,7 +324,19 @@ export async function rodarRodada(admin: SupabaseClient, deps: DependenciasDaRod
       continue;
     }
 
-    caixas.push(await rodarCaixa(admin, orgId, caixa, prazoFinal, deps));
+    const lida = await rodarCaixa(admin, orgId, caixa, prazoFinal, deps);
+    // A fila de envio sai na mesma rodada, mas só de caixa cuja senha segue valendo: insistir
+    // com senha recusada bloquearia a conta do cliente. Falha ao drenar não esconde a leitura.
+    if (lida.desfecho !== "senha_recusada" && agora().getTime() < prazoFinal.getTime()) {
+      try {
+        const fila = await (deps.drenarFila ?? drenarFilaDaCaixa)(admin, orgId, caixa, { agora });
+        lida.enviadas = fila.enviadas;
+        lida.falhasDeEnvio = fila.falhas;
+      } catch (erro) {
+        logger.warn("[email.rodada] drenar a fila de envio falhou", { organizationId: orgId, caixaId: caixa.id, erro: codigoDoErro(erro) });
+      }
+    }
+    caixas.push(lida);
   }
   return { desligado: false, caixas };
 }

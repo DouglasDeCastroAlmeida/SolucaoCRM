@@ -60,6 +60,8 @@ import type pg from 'pg';
 
 import { CLASSIFIER_CONTEXT_MESSAGES, MAX_CLASSIFIER_CONTEXT_MESSAGES, contextoDoClassificador } from '@/lib/ai/classifier-context';
 
+import { capabilitiesOf, PROVIDERS_DE_MENSAGEM } from '@/lib/channels/capabilities';
+import type { ChannelProvider } from '@/lib/channels/capabilities';
 import { consultarJevNoRoteador } from '@/lib/ai/decisao/roteador';
 import type { DependenciasDoPonto } from '@/lib/ai/decisao/ponto';
 
@@ -509,7 +511,7 @@ export async function resolveConversationTurn(
       .reverse();
   }
 
-  return resolveTurnAgent(db, llmCfg, {
+  const resolucao = await resolveTurnAgent(db, llmCfg, {
     ...input,
     signal,
     signalBody,
@@ -518,4 +520,31 @@ export async function resolveConversationTurn(
     stickyAgentId: rows[0]?.active_ai_agent_id ?? null,
     stickyIntent: rows[0]?.active_intent ?? null,
   }, deps);
+  return exigirAprovacaoDoCanal(db, input, resolucao);
+}
+
+/**
+ * Canal em que a IA só rascunha (capacidade `iaSoComAprovacao`, ex.: e-mail): o agente escolhido
+ * roda em modo ASSISTIDO, o mesmo que o operador liga à mão — o turno vira rascunho para uma
+ * pessoa aprovar, e nada sai sozinho. Decidido aqui, no ponto único que resolve o agente do
+ * turno, para o ramo de entrada, o do follow-up e o da fila seguirem a mesma regra. A cadeia
+ * `before_send` ainda veta o envio autônomo (gate `ai_approval`) se algum caminho escapar.
+ *
+ * Canal não encontrado ou provider desconhecido NÃO muda o modo: perguntar e não saber não é
+ * motivo para travar o atendimento de quem não tem a restrição.
+ */
+export async function exigirAprovacaoDoCanal(
+  db: pg.Pool,
+  input: { tenantId: string; channelSessionId: string },
+  resolucao: TurnAgentResolution,
+): Promise<TurnAgentResolution> {
+  if (resolucao.config === null || resolucao.config.operationMode === 'assisted') return resolucao;
+  const { rows } = await db.query<{ provider: string }>(
+    'select provider from channel_sessions where organization_id = $1 and id = $2',
+    [input.tenantId, input.channelSessionId],
+  );
+  const provider = rows[0]?.provider;
+  if (provider === undefined || !(PROVIDERS_DE_MENSAGEM as readonly string[]).includes(provider)) return resolucao;
+  if (!capabilitiesOf(provider as ChannelProvider).iaSoComAprovacao) return resolucao;
+  return { ...resolucao, config: { ...resolucao.config, operationMode: 'assisted' } };
 }

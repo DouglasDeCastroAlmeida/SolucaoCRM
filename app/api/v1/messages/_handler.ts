@@ -34,6 +34,7 @@ import { audit } from "@/lib/audit";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { assertOrgOperante } from "@/lib/organizacao/operante";
 import {
+  capabilitiesOf,
   CHANNEL_SESSION_REF_COLUMNS,
   DEFAULT_CHANNEL_PROVIDER,
   getAdapter,
@@ -455,7 +456,7 @@ export async function sendMessageHandler(
   // envio com 42703. Sem a coluna, nada está arquivado — e a consulta sem ela é a
   // consulta certa (ver lib/channels/archived).
   const convSelect = (comArchived: boolean) =>
-    `id, organization_id, contact_id, channel_session_id, is_group, group_chat_id, bot_silenced_until, provider_conversation_id, last_inbound_at, contacts:contact_id(phone_number, wa_identity, wa_lid, is_blocked, is_personal), channel_sessions:channel_session_id(${CHANNEL_SESSION_REF_COLUMNS}, status, metadata${comArchived ? `, ${ARCHIVED_AT}` : ""})`;
+    `id, organization_id, contact_id, channel_session_id, is_group, group_chat_id, bot_silenced_until, provider_conversation_id, last_inbound_at, contacts:contact_id(phone_number, wa_identity, wa_lid, email, is_blocked, is_personal), channel_sessions:channel_session_id(${CHANNEL_SESSION_REF_COLUMNS}, status, metadata${comArchived ? `, ${ARCHIVED_AT}` : ""})`;
   //
   // O filtro por `organization_id` NÃO é redundância com a RLS — é a única
   // proteção que existe na metade dos chamadores. Este handler é a porta de
@@ -522,6 +523,8 @@ export async function sendMessageHandler(
       phone_number: string | null;
       wa_identity: string | null;
       wa_lid: string | null;
+      /** Endereço de e-mail do contato — só o canal que endereça por e-mail lê. */
+      email: string | null;
       is_blocked: boolean;
       /** Spec 21: pessoal não recebe por nenhum caminho — o veto é no mesmo ponto do bloqueio. */
       is_personal: boolean;
@@ -913,7 +916,29 @@ export async function sendMessageHandler(
     phoneNumber: c.contacts?.phone_number,
     waIdentity: c.contacts?.wa_identity,
     waLid: c.contacts?.wa_lid,
+    email: c.contacts?.email,
   });
+
+  // Envio PROATIVO (campanha, sequência de follow-up, automação, prospecção) é "em lote":
+  // um canal que só responde a quem escreveu (capacidade `envioEmLote` falsa) recusa, em vez
+  // de mandar mensagem fria pela caixa do cliente. Resposta de atendente ou de agente dentro
+  // da conversa não carrega `proactiveContext` e passa.
+  const recusadoPorSerEmLote =
+    !!(ctx.proactiveContext || ctx.prospectingDelivery) &&
+    !capabilitiesOf(c.channel_sessions?.provider ?? DEFAULT_CHANNEL_PROVIDER).envioEmLote;
+
+  // O canal pode pedir para o envio esperar (teto do dia, intervalo mínimo): a mensagem fica
+  // `queued` com a hora de retomada, e a fila é drenada por quem tem o relógio (cron do canal).
+  let adiamento: { adiarAte: Date; motivo: string } | null = null;
+  const consultarAdmissao = async () => {
+    if (!adapter.admitir || !c.channel_sessions) return null;
+    const r = await adapter.admitir({
+      organizationId: ctx.organization_id,
+      sessionRef: resolveSessionRef(c.channel_sessions),
+      agora: new Date(),
+    });
+    return r.ok ? null : { adiarAte: r.adiarAte, motivo: r.motivo };
+  };
 
   // Releitura no sink: o operador pode ter fechado o canal enquanto o modelo
   // gerava a resposta. Envio humano não passa por esta restrição da IA.
@@ -970,6 +995,20 @@ export async function sendMessageHandler(
       .select(MSG_COLS)
       .maybeSingle();
     if (updated) message = updated as unknown as Message;
+  } else if (recusadoPorSerEmLote) {
+    // `failed` terminal: fila implicaria "vai sair quando der", e por este canal não sai nunca.
+    const { data: updated } = await supabase
+      .from("messages")
+      .update({
+        status: "failed",
+        error_code: "canal_sem_envio_em_lote",
+        error_message: "Este canal só responde a quem escreveu: campanhas e sequências automáticas não saem por ele.",
+      })
+      .eq("id", message.id)
+      .eq("organization_id", ctx.organization_id)
+      .select(MSG_COLS)
+      .maybeSingle();
+    if (updated) message = updated as unknown as Message;
   } else if (!adapter.isConfigured()) {
     const { data: updated } = await supabase
       .from("messages")
@@ -1002,6 +1041,21 @@ export async function sendMessageHandler(
         },
       })
       .eq("id", message.id)
+      .select(MSG_COLS)
+      .maybeSingle();
+    if (updated) message = updated as unknown as Message;
+  } else if ((adiamento = await consultarAdmissao())) {
+    const { data: updated } = await supabase
+      .from("messages")
+      .update({
+        metadata: {
+          ...(message.metadata ?? {}),
+          queued_reason: adiamento.motivo,
+          adiar_ate: adiamento.adiarAte.toISOString(),
+        },
+      })
+      .eq("id", message.id)
+      .eq("organization_id", ctx.organization_id)
       .select(MSG_COLS)
       .maybeSingle();
     if (updated) message = updated as unknown as Message;
@@ -1111,6 +1165,7 @@ export async function sendMessageHandler(
           sessionRef: resolveSessionRef(c.channel_sessions),
           to: chatId,
           providerConversationId: c.provider_conversation_id,
+          conversationId: c.id,
           kind: input.type,
           media: {
             url: signed.signedUrl,
@@ -1138,6 +1193,7 @@ export async function sendMessageHandler(
           sessionRef: resolveSessionRef(c.channel_sessions),
           to: chatId,
           providerConversationId: c.provider_conversation_id,
+          conversationId: c.id,
           kind: input.type,
           media: {
             url: input.media_url,
@@ -1183,6 +1239,7 @@ export async function sendMessageHandler(
           sessionRef: resolveSessionRef(c.channel_sessions),
           to: chatId,
           providerConversationId: c.provider_conversation_id,
+          conversationId: c.id,
           kind: input.type,
           body: corpoDoCanal(input.body ?? "") ?? "",
           replyToExternalId: citada?.external_id ?? null,

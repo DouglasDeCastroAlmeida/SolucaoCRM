@@ -67,6 +67,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (msg === "session_not_found") {
       return fail("not_found", t("Sessão de canal não encontrada."), 404, { requestId });
     }
+    if (msg === "channel_cannot_start_conversation") {
+      return fail(
+        "email_so_responde",
+        t("Este canal só responde a quem escreveu: não dá para iniciar uma conversa nova por ele."),
+        422,
+        { requestId },
+      );
+    }
     if (msg === "invalid_phone") {
       return fail("validation_error", t("Telefone inválido."), 422, { requestId });
     }

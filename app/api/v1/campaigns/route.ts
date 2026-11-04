@@ -17,7 +17,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import { FILTRO_VAZIO } from "@/lib/campanhas/audiencia";
-import { gravarPool } from "@/lib/campanhas/pool-de-numeros";
+import { conexaoAceitaCampanha, gravarPool } from "@/lib/campanhas/pool-de-numeros";
 import {
   codificarCursor,
   criarCampanhaSchema,
@@ -113,17 +113,21 @@ export async function POST(req: NextRequest): Promise<Response> {
   const supabase = createAdminClient();
   // A conexão é conferida CONTRA A ORGANIZAÇÃO: a FK composta da 0375 recusaria
   // o número de outro tenant, mas a recusa do banco chegaria como erro genérico.
-  const { data: canal } = await supabase
-    .from("channel_sessions")
-    .select("id")
-    .eq("organization_id", org.orgId)
-    .eq("id", entrada.channel_session_id)
-    .maybeSingle();
-  if (!canal) {
+  const conexao = await conexaoAceitaCampanha(supabase, org.orgId, entrada.channel_session_id);
+  if (conexao === "nao_encontrada") {
     return fail(
       "campanha_canal_indisponivel",
       t("Escolha uma conexão de WhatsApp desta organização."),
       409,
+      { requestId },
+    );
+  }
+
+  if (conexao === "so_responde") {
+    return fail(
+      "email_envio_em_lote",
+      t("Este canal só responde a quem escreveu: não dá para usá-lo em campanhas."),
+      422,
       { requestId },
     );
   }

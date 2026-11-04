@@ -274,3 +274,25 @@ export function capabilitiesOf(provider: ChannelProvider): ChannelCapabilities {
   if (!caps) throw new Error(`unknown_channel_provider: ${provider}`);
   return caps;
 }
+
+/**
+ * `true` se o canal aceita envio EM LOTE (campanha, sequência de follow-up): capacidade
+ * `envioEmLote`. Provider desconhecido responde `false` (falha fechada); provider ausente
+ * herda o default da coluna, como `DEFAULT_CHANNEL_PROVIDER`.
+ */
+export function aceitaEnvioEmLote(provider: string | null | undefined): boolean {
+  const p = provider ?? DEFAULT_CHANNEL_PROVIDER;
+  return transportaMensagem(p) && capabilitiesOf(p as ChannelProvider).envioEmLote;
+}
+
+/**
+ * `true` se o canal pode ABRIR conversa com quem nunca escreveu: capacidade `iniciaConversa`.
+ * Mesma regra de provider desconhecido/ausente de `aceitaEnvioEmLote`.
+ */
+export function podeIniciarConversa(provider: string | null | undefined): boolean {
+  const p = provider ?? DEFAULT_CHANNEL_PROVIDER;
+  return transportaMensagem(p) && capabilitiesOf(p as ChannelProvider).iniciaConversa;
+}
+
+/** Os providers de mensagem que podem abrir conversa — o recorte de quem escolhe canal sozinho. */
+export const PROVIDERS_QUE_INICIAM_CONVERSA = PROVIDERS_DE_MENSAGEM.filter((p) => CHANNEL_CAPABILITIES[p].iniciaConversa);

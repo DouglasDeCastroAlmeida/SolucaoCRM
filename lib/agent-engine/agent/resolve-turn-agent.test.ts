@@ -1,9 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { capabilitiesOf, PROVIDERS_DE_MENSAGEM } from '@/lib/channels/capabilities';
+
 import type { EstadoDaTarefa } from '@/lib/ai/decisao/config';
 import type { EscolhaDoJev, JevNoRoteador } from '@/lib/ai/decisao/roteador';
 
-import { agenteDoDestino, destinoDoVeredito, resolveConversationTurn, resolveTurnAgent } from './resolve-turn-agent';
+import {
+  agenteDoDestino,
+  destinoDoVeredito,
+  exigirAprovacaoDoCanal,
+  resolveConversationTurn,
+  resolveTurnAgent,
+  type TurnAgentResolution,
+} from './resolve-turn-agent';
 import type { PublishedAgentConfig } from './agent-config';
 import type { IntentVerdict } from './intent-classifier';
 import type { LoadedRouter } from './router-config';
@@ -839,5 +848,48 @@ describe('2155 — destino de funil na intenção casada', () => {
     expect(out.outcome).toBe('fallback');
     expect(out.config?.agentId).toBe('agent-reserva');
     expect(out.destinationPipelineId ?? null).toBeNull();
+  });
+});
+
+describe('exigirAprovacaoDoCanal — canal em que a IA só rascunha (e-mail)', () => {
+  const resolucao = (): TurnAgentResolution => ({
+    config: { ...fakeConfig('agent-vendas'), operationMode: 'automatic' },
+    routerId: null,
+    intentName: null,
+    confidence: null,
+    outcome: 'no_router',
+  });
+  const dbDoCanal = (provider: string | null) => ({
+    query: vi.fn(async () => ({ rows: provider === null ? [] : [{ provider }] })),
+  });
+  const entrada = { tenantId: 'org-1', channelSessionId: 'sess-1' };
+  const CANAL_SEM_A_RESTRICAO = PROVIDERS_DE_MENSAGEM.find((p) => !capabilitiesOf(p).iaSoComAprovacao)!;
+
+  it('AC-004.5: em canal que exige aprovação o agente automático passa a assistido (rascunho)', async () => {
+    const db = dbDoCanal('email');
+    const out = await exigirAprovacaoDoCanal(db as never, entrada, resolucao());
+    expect(out.config?.operationMode).toBe('assisted');
+    const [sql, valores] = db.query.mock.calls[0] as unknown as [string, unknown[]];
+    expect(sql).toContain('organization_id = $1');
+    expect(valores).toEqual(['org-1', 'sess-1']);
+  });
+
+  it('AC-004.5: canal que não exige aprovação mantém o modo do agente, sem copiar a config', async () => {
+    const original = resolucao();
+    const out = await exigirAprovacaoDoCanal(dbDoCanal(CANAL_SEM_A_RESTRICAO) as never, entrada, original);
+    expect(out).toBe(original);
+    expect(out.config?.operationMode).toBe('automatic');
+  });
+
+  it('sem agente na resolução nada muda, e a consulta nem acontece', async () => {
+    const db = dbDoCanal('email');
+    const semAgente: TurnAgentResolution = { ...resolucao(), config: null };
+    expect(await exigirAprovacaoDoCanal(db as never, entrada, semAgente)).toBe(semAgente);
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  it('canal que não se acha (ou provider desconhecido) não vira assistido por engano', async () => {
+    expect((await exigirAprovacaoDoCanal(dbDoCanal(null) as never, entrada, resolucao())).config?.operationMode).toBe('automatic');
+    expect((await exigirAprovacaoDoCanal(dbDoCanal('inexistente') as never, entrada, resolucao())).config?.operationMode).toBe('automatic');
   });
 });
