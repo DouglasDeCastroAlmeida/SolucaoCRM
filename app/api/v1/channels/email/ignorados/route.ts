@@ -26,7 +26,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const caixaId = req.nextUrl.searchParams.get("caixa_id") ?? undefined;
   if (caixaId !== undefined && !UUID.test(caixaId)) {
-    return fail("validation_failed", t("Lista de e-mails ignorados não encontrada."), 422, { requestId });
+    return fail("validation_failed", t("Informe uma caixa de e-mail válida."), 422, { requestId });
   }
   const ignorados = await listarIgnorados(createAdminClient(), authz.org.orgId, { caixaId });
   return ok({ ignorados }, { requestId });

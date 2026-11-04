@@ -18,6 +18,9 @@ const h = vi.hoisted(() => ({
   cursor: vi.fn(),
   atualizar: vi.fn(),
   descartar: vi.fn(),
+  lerEstado: vi.fn(),
+  retomar: vi.fn(),
+  resolverAviso: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
@@ -45,6 +48,16 @@ vi.mock("@/lib/channels/email/caixa", async () => ({
   iniciarCursor: h.cursor,
   atualizarConfigDaCaixa: h.atualizar,
   descartarCaixa: h.descartar,
+}));
+
+vi.mock("@/lib/channels/email/estado", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>("@/lib/channels/email/estado")),
+  lerEstado: h.lerEstado,
+  retomar: h.retomar,
+}));
+vi.mock("@/lib/channels/email/avisos", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>("@/lib/channels/email/avisos")),
+  resolverAvisoSenhaRecusada: h.resolverAviso,
 }));
 
 import { GET, POST } from "@/app/api/v1/channels/email/route";
@@ -361,6 +374,20 @@ describe("AC-001.5 e AC-008.1: listar e alterar", () => {
       expect.anything(),
       expect.objectContaining({ config: expect.objectContaining({ senha_ultimos4: "-123" }) }),
     );
+  });
+
+  it("AC-006.1: senha nova numa caixa pausada por senha recusada retoma e fecha o aviso da Central", async () => {
+    h.lerEstado.mockResolvedValue({ pausaMotivo: "senha_recusada" });
+    await PATCH(req("PATCH", "/9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60", { senha: "outra-senha-longa-123" }), contexto());
+
+    expect(h.retomar).toHaveBeenCalledWith(expect.anything(), ORG, "9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60");
+    expect(h.resolverAviso).toHaveBeenCalledWith(expect.anything(), ORG, "9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60");
+  });
+
+  it("AC-006.1: caixa que nao estava pausada nao mexe no aviso", async () => {
+    h.lerEstado.mockResolvedValue({ pausaMotivo: null });
+    await PATCH(req("PATCH", "/9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60", { senha: "outra-senha-longa-123" }), contexto());
+    expect(h.resolverAviso).not.toHaveBeenCalled();
   });
 
   it("senha nova recusada pela caixa não é guardada", async () => {

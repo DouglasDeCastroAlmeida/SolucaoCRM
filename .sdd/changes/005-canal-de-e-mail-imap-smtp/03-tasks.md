@@ -80,6 +80,13 @@ Cada tarefa ocupa uma linha:
 - [ ] T-048 [CHECK-SMOKE] Implantar em produção sem caixas conectadas e rodar a sonda (~30 min) deps: T-047, T-045
 - [ ] T-049 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-048
 
+## Dívida conhecida (revisão da Fatia 4; tratar na Fatia 5/6, não implementada)
+
+- Sugestão 2 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
+- Sugestão 3 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
+- Sugestão 8 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
+- Sugestão 9 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
+
 ## Estimativa
 
 <!-- Gerada por `sdd estimate`. Sempre com a linha TOTALIZADOR GERAL. -->

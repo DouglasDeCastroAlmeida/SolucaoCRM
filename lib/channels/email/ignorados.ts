@@ -14,6 +14,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { acharCaixa } from "./caixa";
+import { lerEstado } from "./estado";
 import { ingerirEmail, type DependenciasDaIngestao } from "./ingest";
 import { abrirLeitorImap, type AbrirLeitor } from "./leitura-imap";
 import { lerEmail } from "./parse";
@@ -82,6 +83,11 @@ export async function promoverIgnorado(
 
   const caixa = await acharCaixa(admin, organizationId, r.channel_session_id);
   if (!caixa) return { resultado: "indisponivel" };
+  // Caixa pausada por senha recusada: abrir o IMAP de novo só repetiria o login que falha.
+  const estado = await lerEstado(admin, organizationId, caixa.id);
+  if (estado?.pausaMotivo === "senha_recusada" || estado?.pausaMotivo === "senha_ausente") {
+    return { resultado: "indisponivel" };
+  }
   const senha = await (deps.lerSenha ?? lerSenhaDaCaixa)(admin, { organizationId, channelSessionId: caixa.id });
   if (!senha) return { resultado: "indisponivel" };
 

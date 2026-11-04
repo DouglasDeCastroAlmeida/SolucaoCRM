@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { criarBancoFalso } from "../../../tests/helpers/banco-falso-do-email";
-import { avisarSenhaRecusada } from "./avisos";
+import { avisarSenhaRecusada, resolverAvisoSenhaRecusada } from "./avisos";
 
 const ENTRADA = { organizationId: "org-a", caixaId: "caixa-1", endereco: "caixa@meunegocio.com" };
 
@@ -43,5 +43,22 @@ describe("avisarSenhaRecusada", () => {
       emailsDosAdmins: async () => ["dono@meunegocio.com"],
     });
     expect(r).toEqual({ central: true, emails: 0 });
+  });
+});
+
+describe("resolverAvisoSenhaRecusada", () => {
+  it("AC-006.1: fecha o item aberto da caixa, so dela, e uma nova recusa abre aviso novo", async () => {
+    const banco = criarBancoFalso({
+      organizations: [{ id: "org-a", locale: "pt-BR" }],
+      agent_inbox_items: [
+        { organization_id: "org-a", kind: "email_senha_recusada", ref_id: "caixa-1", status: "open" },
+        { organization_id: "org-a", kind: "email_senha_recusada", ref_id: "caixa-2", status: "open" },
+      ],
+    });
+    await resolverAvisoSenhaRecusada(banco.client, "org-a", "caixa-1");
+    expect(banco.tabelas.agent_inbox_items!.map((i) => i.status)).toEqual(["resolved", "open"]);
+
+    await avisarSenhaRecusada(banco.client, ENTRADA, { enviar: async () => ({ ok: true }), emailsDosAdmins: async () => [] });
+    expect(banco.tabelas.agent_inbox_items).toHaveLength(3);
   });
 });

@@ -36,6 +36,7 @@ import {
   lerEstado,
   pausar,
   pegarTrava,
+  carimbarRodada,
   recuoEmMs,
   registrarFalha,
   registrarRodadaBoa,
@@ -217,7 +218,7 @@ export async function rodarCaixa(
         logger.warn("[email.rodada] mensagem não tratada; a próxima rodada retoma daqui", {
           organizationId,
           caixaId: caixa.id,
-          erro: erro instanceof Error ? erro.message.slice(0, 120) : "desconhecido",
+          erro: codigoDoErro(erro),
         });
         break;
       }
@@ -236,6 +237,12 @@ export async function rodarCaixa(
     await soltarTrava(admin, organizationId, caixa.id).catch(() => undefined);
     if (leitor) await leitor.fechar().catch(() => undefined);
   }
+}
+
+/** Só o código do erro (ou o nome da classe): a mensagem pode trazer endereço de terceiro. */
+function codigoDoErro(erro: unknown): string {
+  if (erro && typeof erro === "object" && typeof (erro as { code?: unknown }).code === "string") return (erro as { code: string }).code;
+  return erro instanceof Error ? erro.name : "desconhecido";
 }
 
 async function pausarPorSenha(
@@ -287,17 +294,26 @@ export async function rodarRodada(admin: SupabaseClient, deps: DependenciasDaRod
       const { data: org } = await admin.from("organizations").select("status").eq("id", orgId).maybeSingle();
       statusDaOrg.set(orgId, ehOperante((org as { status?: string | null } | null)?.status));
     }
-    if (!statusDaOrg.get(orgId)) continue;
+    if (!statusDaOrg.get(orgId)) {
+      await carimbarRodada(admin, orgId, linha.channel_session_id, agora());
+      continue;
+    }
 
     const caixa = await acharCaixa(admin, orgId, linha.channel_session_id);
-    if (!caixa) continue;
+    if (!caixa) {
+      await carimbarRodada(admin, orgId, linha.channel_session_id, agora());
+      continue;
+    }
     const { data: sessao } = await admin
       .from("channel_sessions")
       .select("metadata")
       .eq("organization_id", orgId)
       .eq("id", caixa.id)
       .maybeSingle();
-    if (canalDesativado((sessao as { metadata?: unknown } | null)?.metadata)) continue;
+    if (canalDesativado((sessao as { metadata?: unknown } | null)?.metadata)) {
+      await carimbarRodada(admin, orgId, caixa.id, agora());
+      continue;
+    }
 
     caixas.push(await rodarCaixa(admin, orgId, caixa, prazoFinal, deps));
   }

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { criarBancoFalso, type BancoFalso } from "../../../tests/helpers/banco-falso-do-email";
 import type { CaixaDeEmail } from "./caixa";
+import { logger } from "@/lib/logger";
 import { emailCanalLigado } from "./chave";
 import { FalhaDeLeitura, type LeitorDeCaixa } from "./leitura-imap";
 import { rodarCaixa, rodarRodada, type DependenciasDaRodada } from "./rodada";
@@ -309,5 +310,26 @@ describe("rodada: a chave EMAIL_CANAL", () => {
     banco.tabelas.organizations![0]!.status = "suspended";
     expect((await rodarRodada(banco.client, deps)).caixas).toEqual([]);
     expect(abrir).not.toHaveBeenCalled();
+  });
+
+  it("AC-008.2: caixas puladas (organizacao parada) sao carimbadas e nao tomam a vaga das demais", async () => {
+    preparar({ mensagens: [] });
+    banco.tabelas.organizations = [{ id: ORG, status: "suspended" }];
+    await rodarRodada(banco.client, deps);
+    expect(banco.tabelas.email_sync_estado![0]!.ultima_rodada_em).toBe(AGORA.toISOString());
+    expect(banco.tabelas.email_sync_estado![0]!.falhas_seguidas).toBe(0);
+  });
+
+  it("log da falha de mensagem registra so o code, nunca a mensagem do banco", async () => {
+    const aviso = vi.spyOn(logger, "warn").mockImplementation(() => undefined);
+    preparar({ mensagens: [{ uid: 6, cru: mime("m6") }] });
+    deps.ingerir = (async () => {
+      throw Object.assign(new Error("duplicate key joao@exemplo.com"), { code: "23505" });
+    }) as never;
+    await rodar();
+    const log = JSON.stringify(aviso.mock.calls);
+    expect(log).toContain("23505");
+    expect(log).not.toContain("joao@exemplo.com");
+    aviso.mockRestore();
   });
 });

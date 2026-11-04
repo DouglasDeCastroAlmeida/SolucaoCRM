@@ -107,6 +107,8 @@ describe("AC-003.4: não é cliente", () => {
     expect(h.role).toHaveBeenCalledWith("agent", expect.anything());
     expect(h.naoCliente).toHaveBeenCalledWith(expect.anything(), { organizationId: ORG, userId: "u-1", conversationId: CONV, endereco: undefined });
     expect(h.audit.mock.calls[0]![0]).toMatchObject({ action: "channel.email_sender_blocked", organizationId: ORG });
+    // A auditoria e append-only: o endereco do terceiro nao entra nela.
+    expect(JSON.stringify(h.audit.mock.calls[0]![0])).not.toContain("joao@exemplo.com");
   });
 
   it.each([

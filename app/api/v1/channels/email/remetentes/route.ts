@@ -59,7 +59,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     organizationId: authz.org.orgId,
     resourceType: "email_remetente",
     requestId,
-    metadata: { endereco: r.endereco, conversas_arquivadas: r.conversasArquivadas },
+    // Sem o endereço do terceiro: a auditoria é append-only e dura anos.
+    metadata: { conversation_id: parsed.data.conversation_id ?? null, conversas_arquivadas: r.conversasArquivadas },
   });
   return ok({ endereco: r.endereco, conversas_arquivadas: r.conversasArquivadas }, { requestId });
 }

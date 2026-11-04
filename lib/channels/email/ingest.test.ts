@@ -193,3 +193,13 @@ describe("origem do negocio", () => {
     });
   });
 });
+
+describe("ingerirEmail: erro de banco", () => {
+  it("o erro lancado leva so o code, nunca a mensagem do Postgres (pode trazer o endereco)", async () => {
+    banco.falharEm("contacts", "select", { code: "XX000", message: "falhou para joao@exemplo.com" });
+    const erro = await ingerir(email()).catch((e: Error) => e);
+    expect(erro).toBeInstanceOf(Error);
+    expect((erro as Error).message).toContain("XX000");
+    expect((erro as Error).message).not.toContain("joao@exemplo.com");
+  });
+});

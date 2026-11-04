@@ -130,6 +130,19 @@ export async function registrarRodadaBoa(admin: SupabaseClient, organizationId: 
     .eq("channel_session_id", caixaId);
 }
 
+/**
+ * Carimba a vez da caixa sem tocar em falhas nem trava. Usado quando a rodada PULA a caixa
+ * (organização parada, canal desativado, arquivada): sem isto ela ficaria entre as mais antigas
+ * para sempre e, com 20 ou mais assim, tomaria todas as vagas do rodízio.
+ */
+export async function carimbarRodada(admin: SupabaseClient, organizationId: string, caixaId: string, agora: Date): Promise<void> {
+  await admin
+    .from("email_sync_estado")
+    .update({ ultima_rodada_em: agora.toISOString() })
+    .eq("organization_id", organizationId)
+    .eq("channel_session_id", caixaId);
+}
+
 export async function registrarFalha(
   admin: SupabaseClient,
   organizationId: string,

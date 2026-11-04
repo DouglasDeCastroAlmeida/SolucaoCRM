@@ -89,3 +89,22 @@ export async function avisarSenhaRecusada(
   }
   return { central, emails };
 }
+
+/**
+ * Fecha o item aberto da Central quando a caixa volta com senha nova; assim, uma nova recusa
+ * abre um aviso novo em vez de cair no "já existe um aberto". Melhor esforço: nunca lança.
+ */
+export async function resolverAvisoSenhaRecusada(admin: SupabaseClient, organizationId: string, caixaId: string): Promise<void> {
+  try {
+    const { error } = await admin
+      .from("agent_inbox_items")
+      .update({ status: "resolved", resolved_at: new Date().toISOString() })
+      .eq("organization_id", organizationId)
+      .eq("kind", KIND_SENHA_RECUSADA)
+      .eq("ref_id", caixaId)
+      .eq("status", "open");
+    if (error) logger.warn("[email.aviso] fechar o item da Central falhou", { organizationId });
+  } catch {
+    logger.warn("[email.aviso] fechar o item da Central interrompido", { organizationId });
+  }
+}

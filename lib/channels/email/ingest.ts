@@ -72,6 +72,14 @@ function tipoDaMensagem(mime: string): "image" | "video" | "audio" | "document" 
   return "document";
 }
 
+/**
+ * Erro de banco SEM a mensagem do Postgres (ela pode trazer o endereço do remetente, que é
+ * dado de terceiro): fica só o rótulo e o `code`, que a rodada registra no log.
+ */
+function erroDoBanco(rotulo: string, erro: { code?: string } | null | undefined): Error & { code?: string } {
+  return Object.assign(new Error(`${rotulo}: ${erro?.code ?? "sem_codigo"}`), { code: erro?.code });
+}
+
 async function acharContatoPorEmail(admin: SupabaseClient, organizationId: string, endereco: string) {
   const { data, error } = await admin
     .from("contacts")
@@ -80,7 +88,7 @@ async function acharContatoPorEmail(admin: SupabaseClient, organizationId: strin
     .eq("email_normalized", endereco)
     .is("is_merged_into", null)
     .maybeSingle();
-  if (error) throw new Error(`email_contact_lookup_failed: ${error.message}`);
+  if (error) throw erroDoBanco("email_contact_lookup_failed", error);
   return (data as { id: string } | null)?.id ?? null;
 }
 
@@ -91,7 +99,7 @@ async function remetenteMarcadoComoNaoCliente(admin: SupabaseClient, organizatio
     .eq("organization_id", organizationId)
     .eq("endereco_normalizado", endereco)
     .maybeSingle();
-  if (error) throw new Error(`email_sender_block_lookup_failed: ${error.message}`);
+  if (error) throw erroDoBanco("email_sender_block_lookup_failed", error);
   return data !== null;
 }
 
@@ -118,7 +126,7 @@ async function criarOuAcharContato(
     const vencedor = await acharContatoPorEmail(admin, organizationId, remetente.endereco);
     if (vencedor) return vencedor;
   }
-  if (error || !data) throw new Error(`email_contact_create_failed: ${error?.message ?? "sem id"}`);
+  if (error || !data) throw erroDoBanco("email_contact_create_failed", error);
   return (data as { id: string }).id;
 }
 
@@ -137,7 +145,7 @@ export async function registrarIgnorado(
     recebido_em: (input.email.data ?? new Date()).toISOString(),
     motivo: input.motivo,
   });
-  if (error && error.code !== "23505") throw new Error(`email_ignored_insert_failed: ${error.message}`);
+  if (error && error.code !== "23505") throw erroDoBanco("email_ignored_insert_failed", error);
 }
 
 export async function ingerirEmail(
@@ -176,7 +184,7 @@ export async function ingerirEmail(
     p_session: caixa.id,
   } as never);
   if (erroDaConversa || !conversa) {
-    throw new Error(`email_conversation_upsert_failed: ${erroDaConversa?.message ?? "sem id"}`);
+    throw erroDoBanco("email_conversation_upsert_failed", erroDaConversa);
   }
   const conversationId = conversa as unknown as string;
 
@@ -215,7 +223,7 @@ export async function ingerirEmail(
     .select("id")
     .maybeSingle();
   if (erroDeInsert?.code === "23505") return { resultado: "duplicado" };
-  if (erroDeInsert || !inserida) throw new Error(`email_ingest_insert_failed: ${erroDeInsert?.message ?? "sem id"}`);
+  if (erroDeInsert || !inserida) throw erroDoBanco("email_ingest_insert_failed", erroDeInsert);
   const messageId = (inserida as { id: string }).id;
 
   // 4. Anexos: guardados depois, com o id da mensagem. Falhar aqui não perde o e-mail.

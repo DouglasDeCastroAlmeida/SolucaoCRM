@@ -110,7 +110,7 @@ export const TEXTOS_EMAIL_CANAL = {
   "Pausamos a leitura e o envio dessa caixa para não bloquear a sua conta. Em Conexões, atualize a senha para retomar de onde parou.": {
     es: "Pausamos la lectura y el envío de ese buzón para no bloquear tu cuenta. En Conexiones, actualiza la contraseña para retomar donde se quedó.",
   },
-  "Lista de e-mails ignorados não encontrada.": { es: "Lista de correos ignorados no encontrada." },
+  "Informe uma caixa de e-mail válida.": { es: "Indica un buzón de correo válido." },
   "E-mail ignorado não encontrado.": { es: "Correo ignorado no encontrado." },
   "Não foi possível ler esse e-mail agora. Tente de novo em alguns minutos.": {
     es: "No fue posible leer ese correo ahora. Inténtalo de nuevo en unos minutos.",

@@ -21,6 +21,7 @@ import {
 } from "@/lib/channels/email/caixa";
 import { verificarCaixa } from "@/lib/channels/email/conexao";
 import { respostaDaFalhaDeConexao, semSegredo, tentativasEsgotadas } from "@/lib/channels/email/rotas";
+import { resolverAvisoSenhaRecusada } from "@/lib/channels/email/avisos";
 import { lerEstado, retomar } from "@/lib/channels/email/estado";
 import { gravarSenhaDaCaixa, ultimosQuatro } from "@/lib/channels/email/segredo";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -106,6 +107,7 @@ export async function PATCH(
       const estado = await lerEstado(admin, orgId, id);
       if (estado?.pausaMotivo === "senha_recusada" || estado?.pausaMotivo === "senha_ausente") {
         await retomar(admin, orgId, id);
+        await resolverAvisoSenhaRecusada(admin, orgId, id);
       }
     } catch (erro) {
       logger.warn("[email.alterar] retomar a caixa depois da senha nova falhou", {

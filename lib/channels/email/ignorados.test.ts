@@ -88,6 +88,18 @@ describe("promoverIgnorado", () => {
     expect(leitor.fechar).toHaveBeenCalled();
   });
 
+  it("AC-006.1: caixa pausada por senha recusada nao abre o IMAP", async () => {
+    const banco = criarBancoFalso({
+      email_ignorados: [ignorado()],
+      channel_sessions: [caixaLinha()],
+      email_sync_estado: [{ channel_session_id: "caixa-1", organization_id: ORG, pausa_motivo: "senha_recusada" }],
+    });
+    const abrirLeitor = vi.fn(async () => leitorQue(mimeDaLoja));
+    const r = await promoverIgnorado(banco.client, ORG, "ign-1", { abrirLeitor, lerSenha: async () => "senha" });
+    expect(r.resultado).toBe("indisponivel");
+    expect(abrirLeitor).not.toHaveBeenCalled();
+  });
+
   it("AC-003.3: o UID agora aponta para outro e-mail (UIDVALIDITY mudou): nao promove o errado", async () => {
     const banco = criarBancoFalso({ email_ignorados: [ignorado({ message_id: "<outro@loja.com>" })], channel_sessions: [caixaLinha()] });
     const r = await promoverIgnorado(banco.client, ORG, "ign-1", {
