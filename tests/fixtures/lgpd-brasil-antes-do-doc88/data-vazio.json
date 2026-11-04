@@ -38,6 +38,8 @@
   "campaign_recipients": [],
   "campaign_suppressions": [],
   "channel_session_groups": [],
+  "email_ignorados": [],
+  "email_remetentes_ignorados": [],
   "group_messages_authored": [],
   "lead_notes": [],
   "ai_agent_runs": [],
