@@ -77,6 +77,8 @@ const FORA_DE_INTERFACE: Record<string, string> = {
   // (da organização que convida, presumivelmente), e mexe no teste de template
   // que compara o HTML inteiro.
   "lib/email/templates/invite.ts": "e-mail: renderizado fora do React; quem recebe convite ainda não tem conta",
+  "lib/channels/email/resposta.ts":
+    "citação da resposta por e-mail (005): texto fixo \"Em <data>, <quem> escreveu:\" escrito em português, renderizado fora do React, na hora do envio; a data acompanha a frase, no fuso da organização",
   "lib/lgpd/email-delivery.ts": "e-mail de LGPD: mesma fronteira do convite",
   "lib/lgpd/sla-alarm.ts": "alarme por e-mail: mesma fronteira",
   "lib/lgpd/avisos-do-artigo-12.ts":
