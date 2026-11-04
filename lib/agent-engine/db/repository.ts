@@ -134,6 +134,10 @@ export type InboxKind =
   // (a conversa foi para a fila humana).
   | 'acao_mcp_pendente'
   | 'ia_provedor_indisponivel'
+  // (migration 0727, mudança SDD 005) A caixa de e-mail recusou a senha e foi pausada;
+  // o teto diário de envio da caixa foi atingido.
+  | 'email_senha_recusada'
+  | 'email_teto_atingido'
   | 'other';
 
 export interface InboxItemRow {

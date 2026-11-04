@@ -33,6 +33,9 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     // É a linha que conversa com um APARELHO pareado: a agenda salva no
     // celular está lá dentro, e o `contacts/all` a devolve paginada (#2736).
     phonebook: true,
+    envioEmLote: true,
+    iniciaConversa: true,
+    iaSoComAprovacao: false,
   },
   // Hetero-restrição: não me banem, mas a Meta me proíbe e me cobra.
   meta_cloud: {
@@ -50,6 +53,9 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     // Nenhuma destas linhas conversa com um aparelho pareado — não existe
     // agenda de celular a ler, e dizer `true` aqui seria um botão que só falha.
     phonebook: false,
+    envioEmLote: true,
+    iniciaConversa: true,
+    iaSoComAprovacao: false,
   },
   // Mesma hetero-restrição do canal oficial, por baixo: é um BSP: a WABA é da
   // Meta, os templates são aprovados pela Meta e a janela de 24h é da Meta. O
@@ -87,6 +93,9 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     // Nenhuma destas linhas conversa com um aparelho pareado — não existe
     // agenda de celular a ler, e dizer `true` aqui seria um botão que só falha.
     phonebook: false,
+    envioEmLote: true,
+    iniciaConversa: true,
+    iaSoComAprovacao: false,
   },
   zernio: {
     freeformOutsideWindow: false,
@@ -101,6 +110,9 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     // Nenhuma destas linhas conversa com um aparelho pareado — não existe
     // agenda de celular a ler, e dizer `true` aqui seria um botão que só falha.
     phonebook: false,
+    envioEmLote: true,
+    iniciaConversa: true,
+    iaSoComAprovacao: false,
   },
   // Parceiro homologado pela Meta que espelha a Cloud API (recorte do #1130):
   // a WABA, a janela de 24h e o custo são da Meta. O parceiro muda o TRANSPORTE
@@ -124,6 +136,33 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     // Nenhuma destas linhas conversa com um aparelho pareado — não existe
     // agenda de celular a ler, e dizer `true` aqui seria um botão que só falha.
     phonebook: false,
+    envioEmLote: true,
+    iniciaConversa: true,
+    iaSoComAprovacao: false,
+  },
+
+  // Caixa de e-mail IMAP/SMTP (mudança 005). Nem auto-restrição (não há banimento por
+  // volume que o canal declare) nem hetero-restrição (sem janela, sem modelo): o texto
+  // livre sai a qualquer hora. As três diferenças reais são as capacidades novas:
+  // não é canal de lote, não abre conversa com quem nunca escreveu, e a IA só envia
+  // depois de aprovada. O teto diário e o intervalo são POR CAIXA (`limite.ts`), por
+  // isso `minIntervalMs` fica nulo: a plataforma não impõe nenhum.
+  email: {
+    freeformOutsideWindow: true,
+    requiresTemplates: false,
+    canManageTemplates: false,
+    banRisk: false,
+    minIntervalMs: null,
+    // Neutro e sem consumidor: não existe nota de voz em e-mail (o Composer esconde o
+    // áudio pela família de canal, na Fatia 6).
+    voiceNote: "server-convert",
+    groups: "none",
+    costPerMessage: false,
+    alteraMensagemEnviada: false,
+    phonebook: false,
+    envioEmLote: false,
+    iniciaConversa: false,
+    iaSoComAprovacao: true,
   },
 };
 
@@ -149,6 +188,8 @@ export const CHANNEL_PROVIDER_SOCIAL: ChannelProvider = "zernio_social";
 export const CHANNEL_PROVIDER_ZERNIO: ChannelProvider = "zernio";
 /** Parceiro que espelha a Cloud API — canal opcional da instalação, desligado por padrão. */
 export const CHANNEL_PROVIDER_DATAFY: ChannelProvider = "datafy";
+/** Caixa de e-mail IMAP/SMTP (mudança 005). */
+export const CHANNEL_PROVIDER_EMAIL: ChannelProvider = "email";
 /** Chamada de voz WhatsApp (spec 18). Não transporta mensagem — ver abaixo. */
 export const CHANNEL_PROVIDER_WACALLS: ChannelProvider = "wacalls";
 
@@ -173,6 +214,7 @@ export const PROVIDERS_DE_MENSAGEM = [
   "zernio",
   "zernio_social",
   "datafy",
+  "email",
 ] as const satisfies readonly ProviderDeMensagem[];
 
 /**

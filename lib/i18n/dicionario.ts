@@ -16858,6 +16858,18 @@ export const DICIONARIO: Traducoes = {
   "O serviço de IA não respondeu (chave revogada, saldo zerado ou serviço fora do ar) e a conversa foi para a fila de uma pessoa. Atenda o cliente e revise a chave de IA.": {
     es: "El servicio de IA no respondió (clave revocada, saldo agotado o servicio caído) y la conversación pasó a la cola de una persona. Atiende al cliente y revisa la clave de IA.",
   },
+  "A caixa de e-mail recusou a senha e foi pausada": {
+    es: "El buzón de correo rechazó la contraseña y quedó en pausa",
+  },
+  "A caixa de e-mail atingiu o limite de envios do dia": {
+    es: "El buzón de correo alcanzó el límite de envíos del día",
+  },
+  "A caixa de e-mail recusou a senha e foi pausada, sem tentar de novo, para não bloquear a conta. Abra Conexões, confira ou troque a senha de app da caixa e retome a leitura.": {
+    es: "El buzón de correo rechazó la contraseña y quedó en pausa, sin reintentar, para no bloquear la cuenta. Abre Conexiones, revisa o cambia la contraseña de aplicación del buzón y reanuda la lectura.",
+  },
+  "A caixa chegou ao limite de envios do dia. O que passou do limite está na fila e sai amanhã, sozinho. Se precisar de mais, ajuste o teto da caixa em Conexões.": {
+    es: "El buzón llegó al límite de envíos del día. Lo que pasó del límite está en cola y sale mañana, solo. Si necesitas más, ajusta el tope del buzón en Conexiones.",
+  },
   "O serviço de IA não respondeu — o cliente não pediu uma pessoa": {
     es: "El servicio de IA no respondió — el cliente no pidió a una persona",
   },

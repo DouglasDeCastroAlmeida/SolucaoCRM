@@ -14,7 +14,7 @@ import type { ContatoDoAparelho } from "@/lib/waha/client";
 // e o lint de canal reprovaria o caminho.
 export type { OutboundMedia, ContatoDoAparelho };
 
-export type ChannelProvider = "waha" | "meta_cloud" | "zernio" | "zernio_social" | "wacalls" | "datafy";
+export type ChannelProvider = "waha" | "meta_cloud" | "zernio" | "zernio_social" | "wacalls" | "datafy" | "email";
 
 /**
  * Os providers que transportam MENSAGEM — o subconjunto sobre o qual a matriz
@@ -76,6 +76,22 @@ export interface ChannelCapabilities {
    * presença do método `listPhonebook` no adapter.
    */
   phonebook: boolean;
+  /**
+   * Aceita campanha e follow-up em LOTE? `false` = só resposta individual: o canal
+   * pune (ou a lei veda) o envio em massa a quem não pediu. Consumidores: campanhas
+   * e follow-up.
+   */
+  envioEmLote: boolean;
+  /**
+   * Pode abrir conversa com quem NUNCA escreveu? `false` = só responde a quem veio
+   * primeiro. Consumidores: o painel de iniciar conversa e `conversa-nova`.
+   */
+  iniciaConversa: boolean;
+  /**
+   * A IA só envia por este canal depois de uma pessoa aprovar o rascunho. Consumidor:
+   * a guarda `before_send` do motor de agentes.
+   */
+  iaSoComAprovacao: boolean;
 }
 
 /**
@@ -100,6 +116,15 @@ export interface RecipientInput {
    * `waIdentity.startsWith("lid:")` — justo o caso que a regra protege.
    */
   waLid?: string | null | undefined;
+  /** `contacts.email`: o endereço de quem recebe, quando o canal endereça por e-mail. */
+  email?: string | null | undefined;
+}
+
+/** Um anexo de e-mail já lido do armazenamento e dentro do limite. */
+export interface AnexoDeEmail {
+  filename: string;
+  contentType: string;
+  content: Uint8Array;
 }
 
 /** Contato compartilhado (vcard) — só `kind: "contact"`. */
@@ -184,6 +209,14 @@ export interface OutboundEnvelope extends ChannelTenantScope {
    * `undefined` = envio solto, que é o caso comum.
    */
   replyToExternalId?: string | null;
+  /** E-mail: assunto da mensagem (a resposta leva `Re:` do assunto original). */
+  assunto?: string;
+  /** E-mail: `Message-ID` da última mensagem recebida, para o cabeçalho `In-Reply-To`. */
+  inReplyTo?: string;
+  /** E-mail: cadeia de `Message-ID` anteriores, para o cabeçalho `References`. */
+  references?: string[];
+  /** E-mail: anexos (os limites de tamanho são do adaptador de envio). */
+  anexos?: AnexoDeEmail[];
 }
 
 /**
@@ -239,6 +272,16 @@ export interface ChannelAdapter {
    * de `lib/channels/`. Quem chama escreve o que o adapter disser.
    */
   readonly codes: { notConfigured: string; sendFailed: string; unknownError: string };
+
+  /**
+   * Pode enviar AGORA? Perguntado antes de `send` por canal com teto diário ou
+   * intervalo próprio (e-mail). `ok: false` devolve quando tentar de novo e o motivo;
+   * o chamador grava a mensagem como `queued` com essa hora, nunca a descarta.
+   * OPCIONAL: canal sem teto próprio não implementa.
+   */
+  admitir?(input: ChannelTenantScope & { sessionRef: string; agora: Date }): Promise<
+    { ok: true } | { ok: false; adiarAte: Date; motivo: "teto_diario" | "intervalo" }
+  >;
 
   /**
    * URL da foto de perfil do contato, ou null quando não há (sem foto,

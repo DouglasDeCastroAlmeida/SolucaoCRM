@@ -122,6 +122,8 @@ export const KIND_LABEL = {
   agenda_cliente_pediu_remarcar: "Um cliente pediu para remarcar um horário",
   acao_mcp_pendente: "Uma ação em um sistema externo espera aprovação",
   ia_provedor_indisponivel: "O serviço de IA parou de responder",
+  email_senha_recusada: "A caixa de e-mail recusou a senha e foi pausada",
+  email_teto_atingido: "A caixa de e-mail atingiu o limite de envios do dia",
   other: "Aviso do assistente",
 } as const satisfies Record<InboxKind, string>;
 

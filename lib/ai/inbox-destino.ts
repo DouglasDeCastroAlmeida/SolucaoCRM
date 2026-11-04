@@ -198,6 +198,14 @@ export const POLITICAS_DE_AVISO = {
     refs: ["conversation", "ai_provider_credential"],
     orientacao: "O serviço de IA não respondeu (chave revogada, saldo zerado ou serviço fora do ar) e a conversa foi para a fila de uma pessoa. Atenda o cliente e revise a chave de IA.",
   },
+  email_senha_recusada: {
+    refs: ["channel_session"],
+    orientacao: "A caixa de e-mail recusou a senha e foi pausada, sem tentar de novo, para não bloquear a conta. Abra Conexões, confira ou troque a senha de app da caixa e retome a leitura.",
+  },
+  email_teto_atingido: {
+    refs: ["channel_session"],
+    orientacao: "A caixa chegou ao limite de envios do dia. O que passou do limite está na fila e sai amanhã, sozinho. Se precisar de mais, ajuste o teto da caixa em Conexões.",
+  },
   other: { refs: ["agenda_reminder_sender", "lead", "channel_session", "appointment", "ai_agent", "ai_provider_credential", "agent_case"], orientacao: "Confira a situação descrita neste aviso com a pessoa responsável." },
 } satisfies Record<InboxKind, Politica>;
 
