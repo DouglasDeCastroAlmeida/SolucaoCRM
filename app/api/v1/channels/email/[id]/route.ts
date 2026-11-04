@@ -1,6 +1,6 @@
 /**
  * PATCH /api/v1/channels/email/[id] — assinatura, teto diário, intervalo e troca de senha da
- * caixa. Pausar e retomar entram junto com a rodada (Fatia 6).
+ * caixa, e pausar/retomar (`pausada`).
  *
  * Só admin; guarda de suporte antes do efeito; Zod estrito; a caixa é achada por
  * (organização do login, id): caixa de outra organização é 404, nunca 403 (não confirma que existe).
@@ -22,7 +22,7 @@ import {
 import { verificarCaixa } from "@/lib/channels/email/conexao";
 import { respostaDaFalhaDeConexao, semSegredo, tentativasEsgotadas } from "@/lib/channels/email/rotas";
 import { resolverAvisoSenhaRecusada } from "@/lib/channels/email/avisos";
-import { lerEstado, retomar } from "@/lib/channels/email/estado";
+import { lerEstado, pausar, retomar } from "@/lib/channels/email/estado";
 import { gravarSenhaDaCaixa, ultimosQuatro } from "@/lib/channels/email/segredo";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { requireSupportWrite } from "@/lib/impersonate/support";
@@ -60,6 +60,31 @@ export async function PATCH(
   const caixa = await acharCaixa(admin, orgId, id);
   if (!caixa) return fail("not_found", t("Caixa de e-mail não encontrada."), 404, { requestId });
 
+  // Retomar uma caixa parada por senha recusada sem trocar a senha só a faria parar de novo na
+  // rodada seguinte (e abriria outro aviso): quem retoma nesse caso é a senha nova.
+  let pausaAtual: string | null = null;
+  try {
+    pausaAtual = (await lerEstado(admin, orgId, id))?.pausaMotivo ?? null;
+  } catch (erro) {
+    logger.error("[email.alterar] ler o estado da caixa falhou", {
+      requestId,
+      erro: erro instanceof Error ? erro.message.slice(0, 120) : "desconhecido",
+    });
+    // Quem só muda assinatura ou teto não depende do estado; quem pausa ou retoma, sim.
+    if (d.pausada !== undefined) {
+      return fail("internal_error", t("Não foi possível salvar a caixa agora. Tente de novo."), 500, { requestId });
+    }
+  }
+  const paradaPorSenha = pausaAtual === "senha_recusada" || pausaAtual === "senha_ausente";
+  if (d.pausada === false && paradaPorSenha && d.senha === undefined) {
+    return fail(
+      "validation_failed",
+      t("A senha desta caixa foi recusada. Informe a senha nova para retomar."),
+      422,
+      { requestId },
+    );
+  }
+
   const config: ConfigDaCaixaGuardada = {
     ...caixa.config,
     ...(d.assinatura !== undefined ? { assinatura: d.assinatura } : {}),
@@ -95,7 +120,10 @@ export async function PATCH(
     config.senha_ultimos4 = ultimosQuatro(d.senha);
   }
 
-  const { error } = await atualizarConfigDaCaixa(admin, { organizationId: orgId, channelSessionId: id, config });
+  const mudouConfig = Object.keys(d).some((k) => k !== "pausada");
+  const { error } = mudouConfig
+    ? await atualizarConfigDaCaixa(admin, { organizationId: orgId, channelSessionId: id, config })
+    : { error: null };
   if (error) {
     logger.error("[email.alterar] gravar a configuração falhou", { requestId, erro: semSegredo(error, d.senha ?? "") });
     return fail("internal_error", t("Não foi possível salvar a caixa agora. Tente de novo."), 500, { requestId });
@@ -104,10 +132,10 @@ export async function PATCH(
   // Senha nova de uma caixa que estava pausada por senha recusada: volta a ler de onde parou.
   if (d.senha !== undefined) {
     try {
-      const estado = await lerEstado(admin, orgId, id);
-      if (estado?.pausaMotivo === "senha_recusada" || estado?.pausaMotivo === "senha_ausente") {
+      if (pausaAtual === "senha_recusada" || pausaAtual === "senha_ausente") {
         await retomar(admin, orgId, id);
         await resolverAvisoSenhaRecusada(admin, orgId, id);
+        pausaAtual = null;
       }
     } catch (erro) {
       logger.warn("[email.alterar] retomar a caixa depois da senha nova falhou", {
@@ -116,6 +144,42 @@ export async function PATCH(
       });
     }
   }
+
+  // Pausar e retomar (AC-008.2): só o estado muda. O cursor de leitura não é tocado, então
+  // retomar continua do ponto em que parou, e as conversas ficam intactas.
+  let pausaFinal = pausaAtual;
+  let acaoDaPausa: "channel.email_paused" | "channel.email_resumed" | null = null;
+  if (d.pausada === true && pausaAtual === null) {
+    try {
+      await pausar(admin, orgId, id, "pausada_pela_equipe");
+    } catch {
+      return fail("internal_error", t("Não foi possível salvar a caixa agora. Tente de novo."), 500, { requestId });
+    }
+    pausaFinal = "pausada_pela_equipe";
+    acaoDaPausa = "channel.email_paused";
+  } else if (d.pausada === false && pausaAtual !== null) {
+    try {
+      await retomar(admin, orgId, id);
+    } catch {
+      return fail("internal_error", t("Não foi possível salvar a caixa agora. Tente de novo."), 500, { requestId });
+    }
+    pausaFinal = null;
+    acaoDaPausa = "channel.email_resumed";
+  } else if (d.pausada === false) {
+    pausaFinal = null;
+  }
+  if (acaoDaPausa) {
+    void audit({
+      action: acaoDaPausa,
+      actorUserId: authz.user.id,
+      organizationId: orgId,
+      resourceType: "channel_session",
+      resourceId: id,
+      requestId,
+      metadata: { endereco: caixa.endereco },
+    });
+  }
+  if (!mudouConfig) return ok(visaoPublicaDaCaixa({ ...caixa, config }, pausaFinal), { requestId });
 
   void audit({
     action: "channel.email_updated",
@@ -128,5 +192,5 @@ export async function PATCH(
     metadata: { endereco: caixa.endereco, campos: Object.keys(d) },
   });
 
-  return ok(visaoPublicaDaCaixa({ ...caixa, config }), { requestId });
+  return ok(visaoPublicaDaCaixa({ ...caixa, config }, pausaFinal), { requestId });
 }

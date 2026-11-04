@@ -924,6 +924,7 @@ export function InboxLayout({
               key={rascunhoVivo ? `rascunho:${rascunhoVivo.conversationId}` : "composer"}
               ref={composerRef}
               conversationId={selectedConversation.id}
+              provider={selectedConversation.channel_sessions?.provider ?? null}
               blockedReason={supportReadonly ? "Acompanhamento somente leitura" : blockedReason}
               janelaFechada={motivoDaJanela}
               disabled={selectedConversation.status === "closed"}

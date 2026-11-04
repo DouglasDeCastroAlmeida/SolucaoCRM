@@ -52,6 +52,7 @@ import { resolveSharedContact } from "@/lib/messaging/contact-card";
 import { BarraDeRecursos } from "@/components/inbox/composer/BarraDeRecursos";
 import { type Recurso } from "@/lib/inbox/recursos";
 import type { Message } from "@/lib/types/messaging";
+import { capabilitiesOf, transportaMensagem, type ChannelProvider } from "@/lib/channels/capabilities";
 
 export interface ComposerHandle {
   focus: () => void;
@@ -124,6 +125,11 @@ interface Props {
    * `draft_id` que o consumo usa depois do clique.
    */
   rascunho?: AvisoDeRascunho | null;
+  /**
+   * O canal da conversa. Com ele o Composer pergunta à MATRIZ DE CAPACIDADES o que o canal
+   * permite (gravar voz, teto de anexos) — nunca "é e-mail?". Ausente = o comportamento de sempre.
+   */
+  provider?: string | null;
 }
 
 export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
@@ -142,6 +148,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
     respondendo,
     onCancelarResposta,
     rascunho = null,
+    provider = null,
   },
   ref,
 ) {
@@ -247,6 +254,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   // A janela só alcança o que SAI. Em modo nota o composer segue liberado: a
   // nota interna nunca chega ao cliente, e é onde o atendente registra por que
   // a conversa esfriou — barrá-la tira exatamente o que ainda dá para fazer.
+  const capacidadesDoCanal = transportaMensagem(provider) ? capabilitiesOf(provider as ChannelProvider) : null;
   const respostaBarrada = isDisabled || (mode === "reply" && !!janelaFechada);
 
   /**
@@ -270,6 +278,18 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
 
   /** Escolhe o arquivo e MARCA o modo da escolha (ver `pendingEm`). */
   function escolherArquivo(file: File) {
+    // Teto de anexos do canal (e-mail: ~18 MB no total). Só vale para o que SAI: a nota interna
+    // não passa pelo canal. Recusar aqui poupa subir o arquivo para o servidor recusar depois.
+    const teto = mode === "reply" ? capacidadesDoCanal?.limiteDeAnexoBytes ?? null : null;
+    if (teto !== null && file.size > teto) {
+      toast.error(
+        t("O anexo é grande demais para este canal: o limite é de {n} MB. Envie um arquivo menor.").replace(
+          "{n}",
+          String(Math.floor(teto / (1024 * 1024))),
+        ),
+      );
+      return;
+    }
     setPendingFiles([file]);
     setLegendaInicial(null);
     setPendingEm(mode);
@@ -883,7 +903,8 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               <PaperPlaneTilt size={16} weight="fill" aria-hidden />
             </Button>
           ) : (
-            active && <AudioRecorder conversationId={conversationId} disabled={respostaBarrada} />
+            active &&
+            capacidadesDoCanal?.mensagemDeVoz !== false && <AudioRecorder conversationId={conversationId} disabled={respostaBarrada} />
           )}
         </div>
       </div>

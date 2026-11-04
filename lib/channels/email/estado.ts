@@ -56,6 +56,24 @@ export async function lerEstado(admin: SupabaseClient, organizationId: string, c
 }
 
 /**
+ * O motivo da pausa de cada caixa da organização (`null` = ativa). Caixa sem linha de estado não
+ * aparece no mapa. LANÇA se a consulta falha: "ativa" e "não sei" são coisas diferentes.
+ */
+export async function listarPausas(admin: SupabaseClient, organizationId: string): Promise<Map<string, string | null>> {
+  const { data, error } = await admin
+    .from("email_sync_estado")
+    .select("channel_session_id, pausa_motivo")
+    .eq("organization_id", organizationId);
+  if (error) throw new Error(`email_pausas_lookup_failed: ${error.message}`);
+  return new Map(
+    ((data as { channel_session_id: string; pausa_motivo: string | null }[] | null) ?? []).map((l) => [
+      l.channel_session_id,
+      l.pausa_motivo,
+    ]),
+  );
+}
+
+/**
  * Pega a trava da caixa por `ateQuando`. Devolve `false` se outra rodada a tem (ainda
  * dentro do prazo). Dois passos, porque o CAS precisa distinguir "livre" de "vencida".
  */

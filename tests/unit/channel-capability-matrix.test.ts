@@ -44,6 +44,10 @@ const CAPABILITIES = [
   "envioEmLote",
   "iniciaConversa",
   "iaSoComAprovacao",
+  "mensagemDeVoz",
+  "reciboDeLeitura",
+  "limiteDeAnexoBytes",
+  "reenviaFalha",
 ] as const;
 
 describe("matriz capability × provider é exaustiva", () => {
@@ -119,6 +123,20 @@ describe("canal de e-mail na matriz (mudança 005)", () => {
     expect(capabilitiesOf("email").iniciaConversa).toBe(false);
     for (const p of PROVIDERS.filter((x) => x !== "email")) {
       expect(CHANNEL_CAPABILITIES[p].iniciaConversa, p).toBe(true);
+    }
+  });
+
+  it("AC-008.5: só o e-mail não grava voz, não mostra recibo de leitura e tem teto de anexos", () => {
+    const e = capabilitiesOf("email");
+    expect(e.mensagemDeVoz).toBe(false);
+    expect(e.reciboDeLeitura).toBe(false);
+    expect(e.limiteDeAnexoBytes).toBe(18 * 1024 * 1024);
+    expect(e.reenviaFalha).toBe(true);
+    for (const p of PROVIDERS.filter((x) => x !== "email")) {
+      expect(CHANNEL_CAPABILITIES[p].mensagemDeVoz, p).toBe(true);
+      expect(CHANNEL_CAPABILITIES[p].reciboDeLeitura, p).toBe(true);
+      expect(CHANNEL_CAPABILITIES[p].limiteDeAnexoBytes, p).toBeNull();
+      expect(CHANNEL_CAPABILITIES[p].reenviaFalha, p).toBe(false);
     }
   });
 

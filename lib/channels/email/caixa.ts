@@ -12,8 +12,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import { metadataInicialDoCanal } from "@/lib/ai/elegibilidade/pre-go-live";
-
 import { reactivateChannelSession } from "../reactivate";
 import type { SegurancaDaConexao } from "./conexao";
 
@@ -59,6 +57,8 @@ export const alterarSchema = z
     teto_diario: z.number().int().min(1).max(TETO_DIARIO_MAXIMO).optional(),
     intervalo_segundos: z.number().int().min(0).max(INTERVALO_MAXIMO_SEGUNDOS).optional(),
     senha: z.string().min(1).max(500).optional(),
+    /** `true` pausa a leitura e o envio da caixa; `false` retoma de onde parou. */
+    pausada: z.boolean().optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, { message: "informe ao menos um campo" });
@@ -91,7 +91,7 @@ export interface CaixaDeEmail {
 }
 
 /** O que a API devolve de uma caixa. Lista branca: nada que não esteja aqui sai. */
-export function visaoPublicaDaCaixa(c: CaixaDeEmail) {
+export function visaoPublicaDaCaixa(c: CaixaDeEmail, pausaMotivo: string | null = null) {
   return {
     id: c.id,
     endereco: c.endereco,
@@ -103,6 +103,9 @@ export function visaoPublicaDaCaixa(c: CaixaDeEmail) {
     assinatura: c.config.assinatura,
     teto_diario: c.config.teto_diario,
     intervalo_segundos: c.config.intervalo_segundos,
+    // O estado da caixa vive em `email_sync_estado`; a tela só precisa saber se está parada e por quê.
+    pausada: pausaMotivo !== null,
+    pausa_motivo: pausaMotivo,
   };
 }
 
@@ -246,7 +249,10 @@ export async function salvarCaixa(
     .insert({
       ...linha,
       webhook_secret_encrypted: input.segredoSemUsoCifrado,
-      metadata: metadataInicialDoCanal(),
+      // Nasce ABERTA, e não em pré-liberação como o WhatsApp: a pré-liberação só deixa a IA falar com
+      // os TELEFONES de teste, e quem escreve por e-mail não tem telefone — a IA nunca atenderia ninguém.
+      // Aberto aqui não solta a IA: neste canal ela só envia depois que uma pessoa aprova (iaSoComAprovacao).
+      metadata: {},
     })
     .select("id")
     .maybeSingle();
