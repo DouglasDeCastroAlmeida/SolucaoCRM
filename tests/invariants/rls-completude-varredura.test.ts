@@ -94,6 +94,7 @@ const PROVA_PROPRIA: readonly Excecao[] = [
   { tabela: "appointment_recovery_receipts", razao: "tests/invariants/agenda-presenca-acl.test.ts — leitura/escrita direta anon/authenticated negadas, escrita service_role negada e RPC service-only valida a tupla org/evento nos dois sentidos A/B" },
   { tabela: "event_service_origins", razao: "tests/invariants/service-event-origin.test.ts — recibo server-only, authenticated sem leitura/escrita, RPC rejeita tenant B real" },
   { tabela: "platform_support_sessions", razao: "tests/invariants/suporte-temporario.test.ts — grant por sessão, readonly e nenhuma escrita direta authenticated" },
+  ...["email_sync_estado", "email_ignorados", "email_remetentes_ignorados", "email_envios_dia", "email_credenciais"].map(tabela => ({ tabela, razao: "tests/invariants/email-isolamento.test.ts — dois tenants reais por JWT: admin lê só a própria organização nas tabelas legíveis e ZERO do vizinho; envios_dia e credenciais sem leitura de cliente; escrita direta de authenticated negada" })),
   {
     tabela: "crm_proposal_counters",
     razao:

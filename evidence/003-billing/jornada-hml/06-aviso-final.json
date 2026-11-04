@@ -1,0 +1,30 @@
+{
+  "passo": "aviso-final",
+  "quando": "2026-11-04T02:48:35.768Z",
+  "resultados": [
+    {
+      "id": "06.regua",
+      "descricao": "a régua dá o aviso final antes de suspender",
+      "passou": true,
+      "detalhe": "acao avisar, aviso suspende_em_breve"
+    },
+    {
+      "id": "06.acesso",
+      "descricao": "a empresa segue ativa depois do aviso final",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "06.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.central.medida",
+      "descricao": "tela /app/ai/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    }
+  ]
+}
