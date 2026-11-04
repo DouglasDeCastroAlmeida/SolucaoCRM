@@ -22,12 +22,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/005-email/ e decidir: passou segue; falhou para a esteira e volta ao design (V-6) (~20 min) {AC-009.1} deps: T-001
 
 ### Fatia 2: Banco aditivo, provider na matriz e isolamento (REQ-007, REQ-008, REQ-009)
-- [ ] T-003 [TEST-INT] Invariante: CHECKs aceitam provider email e canal email, única por (organização, endereço), isolamento entre 2 organizações nas tabelas novas, funções novas sem EXECUTE para PUBLIC e anon, senha sem coluna legível ao cliente (~55 min) {AC-007.4, AC-009.2} deps: T-002
+- [x] T-003 [TEST-INT] Invariante: CHECKs aceitam provider email e canal email, única por (organização, endereço), isolamento entre 2 organizações nas tabelas novas, funções novas sem EXECUTE para PUBLIC e anon, senha sem coluna legível ao cliente (~55 min) {AC-007.4, AC-009.2} deps: T-002
 - [x] T-004 [TEST-UNIT] Matriz de capacidades: provider email declara todas as capacidades, as três novas (envioEmLote, iniciaConversa, iaSoComAprovacao) têm consumidor, falha fechada para provider desconhecido (~40 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-002
 - [x] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
-- [ ] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: CHECKs ampliados (drop+add), colunas da caixa, fn_upsert_email_conversation, email_sync_estado, email_ignorados, email_remetentes_ignorados, email_envios_dia, kinds novos da Central (~60 min) {AC-007.4, AC-009.2} deps: T-003, T-005
+- [x] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: CHECKs ampliados (drop+add), colunas da caixa, fn_upsert_email_conversation, email_sync_estado, email_ignorados, email_remetentes_ignorados, email_envios_dia, kinds novos da Central (~60 min) {AC-007.4, AC-009.2} deps: T-003, T-005
 - [x] T-007 [IMPL] ChannelProvider, capacidades novas, ADAPTERS, session-ref, presentation, canais-de-conversa, inbound e health com o provider email e adaptador ainda mínimo (~60 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-004, T-006
-- [ ] T-008 [CHECK-SMOKE] pnpm test:db em instalação nova e em atualização, pnpm lint:channels e o teste de matriz verdes (~20 min) deps: T-006, T-007
+- [x] T-008 [CHECK-SMOKE] pnpm test:db em instalação nova e em atualização, pnpm lint:channels e o teste de matriz verdes (~20 min) deps: T-006, T-007
 
 ### Fatia 3: Conectar a caixa com segurança (REQ-001, REQ-007)
 - [x] T-009 [TEST-UNIT] Destino seguro: recusa loopback, link-local, metadata, RFC1918, CGNAT e multicast, aceita só as portas 143, 993, 465 e 587, fixa o IP resolvido com o servername original, DNS que resolve para IP especial é recusado (~45 min) {AC-001.4}
@@ -47,7 +47,7 @@ Cada tarefa ocupa uma linha:
 - [x] T-021 [TEST-UNIT] Leitura de MIME (texto, anexos com limite, Message-ID, In-Reply-To, References, assunto) e HTML malicioso sem script, formulário, iframe, estilo ou imagem remota (~50 min) {AC-007.3}
 - [x] T-022 [IMPL] parse.ts e html-seguro.ts, com mailparser e sanitize-html pinados no package.json (~55 min) {AC-007.3} deps: T-021
 - [x] T-023 [TEST-UNIT] Ingestão com servidor IMAP simulado: aparece como mensagem com assunto, texto e anexos; remetente novo cria contato, conhecido reaproveita; resposta fica na mesma conversa; só o que chegou depois da conexão; spam e lixeira nunca lidos (~55 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4}
-- [ ] T-024 [TEST-INT] Invariante: o mesmo e-mail visto duas vezes gera uma só mensagem, cursor por UID avança, UIDVALIDITY mudou não reimporta o passado (~45 min) {AC-002.5, AC-002.6} deps: T-008
+- [x] T-024 [TEST-INT] Invariante: o mesmo e-mail visto duas vezes gera uma só mensagem, cursor por UID avança, UIDVALIDITY mudou não reimporta o passado (~45 min) {AC-002.5, AC-002.6} deps: T-008
 - [x] T-025 [IMPL] lib/channels/email/ingest.ts: contato por e-mail, fn_upsert_email_conversation, INSERT com 23505 como duplicado, marcarConversaComMensagem, aplicarEfeitosPosEntrada (~60 min) {AC-002.1, AC-002.2, AC-002.3, AC-002.4, AC-002.5, AC-002.6} deps: T-020, T-022, T-023, T-024, T-008
 - [x] T-026 [TEST-UNIT] Lista de ignorados com remetente, assunto, data e motivo; promover relê pelo UID e vira conversa; "não é cliente" ignora os próximos e tira a conversa da lista (~45 min) {AC-003.3, AC-003.4}
 - [x] T-027 [IMPL] Rotas de ignorados e de remetentes, poda dos ignorados no cron data-retention (~50 min) {AC-003.3, AC-003.4} deps: T-025, T-026
