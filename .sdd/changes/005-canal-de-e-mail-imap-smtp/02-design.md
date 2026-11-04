@@ -171,6 +171,13 @@ Pendência de LGPD e retenção (T-027): a poda de `email_ignorados` no `data-re
 - Decisão: sanitizar no ingestor com lista de tags e atributos permitidos, sem imagem remota nem estilo; o inbox mostra texto por padrão e o HTML limpo sob demanda.
 - Consequências: nova dependência pinada; o que foi gravado já está seguro, mesmo se o renderizador mudar.
 
+### ADR-007: Dependências novas da Fatia 3, versões fixas e licenças (registrado em 2026-11-04)
+- Contexto: não há biblioteca IMAP nem parser MIME no projeto. A regra do dono é versão fixa com mais de 14 dias de publicada.
+- Decisão: `imapflow@2.5.8` (publicada em 2026-10-19, MIT) e `mailparser@3.10.0` (2026-10-19, MIT), ambas em `package.json` sem prefixo (`--save-exact`), instaladas com `--ignore-scripts`. `nodemailer` continua na versão do projeto (10.1.2); o `mailparser` traz a sua própria cópia 10.1.7 (MIT-0) como dependência transitiva, só para o parser. As duas foram provadas na sonda da Fatia 1.
+- Licenças conferidas no registro: todas as dependências transitivas novas são MIT, MIT-0 ou dupla "MIT OR EUPL-1.1+" (`@zone-eu/mailsplit`, escolhida a MIT). Nenhuma é copyleft.
+- O diff do `pnpm-lock.yaml` só acrescenta (326 linhas inseridas, 0 removidas) e `pnpm install --frozen-lockfile --ignore-scripts` fecha sem alteração.
+- Consequências: `sanitize-html` (ADR-006) entra na Fatia 4, com o parser. Risco aberto: o empacotamento `standalone` do Next com essas bibliotecas (carregamento dinâmico do `pino`) só é provado pelo `pnpm build` do CI e pela implantação na homologação.
+
 ## Riscos e casos extremos
 
 - **V-6 (senha de app):** a sonda é a primeira tarefa; falhou ⇒ volta ao design (outros provedores ou auditoria do Gmail).

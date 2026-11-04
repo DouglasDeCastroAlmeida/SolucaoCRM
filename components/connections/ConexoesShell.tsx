@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { RedesSociaisClient } from "./RedesSociaisClient";
+import { CanalEmailClient } from "./CanalEmailClient";
 import { CanalGraphParceiroClient } from "./CanalGraphParceiroClient";
 import { CanalOficialClient } from "./CanalOficialClient";
 import { CanalParceiroClient } from "./CanalParceiroClient";
@@ -70,7 +71,9 @@ export function ConexoesShell({
             ? "voz"
             : abaParam === "graph" && graphParceiro
               ? "graph"
-              : "numeros";
+              : abaParam === "email"
+                ? "email"
+                : "numeros";
   const sub = params.get("sub") === "templates" ? "templates" : "conexao";
 
   const irPara = (proximaAba: string, proximaSub?: string): void => {
@@ -106,6 +109,7 @@ export function ConexoesShell({
         <TabsTrigger value="telefonia">{t("Telefone")}</TabsTrigger>
         <TabsTrigger value="sociais">{t("Redes sociais")}</TabsTrigger>
         <TabsTrigger value="voz">{t("Chamada de voz")}</TabsTrigger>
+        <TabsTrigger value="email">{t("E-mail")}</TabsTrigger>
         {graphParceiro && <TabsTrigger value="graph">{graphParceiro.label}</TabsTrigger>}
       </TabsList>
 
@@ -120,6 +124,10 @@ export function ConexoesShell({
 
       <TabsContent value="voz" className="mt-0">
         <CanalVozClient wacallsConfigured={wacallsConfigured} />
+      </TabsContent>
+
+      <TabsContent value="email" className="mt-0">
+        <CanalEmailClient />
       </TabsContent>
 
       {graphParceiro && (

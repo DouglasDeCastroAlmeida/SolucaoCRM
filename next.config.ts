@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   // desligado porque Next 16.3 + adapter + standalone quebra o onBuildComplete
   // com ENOENT next-server.js.nft.json (#96646).
   output: process.env.VERCEL ? undefined : "standalone",
+  // Canal de e-mail (mudança 005): o imapflow puxa pino/thread-stream (workers e requires dinâmicos) e o
+  // mailparser tem requires internos que o empacotador reescreve mal. Fora do bundle, o file tracing do
+  // standalone copia o pacote inteiro; conferir `.next/standalone/node_modules` no build (T-047).
+  serverExternalPackages: ["imapflow", "mailparser"],
   /**
    * O `standalone` copia SÓ o que o file tracing detecta — e ele não detecta
    * tudo de `@swc/helpers`.
