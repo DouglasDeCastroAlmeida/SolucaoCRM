@@ -91,7 +91,6 @@ beforeAll(() => {
          jsonb_build_object('nome', 'cpf.png', 'caminho', '${ANEXO_3}'),
          jsonb_build_object('nome', 'grande.zip', 'caminho', null),
          jsonb_build_object('nome', 'alheio.pdf', 'caminho', '${ANEXO_ALHEIO}')))),
-       ),
       ('${MSG_B}', '${ORG_B}', '${CONVERSA_B}', '${CONTATO_B}', '${SESS_B}', 'inbound', 'external_device', 'received', 'text',
        'Da outra organizacao', '${ANEXO_DA_B}',
        jsonb_build_object('email', jsonb_build_object('anexos', jsonb_build_array(
