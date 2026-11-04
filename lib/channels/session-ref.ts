@@ -15,7 +15,8 @@ export type ChannelSessionRef =
   | { provider: "waha"; waha_session_name: string }
   | { provider: "meta_cloud"; meta_phone_number_id: string }
   | { provider: "zernio" | "zernio_social"; zernio_account_id: string }
-  | { provider: "datafy"; datafy_phone_number_id: string };
+  | { provider: "datafy"; datafy_phone_number_id: string }
+  | { provider: "email"; email_address: string };
 
 /**
  * Colunas que um `select` do PostgREST precisa trazer para `resolveSessionRef`
@@ -23,7 +24,7 @@ export type ChannelSessionRef =
  * nomeia coluna de provider, e ela some da feature junto com a decisão.
  */
 export const CHANNEL_SESSION_REF_COLUMNS =
-  "provider, waha_session_name, meta_phone_number_id, zernio_account_id, datafy_phone_number_id";
+  "provider, waha_session_name, meta_phone_number_id, zernio_account_id, datafy_phone_number_id, email_address";
 
 export function resolveSessionRef(session: ChannelSessionRef): string {
   switch (session.provider) {
@@ -35,6 +36,9 @@ export function resolveSessionRef(session: ChannelSessionRef): string {
       return session.datafy_phone_number_id;
     case "waha":
       return session.waha_session_name;
+    // A caixa é endereçada pelo próprio endereço de e-mail.
+    case "email":
+      return session.email_address;
     // O `accountId` que o provider devolve ao conectar a WABA. NÃO é o
     // phone_number_id da Meta: quem intermedeia guarda o número por dentro e
     // endereça pelo id dele. Mandar o id da Meta aqui responde 404.

@@ -41,6 +41,10 @@ import { SOCIAL_NETWORKS } from "./social/catalog";
  */
 export const CANAIS_DE_CONVERSA = [
   "whatsapp",
+  // E-mail não é rede social (não está em SOCIAL_NETWORKS), então entra à mão ao lado do WhatsApp.
+  // Não "conserte" derivando a lista: o CHECK de conversations.channel e o invariante
+  // canal-da-conversa-banco-x-catalogo dependem deste valor.
+  "email",
   ...SOCIAL_NETWORKS.filter((rede) => rede.inbox).map((rede) => rede.id),
 ] as const satisfies readonly string[];
 

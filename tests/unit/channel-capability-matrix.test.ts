@@ -17,7 +17,7 @@ import {
   type ProviderDeMensagem,
 } from "@/lib/channels/capabilities";
 
-const PROVIDERS = ["waha", "meta_cloud", "zernio", "zernio_social", "datafy"] as const satisfies readonly ProviderDeMensagem[];
+const PROVIDERS = ["waha", "meta_cloud", "zernio", "zernio_social", "datafy", "email"] as const satisfies readonly ProviderDeMensagem[];
 
 /**
  * Esquecer um provider aqui passa a ser erro de COMPILAÇÃO.
@@ -41,6 +41,9 @@ const CAPABILITIES = [
   "costPerMessage",
   "alteraMensagemEnviada",
   "phonebook",
+  "envioEmLote",
+  "iniciaConversa",
+  "iaSoComAprovacao",
 ] as const;
 
 describe("matriz capability × provider é exaustiva", () => {
@@ -94,5 +97,49 @@ describe("matriz capability × provider é exaustiva", () => {
       const c = CHANNEL_CAPABILITIES[p];
       expect(c.banRisk && c.requiresTemplates, `${p} declara as duas famílias`).toBe(false);
     }
+  });
+});
+
+describe("canal de e-mail na matriz (mudança 005)", () => {
+  it("AC-008.4: o provider email declara todas as capacidades e é canal de mensagem", () => {
+    for (const c of CAPABILITIES) {
+      expect(CHANNEL_CAPABILITIES.email, `email não declara ${c}`).toHaveProperty(c);
+    }
+    expect(transportaMensagem("email")).toBe(true);
+  });
+
+  it("AC-005.4: só o e-mail recusa envio em lote", () => {
+    expect(capabilitiesOf("email").envioEmLote).toBe(false);
+    for (const p of PROVIDERS.filter((x) => x !== "email")) {
+      expect(CHANNEL_CAPABILITIES[p].envioEmLote, p).toBe(true);
+    }
+  });
+
+  it("AC-004.6: só o e-mail não inicia conversa com quem nunca escreveu", () => {
+    expect(capabilitiesOf("email").iniciaConversa).toBe(false);
+    for (const p of PROVIDERS.filter((x) => x !== "email")) {
+      expect(CHANNEL_CAPABILITIES[p].iniciaConversa, p).toBe(true);
+    }
+  });
+
+  it("AC-004.5: só o e-mail exige aprovação para a IA enviar", () => {
+    expect(capabilitiesOf("email").iaSoComAprovacao).toBe(true);
+    for (const p of PROVIDERS.filter((x) => x !== "email")) {
+      expect(CHANNEL_CAPABILITIES[p].iaSoComAprovacao, p).toBe(false);
+    }
+  });
+
+  it("AC-008.4: perfil do e-mail não arma anti-ban nem exige modelo, e fala livre fora da janela", () => {
+    const c = capabilitiesOf("email");
+    expect(c.banRisk).toBe(false);
+    expect(c.requiresTemplates).toBe(false);
+    expect(c.freeformOutsideWindow).toBe(true);
+    expect(c.groups).toBe("none");
+    expect(c.minIntervalMs).toBeNull();
+    expect(c.phonebook).toBe(false);
+  });
+
+  it("AC-008.4: provider desconhecido segue falhando fechado", () => {
+    expect(() => capabilitiesOf("emal" as ChannelProvider)).toThrow(/unknown_channel_provider/);
   });
 });

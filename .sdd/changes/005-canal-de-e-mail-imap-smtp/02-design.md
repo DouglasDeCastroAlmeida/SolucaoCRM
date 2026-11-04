@@ -130,6 +130,15 @@ Migrations aditivas, idempotentes, com apêndice no `baseline.sql` antes da varr
 
 RLS: todas as tabelas novas com RLS por organização (leitura para admin, escrita só `service_role`); a senha nunca é coluna legível ao cliente.
 
+**Desvios do desenho original, decididos na Fatia 2 (revisão aprovou os quatro):**
+
+1. **Senha em tabela própria.** `email_credenciais (channel_session_id, organization_id, senha_encrypted bytea)`, sem nenhum GRANT para `anon` nem `authenticated`, no lugar de `channel_sessions.email_password_encrypted`. Motivo: `channel_sessions` concede SELECT da tabela inteira a `authenticated`, e um `revoke` de coluna não desfaz esse GRANT. `email_config` guarda só os 4 últimos dígitos.
+2. **`admitir?` recebe o escopo da organização:** `ChannelTenantScope & { sessionRef, agora }`. Só `sessionRef` não identifica a linha entre organizações. Coerente com os demais métodos do contrato.
+3. **Leitura por perfil.** `email_sync_estado`, `email_ignorados` e `email_remetentes_ignorados` só têm SELECT para admin da organização (assunto e remetente dos ignorados são dado de terceiros). `email_envios_dia` e `email_credenciais` não têm leitura de cliente.
+4. **`"email"` escrito à mão em `CANAIS_DE_CONVERSA`:** e-mail não é rede social e não vem de `SOCIAL_NETWORKS`. Não derivar a lista.
+
+Pendência de LGPD e retenção (T-027): a poda de `email_ignorados` no `data-retention` e a anonimização do contato alcançando `email_ignorados` e `email_remetentes_ignorados`.
+
 ## Decisões (ADRs)
 
 ### ADR-001: Rodada por cron HTTP em vez de laço contínuo no worker

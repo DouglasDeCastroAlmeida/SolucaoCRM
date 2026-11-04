@@ -18,15 +18,15 @@ Cada tarefa ocupa uma linha:
 ## Tarefas
 
 ### Fatia 1: Prova de leitura e envio em contas reais, antes de qualquer código (REQ-009)
-- [ ] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): numa conta Gmail com senha de app e numa conta de outro provedor, entrar por IMAP, ler a caixa de entrada, enviar por SMTP e ver a mensagem chegar; grava evidência (~60 min) {AC-009.1}
-- [ ] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/005-email/ e decidir: passou segue; falhou para a esteira e volta ao design (V-6) (~20 min) {AC-009.1} deps: T-001
+- [x] T-001 [TEST-INT] Sonda real (credenciais do dono em C:\Users\Douglas\.secrets\): numa conta Gmail com senha de app e numa conta de outro provedor, entrar por IMAP, ler a caixa de entrada, enviar por SMTP e ver a mensagem chegar; grava evidência (~60 min) {AC-009.1}
+- [x] T-002 [DOCS] Registrar o resultado em docs/solucao-crm/evidencias/005-email/ e decidir: passou segue; falhou para a esteira e volta ao design (V-6) (~20 min) {AC-009.1} deps: T-001
 
 ### Fatia 2: Banco aditivo, provider na matriz e isolamento (REQ-007, REQ-008, REQ-009)
 - [ ] T-003 [TEST-INT] Invariante: CHECKs aceitam provider email e canal email, única por (organização, endereço), isolamento entre 2 organizações nas tabelas novas, funções novas sem EXECUTE para PUBLIC e anon, senha sem coluna legível ao cliente (~55 min) {AC-007.4, AC-009.2} deps: T-002
-- [ ] T-004 [TEST-UNIT] Matriz de capacidades: provider email declara todas as capacidades, as três novas (envioEmLote, iniciaConversa, iaSoComAprovacao) têm consumidor, falha fechada para provider desconhecido (~40 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-002
-- [ ] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
+- [x] T-004 [TEST-UNIT] Matriz de capacidades: provider email declara todas as capacidades, as três novas (envioEmLote, iniciaConversa, iaSoComAprovacao) têm consumidor, falha fechada para provider desconhecido (~40 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-002
+- [x] T-005 [SETUP] Reservar o número da migration com pnpm checar:colisao-de-migration e criar o arquivo com cabeçalho -- manifest: (~10 min) deps: T-002
 - [ ] T-006 [IMPL] Migration aditiva + apêndice idempotente no baseline.sql: CHECKs ampliados (drop+add), colunas da caixa, fn_upsert_email_conversation, email_sync_estado, email_ignorados, email_remetentes_ignorados, email_envios_dia, kinds novos da Central (~60 min) {AC-007.4, AC-009.2} deps: T-003, T-005
-- [ ] T-007 [IMPL] ChannelProvider, capacidades novas, ADAPTERS, session-ref, presentation, canais-de-conversa, inbound e health com o provider email e adaptador ainda mínimo (~60 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-004, T-006
+- [x] T-007 [IMPL] ChannelProvider, capacidades novas, ADAPTERS, session-ref, presentation, canais-de-conversa, inbound e health com o provider email e adaptador ainda mínimo (~60 min) {AC-008.4, AC-004.5, AC-004.6, AC-005.4} deps: T-004, T-006
 - [ ] T-008 [CHECK-SMOKE] pnpm test:db em instalação nova e em atualização, pnpm lint:channels e o teste de matriz verdes (~20 min) deps: T-006, T-007
 
 ### Fatia 3: Conectar a caixa com segurança (REQ-001, REQ-007)
