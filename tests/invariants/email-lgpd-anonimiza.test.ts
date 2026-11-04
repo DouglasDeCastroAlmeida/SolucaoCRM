@@ -149,9 +149,13 @@ describe("AC-009.2: anonimizar o contato alcança o canal de e-mail", () => {
   });
 
   it("AC-009.2: TODOS os anexos do e-mail vão para a fila de remoção (não só o primeiro)", () => {
-    expect(naFila(ANEXO_1)).toBe(1);
-    expect(naFila(ANEXO_2)).toBe(1);
-    expect(naFila(ANEXO_3)).toBe(1);
+    const fila = valor(
+      `select coalesce(string_agg(bucket || ':' || object_path || ':' || status, ' | '), '(vazia)') from public.storage_redaction_queue where organization_id = '${ORG_A}';`,
+    );
+    const diag = `fila da A: ${fila} | retorno: ${retorno}`;
+    expect(naFila(ANEXO_1), diag).toBe(1);
+    expect(naFila(ANEXO_2), diag).toBe(1);
+    expect(naFila(ANEXO_3), diag).toBe(1);
   });
 
   it("AC-009.2: caminho de outra organização dentro do metadata nunca entra na fila, nem o anexo da B", () => {
