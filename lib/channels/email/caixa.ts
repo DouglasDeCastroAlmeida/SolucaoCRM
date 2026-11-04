@@ -165,24 +165,41 @@ export async function acharCaixa(
   return paraCaixa(data as Record<string, unknown> | null);
 }
 
-/** Por endereço, ATIVA primeiro: reconectar por cima de uma arquivada traz a linha de volta. */
+/**
+ * Por endereço, ATIVA primeiro: reconectar por cima de uma arquivada traz a linha de volta.
+ *
+ * Duas consultas porque o recorte `archived_at is null` é o mesmo do índice único parcial por
+ * endereço (cerca `canal-consulta-por-organizacao`). As arquivadas são lidas por organização e
+ * comparadas aqui: são poucas, e o endereço nunca vira curinga de `ilike` (`_` é válido em e-mail).
+ */
 export async function acharCaixaPorEndereco(
   admin: SupabaseClient,
   organizationId: string,
   endereco: string,
 ): Promise<CaixaDeEmail | null> {
-  const { data, error } = await admin
+  const alvo = endereco.toLowerCase();
+  const { data: ativa, error } = await admin
     .from("channel_sessions")
     .select(COLUNAS)
     .eq("organization_id", organizationId)
     .eq("provider", PROVIDER)
-    // `eq`, não `ilike`: `_` e `%` são curingas no ilike e `_` é válido em e-mail. O endereço já chega em minúsculas.
-    .eq("email_address", endereco.toLowerCase())
-    .order("archived_at", { ascending: true, nullsFirst: true })
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .eq("email_address", alvo)
+    .is("archived_at", null)
+    .maybeSingle();
   if (error) throw new Error(`email_caixa_lookup_failed: ${error.message}`);
-  return paraCaixa((data as Record<string, unknown>[] | null)?.[0] ?? null);
+  if (ativa) return paraCaixa(ativa as Record<string, unknown>);
+
+  const { data: todas, error: erroTodas } = await admin
+    .from("channel_sessions")
+    .select(COLUNAS)
+    .eq("organization_id", organizationId)
+    .eq("provider", PROVIDER)
+    .order("created_at", { ascending: false });
+  if (erroTodas) throw new Error(`email_caixa_lookup_failed: ${erroTodas.message}`);
+  const achada = ((todas as Record<string, unknown>[] | null) ?? []).find(
+    (r) => String(r.email_address ?? "").toLowerCase() === alvo,
+  );
+  return paraCaixa(achada ?? null);
 }
 
 // ─── Escrita ─────────────────────────────────────────────────────────────────
