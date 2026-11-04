@@ -82,10 +82,10 @@ Cada tarefa ocupa uma linha:
 
 ## Dívida conhecida (revisão da Fatia 4; tratar na Fatia 5/6, não implementada)
 
-- Sugestão 2 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
-- Sugestão 3 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
-- Sugestão 8 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
-- Sugestão 9 da revisão: pendente de detalhamento pelo revisor; tratar na Fatia 5/6.
+- Sugestão 2: mensagem que sempre lança no `ingerir` (erro determinístico de banco) trava o cursor para sempre, com recuo de até 30 min e só log. Pular o UID com `registrarIgnorado` depois de N falhas no mesmo UID (rodada.ts).
+- Sugestão 3: `avancarCursor` (estado.ts) faz UPDATE incondicional; o cursor nunca retroceder depende só da trava. Tornar garantia do banco (`.lt("ultimo_uid", n)` ou `greatest`). O AC-002.6 do invariante é tautológico; a prova real está em rodada.test.ts.
+- Sugestão 8: anexo guardado com o Content-Type original (pode ser text/html ou image/svg+xml) no bucket privado. Forçar download (Content-Disposition) ou normalizar o tipo na Fatia 5, quando o anexo for exibido.
+- Sugestão 9: "não é cliente" por `endereco` (sem `conversation_id`) grava o bloqueio mas não arquiva conversas existentes. O AC-003.4 está coberto pelo caminho com `conversation_id`; documentar ou arquivar também por endereço.
 
 ## Estimativa
 
