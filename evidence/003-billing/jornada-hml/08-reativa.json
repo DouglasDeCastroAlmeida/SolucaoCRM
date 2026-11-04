@@ -1,0 +1,36 @@
+{
+  "passo": "reativa",
+  "quando": "2026-11-04T02:50:27.190Z",
+  "resultados": [
+    {
+      "id": "08.regua",
+      "descricao": "pago o valor, a régua reativa a empresa",
+      "passou": true,
+      "detalhe": "acao reativar, org active/null"
+    },
+    {
+      "id": "08.volta",
+      "descricao": "/app abre de novo (sem cair no hub)",
+      "passou": true,
+      "detalhe": "/app/inbox"
+    },
+    {
+      "id": "08.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "08.plano.medida",
+      "descricao": "tela /app/settings/billing sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "08.central.medida",
+      "descricao": "tela /app/ai/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    }
+  ]
+}

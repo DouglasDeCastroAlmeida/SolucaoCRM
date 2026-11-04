@@ -1,0 +1,30 @@
+{
+  "passo": "suspende",
+  "quando": "2026-11-04T02:49:12.145Z",
+  "resultados": [
+    {
+      "id": "07.regua",
+      "descricao": "passada a tolerância e as 48 h do aviso final, a régua suspende",
+      "passou": true,
+      "detalhe": "acao suspender, org suspended/cobranca"
+    },
+    {
+      "id": "07.redireciona",
+      "descricao": "/app de empresa suspensa por cobrança cai no hub",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "07.hub.medida",
+      "descricao": "tela /account-suspended sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "07.hub",
+      "descricao": "o hub explica a suspensão por pagamento e dá o caminho para pagar",
+      "passou": true,
+      "detalhe": ""
+    }
+  ]
+}

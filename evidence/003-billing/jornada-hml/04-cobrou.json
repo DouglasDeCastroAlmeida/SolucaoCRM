@@ -1,0 +1,36 @@
+{
+  "passo": "cobrou",
+  "quando": "2026-11-04T02:47:12.292Z",
+  "resultados": [
+    {
+      "id": "04.regua",
+      "descricao": "com a 1ª cobrança paga a régua não avisa nem suspende",
+      "passou": true,
+      "detalhe": "acao nada"
+    },
+    {
+      "id": "04.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "04.faixa",
+      "descricao": "a faixa do teste grátis sumiu",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "04.plano.medida",
+      "descricao": "tela /app/settings/billing sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "04.plano",
+      "descricao": "o painel do plano mostra assinatura ativa, sem aviso de dívida",
+      "passou": true,
+      "detalhe": ""
+    }
+  ]
+}

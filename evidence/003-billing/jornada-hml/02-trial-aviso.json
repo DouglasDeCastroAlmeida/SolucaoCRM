@@ -1,0 +1,60 @@
+{
+  "passo": "trial-aviso",
+  "quando": "2026-11-04T02:43:45.693Z",
+  "resultados": [
+    {
+      "id": "02.regua",
+      "descricao": "a régua (cron) gravou o aviso trial_cobra_em_2_dias",
+      "passou": true,
+      "detalhe": "ultimo_aviso trial_cobra_em_2_dias"
+    },
+    {
+      "id": "02.central",
+      "descricao": "a Central tem o aviso com a data da cobrança 05/11",
+      "passou": true,
+      "detalhe": "Seu cartão será cobrado em 2 dias, em 05/11"
+    },
+    {
+      "id": "02.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.faixa",
+      "descricao": "a faixa do teste grátis aparece em /app",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "02.faixa.medida",
+      "descricao": "a faixa ocupa a largura da janela (>= 95%)",
+      "passou": true,
+      "detalhe": "largura 1100px de 1100"
+    },
+    {
+      "id": "02.plano.medida",
+      "descricao": "tela /app/settings/billing sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.plano",
+      "descricao": "o painel do plano diz que a empresa está em teste",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "02.central.medida",
+      "descricao": "tela /app/ai/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "02.central.tela",
+      "descricao": "o aviso aparece na Central, pela tela",
+      "passou": true,
+      "detalhe": "/app/ai/inbox"
+    }
+  ]
+}
