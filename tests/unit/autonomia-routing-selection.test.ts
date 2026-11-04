@@ -74,6 +74,8 @@ function setup(a: PublishedAgentConfig, b: PublishedAgentConfig, sticky: boolean
       expect(values.slice(0, 2)).toEqual([ids.org, ids.conversation]);
       return { rows: [] };
     }
+    // Capacidade do canal (e-mail só rascunha): consulta legítima nova de exigirAprovacaoDoCanal; aqui o canal é WhatsApp.
+    if (sql.includes('from channel_sessions')) return { rows: [{ provider: 'waha' }] };
     expect(values).toEqual([ids.org, ids.conversation]);
     return { rows: [{ active_ai_agent_id: sticky ? 'A' : null, active_intent: sticky ? 'vendas' : null,
       body: 'Agora preciso de suporte técnico' }] };

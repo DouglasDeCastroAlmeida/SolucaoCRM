@@ -8754,6 +8754,9 @@ export const DICIONARIO: Traducoes = {
   // ─── Onboarding: conferências de saída (guardrails), "E nunca vai fazer" ───
   "Respeitar quem pediu para parar": { es: "Respetar a quien pidió parar" },
   "Respeitar dados apagados e a base legal": { es: "Respetar datos borrados y la base legal" },
+  "Pedir aprovação de uma pessoa antes de enviar": { es: "Pedir la aprobación de una persona antes de enviar" },
+  "Neste canal, o texto escrito pela IA fica como rascunho até uma pessoa aprovar; só então sai.": { es: "En este canal, el texto escrito por la IA queda como borrador hasta que una persona lo apruebe; solo entonces sale." },
+  "Neste canal cada mensagem sai da caixa de e-mail do próprio cliente, então nada escrito pela IA deve sair sem alguém conferir.": { es: "En este canal cada mensaje sale del buzón de correo del propio cliente, así que nada escrito por la IA debe salir sin que alguien lo revise." },
   "Segurar o ritmo de envio": { es: "Controlar el ritmo de envío" },
   "Respeitar a janela do WhatsApp": { es: "Respetar la ventana de WhatsApp" },
   "Variar o texto das mensagens iguais": { es: "Variar el texto de los mensajes iguales" },
