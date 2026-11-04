@@ -48,4 +48,17 @@ describe("todo canal criado pela interface nasce em pré-go-live", () => {
     );
     expect(update).not.toContain("metadataInicialDoCanal");
   });
+
+  it("a caixa de e-mail nasce aberta DE PROPÓSITO: não usa metadataInicialDoCanal e a decisão está escrita", () => {
+    const caixa = readFileSync(resolve(RAIZ, "lib/channels/email/caixa.ts"), "utf8");
+    expect(caixa).not.toContain("metadataInicialDoCanal");
+    const spec = readFileSync(resolve(RAIZ, "docs/specs/pre-go-live-whatsapp.md"), "utf8");
+    expect(spec).toContain("nasce aberta de propósito");
+    const design = readFileSync(
+      resolve(RAIZ, ".sdd/changes/005-canal-de-e-mail-imap-smtp/02-design.md"),
+      "utf8",
+    );
+    expect(design).toContain("ADR-009");
+    expect(design).toContain("exigirAprovacaoDoCanal");
+  });
 });

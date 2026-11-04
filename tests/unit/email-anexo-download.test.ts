@@ -90,4 +90,11 @@ describe("anexo de e-mail recebido: sempre download", () => {
     await chamar();
     expect(h.assinar).toHaveBeenCalledWith("org-1/c-1/m-1-0.pdf", 3600);
   });
+
+  it("caminho de OUTRA organização na coluna da mensagem, sem ?anexo, nunca é assinado (404)", async () => {
+    h.mensagem = { ...h.mensagem!, media_storage_path: "outra-org/c-1/m-1-0.pdf", metadata: {} };
+    const r = await chamar();
+    expect(r.status).toBe(404);
+    expect(h.assinar).not.toHaveBeenCalled();
+  });
 });

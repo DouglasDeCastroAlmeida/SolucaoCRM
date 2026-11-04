@@ -60,6 +60,12 @@ Uma requisição já entregue ao provedor não pode ser recolhida por este modo.
 - Laço de retorno: operador observa as conversas de teste no Inbox, ajusta o agente e libera/restringe o canal explicitamente. Não há autoabertura.
 - Mapa: `docs/architecture/pre-go-live-whatsapp.architecture.json`.
 
+## Exceção: o canal de e-mail
+
+A caixa de e-mail (`lib/channels/email/caixa.ts`) nasce aberta de propósito, sem `metadataInicialDoCanal`. A pré-liberação só libera telefones de teste, e quem escreve por e-mail não tem telefone: em pré-go-live a IA nunca atenderia ninguém. Abrir aqui não solta a IA: neste canal ela só rascunha, e o envio depende de aprovação humana (`exigirAprovacaoDoCanal` e o gate `ai_approval`).
+
+Risco em aberto: não há lista de remetentes para e-mail, então a IA rascunha para qualquer remetente. Evolução futura: guarda por remetente, `List-Unsubscribe` e `Precedence: bulk`. Cercado por `tests/unit/pre-go-live-novos-canais.test.ts`.
+
 ## Evidências e limites
 
 - `pre-go-live.test.ts`, `gate.test.ts`, `consulta-supabase.test.ts`, `drain.test.ts`: elegibilidade e compatibilidade.

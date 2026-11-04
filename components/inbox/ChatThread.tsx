@@ -435,7 +435,7 @@ export function ChatThread({
                   // Reenviar é um ENVIO NOVO, pelo mesmo caminho de sempre (teto, intervalo e
                   // causa da falha valem de novo). A mensagem que falhou fica no histórico.
                   onTentarDeNovo={() =>
-                    reenviar.mutate({
+                    reenviar.mutateAsync({
                       conversation_id: item.data.conversation_id,
                       type: item.data.type,
                       ...(item.data.body ? { body: item.data.body } : {}),

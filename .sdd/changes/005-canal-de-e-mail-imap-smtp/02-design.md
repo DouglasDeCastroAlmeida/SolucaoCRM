@@ -186,6 +186,12 @@ Pendência de LGPD e retenção (T-027): a poda de `email_ignorados` no `data-re
 - Decisão: anexos vão para o bucket `whatsapp-media` (`{org}/{conversa}/{mensagem}-{n}.{ext}`); só o primeiro vira `media_storage_path`. Os demais ficam em `metadata.email.anexos[].caminho`.
 - Risco aberto: o redact de LGPD (`redact-cascade`) só remove `media_storage_path`, então anexos além do primeiro e o conteúdo de `email_ignorados` ainda não entram na cascata de anonimização (pendência já listada para a Fatia 6/T-027 de LGPD).
 
+### ADR-009: A caixa de e-mail nasce aberta, sem `pre_go_live` (registrado em 2026-11-04)
+- Contexto: o WhatsApp nasce em pré-go-live (`metadataInicialDoCanal`), que só libera telefones de teste. E-mail não tem telefone.
+- Decisão: a caixa nasce aberta DE PROPÓSITO. A IA em e-mail só rascunha; o envio depende de aprovação humana (`exigirAprovacaoDoCanal` + gate `ai_approval`). Cercado por `tests/unit/pre-go-live-novos-canais.test.ts`.
+- Risco aberto: não há lista de remetentes para e-mail; a IA rascunha para qualquer remetente.
+- Evolução futura: guarda por remetente, `List-Unsubscribe` e `Precedence: bulk`.
+
 ## Riscos e casos extremos
 
 - **V-6 (senha de app):** a sonda é a primeira tarefa; falhou ⇒ volta ao design (outros provedores ou auditoria do Gmail).

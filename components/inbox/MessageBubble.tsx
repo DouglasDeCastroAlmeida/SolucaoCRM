@@ -69,7 +69,7 @@ interface Props {
    */
   capacidades?: ChannelCapabilities | null;
   /** Reenviar esta mensagem que falhou (um envio novo). Só aparece se o canal permitir. */
-  onTentarDeNovo?: () => void;
+  onTentarDeNovo?: () => void | Promise<unknown>;
 }
 
 // O recibo sai do status da própria mensagem: o canal que nunca informa
@@ -123,6 +123,24 @@ export function MessageBubble({
   const [apagando, setApagando] = useState(false);
   const [ocultando, setOcultando] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  // "Tentar de novo" é um envio NOVO: dois cliques seriam duas mensagens. Depois de disparar, o botão
+  // fica desabilitado (a falha original continua no histórico); só um erro do reenvio o reabilita.
+  const [reenvioDisparado, setReenvioDisparado] = useState(false);
+  const reenvioEmCurso = useRef(false);
+  const dispararReenvio = () => {
+    if (reenvioEmCurso.current || !onTentarDeNovo) return;
+    reenvioEmCurso.current = true;
+    setReenvioDisparado(true);
+    const liberar = () => {
+      reenvioEmCurso.current = false;
+      setReenvioDisparado(false);
+    };
+    try {
+      void Promise.resolve(onTentarDeNovo()).catch(liberar);
+    } catch {
+      liberar();
+    }
+  };
   const salvandoEdicao = useRef(false);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const abrindoEdicao = useRef(false);
@@ -530,7 +548,7 @@ export function MessageBubble({
         </div>
         {podeTentarDeNovo && (
           <div className="mt-1 flex justify-end">
-            <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={onTentarDeNovo}>
+            <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={reenvioDisparado} onClick={dispararReenvio}>
               {t("Tentar de novo")}
             </Button>
           </div>

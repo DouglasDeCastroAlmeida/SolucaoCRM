@@ -131,6 +131,11 @@ export async function GET(req: NextRequest, ctx: RouteCtx): Promise<Response> {
     }
   }
 
+  // Vale para todo canal: o caminho persistido é sempre `<organização>/...`.
+  if (caminhoDaMidia && !caminhoDaMidia.startsWith(`${activeOrg.orgId}/`)) {
+    return fail("not_found", t("Mensagem sem mídia."), 404, { requestId });
+  }
+
   if (caminhoDaMidia) {
     const admin = createAdminClient();
     const { data: signed, error: signErr } = await admin.storage
