@@ -96,9 +96,19 @@ describe("textoDoAviso: trial com cartão (mudança 003)", () => {
     expect(t.corpo).toContain("cancela hoy");
   });
 
-  it("AC-005.2: cobrança do cartão que falhou pede para trocar o cartão (aviso, aviso final e suspensão)", () => {
-    expect(textoDoAviso("venceu", { ...base, origem: "cartao" }).corpo).toContain("Troque o cartão");
-    expect(textoDoAviso("suspende_em_breve", { ...base, origem: "cartao" }).corpo).toContain("Troque o cartão");
+  it("AC-001.1: cobrança do cartão em atraso manda pagar pelo link, sem prometer troca de cartão", () => {
+    const corpo = textoDoAviso("venceu", { ...base, origem: "cartao" }).corpo;
+    expect(corpo).not.toContain("Troque o cartão");
+    expect(corpo).toContain("link da fatura");
+  });
+
+  it("AC-001.2: aviso final do cartão manda pagar pelo link, sem prometer troca de cartão", () => {
+    const corpo = textoDoAviso("suspende_em_breve", { ...base, origem: "cartao" }).corpo;
+    expect(corpo).not.toContain("Troque o cartão");
+    expect(corpo).toContain("link da fatura");
+  });
+
+  it("AC-005.2: suspensão por cartão mantém o título", () => {
     expect(textoDoAviso("suspensa", { ...base, origem: "cartao" }).titulo).toBe("Conta suspensa por falta de pagamento");
   });
 

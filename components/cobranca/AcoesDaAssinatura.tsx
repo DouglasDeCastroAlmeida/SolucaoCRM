@@ -17,6 +17,7 @@ import { linkDePagamentoSeguro } from "@/lib/cobranca/link";
 import { calcularAjusteProporcional } from "@/lib/cobranca/prorata";
 import { abrirNoNavegador } from "@/lib/cobranca/navegar";
 import type { PlanoParaTroca } from "@/lib/cobranca/painel";
+import { mostrarPagarAgora } from "@/lib/cobranca/pagar-agora";
 import type { EstadoDaAssinatura, ProvedorDeCobranca } from "@/lib/cobranca/vocabulario";
 import { useIdioma } from "@/lib/i18n/IdiomaProvider";
 
@@ -259,7 +260,7 @@ export function AcoesDaAssinatura(p: PropsDasAcoes) {
             {t("Gerenciar pagamento")}
           </Button>
         )}
-        {link && (
+        {(p.noHub || mostrarPagarAgora({ provedor: p.provedor, estado: p.estado, temProvedor: p.temProvedor, assinaturasVivas: p.assinaturasVivas, temLink: link !== null })) && link && (
           <Button asChild>
             <a href={link} target="_blank" rel="noopener noreferrer">
               {/* Asaas em dia: o link é a cobrança seguinte, gerada até 40 dias antes. "Pagar agora" ao lado de "Em dia" leria como dívida. */}

@@ -475,11 +475,11 @@ describe("aplicarRegua: trial com cartão (mudança 003)", () => {
     expect(String(rpcs("fn_cobranca_registrar_aviso")[0]?.args.p_corpo)).not.toContain("R$");
   });
 
-  it("AC-005.2: cobrança que falhou: aviso 'venceu' pelo cartão, com o texto de trocar o cartão", async () => {
+  it("AC-005.2: cobrança que falhou: aviso 'venceu' pelo cartão, com o texto de pagar pelo link da fatura", async () => {
     m.linha = trialComCartao({ estado: "em_atraso", vencida_desde: ha(2), assinaturas_vivas: 1 });
     expect(await aplicarRegua(banco.cliente as never, ORG, deps())).toBe("avisar");
     const aviso = rpcs("fn_cobranca_registrar_aviso")[0]?.args;
     expect(aviso).toMatchObject({ p_aviso: "venceu" });
-    expect(String(aviso?.p_corpo)).toContain("cartão");
+    expect(String(aviso?.p_corpo)).toContain("link da fatura");
   });
 });

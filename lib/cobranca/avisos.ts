@@ -58,7 +58,7 @@ export function textoDoAviso(
       if (o.origem === "cartao") {
         return {
           titulo: comData("Não conseguimos cobrar o seu cartão em {data}"),
-          corpo: t("Troque o cartão em Plano e cobrança para manter o acesso completo."),
+          corpo: t("Pague pelo link da fatura para manter o acesso completo."),
           severidade: "warn",
         };
       }
@@ -82,7 +82,7 @@ export function textoDoAviso(
           o.origem === "cancelamento"
             ? "Você cancelou a assinatura. Assine de novo em Plano e cobrança para continuar usando."
             : o.origem === "cartao"
-              ? "A suspensão acontece se a cobrança não for paga até lá. Troque o cartão em Plano e cobrança para evitar."
+              ? "A suspensão acontece se a cobrança não for paga até lá. Pague pelo link da fatura para evitar."
               : o.origem === "teste"
                 ? "Seu teste grátis terminou e não identificamos pagamento. Assine em Plano e cobrança até a data da suspensão para manter a conta ativa."
                 : "A suspensão acontece se o pagamento não for confirmado até lá. Pague pelo link para evitar.",
