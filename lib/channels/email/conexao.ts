@@ -250,19 +250,7 @@ export async function verificarCaixa(
   }
 
   // 2. Envio: conferir o login e, se pedido, mandar o e-mail de teste para a própria caixa.
-  const smtp = (deps.criarSmtp ?? criarSmtpPadrao)({
-    host: destinoSmtp.ip,
-    port: destinoSmtp.porta,
-    secure: cfg.smtp.seguranca === "ssl",
-    requireTLS: cfg.smtp.seguranca === "starttls",
-    // Sem `name`, o nodemailer se apresenta com o IP/host; o nome do servidor é o que o TLS já conferiu.
-    name: destinoSmtp.servername,
-    auth,
-    tls: { servername: destinoSmtp.servername, rejectUnauthorized: true },
-    connectionTimeout: PRAZO_DE_CONEXAO_MS,
-    greetingTimeout: PRAZO_DE_CONEXAO_MS,
-    socketTimeout: PRAZO_DE_SOCKET_MS,
-  });
+  const smtp = (deps.criarSmtp ?? criarSmtpPadrao)(opcoesSmtp(cfg, destinoSmtp, auth));
   try {
     await smtp.verify();
     if (opcoes.enviarTeste) {
@@ -285,4 +273,62 @@ export async function verificarCaixa(
     }
   }
   return { ok: true, uidValidity, uidNext, testeEnviado: opcoes.enviarTeste };
+}
+
+function opcoesSmtp(
+  cfg: ConfigDaCaixa,
+  destino: { ip: string; porta: number; servername: string },
+  auth: { user: string; pass: string },
+): OpcoesSmtp {
+  return {
+    host: destino.ip,
+    port: destino.porta,
+    secure: cfg.smtp.seguranca === "ssl",
+    requireTLS: cfg.smtp.seguranca === "starttls",
+    // Sem `name`, o nodemailer se apresenta com o IP/host; o nome do servidor é o que o TLS já conferiu.
+    name: destino.servername,
+    auth,
+    tls: { servername: destino.servername, rejectUnauthorized: true },
+    connectionTimeout: PRAZO_DE_CONEXAO_MS,
+    greetingTimeout: PRAZO_DE_CONEXAO_MS,
+    socketTimeout: PRAZO_DE_SOCKET_MS,
+  };
+}
+
+export type ResultadoDoEnvio =
+  | { ok: true; messageId: string }
+  | { ok: false; causa: CausaDaFalha; mensagem: string };
+
+/**
+ * Envia UMA mensagem pelo SMTP da caixa (mudança 005, Fatia 5). Mesma guarda de destino e
+ * mesmo TLS verificado da conexão; o resultado é montado de frases fixas, nunca do texto que o
+ * servidor devolveu (que às vezes ecoa credencial ou o endereço de quem recebe).
+ */
+export async function enviarMensagemSmtp(
+  cfg: ConfigDaCaixa,
+  mensagem: Record<string, unknown>,
+  deps: DependenciasDaConexao = {},
+): Promise<ResultadoDoEnvio> {
+  const destino = await validarDestino(cfg.smtp.host, cfg.smtp.porta, { resolver: deps.resolver });
+  if (!destino.ok) {
+    const causa = CAUSA_DO_DESTINO[destino.motivo];
+    return { ok: false, causa, mensagem: MENSAGEM_DA_CAUSA[causa] };
+  }
+  const smtp = (deps.criarSmtp ?? criarSmtpPadrao)(opcoesSmtp(cfg, destino, { user: cfg.usuario, pass: cfg.senha }));
+  try {
+    const r = await smtp.sendMail(mensagem);
+    if (Array.isArray(r.rejected) && r.rejected.length > 0 && (r.accepted ?? []).length === 0) {
+      return { ok: false, causa: "envio_recusado", mensagem: MENSAGEM_DA_CAUSA.envio_recusado };
+    }
+    return { ok: true, messageId: r.messageId };
+  } catch (erro) {
+    const causa = causaDoErro(erro, "envio");
+    return { ok: false, causa, mensagem: MENSAGEM_DA_CAUSA[causa] };
+  } finally {
+    try {
+      smtp.close();
+    } catch {
+      // já fechado
+    }
+  }
 }

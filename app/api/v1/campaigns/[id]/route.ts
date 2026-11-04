@@ -15,7 +15,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { carregarCampanha } from "@/lib/campanhas/acoes";
 import { ehEditavel, ehTerminal } from "@/lib/campanhas/maquina-de-estados";
-import { gravarPool, lerPoolExtra } from "@/lib/campanhas/pool-de-numeros";
+import { conexaoAceitaCampanha, gravarPool, lerPoolExtra } from "@/lib/campanhas/pool-de-numeros";
 import { editarCampanhaSchema } from "@/lib/campanhas/schemas";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { requireSupportWrite } from "@/lib/impersonate/support";
@@ -166,17 +166,20 @@ export async function PATCH(
   }
 
   if (entrada.channel_session_id !== undefined) {
-    const { data: canal } = await supabase
-      .from("channel_sessions")
-      .select("id")
-      .eq("organization_id", authz.org.orgId)
-      .eq("id", entrada.channel_session_id)
-      .maybeSingle();
-    if (!canal) {
+    const conexao = await conexaoAceitaCampanha(supabase, authz.org.orgId, entrada.channel_session_id);
+    if (conexao === "nao_encontrada") {
       return fail(
         "campanha_canal_indisponivel",
         t("Escolha uma conexão de WhatsApp desta organização."),
         409,
+        { requestId },
+      );
+    }
+    if (conexao === "so_responde") {
+      return fail(
+        "email_envio_em_lote",
+        t("Este canal só responde a quem escreveu: não dá para usá-lo em campanhas."),
+        422,
         { requestId },
       );
     }

@@ -55,12 +55,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-029 [IMPL] lib/channels/email/rodada.ts com trava por caixa e rodízio, rota app/api/v1/cron/email-rodada, linha no docker/scheduler/entrypoint.sh e EMAIL_CANAL em lib/env.ts e .env.example (~60 min) {AC-006.1, AC-006.2, AC-006.3, AC-006.4, AC-008.3} deps: T-025, T-028
 
 ### Fatia 5: Responder por e-mail com a conta protegida (REQ-004, REQ-005, REQ-006)
-- [ ] T-030 [TEST-UNIT] Adaptador de envio com SMTP simulado: assunto "Re:", In-Reply-To e References da última mensagem, citação, assinatura da caixa, anexos dentro do limite e recusa acima dele, enviada sem recibo de leitura, falha com causa e tentar de novo (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-006.5}
-- [ ] T-031 [IMPL] lib/channels/email/adapter.ts e campos novos de RecipientInput e OutboundEnvelope; handler lê o e-mail do contato (~60 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-006.5} deps: T-030, T-012, T-007
-- [ ] T-032 [TEST-UNIT] Limite com relógio injetado: teto diário (padrão 200) manda para a fila do dia seguinte com aviso, intervalo mínimo entre envios, o contador zera na virada do dia no fuso da organização (~45 min) {AC-005.1, AC-005.2, AC-005.3}
-- [ ] T-033 [IMPL] limite.ts, adapter.admitir, status queued com hora de retomada no handler e drenagem da fila na rodada (~60 min) {AC-005.1, AC-005.2, AC-005.3} deps: T-032, T-031, T-029
-- [ ] T-034 [TEST-UNIT] Guardas: IA em canal de e-mail só envia pelo fluxo de aprovação, campanha e follow-up em lote recusam e-mail, iniciar conversa com quem nunca escreveu é recusado (~45 min) {AC-004.5, AC-004.6, AC-005.4}
-- [ ] T-035 [IMPL] Consumidores das capacidades em campanhas, follow-up, PainelIniciarConversa, conversa-nova e before-send (~55 min) {AC-004.5, AC-004.6, AC-005.4} deps: T-034, T-007
+- [x] T-030 [TEST-UNIT] Adaptador de envio com SMTP simulado: assunto "Re:", In-Reply-To e References da última mensagem, citação, assinatura da caixa, anexos dentro do limite e recusa acima dele, enviada sem recibo de leitura, falha com causa e tentar de novo (~55 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-006.5}
+- [x] T-031 [IMPL] lib/channels/email/adapter.ts e campos novos de RecipientInput e OutboundEnvelope; handler lê o e-mail do contato (~60 min) {AC-004.1, AC-004.2, AC-004.3, AC-004.4, AC-006.5} deps: T-030, T-012, T-007
+- [x] T-032 [TEST-UNIT] Limite com relógio injetado: teto diário (padrão 200) manda para a fila do dia seguinte com aviso, intervalo mínimo entre envios, o contador zera na virada do dia no fuso da organização (~45 min) {AC-005.1, AC-005.2, AC-005.3}
+- [x] T-033 [IMPL] limite.ts, adapter.admitir, status queued com hora de retomada no handler e drenagem da fila na rodada (~60 min) {AC-005.1, AC-005.2, AC-005.3} deps: T-032, T-031, T-029
+- [x] T-034 [TEST-UNIT] Guardas: IA em canal de e-mail só envia pelo fluxo de aprovação, campanha e follow-up em lote recusam e-mail, iniciar conversa com quem nunca escreveu é recusado (~45 min) {AC-004.5, AC-004.6, AC-005.4}
+- [x] T-035 [IMPL] Consumidores das capacidades em campanhas, follow-up, PainelIniciarConversa, conversa-nova e before-send (~55 min) {AC-004.5, AC-004.6, AC-005.4} deps: T-034, T-007
 
 ### Fatia 6: Inbox e operação da caixa (REQ-008)
 - [ ] T-036 [TEST-UI] Conversa de e-mail no inbox: ícone do canal, assunto, texto, HTML limpo sob demanda, sem botão de áudio nem recibo de leitura (~45 min) {AC-008.5}

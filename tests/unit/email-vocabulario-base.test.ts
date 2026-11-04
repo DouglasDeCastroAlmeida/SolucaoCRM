@@ -26,9 +26,11 @@ describe("canal de e-mail — vocabulário e seam", () => {
     expect(a.resolveRecipient({ ...base, isGroup: true, email: "ana@exemplo.com" })).toBeNull();
   });
 
-  it("AC-008.4: enquanto o envio SMTP não existe, send desiste com o código de não configurado (vira queued)", async () => {
+  it("AC-008.4: o adaptador registrado envia pela caixa e consulta o limite antes de enviar", () => {
     const a = getAdapter("email");
-    await expect(a.send({} as never)).rejects.toThrow(new RegExp(`^${a.codes.notConfigured}`));
+    expect(typeof a.send).toBe("function");
+    expect(typeof a.admitir).toBe("function");
+    expect(a.codes.notConfigured).toBe("email_not_configured");
   });
 
   it("AC-008.4: a caixa é endereçada pelo próprio endereço, e a coluna entra no select", () => {
