@@ -138,6 +138,8 @@ export function AssistenteDeConexao({ onConectada }: { onConectada: () => void }
       toast.success(t("Caixa de e-mail conectada."));
       onConectada();
     } catch (e) {
+      // O "Deu certo" do teste não pode ficar sob o erro: o que valeu foi a tentativa de conectar, e ela falhou.
+      setTestado(false);
       setErro(mensagemDoErro(e, t("Não foi possível conectar a caixa agora. Tente de novo.")));
     } finally {
       setOcupado(null);

@@ -174,6 +174,19 @@ export async function marcarNaoCliente(
   }
   if (!endereco) return { resultado: "nao_encontrada" };
 
+  // Por endereço (a lista de ignorados), o contato é achado pelo e-mail: se já existe conversa dele, ela também sai.
+  if (!contactId) {
+    const { data: contatos, error: erroDosContatos } = await admin
+      .from("contacts")
+      .select("id")
+      .eq("organization_id", input.organizationId)
+      .eq("email_normalized", endereco)
+      .is("is_merged_into", null)
+      .limit(1);
+    if (erroDosContatos) throw new Error(`email_contato_lookup_failed: ${erroDosContatos.message}`);
+    contactId = ((contatos ?? [])[0] as { id: string } | undefined)?.id ?? null;
+  }
+
   const { error } = await admin.from("email_remetentes_ignorados").upsert(
     { organization_id: input.organizationId, endereco_normalizado: endereco, created_by: input.userId },
     { onConflict: "organization_id,endereco_normalizado" },
@@ -193,6 +206,14 @@ export async function marcarNaoCliente(
     if (erroDoArquivo) throw new Error(`email_arquivar_failed: ${erroDoArquivo.message}`);
     conversasArquivadas = (arquivadas ?? []).length;
   }
+
+  // Os e-mails dele que já estão na lista passam a dizer o motivo certo; abrir um deles como conversa desfaz a marca.
+  const { error: erroDaLista } = await admin
+    .from("email_ignorados")
+    .update({ motivo: "nao_e_cliente" })
+    .eq("organization_id", input.organizationId)
+    .eq("remetente", endereco);
+  if (erroDaLista) throw new Error(`email_ignorados_marcar_failed: ${erroDaLista.message}`);
   return { resultado: "marcado", endereco, conversasArquivadas };
 }
 

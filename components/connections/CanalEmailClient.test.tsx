@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { CanalEmailClient } from "./CanalEmailClient";
 
-const h = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn() }));
-vi.mock("@/lib/api/client", () => ({ apiClient: { get: h.get, post: h.post, patch: h.patch } }));
+const h = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() }));
+vi.mock("@/lib/api/client", () => ({ apiClient: { get: h.get, post: h.post, patch: h.patch, delete: h.delete } }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (s: string) => s }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -167,5 +167,76 @@ describe("AC-008.1: configurar a caixa", () => {
         intervalo_segundos: 45,
       }),
     );
+  });
+});
+
+describe("REQ-008: remover a caixa", () => {
+  it("AC-008.2: Remover caixa pede confirmação que diz o que acontece, e só então chama a rota", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa(), caixa({ id: "cx-2", endereco: "vendas@exemplo.com" })] } });
+    h.delete.mockResolvedValue({ data: { id: "cx-2", removida: true } });
+    montar();
+
+    const vendas = (await screen.findByText("vendas@exemplo.com")).closest("[data-testid='caixa-email']") as HTMLElement;
+    fireEvent.click(within(vendas).getByRole("button", { name: "Remover caixa" }));
+    const dialogo = await screen.findByRole("alertdialog");
+    expect(h.delete).not.toHaveBeenCalled();
+    expect(dialogo.textContent).toContain("vendas@exemplo.com");
+    expect(dialogo.textContent).toContain("O sistema para de ler e de enviar e-mails por esta caixa.");
+    expect(dialogo.textContent).toContain("As conversas e as mensagens continuam no sistema.");
+    expect(dialogo.textContent).toContain("A senha guardada é apagada.");
+    expect(dialogo.textContent).toContain("Para voltar, conecte a caixa de novo com a senha.");
+
+    fireEvent.click(within(dialogo).getByRole("button", { name: "Remover a caixa" }));
+
+    await waitFor(() => expect(h.delete).toHaveBeenCalledWith("/api/v1/channels/email/cx-2"));
+    expect(h.delete).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(h.get.mock.calls.length).toBeGreaterThan(2));
+  });
+
+  it("AC-008.2: cancelar a confirmação não remove nada", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa()] } });
+    montar();
+
+    await screen.findByText("ana@exemplo.com");
+    fireEvent.click(screen.getByRole("button", { name: "Remover caixa" }));
+    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(h.delete).not.toHaveBeenCalled();
+  });
+
+  it("AC-008.2: remoção que falha mostra o motivo e a caixa continua na tela", async () => {
+    const { toast } = await import("sonner");
+    h.get.mockResolvedValue({ data: { caixas: [caixa()] } });
+    h.delete.mockRejectedValue(new Error("Não foi possível remover a caixa agora. Tente de novo."));
+    montar();
+
+    await screen.findByText("ana@exemplo.com");
+    fireEvent.click(screen.getByRole("button", { name: "Remover caixa" }));
+    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Remover a caixa" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Não foi possível remover a caixa agora. Tente de novo."));
+    expect(screen.getByText("ana@exemplo.com")).toBeTruthy();
+  });
+});
+
+describe("AC-003.3: a aba traz a lista de e-mails ignorados", () => {
+  it("AC-003.3: com caixa conectada a lista aparece; sem caixa nenhuma, só o assistente", async () => {
+    h.get.mockImplementation(async (url: string) =>
+      url.endsWith("/ignorados")
+        ? { data: { ignorados: [{ id: "ign-1", caixa_id: "cx-1", remetente: "ofertas@loja.com", assunto: "Oi", recebido_em: "2026-11-03T10:00:00.000Z", motivo: "no_reply" }] } }
+        : { data: { caixas: [caixa()] } },
+    );
+    montar();
+    await screen.findByText("ofertas@loja.com");
+    expect(screen.getByTestId("ignorados-email")).toBeTruthy();
+
+    cleanup();
+    h.get.mockReset();
+    h.get.mockResolvedValue({ data: { caixas: [] } });
+    montar();
+    await screen.findByTestId("assistente-email");
+    expect(screen.queryByTestId("ignorados-email")).toBeNull();
+    expect(h.get).not.toHaveBeenCalledWith("/api/v1/channels/email/ignorados");
   });
 });

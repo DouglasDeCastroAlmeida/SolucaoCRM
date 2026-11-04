@@ -104,7 +104,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // `webhook_secret_encrypted` é NOT NULL e a caixa não tem webhook: um valor aleatório sem uso.
   const semUsoCifrado = await encryptWebhookSecret(admin, randomBytes(32).toString("hex"));
   if (!semUsoCifrado) {
-    return fail("invalid_request", t("cifra indisponível nesta instalação — a chave não foi gravada"), 422, {
+    return fail("invalid_request", t("Não foi possível guardar a senha com segurança neste servidor. Peça a quem instalou o sistema para conferir a chave de segurança e tente de novo."), 422, {
       requestId,
     });
   }
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!senha.ok) {
     await desfazer();
     if (senha.motivo === "cifra_indisponivel") {
-      return fail("invalid_request", t("cifra indisponível nesta instalação — a chave não foi gravada"), 422, {
+      return fail("invalid_request", t("Não foi possível guardar a senha com segurança neste servidor. Peça a quem instalou o sistema para conferir a chave de segurança e tente de novo."), 422, {
         requestId,
       });
     }

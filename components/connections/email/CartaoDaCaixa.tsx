@@ -2,6 +2,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +24,9 @@ import { apiClient } from "@/lib/api/client";
 /**
  * Uma caixa de e-mail em Conexões (mudança 005, REQ-008): estado, limites e assinatura PRÓPRIOS
  * da caixa, e os três gestos que ela aceita — pausar, retomar e configurar.
+ *
+ * "Remover caixa" confirma antes e arquiva a caixa: a leitura e o envio param, a senha guardada é
+ * apagada e as conversas e mensagens ficam. Conectar o mesmo endereço de novo traz a caixa de volta.
  *
  * O estado mostrado vem do servidor (`pausada`, `pausa_motivo`); a tela nunca o adivinha. Caixa
  * parada por senha recusada não tem "Retomar": retomar sem a senha nova só a faria parar de novo.
@@ -47,6 +60,7 @@ export function CartaoDaCaixa({ caixa, onMudou }: { caixa: CaixaDaTela; onMudou:
   const [teto, setTeto] = useState(String(caixa.teto_diario));
   const [intervalo, setIntervalo] = useState(String(caixa.intervalo_segundos));
   const [senha, setSenha] = useState("");
+  const [removendo, setRemovendo] = useState(false);
 
   const pausada = Boolean(caixa.pausada);
   const porSenha = caixa.pausa_motivo === "senha_recusada" || caixa.pausa_motivo === "senha_ausente";
@@ -76,6 +90,20 @@ export function CartaoDaCaixa({ caixa, onMudou }: { caixa: CaixaDaTela; onMudou:
     if (await alterar(corpo, t("Caixa atualizada."))) {
       setSenha("");
       setEditando(false);
+    }
+  }
+
+  async function remover() {
+    setRemovendo(false);
+    setOcupada(true);
+    try {
+      await apiClient.delete(`${ROTA}/${caixa.id}`);
+      toast.success(t("Caixa removida."));
+      onMudou();
+    } catch (erro) {
+      toast.error(mensagemDeErro(erro, t("Não foi possível remover a caixa agora. Tente de novo.")));
+    } finally {
+      setOcupada(false);
     }
   }
 
@@ -161,8 +189,32 @@ export function CartaoDaCaixa({ caixa, onMudou }: { caixa: CaixaDaTela; onMudou:
           <Button size="sm" variant="ghost" disabled={ocupada} onClick={() => setEditando(true)}>
             {t("Configurar")}
           </Button>
+          <Button size="sm" variant="ghost" disabled={ocupada} onClick={() => setRemovendo(true)}>
+            {t("Remover caixa")}
+          </Button>
         </div>
       )}
+
+      <AlertDialog open={removendo} onOpenChange={setRemovendo}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Remover esta caixa de e-mail?")}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="flex flex-col gap-2">
+                <strong>{caixa.endereco}</strong>
+                <span>{t("O sistema para de ler e de enviar e-mails por esta caixa.")}</span>
+                <span>{t("As conversas e as mensagens continuam no sistema.")}</span>
+                <span>{t("A senha guardada é apagada.")}</span>
+                <span>{t("Para voltar, conecte a caixa de novo com a senha.")}</span>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("Cancelar")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void remover()}>{t("Remover a caixa")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

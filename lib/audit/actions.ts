@@ -1293,6 +1293,8 @@ export const AUDIT_ACTIONS = [
   "channel.email_updated",
   "channel.email_paused",
   "channel.email_resumed",
+  // A caixa foi removida: a leitura e o envio acabam, a senha guardada é apagada e a linha é arquivada.
+  "channel.email_removed",
   // O remetente foi marcado como "não é cliente" e um e-mail ignorado foi promovido a conversa.
   "channel.email_sender_blocked",
   "channel.email_ignored_promoted",
