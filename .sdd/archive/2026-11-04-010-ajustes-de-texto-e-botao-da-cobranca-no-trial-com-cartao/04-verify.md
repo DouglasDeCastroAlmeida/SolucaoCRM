@@ -18,8 +18,8 @@
 |---|---|---|
 | AC-001.1 | T-001, T-002 | `lib/cobranca/avisos.test.ts` (aviso `venceu` com origem cartão) |
 | AC-001.2 | T-001, T-002 | `lib/cobranca/avisos.test.ts` (aviso `suspende_em_breve`), `lib/cobranca/sincronizar.test.ts` |
-| AC-002.1 | T-003, T-004, T-005 | `lib/cobranca/pagar-agora.test.ts`; prova pela tela `02-trial-aviso-plano.png` |
-| AC-002.2 | T-003, T-004, T-005 | `lib/cobranca/pagar-agora.test.ts` (atraso, cancelada, ativa); prova pela tela `05-atraso-plano.png` |
+| AC-002.1 | T-003, T-004, T-005 | `lib/cobranca/pagar-agora.test.ts`; prova pela tela `evidence/010-cobranca-ajustes/02-trial-aviso-plano.png` |
+| AC-002.2 | T-003, T-004, T-005 | `lib/cobranca/pagar-agora.test.ts` (atraso, cancelada, ativa); prova pela tela `evidence/010-cobranca-ajustes/05-atraso-plano.png` |
 | AC-002.3 | T-003 | `lib/cobranca/emails.test.ts`, `lib/cobranca/central.test.ts` (botão com link, sem alteração) — cobertos por existência; `central.ts` e `emails.ts` não foram tocados |
 
 ## Revisão de código
