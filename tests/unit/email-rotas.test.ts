@@ -20,6 +20,8 @@ const h = vi.hoisted(() => ({
   descartar: vi.fn(),
   lerEstado: vi.fn(),
   retomar: vi.fn(),
+  pausar: vi.fn(),
+  pausas: vi.fn(),
   resolverAviso: vi.fn(),
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
@@ -54,6 +56,8 @@ vi.mock("@/lib/channels/email/estado", async () => ({
   ...(await vi.importActual<Record<string, unknown>>("@/lib/channels/email/estado")),
   lerEstado: h.lerEstado,
   retomar: h.retomar,
+  pausar: h.pausar,
+  listarPausas: h.pausas,
 }));
 vi.mock("@/lib/channels/email/avisos", async () => ({
   ...(await vi.importActual<Record<string, unknown>>("@/lib/channels/email/avisos")),
@@ -112,6 +116,10 @@ beforeEach(() => {
   h.cursor.mockResolvedValue({ error: null });
   h.atualizar.mockResolvedValue({ error: null });
   h.descartar.mockResolvedValue(undefined);
+  h.pausas.mockResolvedValue(new Map());
+  h.lerEstado.mockResolvedValue({ pausaMotivo: null });
+  h.pausar.mockResolvedValue(undefined);
+  h.retomar.mockResolvedValue(undefined);
 });
 
 const semEfeitos = () => {
@@ -317,6 +325,63 @@ describe("AC-001.5: conectar", () => {
   it("a organização vem do login: o filtro da busca por endereço usa a do login", async () => {
     await POST(req("POST", "", corpo()));
     expect(h.acharPorEndereco).toHaveBeenCalledWith(expect.anything(), ORG, "atendimento@exemplo.com");
+  });
+});
+
+const ID_DA_CAIXA = "9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60";
+
+describe("AC-008.1 e AC-008.2: estado e pausa por caixa", () => {
+  it("a lista traz o estado de CADA caixa: a pausada diz o motivo, a outra segue ativa", async () => {
+    const OUTRA = { ...CAIXA, id: "1d2e3f40-5a6b-4c7d-8e9f-a0b1c2d3e4f5", endereco: "vendas@exemplo.com" };
+    h.listar.mockResolvedValue([CAIXA, OUTRA]);
+    h.pausas.mockResolvedValue(new Map([[CAIXA.id, "pausada_pela_equipe"]]));
+
+    const json = await (await GET(req("GET", ""))).json();
+
+    expect(h.pausas).toHaveBeenCalledWith(expect.anything(), ORG);
+    expect(json.data.caixas[0]).toMatchObject({ pausada: true, pausa_motivo: "pausada_pela_equipe" });
+    expect(json.data.caixas[1]).toMatchObject({ pausada: false, pausa_motivo: null });
+  });
+
+  it("pausar grava o motivo da equipe, audita, e não mexe na configuração nem na rede", async () => {
+    const r = await PATCH(req("PATCH", `/${ID_DA_CAIXA}`, { pausada: true }), contexto());
+
+    expect(r.status).toBe(200);
+    expect(h.pausar).toHaveBeenCalledWith(expect.anything(), ORG, ID_DA_CAIXA, "pausada_pela_equipe");
+    expect(h.atualizar).not.toHaveBeenCalled();
+    expect(h.verificar).not.toHaveBeenCalled();
+    expect(h.audit).toHaveBeenCalledTimes(1);
+    expect(h.audit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "channel.email_paused", organizationId: ORG, resourceId: ID_DA_CAIXA }),
+    );
+    expect((await r.json()).data).toMatchObject({ pausada: true, pausa_motivo: "pausada_pela_equipe" });
+  });
+
+  it("retomar só tira a pausa: o cursor não é tocado e a auditoria é a de retomada", async () => {
+    h.lerEstado.mockResolvedValue({ pausaMotivo: "pausada_pela_equipe" });
+    const r = await PATCH(req("PATCH", `/${ID_DA_CAIXA}`, { pausada: false }), contexto());
+
+    expect(r.status).toBe(200);
+    expect(h.retomar).toHaveBeenCalledWith(expect.anything(), ORG, ID_DA_CAIXA);
+    expect(h.cursor).not.toHaveBeenCalled();
+    expect(h.audit).toHaveBeenCalledWith(expect.objectContaining({ action: "channel.email_resumed" }));
+    expect((await r.json()).data).toMatchObject({ pausada: false, pausa_motivo: null });
+  });
+
+  it("caixa pausada por senha recusada NÃO retoma sem senha nova: 422 com o que fazer", async () => {
+    h.lerEstado.mockResolvedValue({ pausaMotivo: "senha_recusada" });
+    const r = await PATCH(req("PATCH", `/${ID_DA_CAIXA}`, { pausada: false }), contexto());
+
+    expect(r.status).toBe(422);
+    expect((await r.json()).error.message).toContain("senha");
+    expect(h.retomar).not.toHaveBeenCalled();
+    expect(h.audit).not.toHaveBeenCalled();
+  });
+
+  it("pausar uma caixa que já está pausada por senha recusada preserva o motivo (não vira 'da equipe')", async () => {
+    h.lerEstado.mockResolvedValue({ pausaMotivo: "senha_recusada" });
+    await PATCH(req("PATCH", `/${ID_DA_CAIXA}`, { pausada: true }), contexto());
+    expect(h.pausar).not.toHaveBeenCalled();
   });
 });
 

@@ -63,12 +63,12 @@ Cada tarefa ocupa uma linha:
 - [x] T-035 [IMPL] Consumidores das capacidades em campanhas, follow-up, PainelIniciarConversa, conversa-nova e before-send (~55 min) {AC-004.5, AC-004.6, AC-005.4} deps: T-034, T-007
 
 ### Fatia 6: Inbox e operação da caixa (REQ-008)
-- [ ] T-036 [TEST-UI] Conversa de e-mail no inbox: ícone do canal, assunto, texto, HTML limpo sob demanda, sem botão de áudio nem recibo de leitura (~45 min) {AC-008.5}
-- [ ] T-037 [IMPL] ChannelLogo, ConversationHeader e ListItem, MessageBubble e Composer por capacidade (~55 min) {AC-008.5} deps: T-036, T-007
-- [ ] T-038 [TEST-UI] Várias caixas com assinatura, teto e estado próprios; pausar para a leitura e o envio sem perder conversas e retomar do ponto em que parou (~45 min) {AC-008.1, AC-008.2}
-- [ ] T-039 [IMPL] Pausar, retomar e configurar por caixa na aba e nas rotas (~45 min) {AC-008.1, AC-008.2} deps: T-038, T-018, T-029
-- [ ] T-040 [TEST-INT] Varredura dos fluxos que presumem telefone (pré-liberação do canal, duplicidade, pós-entrada) com sessão de e-mail, e regressão do WhatsApp (~45 min) {AC-002.2} deps: T-025
-- [ ] T-041 [IMPL] Ajustes dos fluxos achados em T-040, sem mudar o comportamento do WhatsApp (~50 min) {AC-002.2} deps: T-040
+- [x] T-036 [TEST-UI] Conversa de e-mail no inbox: ícone do canal, assunto, texto, HTML limpo sob demanda, sem botão de áudio nem recibo de leitura (~45 min) {AC-008.5}
+- [x] T-037 [IMPL] ChannelLogo, ConversationHeader e ListItem, MessageBubble e Composer por capacidade (~55 min) {AC-008.5} deps: T-036, T-007
+- [x] T-038 [TEST-UI] Várias caixas com assinatura, teto e estado próprios; pausar para a leitura e o envio sem perder conversas e retomar do ponto em que parou (~45 min) {AC-008.1, AC-008.2}
+- [x] T-039 [IMPL] Pausar, retomar e configurar por caixa na aba e nas rotas (~45 min) {AC-008.1, AC-008.2} deps: T-038, T-018, T-029
+- [x] T-040 [TEST-INT] Varredura dos fluxos que presumem telefone (pré-liberação do canal, duplicidade, pós-entrada) com sessão de e-mail, e regressão do WhatsApp (~45 min) {AC-002.2} deps: T-025
+- [x] T-041 [IMPL] Ajustes dos fluxos achados em T-040, sem mudar o comportamento do WhatsApp (~50 min) {AC-002.2} deps: T-040
 
 ### Fechamento
 - [ ] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
@@ -84,8 +84,18 @@ Cada tarefa ocupa uma linha:
 
 - Sugestão 2: mensagem que sempre lança no `ingerir` (erro determinístico de banco) trava o cursor para sempre, com recuo de até 30 min e só log. Pular o UID com `registrarIgnorado` depois de N falhas no mesmo UID (rodada.ts).
 - Sugestão 3: `avancarCursor` (estado.ts) faz UPDATE incondicional; o cursor nunca retroceder depende só da trava. Tornar garantia do banco (`.lt("ultimo_uid", n)` ou `greatest`). O AC-002.6 do invariante é tautológico; a prova real está em rodada.test.ts.
-- Sugestão 8: anexo guardado com o Content-Type original (pode ser text/html ou image/svg+xml) no bucket privado. Forçar download (Content-Disposition) ou normalizar o tipo na Fatia 5, quando o anexo for exibido.
+- Sugestão 8 (RESOLVIDA na Fatia 6): a rota `GET /api/v1/messages/[id]/media` assina a URL de anexo de e-mail com `download` (Content-Disposition: attachment, nome original) e aceita `?anexo=N`; teste em `tests/unit/email-anexo-download.test.ts`.
 - Sugestão 9: "não é cliente" por `endereco` (sem `conversation_id`) grava o bloqueio mas não arquiva conversas existentes. O AC-003.4 está coberto pelo caminho com `conversation_id`; documentar ou arquivar também por endereço.
+
+## Registro da Fatia 6
+
+- T-040/T-041 (varredura dos fluxos que presumem telefone), em `tests/unit/email-fluxos-sem-telefone.test.ts`:
+  - ACHADO e CONSERTADO: a caixa de e-mail nascia em pré-liberação (`ai_gate_mode = pre_go_live`), que só deixa a IA falar com TELEFONES de teste; quem escreve por e-mail não tem telefone, então a IA nunca atenderia ninguém e nenhuma tela de e-mail libera o canal. Agora a caixa nasce aberta (`metadata` vazio); a IA continua só enviando depois de aprovada (`iaSoComAprovacao`). O WhatsApp segue nascendo em pré-liberação (teste de regressão).
+  - Já corretos, agora com teste: o corte do número interno de avisos (contato sem telefone e sem @lid nunca casa), a duplicidade (já agrupa por e-mail), a origem do negócio (E-mail) e o atalho "Iniciar conversa" da lista de contatos (só aparece com telefone; com conversa existente abre a conversa, e e-mail não inicia conversa por `iniciaConversa=false`).
+  - NÃO tratado (registrado): contato de e-mail sem nome no cabeçalho fica com `display_name` = endereço, e `nomeDoContato` o devolve como "nome" (o agente poderia saudar com o endereço). Resolver exige `email` em `ContatoNomeavel` e em todos os selects; fica para a limpeza.
+- Dívida 2, 3 e 9 da Fatia 4 seguem registradas acima, não tocadas.
+- Capacidades novas na matriz (cada uma com consumidor): `mensagemDeVoz` (Composer), `reciboDeLeitura` (MessageBubble), `limiteDeAnexoBytes` (Composer), `reenviaFalha` (MessageBubble).
+- Sem prova pela tela ainda (fica com o orquestrador, DoD 12): conversa de e-mail no inbox, aba com várias caixas, pausar/retomar, "Tentar de novo", download de anexo.
 
 ## Estimativa
 

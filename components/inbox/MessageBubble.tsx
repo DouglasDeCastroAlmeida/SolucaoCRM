@@ -24,6 +24,9 @@ import { localizacaoDaMensagem } from "@/lib/messaging/localizacao";
 import { resolveSharedContact } from "@/lib/messaging/contact-card";
 import { lerAnuncioDaMensagem } from "@/lib/leads/atribuicao-de-anuncio";
 import { AnuncioCard } from "@/components/inbox/AnuncioCard";
+import { CabecalhoDoEmail, RodapeDoEmail } from "@/components/inbox/EmailDaMensagem";
+import { lerAdiamento, lerEmailDaMensagem } from "@/lib/inbox/email-da-mensagem";
+import type { ChannelCapabilities } from "@/lib/channels/capabilities";
 import {
   extractCitations,
   isAiGeneratedMessage,
@@ -60,11 +63,28 @@ interface Props {
   comCauda?: boolean;
   /** Logo depois de outra do mesmo grupo: espaçamento menor. */
   colada?: boolean;
+  /**
+   * O que o canal da conversa permite (a matriz de capacidades). O balão pergunta a ela — o recibo
+   * de leitura, o reenvio de uma falha —, nunca "que canal é este?". Ausente = o de sempre.
+   */
+  capacidades?: ChannelCapabilities | null;
+  /** Reenviar esta mensagem que falhou (um envio novo). Só aparece se o canal permitir. */
+  onTentarDeNovo?: () => void | Promise<unknown>;
 }
 
 // O recibo sai do status da própria mensagem: o canal que nunca informa
 // entrega/leitura fica em "Enviada", e nada além disso é inventado.
-function AckIndicator({ status, t }: { status: string; t: (texto: string) => string }) {
+function AckIndicator({
+  status,
+  t,
+  semRecibo,
+}: {
+  status: string;
+  t: (texto: string) => string;
+  /** O canal não informa entregue/lida: o que for além de "enviada" não é desenhado. */
+  semRecibo?: boolean;
+}) {
+  if (semRecibo && (status === "read" || status === "delivered")) status = "sent";
   if (status === "queued" || status === "sending") {
     return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
   }
@@ -95,12 +115,32 @@ export function MessageBubble({
   fuso,
   comCauda = true,
   colada = false,
+  capacidades = null,
+  onTentarDeNovo,
 }: Props) {
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(message.body ?? "");
   const [apagando, setApagando] = useState(false);
   const [ocultando, setOcultando] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  // "Tentar de novo" é um envio NOVO: dois cliques seriam duas mensagens. Depois de disparar, o botão
+  // fica desabilitado (a falha original continua no histórico); só um erro do reenvio o reabilita.
+  const [reenvioDisparado, setReenvioDisparado] = useState(false);
+  const reenvioEmCurso = useRef(false);
+  const dispararReenvio = () => {
+    if (reenvioEmCurso.current || !onTentarDeNovo) return;
+    reenvioEmCurso.current = true;
+    setReenvioDisparado(true);
+    const liberar = () => {
+      reenvioEmCurso.current = false;
+      setReenvioDisparado(false);
+    };
+    try {
+      void Promise.resolve(onTentarDeNovo()).catch(liberar);
+    } catch {
+      liberar();
+    }
+  };
   const salvandoEdicao = useRef(false);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const abrindoEdicao = useRef(false);
@@ -157,6 +197,13 @@ export function MessageBubble({
   const podeApagar = enviadaPeloAtendente && Boolean(onApagar);
   const podeOcultar = !isOutbound && !apagada && Boolean(ocultaNoCrm ? onRestaurar : onOcultar);
   const temMenu = Boolean(onResponder || (podeEditar && onEditar) || podeApagar || podeOcultar);
+  // E-mail recebido: o assunto, o HTML limpo sob demanda e os anexos têm desenho próprio. É o DADO
+  // (`metadata.email`) que decide, não o nome do canal.
+  const email = !isOutbound ? lerEmailDaMensagem(message.metadata) : null;
+  const adiamento = isOutbound && message.status === "queued" ? lerAdiamento(message.metadata) : null;
+  const podeTentarDeNovo = Boolean(
+    isFailed && isOutbound && onTentarDeNovo && capacidades?.reenviaFalha && (message.body || hasMedia),
+  );
   const aiGenerated = isAiGeneratedMessage(message.metadata);
   const citations = extractCitations(message.metadata);
   const showCitationButton =
@@ -422,13 +469,15 @@ export function MessageBubble({
           <>
             {anuncio && <AnuncioCard anuncio={anuncio} compacto className="mb-1.5" />}
 
-            {hasMedia && (
+            {email && <CabecalhoDoEmail email={email} />}
+
+            {hasMedia && !email && (
               <div className={cn(message.body && "mb-1")}>
                 <MediaRenderer message={message} agora={agora} />
               </div>
             )}
 
-            {!hasMedia && mediaExpirada && (
+            {!hasMedia && !email && mediaExpirada && (
               <div className={cn(message.body && "mb-1")}>
                 <MediaUnavailable kind={avisoDeExpiracao} />
               </div>
@@ -445,7 +494,18 @@ export function MessageBubble({
             {message.body && !isContact && !localizacao && (
               <p className="whitespace-pre-wrap wrap-anywhere leading-snug">{message.body}</p>
             )}
+
+            {email && <RodapeDoEmail email={email} mensagemId={message.id} />}
           </>
+        )}
+
+        {adiamento && (
+          <p data-testid="aviso-de-adiamento" className="mt-1 text-[11px] leading-snug opacity-90">
+            {(adiamento.motivo === "teto_diario"
+              ? t("Limite do dia da caixa atingido. Esta mensagem sai amanhã, a partir das {hora}.")
+              : t("Aguardando o intervalo entre envios da caixa. Sai por volta das {hora}.")
+            ).replace("{hora}", horaNoFuso(adiamento.ate, fuso))}
+          </p>
         )}
 
         <div
@@ -465,7 +525,9 @@ export function MessageBubble({
           {showCitationButton && (
             <CitationButton citations={citations} messageId={message.id} />
           )}
-          {isOutbound && !isFailed && <AckIndicator status={message.status} t={t} />}
+          {isOutbound && !isFailed && (
+            <AckIndicator status={message.status} t={t} semRecibo={capacidades?.reciboDeLeitura === false} />
+          )}
           {isFailed && (
             // Provider local: o painel do inbox não tem TooltipProvider ancestral e
             // este Tooltip só monta em mensagem failed — sem o provider, abrir uma
@@ -484,6 +546,13 @@ export function MessageBubble({
             </TooltipProvider>
           )}
         </div>
+        {podeTentarDeNovo && (
+          <div className="mt-1 flex justify-end">
+            <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={reenvioDisparado} onClick={dispararReenvio}>
+              {t("Tentar de novo")}
+            </Button>
+          </div>
+        )}
         {reacoes?.length ? (
           <span
             role="img"

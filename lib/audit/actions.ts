@@ -1291,6 +1291,8 @@ export const AUDIT_ACTIONS = [
   // trocados. Nunca levam a senha: só endereço, servidores e o que mudou.
   "channel.email_connected",
   "channel.email_updated",
+  "channel.email_paused",
+  "channel.email_resumed",
   // O remetente foi marcado como "não é cliente" e um e-mail ignorado foi promovido a conversa.
   "channel.email_sender_blocked",
   "channel.email_ignored_promoted",

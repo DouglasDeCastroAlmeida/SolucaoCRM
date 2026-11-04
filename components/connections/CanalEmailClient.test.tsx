@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { CanalEmailClient } from "./CanalEmailClient";
 
-const h = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
-vi.mock("@/lib/api/client", () => ({ apiClient: { get: h.get, post: h.post } }));
+const h = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), patch: vi.fn() }));
+vi.mock("@/lib/api/client", () => ({ apiClient: { get: h.get, post: h.post, patch: h.patch } }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (s: string) => s }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -65,5 +65,107 @@ describe("aba de e-mail em Conexões", () => {
 
     expect((await screen.findByRole("alert")).textContent).toContain("Sem permissão");
     expect(screen.queryByTestId("assistente-email")).toBeNull();
+  });
+});
+
+const caixa = (extra: Record<string, unknown> = {}) => ({
+  id: "cx-1",
+  endereco: "ana@exemplo.com",
+  status: "WORKING",
+  usuario: "ana@exemplo.com",
+  imap: { host: "imap.exemplo.com", porta: 993 },
+  smtp: { host: "smtp.exemplo.com", porta: 465 },
+  senha_ultimos4: "m9z2",
+  assinatura: "Abraço da Ana",
+  teto_diario: 200,
+  intervalo_segundos: 30,
+  pausada: false,
+  pausa_motivo: null,
+  ...extra,
+});
+
+describe("AC-008.1: várias caixas, cada uma com assinatura, teto e estado próprios", () => {
+  it("mostra cada caixa com o seu teto, o seu intervalo, a sua assinatura e o seu estado", async () => {
+    h.get.mockResolvedValue({
+      data: {
+        caixas: [
+          caixa(),
+          caixa({ id: "cx-2", endereco: "vendas@exemplo.com", teto_diario: 50, intervalo_segundos: 90, assinatura: null, pausada: true, pausa_motivo: "pausada_pela_equipe" }),
+          caixa({ id: "cx-3", endereco: "suporte@exemplo.com", pausada: true, pausa_motivo: "senha_recusada" }),
+        ],
+      },
+    });
+    montar();
+
+    const ana = (await screen.findByText("ana@exemplo.com")).closest("[data-testid='caixa-email']") as HTMLElement;
+    const vendas = screen.getByText("vendas@exemplo.com").closest("[data-testid='caixa-email']") as HTMLElement;
+    const suporte = screen.getByText("suporte@exemplo.com").closest("[data-testid='caixa-email']") as HTMLElement;
+
+    expect(within(ana).getByText("Conectada")).toBeTruthy();
+    expect(ana.textContent).toContain("Abraço da Ana");
+    expect(ana.textContent).toContain("200");
+    expect(within(vendas).getByText("Pausada")).toBeTruthy();
+    expect(vendas.textContent).toContain("50");
+    expect(vendas.textContent).toContain("90");
+    expect(within(suporte).getByText("Senha recusada")).toBeTruthy();
+  });
+});
+
+describe("AC-008.2: pausar e retomar por caixa", () => {
+  it("Pausar manda pausada:true só para aquela caixa e recarrega o estado", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa(), caixa({ id: "cx-2", endereco: "vendas@exemplo.com" })] } });
+    h.patch.mockResolvedValue({ data: {} });
+    montar();
+
+    const vendas = (await screen.findByText("vendas@exemplo.com")).closest("[data-testid='caixa-email']") as HTMLElement;
+    fireEvent.click(within(vendas).getByRole("button", { name: "Pausar" }));
+
+    await waitFor(() => expect(h.patch).toHaveBeenCalledWith("/api/v1/channels/email/cx-2", { pausada: true }));
+    expect(h.patch).toHaveBeenCalledTimes(1);
+    // depois de pausar, a lista é lida de novo (o estado mostrado vem do servidor)
+    await waitFor(() => expect(h.get.mock.calls.length).toBeGreaterThan(1));
+  });
+
+  it("caixa pausada pela equipe oferece Retomar e explica que nada se perde", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa({ pausada: true, pausa_motivo: "pausada_pela_equipe" })] } });
+    h.patch.mockResolvedValue({ data: {} });
+    montar();
+
+    await screen.findByText("ana@exemplo.com");
+    expect(document.body.textContent).toContain("as conversas ficam como estão");
+    fireEvent.click(screen.getByRole("button", { name: "Retomar" }));
+    await waitFor(() => expect(h.patch).toHaveBeenCalledWith("/api/v1/channels/email/cx-1", { pausada: false }));
+  });
+
+  it("caixa parada por senha recusada NÃO oferece Retomar: pede a senha nova", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa({ pausada: true, pausa_motivo: "senha_recusada" })] } });
+    montar();
+
+    await screen.findByText("ana@exemplo.com");
+    expect(screen.queryByRole("button", { name: "Retomar" })).toBeNull();
+    expect(document.body.textContent).toContain("senha nova");
+  });
+});
+
+describe("AC-008.1: configurar a caixa", () => {
+  it("Salvar manda só assinatura, teto e intervalo daquela caixa", async () => {
+    h.get.mockResolvedValue({ data: { caixas: [caixa()] } });
+    h.patch.mockResolvedValue({ data: {} });
+    montar();
+
+    await screen.findByText("ana@exemplo.com");
+    fireEvent.click(screen.getByRole("button", { name: "Configurar" }));
+    fireEvent.change(screen.getByLabelText("Assinatura"), { target: { value: "Até logo" } });
+    fireEvent.change(screen.getByLabelText("Limite por dia"), { target: { value: "80" } });
+    fireEvent.change(screen.getByLabelText("Intervalo entre envios (segundos)"), { target: { value: "45" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() =>
+      expect(h.patch).toHaveBeenCalledWith("/api/v1/channels/email/cx-1", {
+        assinatura: "Até logo",
+        teto_diario: 80,
+        intervalo_segundos: 45,
+      }),
+    );
   });
 });

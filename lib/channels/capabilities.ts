@@ -6,6 +6,7 @@
  * nasce de uma diferença real e medida entre WAHA e Meta Cloud; capability que
  * ninguém consome é código morto, e o teste de matriz reprova.
  */
+import { LIMITE_ANEXOS_BYTES } from "./email/limite-de-anexos";
 import type { ChannelCapabilities, ChannelProvider, ProviderDeMensagem } from "./types";
 
 export type { ChannelProvider, ChannelCapabilities, ProviderDeMensagem };
@@ -36,6 +37,10 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: true,
     iniciaConversa: true,
     iaSoComAprovacao: false,
+    mensagemDeVoz: true,
+    reciboDeLeitura: true,
+    limiteDeAnexoBytes: null,
+    reenviaFalha: false,
   },
   // Hetero-restrição: não me banem, mas a Meta me proíbe e me cobra.
   meta_cloud: {
@@ -56,6 +61,10 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: true,
     iniciaConversa: true,
     iaSoComAprovacao: false,
+    mensagemDeVoz: true,
+    reciboDeLeitura: true,
+    limiteDeAnexoBytes: null,
+    reenviaFalha: false,
   },
   // Mesma hetero-restrição do canal oficial, por baixo: é um BSP: a WABA é da
   // Meta, os templates são aprovados pela Meta e a janela de 24h é da Meta. O
@@ -96,6 +105,10 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: true,
     iniciaConversa: true,
     iaSoComAprovacao: false,
+    mensagemDeVoz: true,
+    reciboDeLeitura: true,
+    limiteDeAnexoBytes: null,
+    reenviaFalha: false,
   },
   zernio: {
     freeformOutsideWindow: false,
@@ -113,6 +126,10 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: true,
     iniciaConversa: true,
     iaSoComAprovacao: false,
+    mensagemDeVoz: true,
+    reciboDeLeitura: true,
+    limiteDeAnexoBytes: null,
+    reenviaFalha: false,
   },
   // Parceiro homologado pela Meta que espelha a Cloud API (recorte do #1130):
   // a WABA, a janela de 24h e o custo são da Meta. O parceiro muda o TRANSPORTE
@@ -139,6 +156,10 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: true,
     iniciaConversa: true,
     iaSoComAprovacao: false,
+    mensagemDeVoz: true,
+    reciboDeLeitura: true,
+    limiteDeAnexoBytes: null,
+    reenviaFalha: false,
   },
 
   // Caixa de e-mail IMAP/SMTP (mudança 005). Nem auto-restrição (não há banimento por
@@ -154,7 +175,7 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     banRisk: false,
     minIntervalMs: null,
     // Neutro e sem consumidor: não existe nota de voz em e-mail (o Composer esconde o
-    // áudio pela família de canal, na Fatia 6).
+    // gravador por `mensagemDeVoz`).
     voiceNote: "server-convert",
     groups: "none",
     costPerMessage: false,
@@ -163,6 +184,14 @@ export const CHANNEL_CAPABILITIES: Record<ProviderDeMensagem, ChannelCapabilitie
     envioEmLote: false,
     iniciaConversa: false,
     iaSoComAprovacao: true,
+    // Sem nota de voz nem recibo de leitura: o e-mail só diz "enviado". O teto de anexos é o da
+    // soma que o envio aceita (ver `email/envio.ts`), repetido aqui para a tela recusar ANTES de subir.
+    mensagemDeVoz: false,
+    reciboDeLeitura: false,
+    limiteDeAnexoBytes: LIMITE_ANEXOS_BYTES,
+    // A falha tem causa que a pessoa resolve (senha, destinatário, anexo) e o reenvio é um envio
+    // novo, que passa de novo pelo teto e pelo intervalo da caixa: não há risco de banimento.
+    reenviaFalha: true,
   },
 };
 

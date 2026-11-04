@@ -4063,6 +4063,12 @@ export const DICIONARIO: Traducoes = {
   },
   "Só acompanhar": { es: "Solo monitorear" },
   "Tentar de novo": { es: "Intentar de nuevo" },
+  "Limite do dia da caixa atingido. Esta mensagem sai amanhã, a partir das {hora}.": {
+    es: "Se alcanzó el límite del día del buzón. Este mensaje sale mañana, a partir de las {hora}.",
+  },
+  "Aguardando o intervalo entre envios da caixa. Sai por volta das {hora}.": {
+    es: "Esperando el intervalo entre envíos del buzón. Sale alrededor de las {hora}.",
+  },
   "Tipo de uso": { es: "Tipo de uso" },
   "Todos os números desta página são só deste intervalo. Mude as datas para comparar um mês com o outro.": {
     es: "Todos los números de esta página corresponden solo a este intervalo. Cambia las fechas para comparar un mes con otro.",

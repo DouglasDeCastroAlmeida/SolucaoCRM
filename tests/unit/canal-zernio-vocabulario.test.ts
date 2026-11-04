@@ -43,6 +43,12 @@ describe("capabilities do canal intermediado", () => {
       envioEmLote: true,
       iniciaConversa: true,
       iaSoComAprovacao: false,
+      // Interface do inbox (mudança 005, Fatia 6): o canal intermediado tem voz, recibos e
+      // nenhum teto próprio de anexos — como o WhatsApp.
+      mensagemDeVoz: true,
+      reciboDeLeitura: true,
+      limiteDeAnexoBytes: null,
+      reenviaFalha: false,
     });
   });
 

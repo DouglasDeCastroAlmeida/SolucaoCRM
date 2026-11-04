@@ -15,6 +15,7 @@ import { usePassagensDaConversa } from "@/hooks/inbox/usePassagensDaConversa";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useDeleteNote } from "@/hooks/inbox/useDeleteNote";
 import { useAlterarMensagem } from "@/hooks/inbox/useAlterarMensagem";
+import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { useDebugToggle } from "@/hooks/ai/useDebugToggle";
 import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 import { ROLE_RANK } from "@/lib/auth/types";
@@ -104,6 +105,9 @@ export function ChatThread({
   const canManage = activeOrg != null && ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
   const canalAlteraEnviada = transportaMensagem(provider)
     && capabilitiesOf(provider as ChannelProvider).alteraMensagemEnviada;
+  // O que o canal permite: o balão lê daqui o recibo de leitura e o reenvio de uma falha.
+  const capacidadesDoCanal = transportaMensagem(provider) ? capabilitiesOf(provider as ChannelProvider) : null;
+  const reenviar = useSendMessage();
   const { enabled: debugCitations } = useDebugToggle(activeOrg?.role ?? null);
 
   const messages: Message[] = useMemo(
@@ -427,6 +431,24 @@ export function ChatThread({
                   fuso={fuso}
                   comCauda={posicoes[idx]?.comCauda ?? true}
                   colada={posicoes[idx]?.colada ?? false}
+                  capacidades={capacidadesDoCanal}
+                  // Reenviar é um ENVIO NOVO, pelo mesmo caminho de sempre (teto, intervalo e
+                  // causa da falha valem de novo). A mensagem que falhou fica no histórico.
+                  onTentarDeNovo={() =>
+                    reenviar.mutateAsync({
+                      conversation_id: item.data.conversation_id,
+                      type: item.data.type,
+                      ...(item.data.body ? { body: item.data.body } : {}),
+                      ...(item.data.reply_to_message_id ? { reply_to_message_id: item.data.reply_to_message_id } : {}),
+                      ...(item.data.media_storage_path
+                        ? {
+                            media_storage_path: item.data.media_storage_path,
+                            media_mime: item.data.media_mime ?? undefined,
+                            media_size_bytes: item.data.media_size_bytes ?? undefined,
+                          }
+                        : {}),
+                    })
+                  }
                   onEditar={canalAlteraEnviada && item.data.sent_by_user_id === currentUser.id
                     ? (text) => editar.mutateAsync({ id: item.data.id, text }).then(() => undefined)
                     : undefined}

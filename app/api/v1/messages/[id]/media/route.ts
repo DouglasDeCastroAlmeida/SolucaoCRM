@@ -14,6 +14,7 @@ import { loadAuthUser } from "@/lib/auth/server";
 import { orgAtivaDaApi } from "@/lib/auth/require-role";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { logger } from "@/lib/logger";
+import { nomeDeArquivoLimpo } from "@/lib/messaging/media/nome-de-arquivo";
 import {
   CHANNEL_SESSION_REF_COLUMNS,
   DEFAULT_CHANNEL_PROVIDER,
@@ -33,7 +34,24 @@ interface RouteCtx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
+/**
+ * Os anexos de um e-mail recebido (`metadata.email.anexos`). O tipo e o nome vêm do REMETENTE:
+ * por isso o anexo de e-mail nunca é servido inline (ver o uso abaixo).
+ */
+function anexosDoEmail(metadata: unknown): Array<{ nome: string | null; caminho: string | null }> | null {
+  const email = (metadata as { email?: { anexos?: unknown } } | null)?.email;
+  if (!email || typeof email !== "object") return null;
+  if (!Array.isArray(email.anexos)) return [];
+  return email.anexos.map((a) => {
+    const x = (a ?? {}) as { nome?: unknown; caminho?: unknown };
+    return {
+      nome: nomeDeArquivoLimpo(x.nome),
+      caminho: typeof x.caminho === "string" && x.caminho ? x.caminho : null,
+    };
+  });
+}
+
+export async function GET(req: NextRequest, ctx: RouteCtx): Promise<Response> {
   const requestId = randomUUID();
   const { id: messageId } = await ctx.params;
   const supabase = await createClient();
@@ -90,11 +108,43 @@ export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
     );
   }
 
-  if (msg.media_storage_path) {
+  // Mensagem de e-mail: o anexo sai como DOWNLOAD (Content-Disposition: attachment), com o nome
+  // original. O Content-Type guardado é o que o remetente declarou (pode ser text/html ou
+  // image/svg+xml); inline, isso rodaria dentro do domínio do storage. `?anexo=N` escolhe um
+  // dos anexos (a coluna da mensagem guarda só o primeiro). <img> ignora o Disposition.
+  const anexosDeEmail = anexosDoEmail(msg.metadata);
+  let caminhoDaMidia: string | null = msg.media_storage_path;
+  let nomeParaBaixar: string | null = null;
+  if (anexosDeEmail) {
+    const pedido = req.nextUrl?.searchParams.get("anexo") ?? null;
+    if (pedido !== null) {
+      const indice = /^[0-9]{1,3}$/.test(pedido) ? Number(pedido) : -1;
+      const anexo = anexosDeEmail[indice];
+      // O caminho é sempre `<organização>/...`: um caminho de outra organização nunca é assinado.
+      if (!anexo?.caminho || !anexo.caminho.startsWith(`${activeOrg.orgId}/`)) {
+        return fail("not_found", t("Mensagem sem mídia."), 404, { requestId });
+      }
+      caminhoDaMidia = anexo.caminho;
+      nomeParaBaixar = anexo.nome;
+    } else {
+      nomeParaBaixar = anexosDeEmail.find((a) => a.caminho === msg.media_storage_path)?.nome ?? null;
+    }
+  }
+
+  // Vale para todo canal: o caminho persistido é sempre `<organização>/...`.
+  if (caminhoDaMidia && !caminhoDaMidia.startsWith(`${activeOrg.orgId}/`)) {
+    return fail("not_found", t("Mensagem sem mídia."), 404, { requestId });
+  }
+
+  if (caminhoDaMidia) {
     const admin = createAdminClient();
     const { data: signed, error: signErr } = await admin.storage
       .from("whatsapp-media")
-      .createSignedUrl(msg.media_storage_path, SIGNED_URL_TTL_S);
+      .createSignedUrl(
+        caminhoDaMidia,
+        SIGNED_URL_TTL_S,
+        ...(anexosDeEmail ? [{ download: nomeParaBaixar ?? "anexo" }] : []),
+      );
     if (!signErr && signed?.signedUrl) {
       const response = NextResponse.redirect(signed.signedUrl, 302);
       response.headers.set("X-Request-Id", requestId);

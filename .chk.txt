@@ -1,0 +1,4 @@
+0
+> tsx scripts/lint-channels.ts
+
+lint-channels: ok (61 arquivos de dívida conhecida, nenhum novo)

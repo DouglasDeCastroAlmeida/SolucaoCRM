@@ -125,4 +125,35 @@ export const TEXTOS_EMAIL_CANAL = {
   "Informe o endereço de e-mail do remetente.": { es: "Indica la dirección de correo del remitente." },
   "Conversa de e-mail não encontrada.": { es: "Conversación de correo no encontrada." },
   "O canal de e-mail está desligado nesta instalação.": { es: "El canal de correo está apagado en esta instalación." },
+  // Várias caixas, pausa e configuração por caixa (Fatia 6)
+  "Caixa atualizada.": { es: "Buzón actualizado." },
+  "Caixa pausada.": { es: "Buzón en pausa." },
+  "Caixa retomada.": { es: "Buzón reanudado." },
+  "Senha recusada": { es: "Contraseña rechazada" },
+  "Intervalo entre envios": { es: "Intervalo entre envíos" },
+  "Intervalo entre envios (segundos)": { es: "Intervalo entre envíos (segundos)" },
+  "Assinatura": { es: "Firma" },
+  "nenhuma": { es: "ninguna" },
+  "Senha nova (deixe vazio para manter)": { es: "Contraseña nueva (déjalo vacío para mantener)" },
+  "A leitura e o envio estão parados porque a senha foi recusada. Informe a senha nova em Configurar para voltar.": {
+    es: "La lectura y el envío están detenidos porque la contraseña fue rechazada. Indica la contraseña nueva en Configurar para volver.",
+  },
+  "A leitura e o envio estão parados e as conversas ficam como estão. Ao retomar, a caixa continua de onde parou.": {
+    es: "La lectura y el envío están detenidos y las conversaciones quedan como están. Al reanudar, el buzón continúa donde se quedó.",
+  },
+  "Retomar": { es: "Reanudar" },
+  "A senha desta caixa foi recusada. Informe a senha nova para retomar.": {
+    es: "La contraseña de este buzón fue rechazada. Indica la contraseña nueva para reanudar.",
+  },
+  // Conversa de e-mail no inbox (Fatia 6)
+  "Ver com formatação": { es: "Ver con formato" },
+  "Ocultar formatação": { es: "Ocultar formato" },
+  "E-mail com formatação": { es: "Correo con formato" },
+  "Baixar": { es: "Descargar" },
+  "não foi guardado": { es: "no se guardó" },
+  "1 anexo ficou de fora por ser grande demais.": { es: "1 adjunto quedó fuera por ser demasiado grande." },
+  "{n} anexos ficaram de fora por serem grandes demais.": { es: "{n} adjuntos quedaron fuera por ser demasiado grandes." },
+  "O anexo é grande demais para este canal: o limite é de {n} MB. Envie um arquivo menor.": {
+    es: "El adjunto es demasiado grande para este canal: el límite es de {n} MB. Envía un archivo más pequeño.",
+  },
 } as const;

@@ -25,10 +25,10 @@ import { enviarMensagemSmtp, MENSAGEM_DA_CAUSA, type CausaDaFalha, type ConfigDa
 import { lerEstado, pausar } from "./estado";
 import { fusoDaOrganizacao, registrarEnvioFeito } from "./limite";
 import { assuntoDaResposta, montarMensagemDeEmail, novoMessageId, referenciasDaResposta, type MensagemCitada } from "./resposta";
+import { LIMITE_ANEXOS_BYTES } from "./limite-de-anexos";
 import { lerSenhaDaCaixa } from "./segredo";
 
-/** Tamanho bruto máximo da soma dos anexos. Gmail e Outlook limitam a ~25 MB já codificados (base64 +33%). */
-export const LIMITE_ANEXOS_BYTES = 18 * 1024 * 1024;
+export { LIMITE_ANEXOS_BYTES };
 
 const FORMA_DE_ENDERECO = /^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/;
 

@@ -92,6 +92,27 @@ export interface ChannelCapabilities {
    * a guarda `before_send` do motor de agentes.
    */
   iaSoComAprovacao: boolean;
+  /**
+   * O canal tem nota de voz (gravar e mandar áudio)? `false` = o Composer não oferece o gravador.
+   * Consumidor: o Composer do inbox.
+   */
+  mensagemDeVoz: boolean;
+  /**
+   * O canal informa entregue/lida? `false` = a conversa só diz "enviada", e o balão não desenha
+   * o recibo de leitura. Consumidor: o MessageBubble do inbox.
+   */
+  reciboDeLeitura: boolean;
+  /**
+   * Soma máxima, em bytes, dos anexos de uma mensagem que o canal aceita; `null` = sem teto
+   * próprio (vale o do transporte). Consumidor: o Composer, que recusa antes de subir o arquivo.
+   */
+  limiteDeAnexoBytes: number | null;
+  /**
+   * Reenviar uma mensagem que FALHOU é um envio novo, seguro e que a pessoa pode pedir pelo balão?
+   * `false` = a falha fica só sinalizada (reenviar por conta própria, num canal que pune volume
+   * ou cobra por mensagem, é decisão de quem atende). Consumidor: o MessageBubble.
+   */
+  reenviaFalha: boolean;
 }
 
 /**

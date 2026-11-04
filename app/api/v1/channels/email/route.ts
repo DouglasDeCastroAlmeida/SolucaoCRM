@@ -33,6 +33,7 @@ import {
   type ConfigDaCaixaGuardada,
 } from "@/lib/channels/email/caixa";
 import { verificarCaixa } from "@/lib/channels/email/conexao";
+import { listarPausas } from "@/lib/channels/email/estado";
 import { respostaDaFalhaDeConexao, semSegredo, tentativasEsgotadas } from "@/lib/channels/email/rotas";
 import { gravarSenhaDaCaixa, ultimosQuatro } from "@/lib/channels/email/segredo";
 import { traduzirLimiteDoPlano } from "@/lib/cobranca/limites";
@@ -52,8 +53,10 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
   const authz = await requireRole("admin", { requestId, resource: "channels_email" });
   if (!authz.ok) return authz.response;
 
-  const caixas = await listarCaixas(createAdminClient(), authz.org.orgId);
-  return ok({ caixas: caixas.map(visaoPublicaDaCaixa) }, { requestId });
+  const admin = createAdminClient();
+  const caixas = await listarCaixas(admin, authz.org.orgId);
+  const pausas = await listarPausas(admin, authz.org.orgId);
+  return ok({ caixas: caixas.map((c) => visaoPublicaDaCaixa(c, pausas.get(c.id) ?? null)) }, { requestId });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
