@@ -1,0 +1,24 @@
+{
+  "passo": "base",
+  "quando": "2026-11-04T13:18:40.509Z",
+  "resultados": [
+    {
+      "id": "base.estado",
+      "descricao": "partida: teste com cartão, assinatura criada, empresa ativa",
+      "passou": true,
+      "detalhe": "estado trial"
+    },
+    {
+      "id": "01.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "01.plano.medida",
+      "descricao": "tela /app/settings/billing sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    }
+  ]
+}

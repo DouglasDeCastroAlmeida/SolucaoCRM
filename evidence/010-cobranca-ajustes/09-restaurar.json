@@ -1,0 +1,24 @@
+{
+  "passo": "restaurar",
+  "quando": "2026-11-04T13:19:23.951Z",
+  "resultados": [
+    {
+      "id": "09.linha",
+      "descricao": "a linha de cobrança voltou ao original",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "09.avisos",
+      "descricao": "avisos criados pela jornada apagados (1)",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "09.org",
+      "descricao": "a empresa está ativa",
+      "passou": true,
+      "detalhe": ""
+    }
+  ]
+}
