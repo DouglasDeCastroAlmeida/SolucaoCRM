@@ -9360,6 +9360,6 @@
   "Valor: {valor}. Se não quiser continuar, cancele em Plano e cobrança antes dessa data e nada será cobrado.": "Amount: {valor}. If you do not want to continue, cancel in Plan and billing before that date and nothing will be charged.",
   "Valor: {valor}. Se não quiser continuar, cancele em Plano e cobrança hoje e nada será cobrado.": "Amount: {valor}. If you do not want to continue, cancel in Plan and billing today and nothing will be charged.",
   "Não conseguimos cobrar o seu cartão em {data}": "We could not charge your card on {data}",
-  "Troque o cartão em Plano e cobrança para manter o acesso completo.": "Change your card in Plan and billing to keep full access.",
-  "A suspensão acontece se a cobrança não for paga até lá. Troque o cartão em Plano e cobrança para evitar.": "Suspension happens if the charge is not paid by then. Change your card in Plan and billing to avoid it."
+  "Pague pelo link da fatura para manter o acesso completo.": "Pay using the invoice link to keep full access.",
+  "A suspensão acontece se a cobrança não for paga até lá. Pague pelo link da fatura para evitar.": "Suspension happens if the charge is not paid by then. Pay using the invoice link to avoid it."
 }
