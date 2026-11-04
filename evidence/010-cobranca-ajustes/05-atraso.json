@@ -1,0 +1,54 @@
+{
+  "passo": "atraso",
+  "quando": "2026-11-04T13:16:52.619Z",
+  "resultados": [
+    {
+      "id": "05.regua",
+      "descricao": "a régua avisa que o pagamento venceu",
+      "passou": true,
+      "detalhe": "acao avisar, aviso venceu"
+    },
+    {
+      "id": "05.acesso",
+      "descricao": "a empresa segue ativa (tolerância de 3 dias)",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "05.app.medida",
+      "descricao": "tela /app/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "05.faixa",
+      "descricao": "a faixa de cobrança aparece em /app",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "05.plano.medida",
+      "descricao": "tela /app/settings/billing sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "05.com-pagar-agora",
+      "descricao": "AC-002.2: em atraso o painel MOSTRA Pagar agora",
+      "passou": true,
+      "detalhe": ""
+    },
+    {
+      "id": "05.central.medida",
+      "descricao": "tela /app/ai/inbox sem rolagem lateral e sem botão fora da janela",
+      "passou": true,
+      "detalhe": "{\"larguraDaJanela\":1100,\"larguraDoConteudo\":1100,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "05.central.tela",
+      "descricao": "o aviso aparece na Central",
+      "passou": true,
+      "detalhe": ""
+    }
+  ]
+}
