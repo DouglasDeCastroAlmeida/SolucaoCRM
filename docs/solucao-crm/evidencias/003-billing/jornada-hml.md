@@ -49,6 +49,13 @@ a faixa do teste ocupa 1100 de 1100 px.
 4. O painel do plano durante o trial com cartão mostra "Pagar agora" ao lado de "Teste grátis até 09/11/2026 · 1ª cobrança
    agendada": o botão convida a pagar antes da data (pode ser desejado, mas contradiz "você só será cobrado em DD/MM").
 
+## Tratamento dos achados 3 e 4
+
+Os achados 3 (texto "Troque o cartão" sem tela de troca) e 4 ("Pagar agora" durante o trial com cartão) foram tratados pela mudança
+010 (`.sdd/changes/010-ajustes-de-texto-e-botao-da-cobranca-no-trial-com-cartao/`): o aviso agora manda pagar pelo link da fatura e o
+painel esconde o botão enquanto a 1ª cobrança está agendada e em dia. A troca de cartão de verdade segue como mudança separada, a
+abrir antes de ligar a cobrança real. A prova pela tela da 010 ainda será feita.
+
 ## Resíduos
 
 - Banco da hml: linha de cobrança e `onboarded_at` da empresa de teste restaurados; os 6 avisos da Central criados pela jornada

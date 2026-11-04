@@ -59,7 +59,7 @@ export interface AssinaturaNaRegua {
   /**
    * Trial com cartão (mudança 003): a 1ª cobrança está agendada no provedor para `trialAte`.
    * A flag nunca é limpa: depois da 1ª cobrança paga, atrasos futuros também usam a
-   * tolerância fixa de 3 dias e o texto "Troque o cartão", ignorando a tolerância da
+   * tolerância fixa de 3 dias e o texto "Pague pelo link da fatura", ignorando a tolerância da
    * instalação. É intencional (ADR-005: "a assinatura trial_com_cartao nasce com 3").
    */
   readonly trialComCartao: boolean;

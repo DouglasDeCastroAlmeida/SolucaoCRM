@@ -1,0 +1,35 @@
+{
+  "id": "010-ajustes-de-texto-e-botao-da-cobranca-no-trial-com-cartao",
+  "title": "Ajustes de texto e botao da cobranca no trial com cartao",
+  "size": "S",
+  "stage": "implement",
+  "createdAt": "2026-11-04T09:46:21.291Z",
+  "approvals": {
+    "grill": {
+      "at": "2026-11-04T09:48:11.022Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    },
+    "tasks": {
+      "at": "2026-11-04T09:51:50.721Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false
+    }
+  },
+  "history": [
+    {
+      "stage": "grill",
+      "at": "2026-11-04T09:46:21.293Z"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-11-04T09:48:11.022Z",
+      "from": "grill"
+    },
+    {
+      "stage": "implement",
+      "at": "2026-11-04T09:51:50.721Z",
+      "from": "tasks"
+    }
+  ]
+}
