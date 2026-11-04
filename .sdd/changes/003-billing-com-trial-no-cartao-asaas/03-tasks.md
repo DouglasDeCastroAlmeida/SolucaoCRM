@@ -79,8 +79,8 @@ Cada tarefa ocupa uma linha:
 
 ### Fatia 11: Prova pela tela e liberação segura (REQ-002, REQ-010)
 - [ ] T-040 [TEST-E2E] Jornada pela tela na homologação com o sandbox: cadastro, Checkout, trial, aviso, cobrança, atraso, suspensão e reativação, com evidência em evidence/ (~60 min) {AC-010.3} deps: T-022, T-025, T-034
-- [ ] T-041 [TEST-E2E] Sonda de produção com todas as marcas desligadas: resultado igual ao de antes (~30 min) {AC-002.4, AC-010.5}
-- [ ] T-042 [DOCS] Runbook e roteiro do dono: conta Asaas de produção, dados fiscais com o contador, V-3, texto do arrependimento com advogado, como ligar a marca (~40 min) deps: T-040
+- [x] T-041 [TEST-E2E] Sonda de produção com todas as marcas desligadas: resultado igual ao de antes (~30 min) {AC-002.4, AC-010.5}
+- [x] T-042 [DOCS] Runbook e roteiro do dono: conta Asaas de produção, dados fiscais com o contador, V-3, texto do arrependimento com advogado, como ligar a marca (~40 min) deps: T-040
 - [ ] T-043 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com o sandbox (~30 min) deps: T-040
 - [ ] T-044 [CHECK-SMOKE] Implantar em produção com todas as marcas desligadas e rodar a sonda (~30 min) deps: T-043, T-041
 - [ ] T-045 [REFACTOR] Limpeza com testes verdes e marcação de brand_plans como supersedida (~25 min) PORTÃO DE RELEASE: nenhuma marca liga a cobrança em produção antes de a hml provar, com pagamento real no sandbox pela nossa rota, que a assinatura é achada pelo checkoutSession (o externalReference NÃO é propagado, provado em 2/11/2026; ADR-007) e que a conta é reativada com UMA assinatura (o ligar-cobrança não consegue checar isso; ver evidencias/003-billing/README.md) deps: T-044
