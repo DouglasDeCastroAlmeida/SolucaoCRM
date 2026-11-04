@@ -103,4 +103,19 @@ export const TEXTOS_EMAIL_CANAL = {
   "Não foi possível concluir a conexão e não identificamos a causa. Confira os dados e tente de novo.": {
     es: "No fue posible completar la conexión y no identificamos la causa. Revisa los datos e inténtalo de nuevo.",
   },
+  "primeira mensagem recebida por e-mail": { es: "primer mensaje recibido por correo" },
+  // Aviso de senha recusada (Central e e-mail aos administradores) e lista de ignorados
+  "A senha da caixa de e-mail foi recusada": { es: "La contraseña del buzón de correo fue rechazada" },
+  "O servidor recusou a senha da caixa": { es: "El servidor rechazó la contraseña del buzón" },
+  "Pausamos a leitura e o envio dessa caixa para não bloquear a sua conta. Em Conexões, atualize a senha para retomar de onde parou.": {
+    es: "Pausamos la lectura y el envío de ese buzón para no bloquear tu cuenta. En Conexiones, actualiza la contraseña para retomar donde se quedó.",
+  },
+  "Lista de e-mails ignorados não encontrada.": { es: "Lista de correos ignorados no encontrada." },
+  "E-mail ignorado não encontrado.": { es: "Correo ignorado no encontrado." },
+  "Não foi possível ler esse e-mail agora. Tente de novo em alguns minutos.": {
+    es: "No fue posible leer ese correo ahora. Inténtalo de nuevo en unos minutos.",
+  },
+  "Informe o endereço de e-mail do remetente.": { es: "Indica la dirección de correo del remitente." },
+  "Conversa de e-mail não encontrada.": { es: "Conversación de correo no encontrada." },
+  "O canal de e-mail está desligado nesta instalação.": { es: "El canal de correo está apagado en esta instalación." },
 } as const;

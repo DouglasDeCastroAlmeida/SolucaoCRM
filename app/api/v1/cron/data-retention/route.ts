@@ -54,6 +54,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { autorizaCron } from "@/lib/auth/cron-auth";
 import { env } from "@/lib/env";
+import { RETENCAO_DOS_IGNORADOS_DIAS } from "@/lib/channels/email/retencao";
 import { logger } from "@/lib/logger";
 import {
   RETENCAO_AUDITORIA_DIAS_PADRAO,
@@ -150,6 +151,10 @@ export interface ResultadoDaRetencao {
   lotes_rascunhos: number;
   rascunhos_tem_resto: boolean;
   retencao_rascunho_dias: number;
+  /** O cabeçalho de e-mail ignorado vencido (canal de e-mail, mudança 005): remetente e assunto de terceiros, 30 dias. */
+  email_ignorados_apagados?: number;
+  lotes_email_ignorados?: number;
+  email_ignorados_tem_resto?: boolean;
   /** O candidato ao golden set vencido — rótulo, sem texto de cliente (0428). */
   candidatos_do_golden_apagados: number;
   lotes_candidatos_do_golden: number;
@@ -264,6 +269,15 @@ export interface PodaDb {
     vencidosAntesDe: string,
     lote: number,
   ): Promise<{ data: number | null; error: { message: string } | null }>;
+  /**
+   * A poda dos e-mails ignorados (canal de e-mail, mudança 005): só cabeçalho, 30 dias. DELETE do
+   * admin client em lote, sem função de expurgo (o corte nasce em TypeScript, como o rascunho).
+   * OPCIONAL: uma implementação que não a traz simplesmente não poda — nunca derruba as irmãs.
+   */
+  apagarEmailIgnorados?(
+    vencidosAntesDe: string,
+    lote: number,
+  ): Promise<{ data: number | null; error: { message: string } | null }>;
 }
 
 /**
@@ -353,6 +367,28 @@ async function drenarRascunhos(
         lotes,
         temResto: false,
       });
+    }
+    const n = data ?? 0;
+    lotes += 1;
+    apagadas += n;
+    if (n < TAMANHO_DO_LOTE) return { apagadas, lotes, temResto: false };
+  }
+  return { apagadas, lotes, temResto: true };
+}
+
+/** Poda dos e-mails ignorados: mesmo laço do rascunho, corte por `created_at`. */
+async function drenarEmailIgnorados(
+  db: PodaDb,
+  dias: number,
+): Promise<{ apagadas: number; lotes: number; temResto: boolean }> {
+  if (!db.apagarEmailIgnorados) return { apagadas: 0, lotes: 0, temResto: false };
+  const corte = new Date(Date.now() - dias * 86_400_000).toISOString();
+  let apagadas = 0;
+  let lotes = 0;
+  for (let i = 0; i < MAX_LOTES; i += 1) {
+    const { data, error } = await db.apagarEmailIgnorados(corte, TAMANHO_DO_LOTE);
+    if (error) {
+      throw new DrenoInterrompido(`email_ignorados: ${error.message}`, { apagadas, lotes, temResto: false });
     }
     const n = data ?? 0;
     lotes += 1;
@@ -631,6 +667,8 @@ export async function podarHistorico(
   const telemetriaDrenada = await executarDreno(falhas, "fn_expurgar_telemetria_de_ia_vencida", () => drenar(db, "fn_expurgar_telemetria_de_ia_vencida", telemetriaDeIa.dias), zerado);
   const ritmoDrenado = await executarDreno(falhas, "fn_expurgar_ritmo_de_envio_vencido", () => drenar(db, "fn_expurgar_ritmo_de_envio_vencido", ritmoDeEnvio.dias), zerado);
   const copiasDrenadas = await executarDreno(falhas, "fn_expurgar_copias_enviadas_vencidas", () => drenar(db, "fn_expurgar_copias_enviadas_vencidas", copiasEnviadas.dias), zerado);
+  // Décima sétima poda: os e-mails ignorados (canal de e-mail). Só cabeçalho, 30 dias fixos (RETENCAO_DOS_IGNORADOS_DIAS).
+  const emailIgnoradosDrenados = await executarDreno(falhas, "email_ignorados", () => drenarEmailIgnorados(db, RETENCAO_DOS_IGNORADOS_DIAS), zerado);
   const checkpointsDrenados = await executarDreno(falhas, "fn_expurgar_checkpoints_superados", () => drenar(db, "fn_expurgar_checkpoints_superados", checkpoints.dias), zerado);
 
   return {
@@ -664,6 +702,9 @@ export async function podarHistorico(
     rascunhos_apagados: rascunhosDrenados.apagadas,
     lotes_rascunhos: rascunhosDrenados.lotes,
     rascunhos_tem_resto: rascunhosDrenados.temResto,
+    email_ignorados_apagados: emailIgnoradosDrenados.apagadas,
+    lotes_email_ignorados: emailIgnoradosDrenados.lotes,
+    email_ignorados_tem_resto: emailIgnoradosDrenados.temResto,
     candidatos_do_golden_tem_resto: candidatosDrenados.temResto,
     midia_enfileirada: midiaDrenada.enfileirada,
     midia_expurgada: midiaDrenada.expurgada,
@@ -774,7 +815,9 @@ export function houveEfeito(resultado: ResultadoDaRetencao): boolean {
     resultado.telemetria_de_ia_apagada > 0 ||
     resultado.ritmo_de_envio_apagado > 0 ||
     resultado.copias_enviadas_apagadas > 0 ||
-    resultado.checkpoints_apagados > 0
+    resultado.checkpoints_apagados > 0 ||
+    // Os e-mails ignorados vencidos (canal de e-mail): apagou linha de terceiros, deixa trilha.
+    (resultado.email_ignorados_apagados ?? 0) > 0
   );
 }
 
@@ -818,6 +861,16 @@ async function handle(req: NextRequest): Promise<Response> {
       // retorno é JSONB (`{vencidas, orfas, expurgadas}`), por isso um método
       // próprio em vez de mais uma entrada na união do `rpc` — ver a JSDoc de
       // `PodaDb.enfileirarMidia`.
+      async apagarEmailIgnorados(vencidosAntesDe, lote) {
+        const { data, error } = await admin
+          .from("email_ignorados")
+          .delete()
+          .lt("created_at", vencidosAntesDe)
+          .select("id")
+          .order("id")
+          .limit(lote);
+        return { data: Array.isArray(data) ? data.length : null, error };
+      },
       async enfileirarMidia(lote) {
         const { data, error } = await admin.rpc("fn_enfileirar_midia_vencida" as never, {
           p_limite: lote,

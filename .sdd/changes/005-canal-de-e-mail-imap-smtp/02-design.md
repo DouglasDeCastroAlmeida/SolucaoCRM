@@ -178,6 +178,14 @@ Pendência de LGPD e retenção (T-027): a poda de `email_ignorados` no `data-re
 - O diff do `pnpm-lock.yaml` só acrescenta (326 linhas inseridas, 0 removidas) e `pnpm install --frozen-lockfile --ignore-scripts` fecha sem alteração.
 - Consequências: `sanitize-html` (ADR-006) entra na Fatia 4, com o parser. Risco aberto: o empacotamento `standalone` do Next com essas bibliotecas (carregamento dinâmico do `pino`) só é provado pelo `pnpm build` do CI e pela implantação na homologação.
 
+### ADR-008: Dependências novas da Fatia 4 e decisões da leitura (registrado em 2026-11-04)
+- Contexto: o ADR-006 previa o sanitizador de HTML; a leitura precisa de tipos para o parser e de uma forma de ler a caixa sem laço no worker.
+- Decisão: `sanitize-html@2.17.7` (publicada em 2026-08-13, MIT; a 2.18.1 tem 21 dias e não foi escolhida por maturidade), `@types/sanitize-html@2.16.2` e `@types/mailparser@3.9.0` (só de desenvolvimento, MIT), todas sem prefixo (`--save-exact`) e instaladas com `--ignore-scripts`. O `sanitize-html` traz `htmlparser2`, `postcss` e `parse-srcset` (MIT). Lista de tags de texto, sem `<img>`, estilo, classe ou evento; link só com http, https ou mailto, sempre `noopener`.
+- Decisão: a rodada lê por `rodarRodada` (cron `email-rodada`, 1 min), com o rodízio feito sobre `email_sync_estado.ultima_rodada_em`. O cursor avança DEPOIS de cada mensagem; falha de rede ou banco para a caixa ali e a próxima rodada retoma, com recuo de 1, 2, 4, 8, 16 e 30 min conforme `falhas_seguidas`. Senha recusada pausa a caixa (`pausa_motivo`) e abre o aviso na Central e o e-mail aos administradores; nenhum login novo até a senha ser trocada (o PATCH da senha retoma).
+- Decisão: "não é cliente" arquiva as conversas de e-mail do contato (`status = archived`, nada é apagado) e vale para a organização inteira; vence até contato conhecido. Os ignorados guardam só cabeçalho e vencem em 30 dias (`email_ignorados` no cron `data-retention`, método opcional do `PodaDb`).
+- Decisão: anexos vão para o bucket `whatsapp-media` (`{org}/{conversa}/{mensagem}-{n}.{ext}`); só o primeiro vira `media_storage_path`. Os demais ficam em `metadata.email.anexos[].caminho`.
+- Risco aberto: o redact de LGPD (`redact-cascade`) só remove `media_storage_path`, então anexos além do primeiro e o conteúdo de `email_ignorados` ainda não entram na cascata de anonimização (pendência já listada para a Fatia 6/T-027 de LGPD).
+
 ## Riscos e casos extremos
 
 - **V-6 (senha de app):** a sonda é a primeira tarefa; falhou ⇒ volta ao design (outros provedores ou auditoria do Gmail).
