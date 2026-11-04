@@ -1,5 +1,12 @@
 /** Textos do canal de e-mail (mudança 005): assistente de conexão, aba de Conexões e respostas da API. */
 export const TEXTOS_EMAIL_CANAL = {
+  // Respostas da API para canal que só responde a quem escreveu
+  "Este canal só responde a quem escreveu: não dá para usá-lo em campanhas.": {
+    es: "Este canal solo responde a quien escribió: no se puede usar en campañas.",
+  },
+  "Este canal só responde a quem escreveu: não dá para iniciar uma conversa nova por ele.": {
+    es: "Este canal solo responde a quien escribió: no se puede iniciar una conversación nueva por él.",
+  },
   // Aba e lista de caixas
   "Conectar outra caixa": { es: "Conectar otro buzón" },
   "Limite por dia": { es: "Límite por día" },

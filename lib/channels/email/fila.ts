@@ -14,6 +14,13 @@
  * morre no meio, a linha fica `sending` e o cron `recover-stuck-messages` a marca `failed`
  * (reenviar às cegas seria pior que não enviar).
  *
+ * ─── Resposta aprovada (`approvedReply`) NÃO passa por aqui, e de propósito ──
+ * Ela é enviada pelo agente (ator `ai_agent`, `sent_via` ≠ 'user'), então o filtro acima a
+ * exclui. Adiada por teto/intervalo, o handler só marca a linha `queued` (o recibo e o
+ * `prepareApprovedReply` rodam apenas no ramo de envio direto, depois da admissão, logo nada
+ * fica pendente) e `lib/agent-engine/agent/approved-reply.ts` devolve o job à fila
+ * (`settle("queued")`); o reenvio volta pelo handler e cumpre prepare/recibo ali.
+ *
  * Cada envio passa pelas MESMAS travas do handler (`decidirAdmissao`): bateu o teto, para e
  * avisa a Central; dentro do intervalo, para e deixa o resto para a rodada seguinte.
  * Toda consulta leva `organization_id` à mão (client de service role).
