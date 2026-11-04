@@ -119,6 +119,11 @@ const TABELAS_NA_CASCATA = [
   // `lgpd-cascata-alcanca-quem-guarda-pessoa.test.ts` (FK para `contacts` +
   // coluna de nome-de-PII), e nulificar não perde nada operacional.
   "channel_session_groups",
+  // 0728 — o canal de e-mail guarda o ENDEREÇO de quem escreveu sem `contact_id`: o cabeçalho
+  // do que não virou conversa (remetente, assunto) e a lista "não é cliente". A ponte é o
+  // e-mail do contato, lido antes de o passo 1 zerá-lo; sempre filtra a organização.
+  "email_ignorados",
+  "email_remetentes_ignorados",
 ] as const;
 
 /**
