@@ -52,6 +52,7 @@ function linhas(tabela: string, org: string, filtro: string): number {
 }
 
 let retorno: string;
+let antes: string;
 
 beforeAll(() => {
   sql(`
@@ -117,6 +118,9 @@ beforeAll(() => {
     on conflict (id) do nothing;
   `);
 
+  antes = valor(
+    `select coalesce(string_agg(m.id || ' org=' || m.organization_id || ' conv=' || m.conversation_id || ' tipo=' || jsonb_typeof(m.metadata -> 'email' -> 'anexos') || ' n=' || coalesce(jsonb_array_length(m.metadata -> 'email' -> 'anexos'), -1), ' ; '), '(sem mensagens)') from public.messages m where m.id = '${MSG_A}';`,
+  );
   retorno = valor(`select public.fn_lgpd_cascade_redact_contact('${ORG_A}', '${ALVO}', '${PEDIDO}')::text;`);
 });
 
@@ -152,7 +156,7 @@ describe("AC-009.2: anonimizar o contato alcança o canal de e-mail", () => {
     const fila = valor(
       `select coalesce(string_agg(bucket || ':' || object_path || ':' || status, ' | '), '(vazia)') from public.storage_redaction_queue where organization_id = '${ORG_A}';`,
     );
-    const diag = `fila da A: ${fila} | retorno: ${retorno}`;
+    const diag = `fila da A: ${fila} | antes: ${antes} | retorno: ${retorno}`;
     expect(naFila(ANEXO_1), diag).toBe(1);
     expect(naFila(ANEXO_2), diag).toBe(1);
     expect(naFila(ANEXO_3), diag).toBe(1);
