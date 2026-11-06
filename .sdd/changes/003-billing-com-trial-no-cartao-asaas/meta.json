@@ -2,7 +2,7 @@
   "id": "003-billing-com-trial-no-cartao-asaas",
   "title": "Billing com trial no cartão (Asaas)",
   "size": "L",
-  "stage": "implement",
+  "stage": "verify",
   "createdAt": "2026-10-27T10:38:38.164Z",
   "approvals": {
     "grill": {
@@ -27,6 +27,12 @@
       "at": "2026-10-30T17:11:40.010Z",
       "by": "DouglasDeCastroAlmeida",
       "forced": false
+    },
+    "implement": {
+      "at": "2026-11-06T20:17:30.575Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "implement concluido; jornada final na hml e sonda de producao ok"
     }
   },
   "history": [
@@ -53,6 +59,11 @@
       "stage": "implement",
       "at": "2026-10-30T17:11:40.010Z",
       "from": "tasks"
+    },
+    {
+      "stage": "verify",
+      "at": "2026-11-06T20:17:30.575Z",
+      "from": "implement"
     }
   ]
 }
