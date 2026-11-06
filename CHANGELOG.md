@@ -6,13 +6,13 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual está atualizando antes de rodar `bash update.sh`**. Mudanças que exigem ação manual aparecem sob **⚠️ Requer atenção**.
 
-## 2026-11-06 — Canal de e-mail (IMAP/SMTP) (`005-canal-de-e-mail-imap-smtp`)
+## [Não lançado]
+
+### Canal de e-mail (IMAP/SMTP) — 2026-11-06 (`005-canal-de-e-mail-imap-smtp`)
 
 - Porte: L
 - Specs vivas atualizadas: canal-de-email
 - Histórico: `.sdd/archive/2026-11-06-005-canal-de-e-mail-imap-smtp/`
-
-## [Não lançado]
 
 
 ## [1.90.0] — 2026-10-29

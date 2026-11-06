@@ -55,7 +55,7 @@ describe("todo canal criado pela interface nasce em pré-go-live", () => {
     const spec = readFileSync(resolve(RAIZ, "docs/specs/pre-go-live-whatsapp.md"), "utf8");
     expect(spec).toContain("nasce aberta de propósito");
     const design = readFileSync(
-      resolve(RAIZ, ".sdd/changes/005-canal-de-e-mail-imap-smtp/02-design.md"),
+      resolve(RAIZ, ".sdd/archive/2026-11-06-005-canal-de-e-mail-imap-smtp/02-design.md"),
       "utf8",
     );
     expect(design).toContain("ADR-009");
