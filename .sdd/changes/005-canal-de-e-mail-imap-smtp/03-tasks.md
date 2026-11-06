@@ -86,7 +86,7 @@ Cada tarefa ocupa uma linha:
 - [ ] T-043 [IMPL] Entradas do dicionário com a chave en/es e ajustes até a varredura de marca passar (~30 min) {AC-009.5} deps: T-042, T-018, T-037
 - [ ] T-044 [TEST-E2E] Jornada pela tela na homologação com servidor de e-mail real: conectar, receber, ignorar, responder, pausar, senha recusada (~60 min) {AC-009.3} deps: T-039, T-033, T-041
 - [ ] T-045 [TEST-E2E] Sonda de produção sem nenhuma caixa conectada: resultado igual ao de antes e nenhuma conexão de e-mail feita pelo worker (~30 min) {AC-009.4}
-- [ ] T-046 [DOCS] Runbook e roteiro do dono: criar a senha de app do Gmail, outros provedores, limites, o que fazer se a senha for recusada (~40 min) deps: T-044
+- [x] T-046 [DOCS] Runbook e roteiro do dono: criar a senha de app do Gmail, outros provedores, limites, o que fazer se a senha for recusada (~40 min) deps: T-044 <!-- conferido pelo dono do produto com uma caixa real do Gmail (relato dele, 05/11/2026); sem evidência anexada, a prova da tela do Google é a palavra do dono -->
 - [ ] T-047 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com servidor de e-mail real (~30 min) deps: T-044
 - [ ] T-048 [CHECK-SMOKE] Implantar em produção sem caixas conectadas e rodar a sonda (~30 min) deps: T-047, T-045
 - [ ] T-049 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-048
