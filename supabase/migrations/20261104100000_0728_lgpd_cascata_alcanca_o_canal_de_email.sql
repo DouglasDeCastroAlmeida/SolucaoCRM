@@ -82,6 +82,28 @@ begin
           where contact_id = p_contact_id and organization_id = p_organization_id
       );
 
+  -- 0b. anexos de e-mail (migration 0728), lidos ANTES de qualquer passo irreversível (um gatilho
+  -- do passo 1 pode mexer em `messages`): a mensagem de e-mail pode ter VÁRIOS anexos guardados,
+  -- e só o primeiro tem ponteiro em `media_storage_path` (o passo 7 só enfileira esse). Os
+  -- caminhos de TODOS vivem em `metadata.email.anexos[].caminho`, que o passo 3 zera: vão para
+  -- a fila ANTES, ou o arquivo do 2º anexo em diante fica órfão no bucket sem ninguém que o ache.
+  insert into storage_redaction_queue (organization_id, request_id, bucket, object_path)
+  select p_organization_id, p_request_id, 'whatsapp-media', anexo ->> 'caminho'
+    from messages m
+   cross join lateral jsonb_array_elements(
+     case when jsonb_typeof(m.metadata -> 'email' -> 'anexos') = 'array'
+          then m.metadata -> 'email' -> 'anexos' else '[]'::jsonb end
+   ) as anexo
+   where m.organization_id = p_organization_id
+     and m.conversation_id in (
+       select id from conversations
+        where contact_id = p_contact_id and organization_id = p_organization_id
+     )
+     and length(coalesce(anexo ->> 'caminho', '')) > 0
+     -- só arquivo DESTA organização: o expurgo nunca alcança o de outra
+     and (anexo ->> 'caminho') like p_organization_id::text || '/%'
+  on conflict (bucket, object_path) do nothing;
+
   -- 1. contacts (irreversible)
   update contacts set
     name = v_anon_label,
@@ -110,27 +132,6 @@ begin
   where contact_id = p_contact_id and organization_id = p_organization_id;
   get diagnostics v_count = row_count;
   v_counts := v_counts || jsonb_build_object('conversations', v_count);
-
-  -- 2b. anexos de e-mail (migration 0728): a mensagem de e-mail pode ter VÁRIOS anexos guardados,
-  -- e só o primeiro tem ponteiro em `media_storage_path` (o passo 7 só enfileira esse). Os
-  -- caminhos de TODOS vivem em `metadata.email.anexos[].caminho`, que o passo 3 zera: vão para
-  -- a fila ANTES, ou o arquivo do 2º anexo em diante fica órfão no bucket sem ninguém que o ache.
-  insert into storage_redaction_queue (organization_id, request_id, bucket, object_path)
-  select p_organization_id, p_request_id, 'whatsapp-media', anexo ->> 'caminho'
-    from messages m
-   cross join lateral jsonb_array_elements(
-     case when jsonb_typeof(m.metadata -> 'email' -> 'anexos') = 'array'
-          then m.metadata -> 'email' -> 'anexos' else '[]'::jsonb end
-   ) as anexo
-   where m.organization_id = p_organization_id
-     and m.conversation_id in (
-       select id from conversations
-        where contact_id = p_contact_id and organization_id = p_organization_id
-     )
-     and length(coalesce(anexo ->> 'caminho', '')) > 0
-     -- só arquivo DESTA organização: o expurgo nunca alcança o de outra
-     and (anexo ->> 'caminho') like p_organization_id::text || '/%'
-  on conflict (bucket, object_path) do nothing;
 
   -- 3. messages: redact body + null media + strip metadata (preserve status/timestamps/conversation_id)
   update messages set
