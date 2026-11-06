@@ -55,3 +55,60 @@ A jornada de ponta a ponta funciona na hml com servidor real: conectar, receber 
 - Resíduos que o produto não apaga: 2 conversas de e-mail, 10 mensagens (duas respostas `queued` que nunca serão enviadas), 2 contatos, linhas de auditoria e avisos da Central (`email_teto_atingido` e outros da hml). Anexos recebidos podem estar no Storage.
 - `onboarded_at` da organização voltou ao valor original (`null`).
 - No servidor de e-mail de teste ficaram as mensagens da sonda nas duas caixas.
+
+---
+
+# Rodada 2 (após a Fatia 7)
+
+Data: 05/11/2026. Ambiente: o mesmo da rodada 1 (`https://marca-a.corretora.io`, organização `[teste-003] Empresa Exemplo`). `/api/v1/health` devolve `version 9bbf7a4` (main com a Fatia 7); `/` responde 200 e `/app` responde 307.
+
+## Resultado em uma linha
+
+**A rodada 2 NÃO foi concluída.** Só o passo 0 (base) rodou inteiro. O passo Conectar foi medido em parte (as telas e dois erros), e a partir daí o servidor de e-mail de teste da VPS passou a recusar as conexões vindas da hml, de modo que nenhum passo que precise de uma caixa conectada pôde rodar. Nada foi provado na hml sobre a lista de ignorados, "Não é cliente", "Remover caixa" e o celular. O script foi atualizado para isso, mas essas partes dele **nunca foram executadas** (só checagem de sintaxe).
+
+## O que aconteceu
+
+1. O passo Conectar rodou três vezes. Na 1ª, a tela mostrou os erros novos corretamente (abaixo). Logo depois, o Testar com a senha certa deixou de dar "Deu certo".
+2. Diagnóstico (só leitura, sem tocar na VPS): a rota `POST /api/v1/channels/email/testar` da hml responde 422 com `causa: desconhecida, etapa: leitura` para as **duas** caixas de teste, com a senha certa. Controle: o mesmo Testar para `imap.gmail.com` com senha inventada devolve `senha_recusada` (a hml alcança a internet), e o login IMAP direto, do computador de quem testa, com a senha certa funciona. Conclusão provável: o servidor de e-mail de teste deixou de aceitar a hml. A causa não foi vista (pode ser bloqueio depois de senha errada; não confirmado, porque a VPS é proibida).
+3. Esperei 5 tentativas com 90 s de pausa e depois cerca de 1 hora com uma sondagem a cada 3 minutos; o resultado não mudou. Pela regra da tarefa é problema de ambiente, não defeito do produto, e não foi forçado.
+4. A organização de teste ficou como estava: sem caixa ativa (a caixa arquivada da rodada 1 segue arquivada), `onboarded_at` voltou a `null`, nenhuma senha no repositório.
+
+## Tabela
+
+| # | Passo (AC) | Resultado | Evidência |
+|---|---|---|---|
+| 0 | Hml na versão 9bbf7a4, `/` 200 e `/app` 307, sem caixa ATIVA (sobra a arquivada da rodada 1, com 2 conversas), e-mail ANTIGO deixado no servidor | PASSOU | [01-base.json](evidence/005-email/jornada-hml-2/01-base.json) |
+| 1 | Conectar (AC-001.*): aba E-mail com assistente, Gmail com 3 passos, Conectar travado até o Testar, sem rolagem lateral em 1280 px | PASSOU nas telas; **não concluído** (Testar/Conectar reais bloqueados pelo ambiente) | [02-conectar-parcial.json](evidence/005-email/jornada-hml-2/02-conectar-parcial.json) |
+| 1b | Erro do Testar (achado 4 da rodada 1): senha errada e servidor inválido mostram aviso de erro, **sem** "Deu certo", em português simples | PASSOU (2 de 2 casos no Testar) | idem |
+| 1c | Erro do **Conectar** (a falha que antes deixava o "Deu certo" verde) | NÃO MEDIDO (depende de um Testar bem-sucedido; o script está pronto, no passo `erros`) | |
+| 2 | Receber (AC-002.*, 004.*, 008.5) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 3 | Ignorar: lista na tela, "Abrir como conversa", "Não é cliente" com confirmação e arquivamento (AC-003.*) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 4 | Responder (AC-004.*) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 5 | Pausar/retomar (AC-008.*) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 6 | Senha recusada pelo Configurar (AC-001.4) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 7 | Teto diário e fila (AC-005.*) | NÃO EXECUTADO (bloqueio de ambiente) | |
+| 8 | Celular 375x812: aba E-mail, lista de ignorados, cartão da caixa | NÃO EXECUTADO (precisa de caixa e de itens ignorados) | |
+| 9 | Remover caixa pela tela, senha some, conversas ficam, reconectar o mesmo endereço | NÃO EXECUTADO (precisa de caixa conectada) | |
+
+## Frases de erro vistas na tela (passo 1b)
+
+- Senha errada (servidor respondendo): "O servidor recusou o usuário ou a senha. Confira os dois e tente de novo. Em provedores como o Gmail, use a senha de app, não a senha normal da conta."
+- Servidor inexistente: "Não encontramos esse servidor. Confira o endereço do servidor (por exemplo, imap.seudominio.com) e tente de novo."
+- Servidor de e-mail inalcançável pela hml (estado em que a rodada travou): "Não foi possível concluir a conexão e não identificamos a causa. Confira os dados e tente de novo." É honesta, mas não ajuda quem erra.
+
+## Achados novos
+
+Nenhum defeito do produto foi provado nesta rodada. Uma observação, não confirmada: quando o servidor de e-mail recusa a conexão por um motivo que o imapflow não nomeia, a tela cai na causa `desconhecida`. Não dá para dizer se falta mapeamento (por exemplo, conexão fechada pelo servidor) sem ver o erro cru no log da hml, o que a tarefa não permite.
+
+## O que continua não medido (e por quê)
+
+- Tudo marcado NÃO EXECUTADO/NÃO MEDIDO na tabela: bloqueio de ambiente. Para retomar: liberar a hml no servidor de teste (ou esperar o desbloqueio) e rodar, na ordem, `base, conectar, receber, ignorar, responder, pausar, senha, teto, celular, limpar, erros`. O `erros` vai por último de propósito, porque senhas erradas parecem ser o gatilho do bloqueio.
+- Por decisão da tarefa (igual à rodada 1): aviso na Central por senha recusada pela rodada (exigiria trocar a senha no servidor de teste), virada do dia, `EMAIL_CANAL=desligado` (exige mudar a variável na VPS; já tem teste automatizado) e segundo provedor real (Gmail/Outlook: o dono fará pela tela dele).
+
+## O que mudou no script (`scripts/sondas/jornada-email-hml.mjs`) e NÃO foi executado
+
+- Passo `ignorar`: usa a seção "E-mails que não viraram conversa" da aba E-mail (remetente, assunto, data, motivo), "Abrir como conversa" e "Não é cliente" (com confirmação, arquivamento da conversa e e-mail seguinte ignorado) pela tela, com remetentes novos por rodada. A API ficou só como diagnóstico dos campos.
+- Passo `limpar`: "Remover caixa" pela tela (cancelar, depois confirmar), confere senha apagada, caixa arquivada e conversas mantidas; reconecta o mesmo endereço, confere que a linha volta com as conversas; remove de novo e devolve `onboarded_at`.
+- Passos novos `celular` (375x812: sem rolagem lateral, botões >= 44 px, fonte >= 12 px, diálogos e assistente) e `erros` (erro no Conectar, com a senha trocada no corpo da requisição; senha errada e servidor inválido no Testar).
+- Ajustes para a organização já ter conversas da rodada 1 (casar pela etiqueta da rodada; não contar fila e avisos antigos).
+- Esses trechos podem ter erros de seletor que só aparecem ao rodar.

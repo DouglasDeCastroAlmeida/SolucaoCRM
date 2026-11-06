@@ -1,0 +1,31 @@
+{
+  "passo": "base",
+  "quando": "2026-11-06T01:35:58.049Z",
+  "resultados": [
+    {
+      "id": "01.versao",
+      "descricao": "a hml roda o commit 9bbf7a4 (Fatia 7 implantada)",
+      "resultado": "PASSOU",
+      "detalhe": "version 9bbf7a4"
+    },
+    {
+      "id": "01.rotas",
+      "descricao": "/ responde 200 e /app responde 307",
+      "resultado": "PASSOU",
+      "detalhe": "200/307"
+    },
+    {
+      "id": "01.sem-caixa",
+      "descricao": "a organização de teste parte sem caixa de e-mail ATIVA",
+      "resultado": "PASSOU",
+      "detalhe": "0 ativa(s), 1 arquivada(s)"
+    },
+    {
+      "id": "01.antigo",
+      "descricao": "o e-mail ANTIGO está na caixa do servidor antes da conexão",
+      "resultado": "PASSOU",
+      "detalhe": "assunto marcado T044-mw4az63p"
+    }
+  ],
+  "achados": []
+}
