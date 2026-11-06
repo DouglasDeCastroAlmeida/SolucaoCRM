@@ -1,0 +1,31 @@
+{
+  "passo": "base",
+  "quando": "2026-11-04T19:27:58.560Z",
+  "resultados": [
+    {
+      "id": "01.versao",
+      "descricao": "a hml roda o commit c9144c8 (o desta branch)",
+      "resultado": "PASSOU",
+      "detalhe": "version c9144c8"
+    },
+    {
+      "id": "01.rotas",
+      "descricao": "/ responde 200 e /app responde 307",
+      "resultado": "PASSOU",
+      "detalhe": "200/307"
+    },
+    {
+      "id": "01.sem-caixa",
+      "descricao": "a organização de teste parte sem caixa de e-mail",
+      "resultado": "PASSOU",
+      "detalhe": "0 caixa(s)"
+    },
+    {
+      "id": "01.antigo",
+      "descricao": "o e-mail ANTIGO está na caixa do servidor antes da conexão",
+      "resultado": "PASSOU",
+      "detalhe": "assunto marcado T044-mw2ie92j"
+    }
+  ],
+  "achados": []
+}

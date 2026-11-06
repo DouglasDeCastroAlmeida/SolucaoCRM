@@ -1,0 +1,37 @@
+{
+  "passo": "limpar",
+  "quando": "2026-11-04T20:19:03.018Z",
+  "resultados": [
+    {
+      "id": "09.ui-remover",
+      "descricao": "o cartão da caixa oferece remover/desconectar pela tela",
+      "resultado": "FALHOU",
+      "detalhe": "botões: Pausar, Configurar"
+    },
+    {
+      "id": "09.excluir",
+      "descricao": "(API do produto, sem tela) DELETE /channel-sessions da caixa de teste",
+      "resultado": "PASSOU",
+      "detalhe": "status 200 {\"data\":{\"id\":\"7a1b9ff0-ca05-49db-b395-5e0deea46ef7\",\"archived\":true,\"impact\":{\"outcome\":\"archive\",\"history\":{\"conversations\":2,\"messages\":10,\"agent_versions\":0,\"voice_calls\":0},\"configuration\":{\"ai_routers\":0,\"channel_knobs\":0,\"before_send_traces\":0}}}}"
+    },
+    {
+      "id": "09.sem-caixa",
+      "descricao": "a organização ficou sem caixa de e-mail ativa",
+      "resultado": "PASSOU",
+      "detalhe": "STOPPED"
+    },
+    {
+      "id": "09.aba-apos-limpar.medida",
+      "descricao": "tela \"aba-apos-limpar\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "09.residuos",
+      "descricao": "resíduos (conversas/mensagens/contatos/auditoria) ficam: o produto não os apaga sem LGPD",
+      "resultado": "NAO_MEDIDO",
+      "detalhe": "2 conversa(s) de e-mail permanecem na organização de teste"
+    }
+  ],
+  "achados": []
+}

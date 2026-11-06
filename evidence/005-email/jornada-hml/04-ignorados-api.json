@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "quantidade": 2,
+  "campos": [
+    "id",
+    "caixa_id",
+    "remetente",
+    "assunto",
+    "recebido_em",
+    "motivo"
+  ],
+  "motivo": "lista_de_inscricao"
+}

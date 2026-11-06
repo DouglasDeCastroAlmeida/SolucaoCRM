@@ -1,0 +1,37 @@
+{
+  "passo": "senha",
+  "quando": "2026-11-04T20:16:15.838Z",
+  "resultados": [
+    {
+      "id": "07.configurar-senha-errada.medida",
+      "descricao": "tela \"configurar-senha-errada\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "07.recusa",
+      "descricao": "Configurar com senha errada é recusado com mensagem clara",
+      "resultado": "PASSOU",
+      "detalhe": "O servidor recusou o usuário ou a senha. Confira os dois e tente de novo. Em provedores como o Gmail, use a senha de app, não a senha normal da conta."
+    },
+    {
+      "id": "07.senha-recusada.medida",
+      "descricao": "tela \"senha-recusada\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "07.nao-salvou",
+      "descricao": "a caixa segue Conectada e com os mesmos últimos 4 da senha (nada salvo)",
+      "resultado": "PASSOU",
+      "detalhe": "antes ••••WKal"
+    },
+    {
+      "id": "07.central",
+      "descricao": "aviso na Central por senha recusada pelo servidor (rodada)",
+      "resultado": "NAO_MEDIDO",
+      "detalhe": "NÃO MEDIDO: exigiria mudar a senha no servidor de teste, o que a tarefa proíbe"
+    }
+  ],
+  "achados": []
+}

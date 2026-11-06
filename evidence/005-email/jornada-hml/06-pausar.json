@@ -1,0 +1,73 @@
+{
+  "passo": "pausar",
+  "quando": "2026-11-04T20:14:32.840Z",
+  "resultados": [
+    {
+      "id": "06.antes.medida",
+      "descricao": "tela \"antes\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.pausada-na-hora",
+      "descricao": "logo depois do clique (5 s) o cartão já mostra Pausada, sem recarregar a página",
+      "resultado": "PASSOU",
+      "detalhe": "***@*** Leitura: mail.corretora.io:993 · Envio: mail.corretora.io:465 Pausada Senha: ••••WKal · Limite por dia: 200 · Intervalo entre envios: 3"
+    },
+    {
+      "id": "06.pausada",
+      "descricao": "o cartão mostra 'Pausada' e a explicação (leitura e envio parados, conversas intactas)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "06.pausada.medida",
+      "descricao": "tela \"pausada\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.nao-leu",
+      "descricao": "durante a pausa o e-mail novo NÃO foi lido (AC-008.2)",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "06.inbox-durante-pausa.medida",
+      "descricao": "tela \"inbox-durante-pausa\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.retomada",
+      "descricao": "Retomar volta o estado para Conectada",
+      "resultado": "PASSOU",
+      "detalhe": ""
+    },
+    {
+      "id": "06.retomada.medida",
+      "descricao": "tela \"retomada\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.sem-perder",
+      "descricao": "depois de retomar o e-mail da pausa aparece (nada perdido)",
+      "resultado": "PASSOU",
+      "detalhe": "em 53 s"
+    },
+    {
+      "id": "06.apareceu-apos-retomar.medida",
+      "descricao": "tela \"apareceu-apos-retomar\" sem rolagem lateral e sem botão fora da janela",
+      "resultado": "PASSOU",
+      "detalhe": "{\"larguraDaJanela\":1280,\"larguraDoConteudo\":1280,\"elementosForaDaJanela\":0}"
+    },
+    {
+      "id": "06.sem-repetir",
+      "descricao": "nada antigo foi reimportado nem duplicado depois de retomar",
+      "resultado": "PASSOU",
+      "detalhe": "ocorrências do novo na lista: 1; antigo na lista: false"
+    }
+  ],
+  "achados": []
+}
