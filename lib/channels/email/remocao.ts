@@ -15,6 +15,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { fecharAvisoDePausaDoCanalArquivado } from "@/lib/channels/central-de-pausa";
 import { resolverAvisoSenhaRecusada } from "./avisos";
 import { acharCaixa } from "./caixa";
 
@@ -22,6 +23,7 @@ export type ResultadoDaRemocao = { resultado: "removida"; endereco: string } | {
 
 export interface DependenciasDaRemocao {
   resolverAviso?: typeof resolverAvisoSenhaRecusada;
+  fecharPausa?: typeof fecharAvisoDePausaDoCanalArquivado;
   agora?: () => Date;
 }
 
@@ -56,6 +58,15 @@ export async function removerCaixa(
     await (deps.resolverAviso ?? resolverAvisoSenhaRecusada)(admin, organizationId, caixaId);
   } catch {
     // a remoção já aconteceu; o aviso velho some na próxima varredura da Central
+  }
+  // Todo caminho que arquiva `channel_sessions` fecha o aviso de pausa (issue #2389; cerca em
+  // tests/unit/arquivar-canal-fecha-aviso-de-pausa.test.ts). Best-effort, como o de cima.
+  try {
+    const alvo = { id: caixaId, organization_id: organizationId };
+    if (deps.fecharPausa) await deps.fecharPausa(admin, alvo);
+    else await fecharAvisoDePausaDoCanalArquivado(admin, alvo);
+  } catch {
+    // a remoção já aconteceu; o aviso de pausa velho some na próxima varredura da Central
   }
   return { resultado: "removida", endereco: caixa.endereco };
 }

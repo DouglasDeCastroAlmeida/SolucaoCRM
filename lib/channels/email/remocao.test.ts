@@ -52,6 +52,20 @@ describe("removerCaixa", () => {
     expect(await removerCaixa(banco.client, ORG, "caixa-1", { resolverAviso: vi.fn() })).toEqual({ resultado: "nao_encontrada" });
   });
 
+  it("AC-008.2: fecha tambem o aviso de pausa da caixa arquivada (cerca do #2389)", async () => {
+    const banco = cenario();
+    const fecharPausa = vi.fn(async () => undefined as never);
+    await removerCaixa(banco.client, ORG, "caixa-1", { resolverAviso: vi.fn(async () => undefined), fecharPausa });
+    expect(fecharPausa).toHaveBeenCalledWith(banco.client, { id: "caixa-1", organization_id: ORG });
+  });
+
+  it("AC-008.2: falha ao fechar o aviso de pausa nao desfaz a remocao", async () => {
+    const banco = cenario();
+    const fecharPausa = vi.fn(async () => { throw new Error("boom"); });
+    const r = await removerCaixa(banco.client, ORG, "caixa-1", { resolverAviso: vi.fn(async () => undefined), fecharPausa });
+    expect(r).toEqual({ resultado: "removida", endereco: "caixa@meunegocio.com" });
+  });
+
   it("AC-008.2: fecha o aviso de senha recusada da caixa removida", async () => {
     const banco = cenario();
     const resolverAviso = vi.fn(async () => undefined);
