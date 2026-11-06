@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { reservarEnvioDeAcesso, TRAVA_DE_REENVIO_SEGUNDOS, type BancoDoContexto } from "./contexto-de-email";
+import { liberarEnvioDeAcesso, reservarEnvioDeAcesso, TRAVA_DE_REENVIO_SEGUNDOS, type BancoDoContexto } from "./contexto-de-email";
 
 type Linha = { email: string; action: string; brand_id: string; last_sent_at: string | null };
 
@@ -21,6 +21,10 @@ function bancoEmMemoria(): { banco: BancoDoContexto; linhas: Linha[] } {
       if (!l || l.last_sent_at !== esperado) return false;
       l.last_sent_at = agoraIso;
       return true;
+    },
+    async liberarEnvio(email, action) {
+      const l = linhas.find((x) => x.email === email && x.action === action);
+      if (l) l.last_sent_at = null;
     },
   };
   return { banco, linhas };
@@ -73,6 +77,7 @@ describe("reserva do envio de e-mail de acesso", () => {
       },
       ultimoEnvio: async () => null,
       marcarEnvio: async () => true,
+      liberarEnvio: async () => undefined,
     };
     expect(await reservarEnvioDeAcesso(BASE, { banco: quebrado, agoraMs: () => 1 })).toBe("liberado");
   });
@@ -82,5 +87,27 @@ describe("reserva do envio de e-mail de acesso", () => {
     const r = await reservarEnvioDeAcesso({ ...BASE, brandId: "padrao-embutida" }, { banco, agoraMs: () => 1 });
     expect(r).toBe("liberado");
     expect(linhas).toHaveLength(0);
+  });
+
+  it("AC-003.1: liberar a reserva depois de uma falha deixa a nova tentativa passar dentro de 60 s", async () => {
+    const { banco } = bancoEmMemoria();
+    await reservarEnvioDeAcesso(BASE, { banco, agoraMs: () => 1_000_000 });
+    await liberarEnvioDeAcesso(BASE, { banco });
+    expect(await reservarEnvioDeAcesso(BASE, { banco, agoraMs: () => 1_010_000 })).toBe("liberado");
+  });
+
+  it("AC-003.2/003.3: sem liberar (envio com sucesso), a trava de 60 s continua e só um pedido passa", async () => {
+    const { banco } = bancoEmMemoria();
+    await reservarEnvioDeAcesso(BASE, { banco, agoraMs: () => 1_000_000 });
+    expect(await reservarEnvioDeAcesso(BASE, { banco, agoraMs: () => 1_010_000 })).toBe("travado");
+  });
+
+  it("liberar nunca lança: erro do banco é engolido, e marca embutida não toca o banco", async () => {
+    const quebrado = { ...bancoEmMemoria().banco, liberarEnvio: async () => { throw new Error("fora do ar"); } };
+    await expect(liberarEnvioDeAcesso(BASE, { banco: quebrado })).resolves.toBeUndefined();
+    let chamou = false;
+    const espiao = { ...bancoEmMemoria().banco, liberarEnvio: async () => { chamou = true; } };
+    await liberarEnvioDeAcesso({ ...BASE, brandId: "padrao-embutida" }, { banco: espiao });
+    expect(chamou).toBe(false);
   });
 });

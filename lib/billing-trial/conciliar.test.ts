@@ -156,6 +156,21 @@ describe("conciliarTrialsPendentes", () => {
     expect(c.deps.pedirNota).not.toHaveBeenCalled();
   });
 
+  it("AC-001.5: retorno gravou primeiro; webhook (só releitura) e duas conciliações depois não criam outra assinatura nem reativam de novo", async () => {
+    const c = cenario([pendente(A)], async () => ACHADA);
+    // O retorno do navegador liga a linha à assinatura (o estado final de confirmarTrialDoCheckout).
+    Object.assign(c.tabela("cobranca_assinaturas")[0]!, { pagamento_inicial_pendente: false, provedor: "asaas", provedor_cliente_id: "cus_da_pagina", provedor_assinatura_id: "sub_1" });
+    const antes = { ...c.tabela("cobranca_assinaturas")[0]! };
+
+    const r1 = await conciliarTrialsPendentes(c.banco.cliente, c.deps);
+    const r2 = await conciliarTrialsPendentes(c.banco.cliente, c.deps);
+
+    expect(r1.confirmadas + r2.confirmadas).toBe(0);
+    expect(c.sincroniza).not.toHaveBeenCalled();
+    expect(c.tabela("cobranca_assinaturas")).toHaveLength(1);
+    expect(c.tabela("cobranca_assinaturas")[0]).toEqual(antes);
+  });
+
   it("uma empresa que falha não derruba as outras: vira contagem", async () => {
     let n = 0;
     const c = cenario([pendente(A), pendente(B)], async () => {

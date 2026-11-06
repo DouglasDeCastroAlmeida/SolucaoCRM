@@ -27,7 +27,7 @@ vi.mock("@/lib/instalacao/modulos", () => ({ moduloLigado: async () => true }));
 vi.mock("@/lib/cobranca/hub", () => ({
   lerPainelDoHub: async () =>
     cena.comPainel ? { assinatura: { estado: "trial", provedor: "asaas", assinaturas_vivas: 0 }, plano: null, checkout: {}, fuso: "UTC" } : null,
-  oQueOHubMostra: () => (cena.comPainel ? "pagamento" : "contato"),
+  oQueOHubMostra: () => (cena.comPainel || cena.previa ? "pagamento" : "contato"),
 }));
 vi.mock("@/lib/billing-trial/iniciar", () => ({
   lerPreviaDoTrial: async () =>
@@ -98,6 +98,55 @@ describe("hub: voltou do cartão e a assinatura ainda não apareceu", () => {
     await montar();
 
     expect(screen.getByRole("link", { name: "Tentar de novo" }).getAttribute("href")).toBe("/cobranca/iniciar");
+  });
+});
+
+describe("hub: a espera da confirmação é explicada", () => {
+  const ORIENTACAO = "Isso costuma levar alguns minutos. Se passar de 1 hora, fale com o suporte.";
+  const PENDENTE = /A conta foi suspensa por falta de pagamento/;
+
+  it("AC-002.1: checkout aberto e linha em confirmando mostra a confirmação com a orientação de 1 hora, no lugar do aviso pendente", async () => {
+    cena.confirmando = { podeTentarDeNovo: false };
+
+    await montar();
+
+    expect(screen.getByText(/Estamos confirmando o seu pagamento/)).toBeTruthy();
+    expect(screen.getByText(ORIENTACAO)).toBeTruthy();
+    expect(screen.queryByText(PENDENTE)).toBeNull();
+  });
+
+  it("AC-002.2: o caminho de reler o pagamento (Verificar agora) segue disponível", async () => {
+    cena.confirmando = { podeTentarDeNovo: false };
+
+    await montar();
+
+    expect(screen.getByRole("button", { name: "Verificar agora" })).toBeTruthy();
+  });
+
+  it("AC-002.3: sem linha em confirmando vale o aviso de pagamento pendente, sem a mensagem nova", async () => {
+    await montar();
+
+    expect(screen.getByText(PENDENTE)).toBeTruthy();
+    expect(screen.queryByText(ORIENTACAO)).toBeNull();
+    expect(screen.queryByTestId("hub-trial-confirmando")).toBeNull();
+  });
+
+  it("AC-002.4: conta reativada (sem prévia do trial) não mostra a mensagem", async () => {
+    cena.previa = false;
+
+    await montar();
+
+    expect(screen.queryByText(ORIENTACAO)).toBeNull();
+    expect(screen.queryByTestId("hub-trial-confirmando")).toBeNull();
+  });
+
+  it("AC-002.5: em espanhol a orientação sai traduzida", async () => {
+    cena.idioma = "es";
+    cena.confirmando = { podeTentarDeNovo: false };
+
+    await montar();
+
+    expect(screen.getByText("Esto suele tardar unos minutos. Si pasa de 1 hora, habla con soporte.")).toBeTruthy();
   });
 });
 

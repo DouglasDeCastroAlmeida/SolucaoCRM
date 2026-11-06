@@ -17254,6 +17254,7 @@ export const DICIONARIO: Traducoes = {
   "Cadastrar cartão e começar o teste grátis": { es: "Registrar tarjeta y empezar la prueba gratis" },
   "Você só será cobrado em {dia}.": { es: "Solo se te cobrará el {dia}." },
   "Confirmando seu pagamento": { es: "Confirmando tu pago" },
+  "Isso costuma levar alguns minutos. Se passar de 1 hora, fale com o suporte.": { es: "Esto suele tardar unos minutos. Si pasa de 1 hora, habla con soporte." },
   "Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.": { es: "Estamos confirmando tu pago. Si ya ingresaste la tarjeta, no necesitas pagar de nuevo." },
   "Use \"Tentar de novo\" só se o cartão não foi aceito. Se você já informou o cartão, aguarde: pagar de novo pode gerar duas cobranças.": { es: "Usa \"Intentar de nuevo\" solo si la tarjeta no fue aceptada. Si ya ingresaste la tarjeta, espera: pagar de nuevo puede generar dos cobros." },
 };

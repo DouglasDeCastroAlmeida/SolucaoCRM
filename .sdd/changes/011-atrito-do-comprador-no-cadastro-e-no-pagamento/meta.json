@@ -1,0 +1,48 @@
+{
+  "id": "011-atrito-do-comprador-no-cadastro-e-no-pagamento",
+  "title": "Atrito do comprador no cadastro e no pagamento",
+  "size": "M",
+  "stage": "implement",
+  "createdAt": "2026-11-06T20:47:03.591Z",
+  "approvals": {
+    "grill": {
+      "at": "2026-11-06T21:56:41.253Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "grill aprovado, opcao A e recomendacoes"
+    },
+    "prd": {
+      "at": "2026-11-06T22:58:17.901Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "PRD aprovado"
+    },
+    "tasks": {
+      "at": "2026-11-06T23:03:12.418Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "tarefas aprovadas"
+    }
+  },
+  "history": [
+    {
+      "stage": "grill",
+      "at": "2026-11-06T20:47:03.592Z"
+    },
+    {
+      "stage": "prd",
+      "at": "2026-11-06T21:56:41.253Z",
+      "from": "grill"
+    },
+    {
+      "stage": "tasks",
+      "at": "2026-11-06T22:58:17.901Z",
+      "from": "prd"
+    },
+    {
+      "stage": "implement",
+      "at": "2026-11-06T23:03:12.418Z",
+      "from": "tasks"
+    }
+  ]
+}
