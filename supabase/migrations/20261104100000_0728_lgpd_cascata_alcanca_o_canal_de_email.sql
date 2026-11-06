@@ -83,7 +83,7 @@ begin
       );
 
   -- 0b. anexos de e-mail (migration 0728), lidos ANTES do passo 1. NÃO mover para depois: o gatilho
-  -- `trg_redigir_conversas_ao_anonimizar` (migration 0391, after update of is_anonymized em contacts)
+  -- `trg_redigir_conversas_ao_anonimizar` (migration 0391, disparado pela marcação is_anonymized em contacts)
   -- dispara dentro do passo 1, enfileira só `media_storage_path` e zera `messages.metadata`; depois
   -- disso `metadata.email.anexos` já está vazio. A mensagem de e-mail pode ter VÁRIOS anexos guardados,
   -- e só o primeiro tem ponteiro em `media_storage_path` (o passo 7 só enfileira esse). Os
