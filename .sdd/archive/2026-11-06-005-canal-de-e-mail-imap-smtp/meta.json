@@ -2,7 +2,7 @@
   "id": "005-canal-de-e-mail-imap-smtp",
   "title": "Canal de e-mail (IMAP/SMTP)",
   "size": "L",
-  "stage": "verify",
+  "stage": "done",
   "createdAt": "2026-10-27T11:02:18.874Z",
   "approvals": {
     "grill": {
@@ -33,6 +33,12 @@
       "by": "DouglasDeCastroAlmeida",
       "forced": false,
       "note": "implement concluido; T-044 parcial aceita pelo dono; producao implantada e sonda ok"
+    },
+    "verify": {
+      "at": "2026-11-06T10:35:39.361Z",
+      "by": "DouglasDeCastroAlmeida",
+      "forced": false,
+      "note": "verify aprovado com ressalvas"
     }
   },
   "history": [
@@ -64,6 +70,11 @@
       "stage": "verify",
       "at": "2026-11-06T09:32:02.075Z",
       "from": "implement"
+    },
+    {
+      "stage": "done",
+      "at": "2026-11-06T10:35:39.361Z",
+      "from": "verify"
     }
   ]
 }
