@@ -86,12 +86,12 @@ Cada tarefa ocupa uma linha:
 ### Fechamento
 - [x] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5} <!-- reconciliado em 05/11/2026: pt-BR e es cobertos por tests/unit/i18n-canal-de-email.test.ts; o catalogo en nao existe para nenhuma tela do produto (decisao do projeto, ver cabecalho do teste), entao en fica fora -->
 - [x] T-043 [IMPL] Entradas do dicionário com a chave en/es e ajustes até a varredura de marca passar (~30 min) {AC-009.5} deps: T-042, T-018, T-037 <!-- reconciliado em 05/11/2026: entradas es em lib/i18n/email-canal.ts; varredura de marca (tests/unit/branding-*, 20 arquivos) verde; en fora pelo mesmo motivo -->
-- [ ] T-044 [TEST-E2E] Jornada pela tela na homologação com servidor de e-mail real: conectar, receber, ignorar, responder, pausar, senha recusada (~60 min) {AC-009.3} deps: T-039, T-033, T-041
-- [ ] T-045 [TEST-E2E] Sonda de produção sem nenhuma caixa conectada: resultado igual ao de antes e nenhuma conexão de e-mail feita pelo worker (~30 min) {AC-009.4}
+- [x] T-044 [TEST-E2E] Jornada pela tela na homologação com servidor de e-mail real: conectar, receber, ignorar, responder, pausar, senha recusada (~60 min) {AC-009.3} deps: T-039, T-033, T-041 <!-- jornada na hml: rodada 1 completa (04/11, antes da Fatia 7) e rodada 2 PARCIAL em 06/11 (base, telas de conectar e erros do Testar passaram; o resto nao foi medido porque o servidor de e-mail de teste da VPS deixou de aceitar a hml). Dono aceitou entregar com base no teste real do Gmail dele e na rodada 1 (06/11/2026). Evidencia em docs/solucao-crm/evidencias/005-email/jornada-hml.md. Divida: refazer a rodada 2 completa quando a hml for liberada -->
+- [x] T-045 [TEST-E2E] Sonda de produção sem nenhuma caixa conectada: resultado igual ao de antes e nenhuma conexão de e-mail feita pelo worker (~30 min) {AC-009.4} <!-- sonda scripts/sondas/sonda-producao-email.mjs (PR 68); rodada em 06/11/2026 apos o deploy: 9 de 9 itens passaram (P1-P3, E1-E6) -->
 - [x] T-046 [DOCS] Runbook e roteiro do dono: criar a senha de app do Gmail, outros provedores, limites, o que fazer se a senha for recusada (~40 min) deps: T-044 <!-- conferido pelo dono do produto com uma caixa real do Gmail (relato dele, 05/11/2026); sem evidência anexada, a prova da tela do Google é a palavra do dono -->
-- [ ] T-047 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com servidor de e-mail real (~30 min) deps: T-044
-- [ ] T-048 [CHECK-SMOKE] Implantar em produção sem caixas conectadas e rodar a sonda (~30 min) deps: T-047, T-045
-- [ ] T-049 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-048
+- [x] T-047 [CHECK-SMOKE] Implantar na homologação e rodar a jornada com servidor de e-mail real (~30 min) deps: T-044 <!-- hml roda a main (9bbf7a4 e depois e3408877b) com deploy verde; jornada completa nao refeita, ver T-044 -->
+- [x] T-048 [CHECK-SMOKE] Implantar em produção sem caixas conectadas e rodar a sonda (~30 min) deps: T-047, T-045 <!-- deploy-prod.yml run 42194444619 a partir da main e3408877b, sucesso em 06/11/2026; sonda pos-deploy TUDO PASSOU (/ 200, /app 307, health 200; 0 caixas, 0 conversas de e-mail, 0 conexoes no worker, 1 canal e 1 organizacao como antes) -->
+- [x] T-049 [REFACTOR] Limpeza com testes verdes (~25 min) deps: T-048 <!-- nenhuma limpeza de codigo necessaria: sem refatoracao pendente, CI da main verde -->
 
 ## Dívida conhecida (revisão da Fatia 4; tratar na Fatia 5/6, não implementada)
 
