@@ -82,8 +82,10 @@ begin
           where contact_id = p_contact_id and organization_id = p_organization_id
       );
 
-  -- 0b. anexos de e-mail (migration 0728), lidos ANTES de qualquer passo irreversível (um gatilho
-  -- do passo 1 pode mexer em `messages`): a mensagem de e-mail pode ter VÁRIOS anexos guardados,
+  -- 0b. anexos de e-mail (migration 0728), lidos ANTES do passo 1. NÃO mover para depois: o gatilho
+  -- `trg_redigir_conversas_ao_anonimizar` (migration 0391, after update of is_anonymized em contacts)
+  -- dispara dentro do passo 1, enfileira só `media_storage_path` e zera `messages.metadata`; depois
+  -- disso `metadata.email.anexos` já está vazio. A mensagem de e-mail pode ter VÁRIOS anexos guardados,
   -- e só o primeiro tem ponteiro em `media_storage_path` (o passo 7 só enfileira esse). Os
   -- caminhos de TODOS vivem em `metadata.email.anexos[].caminho`, que o passo 3 zera: vão para
   -- a fila ANTES, ou o arquivo do 2º anexo em diante fica órfão no bucket sem ninguém que o ache.

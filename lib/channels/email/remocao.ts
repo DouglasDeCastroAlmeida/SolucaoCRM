@@ -62,6 +62,8 @@ export async function removerCaixa(
   // Todo caminho que arquiva `channel_sessions` fecha o aviso de pausa (issue #2389; cerca em
   // tests/unit/arquivar-canal-fecha-aviso-de-pausa.test.ts). Best-effort, como o de cima.
   try {
+    // Chamada LITERAL de propósito: a cerca é um regex e só enxerga `fecharAvisoDePausaDoCanalArquivado(`.
+    // Trocar por `const f = deps.x ?? fechar…; f(...)` a reprova em silêncio.
     const alvo = { id: caixaId, organization_id: organizationId };
     if (deps.fecharPausa) await deps.fecharPausa(admin, alvo);
     else await fecharAvisoDePausaDoCanalArquivado(admin, alvo);

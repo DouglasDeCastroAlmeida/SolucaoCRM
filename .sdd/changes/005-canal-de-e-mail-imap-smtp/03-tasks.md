@@ -80,6 +80,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-056 [TEST-UI] Conectar que falha zera o aviso verde "Deu certo" e mostra frase de português simples para a cifra indisponível (~30 min) {AC-001.4}
 - [x] T-057 [IMPL] AssistenteDeConexao zera `testado` ao falhar; rotas trocam a mensagem técnica da cifra, mantendo o código `invalid_request` (~30 min) {AC-001.4} deps: T-056
 - [x] T-058 [TEST-UNIT] Cerca de i18n varre os arquivos novos e as frases novas têm espanhol (~25 min) {AC-009.5} deps: T-051, T-053, T-055, T-057
+- [x] T-059 [FIX] LGPD: a fila de anexos de e-mail da cascata sai ANTES do passo 1, porque o gatilho 0391 zera `messages.metadata` dentro dele; mudança na 0728 e no baseline {AC-009.2}. Exceção à regra de migration imutável: a 0728 entrou na main junto com o conserto (merge do PR #64), nenhum ambiente a aplicou na versão antiga; banco local que a tenha aplicado reaplica o arquivo (`create or replace`). Revisão independente em 05/11/2026: aprovada. O botão da ficha do contato passa pela mesma função (`fn_lgpd_anonymize_contact` delega a `fn_lgpd_cascade_redact_contact`), então está coberto.
+- [x] T-060 [FIX] Remover caixa fecha o aviso de pausa do canal arquivado (cerca do #2389, `fecharAvisoDePausaDoCanalArquivado`), best-effort; testes em `remocao.test.ts` {AC-008.2}. Revisão independente em 05/11/2026: aprovada.
 
 ### Fechamento
 - [x] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5} <!-- reconciliado em 05/11/2026: pt-BR e es cobertos por tests/unit/i18n-canal-de-email.test.ts; o catalogo en nao existe para nenhuma tela do produto (decisao do projeto, ver cabecalho do teste), entao en fica fora -->
