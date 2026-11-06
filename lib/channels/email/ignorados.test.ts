@@ -181,6 +181,27 @@ describe("marcarNaoCliente", () => {
     const r = await marcarNaoCliente(banco.client, { organizationId: ORG, userId: "u-1", endereco: " Spam@Loja.com " });
     expect(r).toEqual({ resultado: "marcado", endereco: "spam@loja.com", conversasArquivadas: 0 });
   });
+
+  it("AC-003.4: por endereco, arquiva as conversas de e-mail do contato e marca os ignorados ja listados daquele remetente", async () => {
+    const banco = criarBancoFalso({
+      contacts: [{ id: "c-1", organization_id: ORG, email: "joao@exemplo.com", is_merged_into: null }],
+      conversations: [
+        { id: "v-1", organization_id: ORG, contact_id: "c-1", channel_session_id: "caixa-1", channel: "email", status: "open" },
+        { id: "v-2", organization_id: ORG, contact_id: "c-1", channel_session_id: "wa-1", channel: "whatsapp", status: "open" },
+      ],
+      email_ignorados: [
+        ignorado({ id: "ign-1", remetente: "joao@exemplo.com" }),
+        ignorado({ id: "ign-2", remetente: "outro@exemplo.com" }),
+        ignorado({ id: "ign-3", remetente: "joao@exemplo.com", organization_id: OUTRA }),
+      ],
+    });
+    const r = await marcarNaoCliente(banco.client, { organizationId: ORG, userId: "u-1", endereco: "Joao@Exemplo.com" });
+    expect(r).toEqual({ resultado: "marcado", endereco: "joao@exemplo.com", conversasArquivadas: 1 });
+    expect(banco.tabelas.conversations!.find((c) => c.id === "v-1")!.status).toBe("archived");
+    expect(banco.tabelas.conversations!.find((c) => c.id === "v-2")!.status).toBe("open");
+    const motivos = Object.fromEntries(banco.tabelas.email_ignorados!.map((l) => [l.id, l.motivo]));
+    expect(motivos).toEqual({ "ign-1": "nao_e_cliente", "ign-2": "envio_em_massa", "ign-3": "envio_em_massa" });
+  });
 });
 
 describe("podarIgnorados", () => {

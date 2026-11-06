@@ -27,6 +27,7 @@ const ARQUIVOS_COM_T = [
   "components/connections/CanalEmailClient.tsx",
   "components/connections/email/AssistenteDeConexao.tsx",
   "components/connections/email/CartaoDaCaixa.tsx",
+  "components/connections/email/ListaDeIgnorados.tsx",
   "components/inbox/EmailDaMensagem.tsx",
   "components/inbox/Composer.tsx",
   "components/inbox/MessageBubble.tsx",

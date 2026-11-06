@@ -112,6 +112,27 @@ describe("assistente de conexão da caixa de e-mail", () => {
     expect((screen.getByRole("button", { name: "Conectar" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("AC-001.4: Conectar que falha tira o aviso verde 'Deu certo', mostra só o erro e exige testar de novo", async () => {
+    const { ApiError } = await import("@/lib/api/types");
+    h.post.mockResolvedValueOnce({ data: { ok: true, teste_enviado: true } });
+    render(<AssistenteDeConexao onConectada={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Gmail" }));
+    preencher("Endereço de e-mail", "ana@gmail.com");
+    preencher("Senha de app", "abcdefghijklmnop");
+    fireEvent.click(screen.getByRole("button", { name: "Testar" }));
+    await screen.findByText(/enviamos um e-mail de teste/i);
+
+    h.post.mockRejectedValueOnce(
+      new ApiError(422, "invalid_request", undefined, "req-2", "Não foi possível guardar a senha com segurança neste servidor."),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Conectar" }));
+
+    const alerta = await screen.findByRole("alert");
+    expect(alerta.textContent).toContain("Não foi possível guardar a senha com segurança neste servidor.");
+    expect(screen.queryByText(/enviamos um e-mail de teste/i)).toBeNull();
+    expect((screen.getByRole("button", { name: "Conectar" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it("AC-001.3: Testar fica bloqueado enquanto faltam endereço, senha ou servidor", () => {
     render(<AssistenteDeConexao onConectada={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Outro provedor" }));

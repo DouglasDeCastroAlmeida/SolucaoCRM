@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api/client";
 
 import { AssistenteDeConexao } from "./email/AssistenteDeConexao";
 import { CartaoDaCaixa, type CaixaDaTela } from "./email/CartaoDaCaixa";
+import { ListaDeIgnorados } from "./email/ListaDeIgnorados";
 
 /**
  * Aba "E-mail" de Conexões (mudança 005): as caixas conectadas e o assistente para conectar
@@ -43,9 +44,14 @@ export function CanalEmailClient() {
         <CartaoDaCaixa
           key={caixa.id}
           caixa={caixa}
-          onMudou={() => void qc.invalidateQueries({ queryKey: ["canal-email"] })}
+          onMudou={() => {
+            void qc.invalidateQueries({ queryKey: ["canal-email"] });
+            void qc.invalidateQueries({ queryKey: ["canal-email-ignorados"] });
+          }}
         />
       ))}
+
+      {caixas.length > 0 && <ListaDeIgnorados caixas={caixas.map((c) => ({ id: c.id, endereco: c.endereco }))} />}
 
       {mostrarAssistente ? (
         <AssistenteDeConexao

@@ -70,6 +70,17 @@ Cada tarefa ocupa uma linha:
 - [x] T-040 [TEST-INT] Varredura dos fluxos que presumem telefone (pré-liberação do canal, duplicidade, pós-entrada) com sessão de e-mail, e regressão do WhatsApp (~45 min) {AC-002.2} deps: T-025
 - [x] T-041 [IMPL] Ajustes dos fluxos achados em T-040, sem mudar o comportamento do WhatsApp (~50 min) {AC-002.2} deps: T-040
 
+### Fatia 7: Telas que faltam (achados da jornada na hml, REQ-003/REQ-008)
+- [x] T-050 [TEST-UI] Lista de ignorados na aba E-mail: remetente, assunto, data e motivo em português simples, estado vazio, erro de rota, "Abrir como conversa" e "Não é cliente" com confirmação (~50 min) {AC-003.3, AC-003.4}
+- [x] T-051 [IMPL] components/connections/email/ListaDeIgnorados.tsx na CanalEmailClient; marcarNaoCliente por endereço também arquiva as conversas de e-mail do contato e marca os ignorados já listados daquele remetente (~50 min) {AC-003.3, AC-003.4} deps: T-050
+- [x] T-052 [TEST-UNIT] DELETE /api/v1/channels/email/[id]: só admin, requireSupportWrite antes do efeito, 404 para caixa de outra organização, apaga a senha guardada, arquiva sem apagar conversas nem mensagens, auditoria sem segredo (~45 min) {AC-008.2, AC-007.5}
+- [x] T-053 [IMPL] lib/channels/email/remocao.ts e DELETE da rota [id]; reconectar o mesmo endereço ressuscita a linha (~50 min) {AC-008.2, AC-007.5} deps: T-052
+- [x] T-054 [TEST-UI] CartaoDaCaixa: "Remover caixa" pede confirmação com as consequências e só então chama a rota (~35 min) {AC-008.2}
+- [x] T-055 [IMPL] Botão e confirmação no CartaoDaCaixa (~35 min) {AC-008.2} deps: T-054, T-053
+- [x] T-056 [TEST-UI] Conectar que falha zera o aviso verde "Deu certo" e mostra frase de português simples para a cifra indisponível (~30 min) {AC-001.4}
+- [x] T-057 [IMPL] AssistenteDeConexao zera `testado` ao falhar; rotas trocam a mensagem técnica da cifra, mantendo o código `invalid_request` (~30 min) {AC-001.4} deps: T-056
+- [x] T-058 [TEST-UNIT] Cerca de i18n varre os arquivos novos e as frases novas têm espanhol (~25 min) {AC-009.5} deps: T-051, T-053, T-055, T-057
+
 ### Fechamento
 - [ ] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
 - [ ] T-043 [IMPL] Entradas do dicionário com a chave en/es e ajustes até a varredura de marca passar (~30 min) {AC-009.5} deps: T-042, T-018, T-037
@@ -85,7 +96,7 @@ Cada tarefa ocupa uma linha:
 - Sugestão 2: mensagem que sempre lança no `ingerir` (erro determinístico de banco) trava o cursor para sempre, com recuo de até 30 min e só log. Pular o UID com `registrarIgnorado` depois de N falhas no mesmo UID (rodada.ts).
 - Sugestão 3: `avancarCursor` (estado.ts) faz UPDATE incondicional; o cursor nunca retroceder depende só da trava. Tornar garantia do banco (`.lt("ultimo_uid", n)` ou `greatest`). O AC-002.6 do invariante é tautológico; a prova real está em rodada.test.ts.
 - Sugestão 8 (RESOLVIDA na Fatia 6): a rota `GET /api/v1/messages/[id]/media` assina a URL de anexo de e-mail com `download` (Content-Disposition: attachment, nome original) e aceita `?anexo=N`; teste em `tests/unit/email-anexo-download.test.ts`.
-- Sugestão 9: "não é cliente" por `endereco` (sem `conversation_id`) grava o bloqueio mas não arquiva conversas existentes. O AC-003.4 está coberto pelo caminho com `conversation_id`; documentar ou arquivar também por endereço.
+- Sugestão 9 (RESOLVIDA na Fatia 7: por endereço agora arquiva as conversas de e-mail do contato e marca os ignorados do remetente): "não é cliente" por `endereco` (sem `conversation_id`) grava o bloqueio mas não arquiva conversas existentes. O AC-003.4 está coberto pelo caminho com `conversation_id`; documentar ou arquivar também por endereço.
 
 ## Registro da Fatia 6
 
@@ -100,3 +111,11 @@ Cada tarefa ocupa uma linha:
 ## Estimativa
 
 <!-- Gerada por `sdd estimate`. Sempre com a linha TOTALIZADOR GERAL. -->
+
+## Registro da Fatia 7
+
+- Lista de ignorados em `ListaDeIgnorados.tsx` (aba E-mail, só aparece com caixa conectada). "Não é cliente" a partir da lista deixa o e-mail na lista com o motivo "Você marcou como não é cliente"; o caminho de desfazer é "Abrir como conversa" (promover já remove a marca). Não há rota própria de desfazer.
+- DÍVIDA: "Não é cliente" no cabeçalho da conversa de e-mail (ConversationHeader é compartilhado e já cheio) não foi feito; a rota `POST /remetentes` com `conversation_id` já o suporta.
+- Remover caixa: `DELETE /api/v1/channels/email/[id]` (admin, `requireSupportWrite`, auditoria `channel.email_removed`) apaga `email_credenciais` e arquiva `channel_sessions` (`archived_at`, `STOPPED`); conversas e mensagens ficam. Reconectar o mesmo endereço ressuscita a linha. Não usa o `DELETE /channel-sessions/[id]` genérico porque ele pode APAGAR a linha e não conhece `email_credenciais`.
+- Mensagem da cifra: o código `invalid_request` segue o mesmo; só o texto virou frase simples nas rotas conectar e alterar.
+- Sem prova pela tela ainda (fica com o orquestrador, DoD 12): lista de ignorados, confirmação de "Não é cliente", Remover caixa e reconectar, erro do Conectar.

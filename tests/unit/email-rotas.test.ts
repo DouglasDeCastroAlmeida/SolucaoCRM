@@ -322,6 +322,22 @@ describe("AC-001.5: conectar", () => {
     expect(h.audit).not.toHaveBeenCalled();
   });
 
+  it("AC-001.4: sem a chave de cifra a mensagem é uma frase simples que diz o que fazer, com o código estável", async () => {
+    h.gravarSenha.mockResolvedValue({ ok: false, motivo: "cifra_indisponivel" });
+    const conectar = await (await POST(req("POST", "", corpo()))).json();
+    const alterar = await (
+      await PATCH(req("PATCH", "/9c1b7a52-3d4e-4f60-8a71-0b2c3d4e5f60", { senha: SENHA }), contexto())
+    ).json();
+
+    for (const corpoDaResposta of [conectar, alterar]) {
+      expect(corpoDaResposta.error.code).toBe("invalid_request");
+      expect(corpoDaResposta.error.message).toBe(
+        "Não foi possível guardar a senha com segurança neste servidor. Peça a quem instalou o sistema para conferir a chave de segurança e tente de novo.",
+      );
+      expect(corpoDaResposta.error.message).not.toMatch(/cifra|chave não foi gravada/i);
+    }
+  });
+
   it("a organização vem do login: o filtro da busca por endereço usa a do login", async () => {
     await POST(req("POST", "", corpo()));
     expect(h.acharPorEndereco).toHaveBeenCalledWith(expect.anything(), ORG, "atendimento@exemplo.com");
