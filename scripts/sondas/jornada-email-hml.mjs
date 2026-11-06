@@ -14,7 +14,9 @@
 //   pausar     pausar, e-mail durante a pausa não é lido, retomar não perde nem repete (AC-008.2)
 //   senha      Configurar com senha errada recusa sem salvar (AC-001.4)
 //   teto       teto 1, duas respostas, a 2ª na fila com aviso; restaura (AC-005.*)
-//   limpar     remove a caixa de teste pelo caminho do produto e mede resíduos
+//   celular    layout em 375x812 da aba E-mail, da lista de ignorados e do cartão da caixa (rodada 2)
+//   erros      (por último) erro claro no Testar/Conectar: senha errada e servidor inválido; sem "Deu certo" (rodada 2)
+//   limpar     "Remover caixa" PELA TELA, mede resíduos, RECONECTA o mesmo endereço e remove de novo (rodada 2)
 // Uso: node scripts/sondas/jornada-email-hml.mjs <passo>
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -28,7 +30,9 @@ const SEGREDOS = join(homedir(), ".secrets");
 const HOST = process.env.TESTE003_HOST ?? "marca-a.corretora.io";
 const BASE = `https://${HOST}`;
 const NOME_DA_ORG = "[teste-003] Empresa Exemplo";
-const EVIDENCIA = join("evidence", "005-email", "jornada-hml");
+// Rodada 1 (antes da Fatia 7): evidence/005-email/jornada-hml (JORNADA_RODADA=1). Rodada 2 (após a Fatia 7): jornada-hml-2.
+const EVIDENCIA = join("evidence", "005-email", process.env.JORNADA_RODADA === "1" ? "jornada-hml" : "jornada-hml-2");
+const VERSAO_ESPERADA = process.env.VERSAO_ESPERADA ?? "9bbf7a4";
 const ESTADO = join(SEGREDOS, "jornada-005-estado.json");
 
 function lerEnv(arquivo) {
@@ -68,7 +72,7 @@ const lerEstado = () => (existsSync(ESTADO) ? JSON.parse(readFileSync(ESTADO, "u
 const gravarEstado = (parcial) => writeFileSync(ESTADO, JSON.stringify({ ...lerEstado(), ...parcial }));
 
 const [passo] = process.argv.slice(2);
-const SEQ = ["base", "conectar", "receber", "ignorar", "responder", "pausar", "senha", "teto", "limpar"];
+const SEQ = ["base", "conectar", "receber", "ignorar", "responder", "pausar", "senha", "teto", "celular", "limpar", "erros"];
 if (!SEQ.includes(passo)) {
   console.error(`Uso: node scripts/sondas/jornada-email-hml.mjs <${SEQ.join("|")}>`);
   process.exit(2);
@@ -177,10 +181,10 @@ async function foto(p, nome, { medir = true } = {}) {
   return arquivo;
 }
 
-async function comNavegador(fn) {
+async function comNavegador(fn, { viewport = { width: 1280, height: 900 }, celular = false } = {}) {
   const nav = await chromium.launch();
   try {
-    const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
+    const ctx = await nav.newContext({ viewport, acceptDownloads: true, ...(celular ? { hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : {}) });
     const p = await ctx.newPage();
     p.setDefaultTimeout(30_000);
     await entrar(p);
@@ -205,7 +209,11 @@ if (passo !== "base" && lerEstado().onboardedOriginal === undefined) {
   gravarEstado({ onboardedOriginal: o.onboarded_at });
   if (o.onboarded_at === null) await patchOrg({ onboarded_at: new Date().toISOString() });
 }
-const caixasDoBanco = () => ler(`channel_sessions?select=id,status,display_name,provider,created_at,metadata&organization_id=eq.${orgId}&provider=eq.email`);
+const caixasDoBanco = () => ler(`channel_sessions?select=id,status,display_name,provider,created_at,archived_at,metadata&organization_id=eq.${orgId}&provider=eq.email`);
+const caixasAtivas = async () => (await caixasDoBanco()).filter((c) => !c.archived_at);
+/** Quantas linhas de senha guardada existem para a caixa (só a CONTAGEM; o valor nunca é lido). */
+const senhasGuardadas = async (caixaId) => (await ler(`email_credenciais?select=channel_session_id&organization_id=eq.${orgId}&channel_session_id=eq.${caixaId}`)).length;
+const conversasDaCaixa = (caixaId) => ler(`conversations?select=id,status&organization_id=eq.${orgId}&channel_session_id=eq.${caixaId}`);
 const mensagensDoBanco = (conversaId) =>
   ler(`messages?select=id,direction,status,body,metadata,created_at&organization_id=eq.${orgId}&conversation_id=eq.${conversaId}&order=created_at.asc`);
 
@@ -223,7 +231,9 @@ async function acharConversa(p, trecho, ms = 240_000) {
   while (Date.now() < limite) {
     await irPara(p, "/app/inbox");
     // O cliente (EMAIL2) é UM contato e UMA conversa: a prévia da lista mostra o assunto do ÚLTIMO e-mail dele.
-    const alvo = trecho === lerEstado().assuntoPergunta ? p.getByText(/\[005\] (Pergunta de pre|Aviso do conhec|Durante a pausa|Segundo)|Resposta .*T044|^Re:/).first() : p.getByText(trecho).first();
+    // Rodada 2: a org já tem conversas da rodada 1 (mesmo cliente); casar sempre pela etiqueta DESTA rodada.
+    const tag = lerEstado().tag;
+    const alvo = trecho === lerEstado().assuntoPergunta ? p.getByText(new RegExp(`\\[005\\] (Pergunta de pre|Aviso do conhec|Durante a pausa|Segundo).*${tag}|Resposta .*T044.*${tag}|^Re:.*${tag}`)).first() : p.getByText(trecho).first();
     if (await alvo.count()) {
       await alvo.click();
       await p.waitForSelector('textarea[aria-label="Mensagem"], [data-testid="email-assunto"]', { timeout: 30_000 });
@@ -242,12 +252,14 @@ const textoDoInbox = async (p) => {
 /* ================================ passos ================================ */
 if (passo === "base") {
   const h = await (await fetch(`${BASE}/api/v1/health`)).json();
-  item("01.versao", "a hml roda o commit c9144c8 (o desta branch)", h.data.version === "c9144c8", `version ${h.data.version}`);
+  item("01.versao", `a hml roda o commit ${VERSAO_ESPERADA} (Fatia 7 implantada)`, h.data.version === VERSAO_ESPERADA, `version ${h.data.version}`);
   const raiz = await fetch(`${BASE}/`, { redirect: "manual" });
   const app = await fetch(`${BASE}/app`, { redirect: "manual" });
   item("01.rotas", "/ responde 200 e /app responde 307", raiz.status === 200 && app.status === 307, `${raiz.status}/${app.status}`);
   const caixas = await caixasDoBanco();
-  item("01.sem-caixa", "a organização de teste parte sem caixa de e-mail", caixas.length === 0, `${caixas.length} caixa(s)`);
+  const ativas = caixas.filter((c) => !c.archived_at);
+  // Rodada 2: sobra a caixa ARQUIVADA da rodada 1 (e as 2 conversas dela); o que importa é não haver caixa ativa.
+  item("01.sem-caixa", "a organização de teste parte sem caixa de e-mail ATIVA", ativas.length === 0, `${ativas.length} ativa(s), ${caixas.length - ativas.length} arquivada(s)`);
   const tag = `T044-${Date.now().toString(36)}`;
   // O e-mail ANTIGO: chega à caixa ANTES de o CRM conectar. Nada dele pode virar conversa.
   const antigo = `[005] ANTIGO ${tag}`;
@@ -314,9 +326,12 @@ if (passo === "base") {
     item("02.cartao", "a caixa aparece com endereço, estado Conectada, limites e botão Pausar (AC-001.5)", /Conectada/.test(txt) && /Pausar/.test(txt) && /Limite por dia/.test(txt), txt.replace(/\n/g, " | "));
     item("02.senha-nao-volta", "a senha não aparece no cartão (só ••••últimos4)", !txt.includes(em.SENHA1) && /••••/.test(txt));
     await foto(p, "cartao");
-    const caixas = await caixasDoBanco();
+    const caixas = await caixasAtivas();
+    const todas = await caixasDoBanco();
     gravarEstado({ caixaId: caixas[0]?.id ?? null });
-    item("02.banco", "existe 1 linha de caixa de e-mail na organização", caixas.length === 1, `status ${caixas[0]?.status}`);
+    // Rodada 2: conectar o MESMO endereço da rodada 1 deve ressuscitar a linha arquivada (sem criar outra).
+    item("02.banco", "existe 1 caixa de e-mail ATIVA na organização (a arquivada da rodada 1 é reaproveitada)", caixas.length === 1, `status ${caixas[0]?.status}; ${todas.length} linha(s) no total`);
+    item("02.senha-guardada", "a senha ficou guardada cifrada (1 linha em email_credenciais; valor não lido)", (await senhasGuardadas(caixas[0].id)) === 1);
     // Nada do passado: espera 2 rodadas do cron (1/min) e confere o Inbox.
     console.log("(esperando 2,5 min por rodadas do cron da hml para provar que o antigo não é importado)");
     await dormir(150_000);
@@ -374,28 +389,29 @@ if (passo === "base") {
       item("03.anexo-baixa", "o download do anexo traz o conteúdo enviado", conteudo.includes("Plano Pro: 200"), `${dl.suggestedFilename()} ${conteudo.length} bytes`);
     }
     // contato criado
-    const c = await ler(`conversations?select=id,contact_id&organization_id=eq.${orgId}&order=created_at.desc&limit=1`);
+    // Rodada 2: a conversa do cliente já existe desde a rodada 1; a que acabou de receber é a de atividade mais recente.
+    const c = await ler(`conversations?select=id,contact_id&organization_id=eq.${orgId}&order=updated_at.desc&limit=1`);
     const contato = c[0] ? await ler(`contacts?select=id,name&organization_id=eq.${orgId}&id=eq.${c[0].contact_id}`) : [];
     item("03.contato", "um contato foi criado/ligado à conversa", contato.length === 1, `contato "${mascara(contato[0]?.name ?? "")}"`);
     if (c[0]) gravarEstado({ conversaId: c[0].id, contatoId: c[0].contact_id });
   });
 } else if (passo === "ignorar") {
   const est = lerEstado();
-  const alias = `no-reply-t044@${DOMINIO}`;
+  // Rodada 2: endereços NOVOS por rodada (a rodada 1 deixou "promo" como conhecido e "não é cliente").
+  const slug = est.tag.toLowerCase();
+  const alias = `promo-${slug}@${DOMINIO}`;
   const aliasCliente = `maria.t044@${DOMINIO}`;
   const assuntoLista = `[005] Newsletter de promoção ${est.tag}`;
+  const assuntoLista2 = `[005] Newsletter de promoção 2 ${est.tag}`;
+  const assuntoAuto = `[005] Resposta automática ${est.tag}`;
   const assuntoConhecido = `[005] Aviso do conhecido ${est.tag}`;
-  const assuntoNaoCliente = `[005] Proposta de parceria ${est.tag}`;
   const assuntoDepois = `[005] Segundo e-mail do mesmo ${est.tag}`;
-  // 1) remetente NOVO, e-mail de lista de inscrição / em massa
-  await enviarDoCliente({
-    assunto: assuntoLista,
-    texto: "Cancelar inscrição: https://exemplo.invalid/sair",
-    de: `Promo T044 <${alias}>`,
-    headers: { "List-Unsubscribe": "<mailto:sair@exemplo.invalid>", Precedence: "bulk" },
-  });
+  const cabecalhosDeLista = { "List-Unsubscribe": "<mailto:sair@exemplo.invalid>", Precedence: "bulk" };
+  // 1) remetente NOVO, DOIS e-mails de lista de inscrição / em massa (um será promovido, no outro se marca "Não é cliente")
+  await enviarDoCliente({ assunto: assuntoLista, texto: "Cancelar inscrição: https://exemplo.invalid/sair", de: `Promo T044 <${alias}>`, headers: cabecalhosDeLista });
+  await enviarDoCliente({ assunto: assuntoLista2, texto: "Outra oferta. Cancelar inscrição: https://exemplo.invalid/sair", de: `Promo T044 <${alias}>`, headers: cabecalhosDeLista });
   // 2) remetente NOVO com resposta automática
-  await enviarDoCliente({ assunto: `[005] Resposta automática ${est.tag}`, texto: "Estou fora do escritório.", de: `Fora T044 <fora.t044@${DOMINIO}>`, headers: { "Auto-Submitted": "auto-generated" } });
+  await enviarDoCliente({ assunto: assuntoAuto, texto: "Estou fora do escritório.", de: `Fora T044 <fora-${slug}@${DOMINIO}>`, headers: { "Auto-Submitted": "auto-generated" } });
   // 3) CONHECIDO (EMAIL2 já é contato) mandando algo que parece automático: AC-003.5
   await enviarDoCliente({ assunto: assuntoConhecido, texto: "Sou eu de novo, o cliente da conversa.", headers: { "Auto-Submitted": "auto-generated", Precedence: "bulk" } });
   gravarEstado({ assuntoConhecido, assuntoLista, aliasCliente, alias });
@@ -408,51 +424,104 @@ if (passo === "base") {
     item("04.lista-ignorada", "e-mail de lista/em massa de remetente novo NÃO virou conversa (AC-003.1)", !inbox.includes(assuntoLista));
     item("04.auto-ignorada", "resposta automática de remetente novo NÃO virou conversa (AC-003.1)", !inbox.includes(`Resposta automática ${est.tag}`));
     await foto(p, "inbox-sem-os-ignorados");
-    // Lista de ignorados: pela TELA (AC-003.3). Procura qualquer porta na navegação.
-    const rotas = ["/app/connections?aba=email", "/app/inbox", "/app/settings", "/app/settings/channels"];
-    let telaEncontrada = false;
-    for (const r of rotas) {
-      await irPara(p, r);
-      if (/ignorad/i.test(await p.innerText("body"))) telaEncontrada = true;
+    // ===== Rodada 2 (Fatia 7): lista de ignorados PELA TELA (AC-003.3), promover e "Não é cliente" pela tela =====
+    const cartaoDe = (assunto) => p.locator('[data-testid="ignorado"]', { hasText: assunto });
+    /** Abre a aba E-mail e espera (recarregando) o item aparecer na lista de ignorados. */
+    const esperarNaLista = async (assunto, ms = 180_000) => {
+      const fim = Date.now() + ms;
+      while (Date.now() < fim) {
+        await abaEmail(p);
+        if ((await cartaoDe(assunto).count()) > 0) return true;
+        await dormir(15_000);
+      }
+      return false;
+    };
+    const naLista = await esperarNaLista(assuntoLista);
+    item("04.tela-ignorados", "a aba E-mail tem a seção 'E-mails que não viraram conversa' com o e-mail de lista (AC-003.3)", naLista && (await p.locator('[data-testid="ignorados-email"]').count()) === 1, naLista ? "item encontrado na tela" : "item não apareceu na lista em 3 min");
+    if (naLista) {
+      const c = cartaoDe(assuntoLista).first();
+      const txt = await c.innerText();
+      const dt = await c.locator("time").getAttribute("datetime");
+      const idade = dt ? (Date.now() - new Date(dt).getTime()) / 60_000 : NaN;
+      item("04.lista-remetente", "o item mostra o remetente", txt.toLowerCase().includes(alias.toLowerCase()), "remetente da rodada presente (mascarado)");
+      item("04.lista-assunto", "o item mostra o assunto", txt.includes(assuntoLista));
+      item("04.lista-data", "o item mostra a data do e-mail (recente)", Number.isFinite(idade) && idade >= 0 && idade < 60 && (await c.locator("time").innerText()).length > 5, `há ${Math.round(idade)} min`);
+      const motivoTxt = (await c.locator("p.text-xs").last().innerText()).trim();
+      item("04.lista-motivo", "o motivo vem em português simples (lista de inscrição / envio em massa)", /lista de inscri|envio em massa/i.test(motivoTxt), `motivo: ${motivoTxt}`);
+      item("04.lista-botoes", "o item oferece 'Abrir como conversa' e 'Não é cliente'", (await c.getByRole("button", { name: "Abrir como conversa" }).count()) === 1 && (await c.getByRole("button", { name: "Não é cliente" }).count()) === 1);
+      const cAuto = cartaoDe(assuntoAuto).first();
+      const motivoAuto = (await cAuto.count()) ? (await cAuto.locator("p.text-xs").last().innerText()).trim() : "";
+      item("04.lista-motivo-auto", "a resposta automática de remetente novo aparece com motivo em português simples", /resposta autom/i.test(motivoAuto), `motivo: ${motivoAuto || "item ausente"}`);
+      await foto(p, "lista-de-ignorados");
+      writeFileSync(join(EVIDENCIA, `${n}-lista-na-tela.json`), JSON.stringify({ motivoDaLista: motivoTxt, motivoDaAutomatica: motivoAuto, itensVisiveis: await p.locator('[data-testid="ignorado"]').count() }, null, 2));
+
+      // --- Abrir como conversa, pela TELA ---
+      await c.getByRole("button", { name: "Abrir como conversa" }).click();
+      const toastOk = await p.locator("[data-sonner-toast]", { hasText: "E-mail aberto como conversa" }).waitFor({ timeout: 40_000 }).then(() => true).catch(() => false);
+      item("04.promover-tela", "'Abrir como conversa' pela tela mostra o aviso de sucesso", toastOk);
+      await dormir(2500);
+      await foto(p, "apos-abrir-como-conversa", { medir: false });
+      item("04.promover-sai-da-lista", "o item promovido sai da lista", (await cartaoDe(assuntoLista).count()) === 0);
+      const viu = await acharConversa(p, assuntoLista, 150_000);
+      item("04.promovido-na-tela", "o e-mail promovido aparece como conversa no Inbox", viu);
+      await foto(p, "promovido");
+      const [convPromovida] = await ler(`conversations?select=id,status,contact_id,channel_session_id&organization_id=eq.${orgId}&order=created_at.desc&limit=1`);
+      item("04.promovido-banco", "(banco) a conversa nova nasceu aberta, ligada à caixa", convPromovida?.status === "open", `status ${convPromovida?.status}`);
+
+      // --- Não é cliente, pela TELA, sobre o 2º e-mail do mesmo remetente (ainda na lista) ---
+      const restou = await esperarNaLista(assuntoLista2, 30_000);
+      item("04.segundo-na-lista", "o 2º e-mail do mesmo remetente segue na lista depois do promover", restou);
+      if (restou) {
+        const c2 = cartaoDe(assuntoLista2).first();
+        await c2.getByRole("button", { name: "Não é cliente" }).click();
+        const dlg = p.getByRole("alertdialog");
+        await dlg.waitFor({ timeout: 10_000 });
+        const dlgTxt = await dlg.innerText();
+        item("04.nc-confirma", "'Não é cliente' pede confirmação, diz que arquiva as conversas de e-mail e que nada é apagado", /Marcar esta pessoa como não é cliente/i.test(dlgTxt) && /arquivadas/i.test(dlgTxt) && /Nada é apagado/i.test(dlgTxt), "texto do diálogo conferido");
+        await foto(p, "dialogo-nao-e-cliente", { medir: false });
+        await dlg.getByRole("button", { name: "Cancelar" }).click();
+        await dormir(800);
+        const [aindaAberta] = await ler(`conversations?select=status&organization_id=eq.${orgId}&id=eq.${convPromovida.id}`);
+        item("04.nc-cancelar", "Cancelar no diálogo não muda nada (a conversa segue aberta)", aindaAberta?.status === "open" && (await cartaoDe(assuntoLista2).count()) === 1, `status ${aindaAberta?.status}`);
+        await cartaoDe(assuntoLista2).first().getByRole("button", { name: "Não é cliente" }).click();
+        await p.getByRole("alertdialog").getByRole("button", { name: "Marcar como não é cliente" }).click();
+        const toastNc = await p.locator("[data-sonner-toast]", { hasText: "Os próximos e-mails dessa pessoa serão deixados de fora" }).waitFor({ timeout: 40_000 }).then(() => true).catch(() => false);
+        item("04.nc-tela", "'Não é cliente' pela tela mostra o aviso de sucesso", toastNc);
+        await dormir(2500);
+        const [depoisNc] = await ler(`conversations?select=id,status&organization_id=eq.${orgId}&id=eq.${convPromovida.id}`);
+        item("04.nc-arquiva", "'Não é cliente' ARQUIVA a conversa do remetente (AC-003.4)", Boolean(depoisNc) && depoisNc.status !== "open", `status da conversa: ${depoisNc?.status}`);
+        const itemMarcado = cartaoDe(assuntoLista2).first();
+        const motivoNc = (await itemMarcado.count()) ? (await itemMarcado.locator("p.text-xs").last().innerText()).trim() : "";
+        item("04.nc-lista", "o item marcado continua na lista com o motivo 'Você marcou como não é cliente' e sem o botão 'Não é cliente'", /marcou como não é cliente/i.test(motivoNc) && (await itemMarcado.getByRole("button", { name: "Não é cliente" }).count()) === 0, `motivo: ${motivoNc || "item ausente"}`);
+        await foto(p, "apos-nao-e-cliente-lista");
+        await irPara(p, "/app/inbox");
+        await dormir(2000);
+        const inboxNc = await p.innerText("body");
+        item("04.nc-fora-da-fila", "a conversa do remetente saiu da fila do Inbox", !inboxNc.includes(assuntoLista), "assunto promovido ausente da fila padrão do Inbox");
+        await foto(p, "inbox-apos-nao-e-cliente");
+        await enviarDoCliente({ assunto: assuntoDepois, texto: "Mais uma mensagem do mesmo remetente.", de: `Promo T044 <${alias}>` });
+        gravarEstado({ ncConversaId: convPromovida.id, assuntoDepois, ncEm: new Date().toISOString() });
+        console.log("(esperando 2,5 min: o próximo e-mail do remetente 'não é cliente' NÃO pode virar conversa)");
+        await dormir(150_000);
+        const depois = await textoDoInbox(p);
+        item("04.nao-cliente-vale", "o próximo e-mail do remetente marcado 'não é cliente' NÃO vira conversa (AC-003.4)", !depois.includes(assuntoDepois));
+        const convsDepois = await ler(`conversations?select=id,status,created_at&organization_id=eq.${orgId}&created_at=gt.${encodeURIComponent(lerEstado().ncEm)}`);
+        item("04.nc-sem-conversa-nova", "(banco) nenhuma conversa nasceu depois do 'Não é cliente'", convsDepois.length === 0, `${convsDepois.length} conversa(s) nova(s)`);
+        await abaEmail(p);
+        item("04.depois-na-lista", "o próximo e-mail do remetente aparece na lista de ignorados com o motivo 'não é cliente'", await esperarNaLista(assuntoDepois, 90_000));
+        await foto(p, "apos-nao-cliente");
+      }
     }
-    item("04.tela-ignorados", "existe tela com a lista de ignorados (remetente, assunto, data, motivo) (AC-003.3)", telaEncontrada, telaEncontrada ? "texto 'ignorad' encontrado" : "nenhuma tela das rotas de Conexões/Inbox/Configurações menciona 'ignorados'");
     // O backend: lido a partir da sessão do navegador (diagnóstico, não prova de UX)
     const api = await p.evaluate(async () => {
       const r = await fetch("/api/v1/channels/email/ignorados", { credentials: "include" });
       return { status: r.status, json: await r.json() };
     });
     const lista = api.json?.data?.ignorados ?? [];
-    const doLista = lista.find((x) => (x.assunto ?? x.subject ?? "").includes(assuntoLista));
+    const doLista = lista.find((x) => (x.assunto ?? x.subject ?? "").includes(assuntoLista2));
     item("04.api-ignorados", "(API, diagnóstico) a lista de ignorados do servidor traz o e-mail de lista com motivo", Boolean(doLista), `status ${api.status}, ${lista.length} ignorado(s), campos ${doLista ? Object.keys(doLista).join(",") : "-"}, motivo ${doLista ? JSON.stringify(doLista.motivo ?? doLista.reason ?? null) : "-"}`);
+    // (os campos de status/promover/marcar agora são provados PELA TELA acima; a API ficou só de diagnóstico dos campos)
     writeFileSync(join(EVIDENCIA, `${n}-ignorados-api.json`), JSON.stringify({ status: api.status, quantidade: lista.length, campos: doLista ? Object.keys(doLista) : [], motivo: doLista?.motivo ?? doLista?.reason ?? null }, null, 2));
-    // Promover (API)
-    if (doLista) {
-      const prom = await p.evaluate(async (id) => {
-        const r = await fetch(`/api/v1/channels/email/ignorados/${id}/promover`, { method: "POST", credentials: "include", headers: { "content-type": "application/json" }, body: "{}" });
-        return { status: r.status, corpo: (await r.text()).slice(0, 200) };
-      }, doLista.id);
-      item("04.api-promover", "(API, diagnóstico) promover o ignorado o transforma em conversa", prom.status < 300, `status ${prom.status} ${prom.corpo}`);
-      if (prom.status < 300) {
-        const viu = await acharConversa(p, assuntoLista, 150_000);
-        item("04.promovido-na-tela", "o promovido aparece no Inbox", viu);
-        await foto(p, "promovido");
-        // "Não é cliente" sobre o remetente promovido
-        const nc = await p.evaluate(async (endereco) => {
-          const r = await fetch("/api/v1/channels/email/remetentes", { method: "POST", credentials: "include", headers: { "content-type": "application/json" }, body: JSON.stringify({ endereco }) });
-          return { status: r.status, corpo: (await r.text()).slice(0, 200) };
-        }, alias);
-        item("04.api-nao-cliente", "(API, diagnóstico) 'não é cliente' aceita o remetente", nc.status < 300, `status ${nc.status} ${nc.corpo}`);
-        await enviarDoCliente({ assunto: assuntoDepois, texto: "Mais uma mensagem do mesmo remetente.", de: `Promo T044 <${alias}>` });
-        await dormir(150_000);
-        const depois = await textoDoInbox(p);
-        item("04.nao-cliente-vale", "o próximo e-mail do remetente marcado 'não é cliente' NÃO vira conversa (AC-003.4)", !depois.includes(assuntoDepois));
-        await foto(p, "apos-nao-cliente");
-      }
-    }
-    // Sem botão na tela?
-    await acharConversa(p, assuntoConhecido, 60_000);
-    const botoes = await p.getByRole("button", { name: /não é cliente|nao e cliente|promover/i }).count();
-    item("04.btn-nao-cliente", "a conversa de e-mail oferece 'Não é cliente' na tela (AC-003.4)", botoes > 0, `${botoes} botão(ões) encontrados`);
   });
 } else if (passo === "responder") {
   const est = lerEstado();
@@ -576,6 +645,10 @@ if (passo === "base") {
     const abriu = await acharConversa(p, est.assuntoPergunta, 60_000);
     if (!abriu) return item("08.abrir", "abrir a conversa", false);
     const ids = [];
+    await p.waitForSelector('[data-testid="email-assunto"]', { timeout: 60_000 }).catch(() => {});
+    await dormir(2500);
+    // Rodada 2: a conversa já tem avisos de adiamento da rodada 1; conta quantos há ANTES para medir só os novos.
+    const avisosAntes = ((await p.innerText("body")).match(/Limite do dia da caixa atingido/g) ?? []).length;
     for (const k of [1, 2]) {
       const texto = `Resposta ${k} sob teto ${est.tag}`;
       await p.locator('textarea[aria-label="Mensagem"]').fill(texto);
@@ -588,12 +661,13 @@ if (passo === "base") {
     await p.waitForSelector('[data-testid="email-assunto"]', { timeout: 60_000 }).catch(() => {});
     await dormir(2500);
     const corpo = await p.innerText("body");
-    const sinal = /adiad|fila|amanh|retom|limite/i.test(corpo);
+    const sinal = (corpo.match(/Limite do dia da caixa atingido/g) ?? []).length > avisosAntes;
     await foto(p, "duas-respostas-sob-teto");
     const msgs = await mensagensDoBanco(est.conversaId);
     const saida = msgs.filter((m) => m.direction === "outbound").map((m) => ({ status: m.status, retomada: m.metadata?.email_queue_until ?? m.metadata?.adiado_ate ?? null, chaves: Object.keys(m.metadata ?? {}).slice(0, 8) }));
     writeFileSync(join(EVIDENCIA, `${n}-saidas-no-banco.json`), JSON.stringify(saida, null, 2));
-    const fila = msgs.filter((m) => m.direction === "outbound" && m.status === "queued");
+    // Rodada 2: a conversa traz 2 respostas `queued` da rodada 1; só contam as desta rodada (etiqueta no texto).
+    const fila = msgs.filter((m) => m.direction === "outbound" && m.status === "queued" && String(m.body ?? "").includes(est.tag));
     item("08.fila", "a resposta acima do teto ficou na fila (status queued) em vez de ser enviada", fila.length >= 1, `${fila.length} na fila; saídas: ${saida.map((s) => s.status).join(",")}`);
     item("08.aviso", "a conversa mostra o aviso de adiamento com a hora (AC-005.1)", sinal && fila.length >= 1, `texto de aviso visível: ${sinal}`);
     // restaura
@@ -609,28 +683,249 @@ if (passo === "base") {
   });
 } else if (passo === "limpar") {
   const est = lerEstado();
-  await comNavegador(async (p) => {
+  /** Remove a caixa PELA TELA (botão + confirmação) e devolve o que o banco diz depois. */
+  const removerPelaTela = async (p, rotulo, { cancelarAntes = false } = {}) => {
+    const [ativa] = await caixasAtivas();
+    if (!ativa) throw new Error("nenhuma caixa ativa para remover");
+    const conversasAntes = (await conversasDaCaixa(ativa.id)).length;
     const cartao = await abaEmail(p);
-    const botoes = await cartao.getByRole("button").allInnerTexts();
-    item("09.ui-remover", "o cartão da caixa oferece remover/desconectar pela tela", botoes.some((b) => /remover|desconectar|excluir|arquivar/i.test(b)), `botões: ${botoes.join(", ")}`);
-    const caixas = await caixasDoBanco();
-    for (const c of caixas) {
-      const r = await p.evaluate(async (id) => {
-        const x = await fetch(`/api/v1/channel-sessions/${id}`, { method: "DELETE", credentials: "include" });
-        return { status: x.status, corpo: (await x.text()).slice(0, 300) };
-      }, c.id);
-      item("09.excluir", "(API do produto, sem tela) DELETE /channel-sessions da caixa de teste", r.status < 300, `status ${r.status} ${r.corpo}`);
+    await cartao.getByRole("button", { name: "Remover caixa", exact: true }).click();
+    const dlg = p.getByRole("alertdialog");
+    await dlg.waitFor({ timeout: 10_000 });
+    const t = await dlg.innerText();
+    item(`${n}.${rotulo}-confirma`, "'Remover caixa' pede confirmação e diz o que acontece (para de ler/enviar, conversas ficam, senha apagada, como voltar)", /Remover esta caixa de e-mail/i.test(t) && /para de ler e de enviar/i.test(t) && /conversas e as mensagens continuam/i.test(t) && /senha guardada é apagada/i.test(t) && /conecte a caixa de novo/i.test(t), "texto do diálogo conferido");
+    await foto(p, `${rotulo}-dialogo`, { medir: false });
+    if (cancelarAntes) {
+      await dlg.getByRole("button", { name: "Cancelar" }).click();
+      await dormir(800);
+      item(`${n}.${rotulo}-cancelar`, "Cancelar no diálogo não remove nada (caixa continua ativa e com senha)", (await caixasAtivas()).length === 1 && (await senhasGuardadas(ativa.id)) === 1 && (await p.locator('[data-testid="caixa-email"]').count()) === 1);
+      await p.locator('[data-testid="caixa-email"]').first().getByRole("button", { name: "Remover caixa", exact: true }).click();
+      await p.getByRole("alertdialog").waitFor({ timeout: 10_000 });
     }
-    const depois = await caixasDoBanco();
-    item("09.sem-caixa", "a organização ficou sem caixa de e-mail ativa", depois.every((c) => ["STOPPED", "ARCHIVED", "archived"].includes(String(c.status))) || depois.length === 0, depois.map((c) => c.status).join(",") || "nenhuma linha");
-    const aba = await abaEmail(p);
-    void aba;
-    await foto(p, "aba-apos-limpar");
-  });
-  const convs = await ler(`conversations?select=id&organization_id=eq.${orgId}&channel_session_id=in.(${(await caixasDoBanco()).map((c) => c.id).join(",") || "00000000-0000-0000-0000-000000000000"})`);
-  item("09.residuos", "resíduos (conversas/mensagens/contatos/auditoria) ficam: o produto não os apaga sem LGPD", null, `${convs.length} conversa(s) de e-mail permanecem na organização de teste`);
-  void est;
-  if (est.onboardedOriginal !== undefined) await patchOrg({ onboarded_at: est.onboardedOriginal });
+    await p.getByRole("alertdialog").getByRole("button", { name: "Remover a caixa", exact: true }).click();
+    const toastOk = await p.locator("[data-sonner-toast]", { hasText: "Caixa removida" }).waitFor({ timeout: 40_000 }).then(() => true).catch(() => false);
+    item(`${n}.${rotulo}-aviso`, "'Remover a caixa' mostra o aviso 'Caixa removida.'", toastOk);
+    const saiu = await p.locator('[data-testid="caixa-email"]').waitFor({ state: "detached", timeout: 20_000 }).then(() => true).catch(() => false);
+    item(`${n}.${rotulo}-sai-da-tela`, "a caixa sai da tela e o assistente de conexão volta", saiu && (await p.locator('[data-testid="assistente-email"]').waitFor({ timeout: 15_000 }).then(() => true).catch(() => false)));
+    await foto(p, `${rotulo}-aba-sem-caixa`);
+    const linha = (await caixasDoBanco()).find((c) => c.id === ativa.id);
+    item(`${n}.${rotulo}-arquivada`, "(banco) a caixa ficou arquivada (STOPPED, archived_at preenchido) e a linha não foi apagada", Boolean(linha?.archived_at) && linha?.status === "STOPPED", `status ${linha?.status}`);
+    item(`${n}.${rotulo}-senha-some`, "(banco) a senha guardada sumiu (0 linhas em email_credenciais)", (await senhasGuardadas(ativa.id)) === 0);
+    const conversasDepois = (await conversasDaCaixa(ativa.id)).length;
+    item(`${n}.${rotulo}-conversas-ficam`, "(banco) as conversas da caixa continuam", conversasDepois === conversasAntes && conversasAntes > 0, `${conversasAntes} antes, ${conversasDepois} depois`);
+    return { id: ativa.id, conversas: conversasAntes };
+  };
+  try {
+    await comNavegador(async (p) => {
+      // ---- 1) remover pela tela (com cancelar antes) ----
+      const cartao0 = await abaEmail(p);
+      const botoes = await cartao0.getByRole("button").allInnerTexts();
+      item(`${n}.ui-remover`, "o cartão da caixa oferece 'Remover caixa' pela tela", botoes.includes("Remover caixa"), `botões: ${botoes.join(", ")}`);
+      const removida = await removerPelaTela(p, "remover", { cancelarAntes: true });
+      const viuConversa = await acharConversa(p, est.assuntoPergunta, 90_000);
+      item(`${n}.conversas-na-tela`, "as conversas da caixa removida continuam visíveis no Inbox", viuConversa);
+      await foto(p, "inbox-com-caixa-removida", { medir: false });
+
+      // ---- 2) reconectar o MESMO endereço ----
+      await abaEmail(p);
+      await p.getByRole("button", { name: "Outro provedor", exact: true }).click();
+      await p.fill("#email-endereco", em.EMAIL1);
+      await p.fill("#email-senha", em.SENHA1);
+      await p.fill("#email-imap-host", em.EMAIL_HOST);
+      await p.fill("#email-imap-porta", em.EMAIL_IMAP_PORT);
+      await p.fill("#email-smtp-host", em.EMAIL_HOST);
+      await p.fill("#email-smtp-porta", em.EMAIL_SMTP_PORT);
+      await p.fill("#email-assinatura", "-- Equipe de teste 005");
+      await p.getByRole("button", { name: "Testar", exact: true }).click();
+      const testou = await p.locator('[data-testid="assistente-email"] [role=status]', { hasText: "Deu certo" }).waitFor({ timeout: 75_000 }).then(() => true).catch(() => false);
+      item(`${n}.reconectar-testar`, "reconectar: o Testar do mesmo endereço dá certo", testou);
+      await p.getByRole("button", { name: "Conectar", exact: true }).click();
+      const voltou = await p.locator('[data-testid="caixa-email"]').first().waitFor({ timeout: 60_000 }).then(() => true).catch(() => false);
+      item(`${n}.reconectar-volta`, "reconectar: a caixa volta à tela", voltou);
+      if (voltou) {
+        await dormir(2000);
+        const cartaoNovo = p.locator('[data-testid="caixa-email"]').first();
+        const txt = await cartaoNovo.innerText();
+        item(`${n}.reconectar-estado`, "reconectar: o cartão mostra Conectada, limites e a senha só como ••••últimos4", /Conectada/.test(txt) && /Limite por dia/.test(txt) && /••••/.test(txt) && !txt.includes(em.SENHA1));
+        await foto(p, "reconectada");
+        const [nova] = await caixasAtivas();
+        item(`${n}.reconectar-mesma-linha`, "(banco) a mesma linha de caixa foi ressuscitada (sem criar outra)", nova?.id === removida.id, nova?.id === removida.id ? "mesmo id" : "id diferente");
+        item(`${n}.reconectar-senha`, "(banco) a senha foi guardada de novo (1 linha)", (await senhasGuardadas(nova.id)) === 1);
+        const convs = await conversasDaCaixa(nova.id);
+        item(`${n}.reconectar-conversas`, "(banco) as conversas voltam ligadas à caixa reconectada", convs.length >= removida.conversas, `${convs.length} conversa(s), eram ${removida.conversas}`);
+        const viu2 = await acharConversa(p, est.assuntoPergunta, 90_000);
+        item(`${n}.reconectar-conversas-na-tela`, "as conversas aparecem no Inbox com a caixa reconectada", viu2);
+        await foto(p, "inbox-apos-reconectar", { medir: false });
+        gravarEstado({ caixaId: nova.id });
+      }
+
+      // ---- 3) deixa a organização como encontrou: remove de novo, pela tela ----
+      if ((await caixasAtivas()).length === 1) {
+        await removerPelaTela(p, "remover-final");
+      }
+      const finais = await caixasAtivas();
+      item(`${n}.sem-caixa`, "(banco) a organização ficou SEM caixa de e-mail ativa", finais.length === 0, `${finais.length} ativa(s)`);
+    });
+  } finally {
+    if (est.onboardedOriginal !== undefined) {
+      await patchOrg({ onboarded_at: est.onboardedOriginal });
+      const [o] = await ler(`organizations?select=onboarded_at&id=eq.${orgId}`);
+      item(`${n}.onboarding`, "onboarded_at da organização voltou ao valor original", JSON.stringify(o.onboarded_at) === JSON.stringify(est.onboardedOriginal), `original ${JSON.stringify(est.onboardedOriginal)}`);
+    }
+  }
+  const todas = await caixasDoBanco();
+  const convs = await ler(`conversations?select=id&organization_id=eq.${orgId}&channel_session_id=in.(${todas.map((c) => c.id).join(",") || "00000000-0000-0000-0000-000000000000"})`);
+  item(`${n}.residuos`, "resíduos (conversas/mensagens/contatos/auditoria) ficam: o produto não os apaga sem LGPD", null, `${convs.length} conversa(s) de e-mail permanecem na organização de teste`);
+} else if (passo === "celular") {
+  // Layout em celular (375x812): sem rolagem lateral da página, botões >= 44 px de altura, texto >= 12 px.
+  const medirRegiao = (p, seletor) =>
+    p.evaluate((sel) => {
+      const raiz = document.querySelector(sel);
+      if (!raiz) return null;
+      const larguraDaJanela = window.innerWidth;
+      const visiveis = (e) => {
+        const r = e.getBoundingClientRect();
+        const cs = getComputedStyle(e);
+        return r.width > 0 && r.height > 0 && cs.visibility !== "hidden" && cs.display !== "none";
+      };
+      const botoes = [...raiz.querySelectorAll("button, a[href], select, input:not([type=hidden])")].filter(visiveis).map((e) => {
+        const r = e.getBoundingClientRect();
+        return { nome: (e.getAttribute("aria-label") ?? e.innerText ?? e.id ?? e.tagName).toString().trim().slice(0, 40), altura: Math.round(r.height), largura: Math.round(r.width), foraDaJanela: r.left < -1 || r.right > larguraDaJanela + 1 };
+      });
+      const textos = [...raiz.querySelectorAll("*")].filter((e) => visiveis(e) && [...e.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim().length > 2));
+      const menorFonte = Math.min(...textos.map((e) => parseFloat(getComputedStyle(e).fontSize)));
+      const pequenos = textos.filter((e) => parseFloat(getComputedStyle(e).fontSize) < 12).map((e) => e.textContent.trim().slice(0, 30));
+      return {
+        larguraDaJanela,
+        larguraDaPagina: document.documentElement.scrollWidth,
+        larguraDaRegiao: raiz.scrollWidth,
+        botoes,
+        botoesBaixos: botoes.filter((b) => b.altura < 44).map((b) => `${b.nome} (${b.altura}px)`),
+        elementosForaDaJanela: botoes.filter((b) => b.foraDaJanela).length,
+        menorFonte,
+        textosPequenos: pequenos.slice(0, 5),
+      };
+    }, seletor);
+  const relatorio = {};
+  await comNavegador(
+    async (p) => {
+      await abaEmail(p);
+      const temCartao = (await p.locator('[data-testid="caixa-email"]').count()) > 0;
+      const temLista = (await p.locator('[data-testid="ignorado"]').count()) > 0;
+      item(`${n}.pre`, "há caixa e itens na lista de ignorados para medir", temCartao && temLista, `cartão ${temCartao}, itens ${await p.locator('[data-testid="ignorado"]').count()}`);
+      const regioes = [
+        ["aba-email", '[data-testid="canal-email"]'],
+        ["cartao-da-caixa", '[data-testid="caixa-email"]'],
+        ["lista-de-ignorados", '[data-testid="ignorados-email"]'],
+      ];
+      await foto(p, "aba-email-celular");
+      for (const [nome, sel] of regioes) {
+        const m = await medirRegiao(p, sel);
+        relatorio[nome] = m;
+        if (!m) { item(`${n}.${nome}`, `região ${nome} existe`, false); continue; }
+        item(`${n}.${nome}.sem-rolagem`, `${nome}: a página não rola para o lado e nenhum controle sai da janela`, m.larguraDaPagina <= m.larguraDaJanela + 1 && m.larguraDaRegiao <= m.larguraDaJanela + 1 && m.elementosForaDaJanela === 0, `janela ${m.larguraDaJanela}, página ${m.larguraDaPagina}, região ${m.larguraDaRegiao}, fora ${m.elementosForaDaJanela}`);
+        item(`${n}.${nome}.toque`, `${nome}: botões e campos tocáveis (altura >= 44 px)`, m.botoesBaixos.length === 0, m.botoesBaixos.length ? `abaixo de 44 px: ${m.botoesBaixos.join("; ")}` : `${m.botoes.length} controles, todos >= 44 px`);
+        item(`${n}.${nome}.texto`, `${nome}: texto legível (fonte >= 12 px)`, m.menorFonte >= 12, `menor fonte ${m.menorFonte}px${m.textosPequenos.length ? `; menores: ${m.textosPequenos.join(" | ")}` : ""}`);
+      }
+      // diálogos de confirmação em celular
+      await p.locator('[data-testid="caixa-email"]').first().getByRole("button", { name: "Remover caixa", exact: true }).click();
+      await p.getByRole("alertdialog").waitFor({ timeout: 10_000 });
+      const dlg = await medirRegiao(p, '[role="alertdialog"]');
+      relatorio["dialogo-remover"] = dlg;
+      item(`${n}.dialogo-remover`, "diálogo 'Remover caixa': cabe na janela e os botões têm >= 44 px", Boolean(dlg) && dlg.larguraDaPagina <= dlg.larguraDaJanela + 1 && dlg.elementosForaDaJanela === 0 && dlg.botoesBaixos.length === 0, dlg ? `fora ${dlg.elementosForaDaJanela}; baixos: ${dlg.botoesBaixos.join("; ") || "nenhum"}` : "sem diálogo");
+      await foto(p, "dialogo-remover-celular", { medir: false });
+      await p.getByRole("alertdialog").getByRole("button", { name: "Cancelar" }).click();
+      await p.locator('[data-testid="ignorado"]').first().getByRole("button", { name: "Não é cliente" }).first().click().catch(() => {});
+      if ((await p.getByRole("alertdialog").count()) > 0) {
+        const d2 = await medirRegiao(p, '[role="alertdialog"]');
+        relatorio["dialogo-nao-e-cliente"] = d2;
+        item(`${n}.dialogo-nao-e-cliente`, "diálogo 'Não é cliente': cabe na janela e os botões têm >= 44 px", Boolean(d2) && d2.larguraDaPagina <= d2.larguraDaJanela + 1 && d2.elementosForaDaJanela === 0 && d2.botoesBaixos.length === 0, d2 ? `fora ${d2.elementosForaDaJanela}; baixos: ${d2.botoesBaixos.join("; ") || "nenhum"}` : "");
+        await foto(p, "dialogo-nao-e-cliente-celular", { medir: false });
+        await p.getByRole("alertdialog").getByRole("button", { name: "Cancelar" }).click();
+      }
+      // assistente de conexão (aberto pelo botão) também em celular
+      await p.getByRole("button", { name: "Conectar outra caixa" }).click();
+      await p.getByRole("button", { name: "Outro provedor", exact: true }).click();
+      await dormir(800);
+      const ass = await medirRegiao(p, '[data-testid="assistente-email"]');
+      relatorio["assistente-de-conexao"] = ass;
+      item(`${n}.assistente.sem-rolagem`, "assistente de conexão: sem rolagem lateral", Boolean(ass) && ass.larguraDaPagina <= ass.larguraDaJanela + 1 && ass.elementosForaDaJanela === 0, ass ? `página ${ass.larguraDaPagina} / janela ${ass.larguraDaJanela}` : "");
+      item(`${n}.assistente.toque`, "assistente de conexão: controles >= 44 px", Boolean(ass) && ass.botoesBaixos.length === 0, ass?.botoesBaixos.join("; ") || "todos >= 44 px");
+      await foto(p, "assistente-celular");
+    },
+    { viewport: { width: 375, height: 812 }, celular: true },
+  );
+  writeFileSync(join(EVIDENCIA, `${n}-medidas-celular.json`), mascara(JSON.stringify(relatorio, null, 2)));
+} else if (passo === "erros") {
+  // Rodada 2 (Fatia 7), achado 4: o erro do Conectar/Testar é claro, em português simples, e NUNCA convive com "Deu certo".
+  // Roda por ÚLTIMO de propósito: senhas erradas no servidor de teste podem fazê-lo recusar a hml por um tempo
+  // (ver rodada 2 no documento), e nenhum outro passo pode depender dele depois disto.
+  const est = lerEstado();
+  if (est.onboardedOriginal !== undefined) await patchOrg({ onboarded_at: new Date().toISOString() }); // o `limpar` já devolveu o original
+  try {
+    await comNavegador(async (p) => {
+      await abaEmail(p);
+      await p.waitForSelector('[data-testid="assistente-email"]');
+      const painel = p.locator('[data-testid="assistente-email"]');
+      const tecnico = /ECONN|ETIMEDOUT|ENOTFOUND|EAI_|stack|undefined|\[object|Error:|\{|\}|\b5\d\d\b|cifra|private\.|supabase/i;
+      const frasesDeErro = {};
+      const esperarErro = async (nome, ms = 75_000) => {
+        const r = await Promise.race([
+          painel.locator("[role=alert]").first().waitFor({ timeout: ms }).then(() => "erro"),
+          painel.locator("[role=status]", { hasText: "Deu certo" }).waitFor({ timeout: ms }).then(() => "ok"),
+        ]).catch(() => "tempo");
+        const texto = r === "erro" ? (await painel.locator("[role=alert]").first().innerText()).trim() : "";
+        const deuCerto = (await painel.locator("[role=status]", { hasText: "Deu certo" }).count()) > 0;
+        frasesDeErro[nome] = texto;
+        item(`${n}.${nome}`, `${nome}: aparece um aviso de erro e NÃO aparece "Deu certo"`, r === "erro" && !deuCerto, `${r}; "Deu certo" visível: ${deuCerto}`);
+        item(`${n}.${nome}-claro`, `${nome}: a frase de erro é em português simples (sem termo técnico)`, texto.length >= 15 && !tecnico.test(texto) && /[a-zà-ú]/i.test(texto), `frase: ${texto}`);
+        return r === "erro";
+      };
+      await p.getByRole("button", { name: "Outro provedor", exact: true }).click();
+      await p.fill("#email-endereco", em.EMAIL1);
+      await p.fill("#email-senha", em.SENHA1);
+      await p.fill("#email-imap-host", em.EMAIL_HOST);
+      await p.fill("#email-imap-porta", em.EMAIL_IMAP_PORT);
+      await p.fill("#email-smtp-host", em.EMAIL_HOST);
+      await p.fill("#email-smtp-porta", em.EMAIL_SMTP_PORT);
+      // (a) CONECTAR falhando: o Testar passa com a senha certa; na hora do Conectar o corpo vai com senha errada
+      await p.getByRole("button", { name: "Testar", exact: true }).click();
+      const testou = await painel.locator("[role=status]", { hasText: "Deu certo" }).waitFor({ timeout: 75_000 }).then(() => true).catch(() => false);
+      item(`${n}.testar-certo`, "Testar com os dados certos dá 'Deu certo' (ponto de partida do erro no Conectar)", testou, testou ? "" : (await painel.locator("[role=alert]").count()) ? await painel.locator("[role=alert]").first().innerText() : "sem aviso");
+      if (testou) {
+        await p.route(
+          (u) => u.pathname === "/api/v1/channels/email",
+          async (rota) => {
+            const req = rota.request();
+            if (req.method() !== "POST") return rota.continue();
+            const corpo = JSON.parse(req.postData() ?? "{}");
+            corpo.senha = "senha-errada-t044-rodada2";
+            return rota.continue({ postData: JSON.stringify(corpo) });
+          },
+        );
+        await p.getByRole("button", { name: "Conectar", exact: true }).click();
+        await esperarErro("erro-conectar-senha-errada");
+        item(`${n}.conectar-sem-caixa`, "Conectar que falhou não cria cartão de caixa e o botão Conectar volta a travar", (await p.locator('[data-testid="caixa-email"]').count()) === 0 && (await p.getByRole("button", { name: "Conectar", exact: true }).isDisabled()));
+        await foto(p, "conectar-senha-errada");
+        await p.unrouteAll({ behavior: "ignoreErrors" });
+      }
+      // (b) senha errada no Testar
+      await p.fill("#email-senha", "senha-errada-t044-rodada2");
+      await p.getByRole("button", { name: "Testar", exact: true }).click();
+      await esperarErro("erro-testar-senha-errada");
+      await foto(p, "testar-senha-errada");
+      // (c) servidor inválido no Testar
+      await p.fill("#email-senha", em.SENHA1);
+      await p.fill("#email-imap-host", "servidor-que-nao-existe.invalid");
+      await p.getByRole("button", { name: "Testar", exact: true }).click();
+      await esperarErro("erro-testar-servidor-invalido");
+      await foto(p, "testar-servidor-invalido");
+      writeFileSync(join(EVIDENCIA, `${n}-frases-de-erro.json`), mascara(JSON.stringify(frasesDeErro, null, 2)));
+      item(`${n}.sem-caixa`, "(banco) nenhuma caixa ficou ativa depois dos erros", (await caixasAtivas()).length === 0);
+    });
+  } finally {
+    if (est.onboardedOriginal !== undefined) await patchOrg({ onboarded_at: est.onboardedOriginal });
+  }
 }
 
 const falhas = resultados.filter((r) => r.resultado === "FALHOU").length;

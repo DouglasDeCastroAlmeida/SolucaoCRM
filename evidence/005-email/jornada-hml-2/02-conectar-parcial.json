@@ -1,0 +1,30 @@
+{
+  "observacao": "Transcrição do que o passo conectar imprimiu antes de o servidor de e-mail de teste deixar de aceitar a hml. Fotos dessas execuções parciais não foram mantidas. Nenhum dado pessoal ou senha.",
+  "hml": { "versao": "9bbf7a4", "rotas": "/ 200, /app 307" },
+  "execucao_1": {
+    "02.tab": "PASSOU",
+    "02.gmail (3 passos)": "PASSOU",
+    "02.conectar-travado": "PASSOU",
+    "medidas de layout em 1280 px": "PASSOU (0 rolagem lateral, 0 botão fora)",
+    "erro com senha errada no Testar": {
+      "resultado": "PASSOU",
+      "mostrou_Deu_certo": false,
+      "frase": "O servidor recusou o usuário ou a senha. Confira os dois e tente de novo. Em provedores como o Gmail, use a senha de app, não a senha normal da conta."
+    },
+    "erro com servidor inválido no Testar": {
+      "resultado": "PASSOU",
+      "mostrou_Deu_certo": false,
+      "frase": "Não encontramos esse servidor. Confira o endereço do servidor (por exemplo, imap.seudominio.com) e tente de novo."
+    },
+    "Testar com dados certos logo depois": "sem 'Deu certo' em 75 s (o servidor de teste já não aceitava a hml)"
+  },
+  "execucoes_2_e_3": {
+    "erro com senha errada no Testar": {
+      "resultado": "PASSOU (sem 'Deu certo', frase em português simples)",
+      "frase": "Não foi possível concluir a conexão e não identificamos a causa. Confira os dados e tente de novo.",
+      "details": { "causa": "desconhecida", "etapa": "leitura" }
+    },
+    "Testar com dados certos": "FALHOU em 5 tentativas com 90 s de pausa; depois, 25 sondagens por 1 hora com o mesmo resultado (causa desconhecida, etapa leitura), para as duas caixas de teste",
+    "controle": "Testar para imap.gmail.com com senha inventada devolveu 'senha_recusada' (a hml alcança a internet); login IMAP direto do computador de quem testa, com a senha certa, funcionou"
+  }
+}
