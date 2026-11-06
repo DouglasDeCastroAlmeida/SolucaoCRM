@@ -52,6 +52,7 @@ function linhas(tabela: string, org: string, filtro: string): number {
 }
 
 let retorno: string;
+let antes: string;
 
 beforeAll(() => {
   sql(`
@@ -90,8 +91,8 @@ beforeAll(() => {
          jsonb_build_object('nome', 'rg.png', 'caminho', '${ANEXO_2}'),
          jsonb_build_object('nome', 'cpf.png', 'caminho', '${ANEXO_3}'),
          jsonb_build_object('nome', 'grande.zip', 'caminho', null),
-         jsonb_build_object('nome', 'alheio.pdf', 'caminho', '${ANEXO_ALHEIO}')))),
-       ),
+         jsonb_build_object('nome', 'alheio.pdf', 'caminho', '${ANEXO_ALHEIO}'))))
+      ),
       ('${MSG_B}', '${ORG_B}', '${CONVERSA_B}', '${CONTATO_B}', '${SESS_B}', 'inbound', 'external_device', 'received', 'text',
        'Da outra organizacao', '${ANEXO_DA_B}',
        jsonb_build_object('email', jsonb_build_object('anexos', jsonb_build_array(
@@ -117,6 +118,9 @@ beforeAll(() => {
     on conflict (id) do nothing;
   `);
 
+  antes = valor(
+    `select coalesce(string_agg(m.id || ' org=' || m.organization_id || ' conv=' || m.conversation_id || ' tipo=' || jsonb_typeof(m.metadata -> 'email' -> 'anexos') || ' n=' || coalesce(jsonb_array_length(m.metadata -> 'email' -> 'anexos'), -1), ' ; '), '(sem mensagens)') from public.messages m where m.id = '${MSG_A}';`,
+  );
   retorno = valor(`select public.fn_lgpd_cascade_redact_contact('${ORG_A}', '${ALVO}', '${PEDIDO}')::text;`);
 });
 
@@ -149,9 +153,13 @@ describe("AC-009.2: anonimizar o contato alcança o canal de e-mail", () => {
   });
 
   it("AC-009.2: TODOS os anexos do e-mail vão para a fila de remoção (não só o primeiro)", () => {
-    expect(naFila(ANEXO_1)).toBe(1);
-    expect(naFila(ANEXO_2)).toBe(1);
-    expect(naFila(ANEXO_3)).toBe(1);
+    const fila = valor(
+      `select coalesce(string_agg(bucket || ':' || object_path || ':' || status, ' | '), '(vazia)') from public.storage_redaction_queue where organization_id = '${ORG_A}';`,
+    );
+    const diag = `fila da A: ${fila} | antes: ${antes} | retorno: ${retorno}`;
+    expect(naFila(ANEXO_1), diag).toBe(1);
+    expect(naFila(ANEXO_2), diag).toBe(1);
+    expect(naFila(ANEXO_3), diag).toBe(1);
   });
 
   it("AC-009.2: caminho de outra organização dentro do metadata nunca entra na fila, nem o anexo da B", () => {
