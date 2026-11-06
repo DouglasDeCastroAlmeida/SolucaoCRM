@@ -82,8 +82,8 @@ Cada tarefa ocupa uma linha:
 - [x] T-058 [TEST-UNIT] Cerca de i18n varre os arquivos novos e as frases novas têm espanhol (~25 min) {AC-009.5} deps: T-051, T-053, T-055, T-057
 
 ### Fechamento
-- [ ] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5}
-- [ ] T-043 [IMPL] Entradas do dicionário com a chave en/es e ajustes até a varredura de marca passar (~30 min) {AC-009.5} deps: T-042, T-018, T-037
+- [x] T-042 [TEST-UNIT] Textos novos em pt-BR, en e es pelo dicionário e a varredura de marca sem nome ou cor fixos (~30 min) {AC-009.5} <!-- reconciliado em 05/11/2026: pt-BR e es cobertos por tests/unit/i18n-canal-de-email.test.ts; o catalogo en nao existe para nenhuma tela do produto (decisao do projeto, ver cabecalho do teste), entao en fica fora -->
+- [x] T-043 [IMPL] Entradas do dicionário com a chave en/es e ajustes até a varredura de marca passar (~30 min) {AC-009.5} deps: T-042, T-018, T-037 <!-- reconciliado em 05/11/2026: entradas es em lib/i18n/email-canal.ts; varredura de marca (tests/unit/branding-*, 20 arquivos) verde; en fora pelo mesmo motivo -->
 - [ ] T-044 [TEST-E2E] Jornada pela tela na homologação com servidor de e-mail real: conectar, receber, ignorar, responder, pausar, senha recusada (~60 min) {AC-009.3} deps: T-039, T-033, T-041
 - [ ] T-045 [TEST-E2E] Sonda de produção sem nenhuma caixa conectada: resultado igual ao de antes e nenhuma conexão de e-mail feita pelo worker (~30 min) {AC-009.4}
 - [ ] T-046 [DOCS] Runbook e roteiro do dono: criar a senha de app do Gmail, outros provedores, limites, o que fazer se a senha for recusada (~40 min) deps: T-044
