@@ -62277,3 +62277,8 @@ alter table public.cobranca_assinaturas
 comment on column public.cobranca_assinaturas.checkout_provedor_id is
   'Id do checkout hospedado do provedor (checkoutSession da assinatura que ele cria). Achar a assinatura por aqui, nunca por externalReference (o Asaas não a propaga). Nulo em linhas anteriores: vale o uuid da checkout_url.';
 
+
+-- ---- brand_plans marcada como supersedida (migration 0729) ----
+-- Espelho exato da migration 20261106200000_0729_brand_plans_supersedida.sql.
+comment on table public.brand_plans is
+  'SUPERSEDIDA (mudança 003): o plano por marca vive em public.cobranca_planos.brand_id. Não ler nem gravar aqui; a tabela sai numa migration futura.';

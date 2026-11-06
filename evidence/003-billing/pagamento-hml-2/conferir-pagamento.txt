@@ -1,0 +1,13 @@
+Conferencia pos-pagamento na hml, 06/11/2026 19:44Z, conta NOVA criada pela tela da marca de teste
+(scripts/sondas/conferir-pagamento-hml.mjs, ids e chaves nao impressos)
+PASSOU  A1 existe assinatura com checkoutSession = id do checkout da organizacao
+PASSOU  A2 a assinatura esta ACTIVE
+PASSOU  A3 a primeira cobranca e PENDING, vence no fim do teste (2026-11-13) e nao foi confirmada
+PASSOU  A4 ha UMA so assinatura (por checkoutSession e pelo cliente) (1 / 1)
+PASSOU  B1 a organizacao saiu da suspensao (status active)
+PASSOU  B2 a linha de cobranca_assinaturas tem provedor, cliente e assinatura preenchidos
+PASSOU  B3 pagamento_inicial_pendente = false
+PASSOU  B4 a assinatura gravada no banco e a do Asaas
+TUDO PASSOU
+
+Antes da conciliacao horaria (19:30Z) A1-A4 passavam e B1-B4 falhavam: a conta seguiu suspensa ate a rodada do minuto 43.

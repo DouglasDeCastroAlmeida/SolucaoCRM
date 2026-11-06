@@ -63,3 +63,22 @@ abrir antes de ligar a cobrança real. A prova pela tela da 010 ainda será feit
 - Sandbox Asaas: 3 assinaturas ACTIVE; uma é a da empresa de teste (checkout `ab1cba87…`), **duas são duplicatas de testes
   anteriores** (checkouts `9093cd13…` e `d268aefc…`, criadas em 2/11 e 31/10). Não foram apagadas.
 - Arquivos fora do repositório (em `~/.secrets/`): `jornada-003-original.json`, `jornada-003-onboarded.json`, `jornada-003-base-ids.json`.
+
+## Rodada final (06/11/2026): conta nova pela tela e pagamento novo no Checkout (fecha a T-040)
+
+O que faltava no veredito PARCIAL de 03/11. Ambiente: hml, marca de teste `marca-a`, código da main `b13b36bff`.
+
+1. A hml estava em "cadastro apenas por convite" (`/admin/cadastro`); abri o cadastro só durante o teste e o fechei de novo (verificado: a tela voltou a recusar).
+2. Cadastro pela tela da marca, com plano de teste de 7 dias. O e-mail `@example.com` fez o gancho de envio falhar (`envio_falhou:send_failed`) e o Supabase cancelou a criação; com o endereço de teste do Resend (`delivered@resend.dev`) o cadastro passou. A confirmação foi pelo mesmo caminho do link do e-mail (`/login/continuar` com o `token_hash`).
+3. A organização nasceu `suspended`, `trial_com_cartao` e `pagamento_inicial_pendente`. `/app` caiu em `/account-suspended`; `/cobranca/iniciar` mostrou "Você só será cobrado em 13/11", pediu o CPF e redirecionou ao Checkout do Asaas sandbox.
+4. O dono pagou no Checkout com o cartão de teste do Asaas, pelo celular (o reCAPTCHA não admite automação).
+5. O retorno do Checkout não voltou para uma sessão logada, então a conta seguiu suspensa. A conciliação horária (`lib/billing-trial/conciliar.ts`) a reativou às 19:44Z, na rodada do minuto 43.
+6. `conferir-pagamento-hml.mjs`: A1 a A4 e B1 a B4 PASSOU (`evidence/003-billing/pagamento-hml-2/conferir-pagamento.txt`). A assinatura foi achada pelo `checkoutSession`, é única e a conta foi reativada com UMA assinatura.
+
+Achados (para melhoria, nenhum bloqueia a 003):
+- Quando o e-mail de confirmação não pode ser enviado, a tela de cadastro disse "Já enviamos…" mas a conta não foi criada.
+- Se a pessoa paga num navegador sem sessão (celular), a reativação espera até 1 hora pela conciliação.
+
+Produção (06/11/2026, após o deploy da main, todas as marcas desligadas): `sonda-producao-cobranca.mjs` P1 a P3 PASSOU (`/` 200, `/app` 307, health 200); contagens no banco por leitura: marcas com cobrança ligada 0, organizações suspensas por cobrança 0, assinaturas em trial com cartão 0, organizações 1.
+
+Resíduos: no sandbox do Asaas há agora 4 assinaturas ACTIVE (a nova é a do checkout `57c55a90…`); na hml, uma organização e um usuário de teste novos (`delivered+t003…@resend.dev`); credenciais só em `~/.secrets/teste-003-novo-hml.env`.
