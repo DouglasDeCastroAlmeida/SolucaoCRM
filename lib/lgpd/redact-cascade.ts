@@ -84,6 +84,56 @@ async function enfileirarMidiaNaFila(
   }
 }
 
+const PAGINA_DE_EMAILS = 500;
+
+/**
+ * ANEXOS DE E-MAIL (canal de e-mail, migration 0728) — ANTES da RPC, na mesma ordem do avatar e da nota.
+ *
+ * A mensagem de e-mail pode ter vários anexos guardados; só o primeiro tem ponteiro em
+ * `media_storage_path` (o passo 7 da RPC só enfileira esse). Os caminhos de TODOS estão em
+ * `metadata.email.anexos[].caminho`, que o passo 3 da RPC zera. A RPC também os enfileira (é a
+ * garantia atômica); isto é a falha FECHADA do lado do app, igual à da foto: sem a linha na fila,
+ * o arquivo do 2º anexo em diante ficaria no bucket sem ninguém capaz de achá-lo. Só entra caminho
+ * da PRÓPRIA organização. Idempotente (`unique (bucket, object_path)`).
+ */
+async function enfileirarAnexosDeEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  args: CascadeArgs,
+  idsDasConversas: string[],
+): Promise<void> {
+  const prefixo = `${args.organizationId}/`;
+  for (let de = 0; ; de += PAGINA_DE_EMAILS) {
+    const { data, error } = await admin
+      .from("messages")
+      .select("id, metadata")
+      .eq("organization_id", args.organizationId)
+      .in("conversation_id", idsDasConversas)
+      .not("metadata->email", "is", null)
+      .order("id", { ascending: true })
+      .range(de, de + PAGINA_DE_EMAILS - 1);
+    if (error) {
+      throw new Error(`[lgpd-redact-cascade] anexos de e-mail não lidos: ${error.message}`);
+    }
+    const pagina = (data ?? []) as Array<{ metadata?: unknown }>;
+    for (const mensagem of pagina) {
+      const meta = mensagem.metadata as { email?: { anexos?: unknown } } | null;
+      const anexos = meta?.email?.anexos;
+      if (!Array.isArray(anexos)) continue;
+      for (const anexo of anexos as Array<{ caminho?: unknown } | null>) {
+        const caminho = anexo?.caminho;
+        if (typeof caminho !== "string" || !caminho.startsWith(prefixo)) continue;
+        await enfileirarMidiaNaFila(admin, {
+          organizationId: args.organizationId,
+          requestId: args.requestId,
+          bucket: "whatsapp-media",
+          objectPath: caminho,
+        });
+      }
+    }
+    if (pagina.length < PAGINA_DE_EMAILS) return;
+  }
+}
+
 export async function cascadeRedactContact(args: CascadeArgs): Promise<CascadeResult> {
   const admin = createAdminClient();
 
@@ -198,6 +248,10 @@ export async function cascadeRedactContact(args: CascadeArgs): Promise<CascadeRe
         objectPath: caminho,
       });
     }
+  }
+
+  if (idsDasConversas.length > 0) {
+    await enfileirarAnexosDeEmail(admin, args, idsDasConversas);
   }
 
   const { data, error } = await admin.rpc("fn_lgpd_cascade_redact_contact" as never, {

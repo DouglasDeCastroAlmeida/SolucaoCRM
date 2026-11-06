@@ -554,6 +554,30 @@ export interface CampaignSuppressionRow {
 }
 
 /**
+ * Um e-mail que o canal de e-mail NÃO transformou em conversa e guardou só pelo cabeçalho
+ * (migration 0727). Sem `contact_id`: a ponte é o endereço do titular. A anonimização o APAGA
+ * (migration 0728), então o acesso o entrega (Art. 18 II). O `message_id` e o UID não entram:
+ * não dizem nada ao titular.
+ */
+export interface EmailIgnoradoRow {
+  id: string;
+  remetente: string;
+  assunto: string | null;
+  recebido_em: string;
+  motivo: string;
+  created_at: string;
+}
+
+/**
+ * Endereço do titular que a organização marcou como "não é cliente" (migration 0727). A
+ * anonimização o APAGA (migration 0728), e o que se apaga a pedido dele se entrega a pedido dele.
+ */
+export interface EmailRemetenteIgnoradoRow {
+  endereco_normalizado: string;
+  created_at: string;
+}
+
+/**
  * O que o relatório entrega além do corpo do documento — o art. 15.º, n.º 1
  * alínea a alínea (issue #2340). Os valores VARIÁVEIS moram aqui; o texto fixo
  * da lei (al. e) e a linha do n.º 3 vêm de `lib/legal/art15.ts` no render.
@@ -740,6 +764,13 @@ export interface ExportPayload {
    * export novo NÃO COMPILAR se esquecer.
    */
   channel_session_groups: ChannelSessionGroupRow[];
+  /**
+   * E-mails ignorados (só o cabeçalho) do endereço do titular — ver `EmailIgnoradoRow`. Obrigatório,
+   * pela mesma razão de `case_chat_messages`.
+   */
+  email_ignorados: EmailIgnoradoRow[];
+  /** O "não é cliente" do endereço do titular — ver `EmailRemetenteIgnoradoRow`. */
+  email_remetentes_ignorados: EmailRemetenteIgnoradoRow[];
   /**
    * Mensagens que o titular escreveu em GRUPOS de WhatsApp (migration 0482).
    * Moram na conversa do placeholder do grupo, não na dele, então
@@ -1712,6 +1743,45 @@ export async function collectExportData(args: CollectArgs): Promise<ExportPayloa
     }
   }
 
+  // Canal de e-mail (migrations 0727/0728): as duas tabelas não têm `contact_id`; a ponte é o
+  // endereço do titular, com a MESMA regra da redação (`email_normalized`, organização do pedido).
+  let email_ignorados: EmailIgnoradoRow[] = [];
+  let email_remetentes_ignorados: EmailRemetenteIgnoradoRow[] = [];
+  const enderecoDoTitular = (contact?.email ?? "").trim().toLowerCase();
+  if (contactId && enderecoDoTitular) {
+    const { data, error } = await admin
+      .from("email_ignorados")
+      .select("id, remetente, assunto, recebido_em, motivo, created_at")
+      .eq("organization_id", organizationId)
+      .eq("remetente", enderecoDoTitular)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) {
+      logger.warn("[lgpd-export-worker] email ignorados load failed", {
+        request_id: requestId,
+        error: error.message,
+      });
+    } else if (data) {
+      conferirTeto("email_ignorados", data, 500);
+      email_ignorados = data as unknown as EmailIgnoradoRow[];
+    }
+
+    const { data: marcados, error: erroMarcados } = await admin
+      .from("email_remetentes_ignorados")
+      .select("endereco_normalizado, created_at")
+      .eq("organization_id", organizationId)
+      .eq("endereco_normalizado", enderecoDoTitular)
+      .limit(10);
+    if (erroMarcados) {
+      logger.warn("[lgpd-export-worker] email remetentes ignorados load failed", {
+        request_id: requestId,
+        error: erroMarcados.message,
+      });
+    } else if (marcados) {
+      email_remetentes_ignorados = marcados as unknown as EmailRemetenteIgnoradoRow[];
+    }
+  }
+
   // Mensagens de grupo escritas pelo titular — ver `group_messages_authored`.
   // Duas consultas (telefone, lid) em vez de um `or` sobre caminho JSON: cada
   // uma é um filtro simples, e a união por id desfaz a mensagem que casa as duas.
@@ -2296,6 +2366,8 @@ export async function collectExportData(args: CollectArgs): Promise<ExportPayloa
     campaign_recipients,
     campaign_suppressions,
     channel_session_groups,
+    email_ignorados,
+    email_remetentes_ignorados,
     group_messages_authored,
     conversation_drafts,
     conversation_notes,
@@ -2489,6 +2561,8 @@ function emptyPayload(
     campaign_recipients: [],
     campaign_suppressions: [],
     channel_session_groups: [],
+    email_ignorados: [],
+    email_remetentes_ignorados: [],
     group_messages_authored: [],
     lead_notes: [],
     ai_agent_runs: [],
