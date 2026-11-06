@@ -1,8 +1,8 @@
 # Canal de e-mail (caixa IMAP/SMTP em Conexões)
 
-> **RASCUNHO.** Escrito a partir do código e do design da mudança 005, ainda **sem a prova
-> pela tela com um servidor de e-mail real** (tarefa T-044). Os passos do Gmail abaixo
-> precisam ser conferidos na tela do Google e do CRM antes de este texto virar guia final.
+> **Conferido pelo dono do produto com uma caixa real do Gmail (05/11/2026).** A jornada completa
+> foi provada pela tela na homologação com um servidor de e-mail de teste (mudança 005, T-044). Se um
+> passo do Google não bater com a sua tela, o Google mudou o menu: avise, que o texto é corrigido.
 
 Com o canal de e-mail, quem escreve para a sua caixa aparece como conversa no Inbox, e a sua
 equipe responde por lá. É a mesma conversa, só que o cliente fala por e-mail em vez de WhatsApp.
