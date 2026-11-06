@@ -1,15 +1,16 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { argumentos, bancoFalso, operacao, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
+import { argumentos, bancoFalso, operacao, valorDoFiltro, type BancoFalso, type Cadeia, type Resposta } from "@/tests/helpers/banco-falso-da-cobranca";
 
 const h = vi.hoisted(() => ({
   ligada: true,
   segredo: "whsec_teste" as string | null,
-  sinal: { eventoId: "evt_1", tipo: "invoice.paid", clienteRef: "cus_1" } as { eventoId: string; tipo: string; clienteRef: string | null } | null,
+  sinal: { eventoId: "evt_1", tipo: "invoice.paid", clienteRef: "cus_1" } as { eventoId: string; tipo: string; clienteRef: string | null; checkoutRef?: string | null } | null,
   permitido: true,
   baldes: [] as string[],
   aviso: vi.fn(),
+  info: vi.fn(),
   banco: undefined as unknown as BancoFalso,
 }));
 vi.mock("@/lib/instalacao/modulos", () => ({ moduloLigado: async () => h.ligada }));
@@ -22,13 +23,19 @@ vi.mock("@/lib/ai/dispatcher/rate-limit", () => ({
   },
 }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.banco.cliente }));
-vi.mock("@/lib/logger", () => ({ logger: { warn: h.aviso, error: vi.fn(), info: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: { warn: h.aviso, error: vi.fn(), info: h.info } }));
 
 import { POST } from "./route";
 
 const ORG = "cccccccc-0000-4000-8000-000000000001";
 
-interface Mundo { duplicado: boolean; statusExistente: string; dona: { organization_id: string } | null; emit: Resposta }
+interface Mundo {
+  duplicado: boolean;
+  statusExistente: string;
+  dona: { organization_id: string } | null;
+  donaPorCheckout: { organization_id: string } | null;
+  emit: Resposta;
+}
 let m: Mundo;
 
 function responder(c: Cadeia): Resposta {
@@ -38,7 +45,9 @@ function responder(c: Cadeia): Resposta {
     if (op === "select") return { data: { id: "linha-1", status: m.statusExistente } };
     return { data: null };
   }
-  if (c.tabela === "cobranca_assinaturas") return { data: m.dona };
+  if (c.tabela === "cobranca_assinaturas") {
+    return { data: valorDoFiltro(c, "eq", "checkout_provedor_id") !== undefined ? m.donaPorCheckout : m.dona };
+  }
   return {};
 }
 
@@ -67,7 +76,7 @@ beforeEach(() => {
   h.sinal = { eventoId: "evt_1", tipo: "invoice.paid", clienteRef: "cus_1" };
   h.permitido = true;
   h.baldes = [];
-  m = { duplicado: false, statusExistente: "received", dona: { organization_id: ORG }, emit: { data: "ev-1" } };
+  m = { duplicado: false, statusExistente: "received", dona: { organization_id: ORG }, donaPorCheckout: null, emit: { data: "ev-1" } };
   h.banco = bancoFalso(responder, () => m.emit);
 });
 
@@ -199,6 +208,114 @@ describe("webhook da cobrança pelo Asaas (PR 3b)", () => {
     h.permitido = false;
     expect((await doAsaas({ "asaas-access-token": TOKEN_ASAAS })).status).toBe(200);
     expect(h.baldes).toEqual([]);
+  });
+});
+
+describe("webhook do Asaas achando a empresa pelo checkout (mudança 011, AC-001)", () => {
+  const CK = "5b7c0e6a-1d2f-4a3b-9c8d-7e6f5a4b3c2d";
+  const comCheckout = (checkoutRef: string | null) => {
+    h.sinal = { eventoId: "evt_ck", tipo: "PAYMENT_CONFIRMED", clienteRef: null, checkoutRef };
+  };
+  const consultasPorCheckout = () =>
+    h.banco.cadeias.filter((c) => c.tabela === "cobranca_assinaturas" && valorDoFiltro(c, "eq", "checkout_provedor_id") !== undefined);
+
+  it("AC-001.1: aviso com o checkout da empresa suspensa (cliente ainda não gravado) acha a empresa e dispara a releitura", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    m.donaPorCheckout = { organization_id: ORG };
+
+    const res = await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(res.status).toBe(200);
+    expect(emits()).toHaveLength(1);
+    expect(emits()[0]?.args).toMatchObject({ p_event_type: "cobranca.sinal", p_entity_id: ORG, p_organization_id: ORG });
+    expect(argumentos(doLog("update")[0]!, "update")?.[0]).toMatchObject({ status: "processed" });
+    expect(valorDoFiltro(consultasPorCheckout()[0]!, "eq", "checkout_provedor_id")).toBe(CK);
+    expect(valorDoFiltro(consultasPorCheckout()[0]!, "eq", "provedor")).toBe("asaas");
+  });
+
+  it("AC-001.2: achado pelo checkout nunca passa pelo balde de desconhecidos e deixa o log de medição sem dado pessoal", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    m.donaPorCheckout = { organization_id: ORG };
+    h.permitido = false;
+
+    const res = await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(res.status).toBe(200);
+    expect(h.baldes).toEqual([]);
+    expect(emits()).toHaveLength(1);
+    expect(h.info).toHaveBeenCalledWith("cobranca.webhook_achado_por_checkout", { organization_id: ORG, provedor: "asaas" });
+  });
+
+  it("AC-001.2: cliente achado pela via de hoje não consulta o checkout", async () => {
+    h.sinal = { eventoId: "evt_ck", tipo: "PAYMENT_CONFIRMED", clienteRef: "cus_1", checkoutRef: CK };
+    m.donaPorCheckout = { organization_id: "outra" };
+
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(consultasPorCheckout()).toEqual([]);
+    expect(emits()[0]?.args).toMatchObject({ p_entity_id: ORG });
+  });
+
+  it("AC-001.3: checkoutSession que não é de nenhum checkout nosso: cliente_desconhecido, sem sinal e sob o mesmo balde", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    m.donaPorCheckout = null;
+
+    const res = await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(res.status).toBe(200);
+    expect(h.baldes).toEqual(["cobranca-webhook-desconhecido:asaas"]);
+    expect(argumentos(doLog("update")[0]!, "update")?.[0]).toMatchObject({ status: "error", error_message: "cliente_desconhecido" });
+    expect(emits()).toEqual([]);
+    expect(h.info).toHaveBeenCalledWith("cobranca.webhook_cliente_desconhecido", { provedor: "asaas", tem_checkout_session: true });
+  });
+
+  it("AC-001.3: checkout desconhecido acima do balde: 200 sem gravar linha nova", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    h.permitido = false;
+
+    expect((await doAsaas({ "asaas-access-token": TOKEN_ASAAS })).status).toBe(200);
+    expect(doLog("insert")).toEqual([]);
+  });
+
+  it("AC-001.6: aviso sem checkoutSession mantém o descarte de hoje e não consulta checkout", async () => {
+    comCheckout(null);
+    m.dona = null;
+    m.donaPorCheckout = { organization_id: ORG };
+
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(consultasPorCheckout()).toEqual([]);
+    expect(emits()).toEqual([]);
+    expect(argumentos(doLog("update")[0]!, "update")?.[0]).toMatchObject({ status: "error", error_message: "cliente_desconhecido" });
+    expect(h.info).toHaveBeenCalledWith("cobranca.webhook_cliente_desconhecido", { provedor: "asaas", tem_checkout_session: false });
+  });
+
+  it("AC-001.4: aviso forjado só acorda a releitura: o evento carrega apenas ponteiros e nenhuma conta ou assinatura é escrita", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    m.donaPorCheckout = { organization_id: ORG };
+
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(Object.keys(emits()[0]?.args.p_payload as object).sort()).toEqual(["evento_id", "provedor", "tipo"]);
+    const escritas = h.banco.cadeias.filter((c) => operacao(c) !== "select" && c.tabela !== "webhook_events_log");
+    expect(escritas).toEqual([]);
+  });
+
+  it("AC-001.7: o token nunca é gravado nem emitido, e a rota não compara o token (quem compara é o adaptador, em tempo constante)", async () => {
+    comCheckout(CK);
+    m.dona = null;
+    m.donaPorCheckout = { organization_id: ORG };
+
+    await doAsaas({ "asaas-access-token": TOKEN_ASAAS });
+
+    expect(JSON.stringify([h.banco.cadeias, h.banco.rpcs, h.info.mock.calls, h.aviso.mock.calls])).not.toContain(TOKEN_ASAAS);
+    // O ponteiro gravado é só {id,type}: o checkoutSession do corpo não vai para o arquivo de avisos.
+    expect(JSON.stringify(argumentos(doLog("insert")[0]!, "insert"))).not.toContain(CK);
   });
 });
 

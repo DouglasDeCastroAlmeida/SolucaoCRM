@@ -225,9 +225,15 @@ const eventoDoAsaas = z.object({
   // Tetos de tamanho: com o token vazado, cada aviso válido vira uma linha no arquivo de avisos.
   id: z.string().min(1).max(100),
   event: z.string().regex(/^[A-Z_]{1,64}$/),
-  payment: z.object({ customer: z.string().nullish() }).nullish(),
-  subscription: z.object({ customer: z.string().nullish() }).nullish(),
+  // `checkoutSession` fica `unknown`: valor fora de forma vira null depois, sem derrubar o aviso.
+  payment: z.object({ customer: z.string().nullish(), checkoutSession: z.unknown().optional() }).nullish(),
+  subscription: z.object({ customer: z.string().nullish(), checkoutSession: z.unknown().optional() }).nullish(),
 });
+
+/** uuid do checkout em minúsculas, ou null para qualquer coisa fora da forma. */
+function checkoutDoAviso(valor: unknown): string | null {
+  return ehIdDeCheckout(valor) ? valor.toLowerCase() : null;
+}
 
 /**
  * O Asaas autentica o aviso com o `authToken` que NÓS geramos, ecoado em
@@ -253,7 +259,12 @@ export function verificarWebhookAsaas(corpoCru: string, headers: Headers, segred
   const evento = eventoDoAsaas.safeParse(json);
   if (evento.success) {
     const { id, event, payment, subscription } = evento.data;
-    return { eventoId: id, tipo: event, clienteRef: payment?.customer ?? subscription?.customer ?? null };
+    return {
+      eventoId: id,
+      tipo: event,
+      clienteRef: payment?.customer ?? subscription?.customer ?? null,
+      checkoutRef: checkoutDoAviso(payment?.checkoutSession) ?? checkoutDoAviso(subscription?.checkoutSession),
+    };
   }
   // Token CERTO e forma inesperada: é o Asaas, não um atacante. Recusar (401) faria
   // o Asaas pausar a FILA de avisos depois das falhas seguidas, e um aviso esquisito
@@ -263,7 +274,7 @@ export function verificarWebhookAsaas(corpoCru: string, headers: Headers, segred
   const bruto = json !== null && typeof json === "object" ? (json as Record<string, unknown>) : {};
   const tipo = typeof bruto.event === "string" && /^[A-Z_]{1,64}$/.test(bruto.event) ? bruto.event : "DESCONHECIDO";
   const resumo = createHash("sha256").update(corpoCru, "utf8").digest("hex").slice(0, 40);
-  return { eventoId: `forma:${resumo}`, tipo, clienteRef: null };
+  return { eventoId: `forma:${resumo}`, tipo, clienteRef: null, checkoutRef: null };
 }
 
 export function criarAdaptadorAsaas(dep: DependenciasDoAsaas): AdaptadorDeCobranca {

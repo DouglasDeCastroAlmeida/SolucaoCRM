@@ -118,7 +118,7 @@ export default async function AccountSuspendedPage({
           <h1 className="text-2xl font-semibold">{t("Conta suspensa")}</h1>
           {/* Quem participa de várias empresas precisa saber QUAL parou. Dado, não interface: sem t(). */}
           <p className="text-base font-medium">{ativa.name}</p>
-          {mostra === "pagamento" ? (
+          {mostra === "pagamento" && previaDoTrial?.confirmando ? null : mostra === "pagamento" ? (
             <p className="text-sm text-muted-foreground">
               {t(
                 "A conta foi suspensa por falta de pagamento. Assim que o pagamento for confirmado, tudo volta a funcionar na hora.",
@@ -153,6 +153,9 @@ export default async function AccountSuspendedPage({
                 {t(
                   "Estamos confirmando o seu pagamento. Se você já informou o cartão, não precisa pagar de novo.",
                 )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("Isso costuma levar alguns minutos. Se passar de 1 hora, fale com o suporte.")}
               </p>
               {/* POST, não link: reler o Asaas é efeito, e GET é disparado por pré-carregamento. */}
               <form method="post" action="/cobranca/iniciar">

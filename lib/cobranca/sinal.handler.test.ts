@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EventRow } from "@/lib/event-log/dispatcher";
 import { bancoFalso, type BancoFalso } from "@/tests/helpers/banco-falso-da-cobranca";
 
-const h = vi.hoisted(() => ({ sincronizar: vi.fn(), linha: null as { relida_em: string | null } | null, banco: undefined as unknown as BancoFalso }));
+const h = vi.hoisted(() => ({ sincronizar: vi.fn(), confirmar: vi.fn(), linha: null as { relida_em: string | null } | null, banco: undefined as unknown as BancoFalso }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => h.banco.cliente }));
 vi.mock("./sincronizar", () => ({ sincronizar: h.sincronizar }));
+vi.mock("@/lib/billing-trial/confirmar", () => ({ confirmarTrialDoCheckout: h.confirmar }));
 
 import { cobrancaSinalHandler, JANELA_DO_COALESCER_MS } from "./sinal.handler";
 
@@ -61,4 +62,36 @@ describe("cobrancaSinalHandler", () => {
       expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "skipped", detail: `leitura_nao_transitoria:${erro}` });
     },
   );
+});
+
+describe("AC-001.1: org trial com cartão (cliente ainda não gravado) é confirmada pelo checkout, não por sincronizar", () => {
+  beforeEach(() => {
+    h.linha = { relida_em: null, trial_com_cartao: true, pagamento_inicial_pendente: true } as unknown as { relida_em: string | null };
+  });
+
+  it("AC-001.1: confirma pelo caminho da conciliação e reativa; não chama sincronizar direto", async () => {
+    h.confirmar.mockResolvedValue({ tipo: "confirmada", reativada: true, primeiraVez: true });
+    expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "ok", detail: "confirmada" });
+    expect(h.confirmar).toHaveBeenCalledWith(h.banco.cliente, { orgId: ORG, resultado: "ok", conciliacao: true });
+    expect(h.sincronizar).not.toHaveBeenCalled();
+  });
+
+  it("AC-001.1: trial já confirmado (cobrança mensal) segue por sincronizar, com o retry do dreno", async () => {
+    h.linha = { relida_em: null, trial_com_cartao: true, pagamento_inicial_pendente: false } as unknown as { relida_em: string | null };
+    h.sincronizar.mockResolvedValue({ tipo: "falhou", erro: "provedor_fora", transitorio: true });
+    expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "error" });
+    expect(h.confirmar).not.toHaveBeenCalled();
+  });
+
+  it("AC-001.4: assinatura ainda não existe no Asaas: nada muda (ok, pendente) e a conta continua suspensa", async () => {
+    h.confirmar.mockResolvedValue({ tipo: "pendente", checkoutDescartado: false });
+    expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "ok", detail: "pendente" });
+  });
+
+  it("provedor fora do ar: error (o dreno faz backoff); duas assinaturas: skipped, a conciliação avisa a Central", async () => {
+    h.confirmar.mockResolvedValue({ tipo: "provedor_fora" });
+    expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "error" });
+    h.confirmar.mockResolvedValue({ tipo: "provedor_fora", motivo: "assinatura_ambigua" });
+    expect(await cobrancaSinalHandler.handle(linha())).toMatchObject({ status: "skipped", detail: "assinatura_ambigua" });
+  });
 });

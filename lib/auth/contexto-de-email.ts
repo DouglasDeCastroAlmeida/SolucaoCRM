@@ -21,6 +21,8 @@ export interface BancoDoContexto {
   ultimoEnvio(email: string, action: string): Promise<string | null>;
   /** `true` se trocou `esperado` (pode ser `null`) por `agoraIso`. */
   marcarEnvio(email: string, action: string, esperado: string | null, agoraIso: string): Promise<boolean>;
+  /** Desfaz a reserva (`last_sent_at` volta a `null`): o envio não saiu. */
+  liberarEnvio(email: string, action: string): Promise<void>;
 }
 
 export const bancoDoContexto: BancoDoContexto = {
@@ -53,6 +55,15 @@ export const bancoDoContexto: BancoDoContexto = {
     if (error) throw new Error(`brand_email_context: ${error.code ?? "erro"}`);
     return (data?.length ?? 0) > 0;
   },
+
+  async liberarEnvio(email, action) {
+    const { error } = await createAdminClient()
+      .from("brand_email_context")
+      .update({ last_sent_at: null })
+      .eq("email", email)
+      .eq("action", action);
+    if (error) throw new Error(`brand_email_context: ${error.code ?? "erro"}`);
+  },
 };
 
 export type ResultadoDaReserva = "liberado" | "travado";
@@ -75,5 +86,25 @@ export async function reservarEnvioDeAcesso(
       detalhe: erro instanceof Error ? erro.message : String(erro),
     });
     return "liberado";
+  }
+}
+
+/**
+ * Devolve a reserva quando o envio FALHOU (o gancho não conseguiu mandar o e-mail):
+ * a trava de 60 s existe para não gerar dois e-mails, e aqui nenhum saiu. Chamar só
+ * na falha detectada do envio — nunca em sucesso, nem em caminho que simula sucesso
+ * (e-mail que já tem conta), para não revelar se o e-mail existe. Nunca lança.
+ */
+export async function liberarEnvioDeAcesso(
+  e: { email: string; acao: string; brandId: string },
+  deps: { banco: BancoDoContexto } = { banco: bancoDoContexto },
+): Promise<void> {
+  if (e.brandId === "padrao-embutida") return;
+  try {
+    await deps.banco.liberarEnvio(e.email.trim().toLowerCase(), e.acao);
+  } catch (erro) {
+    logger.warn("contexto de e-mail: não deu para liberar a reserva", {
+      detalhe: erro instanceof Error ? erro.message : String(erro),
+    });
   }
 }

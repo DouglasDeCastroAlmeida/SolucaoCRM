@@ -36,6 +36,11 @@ export interface SinalDoWebhook {
   readonly eventoId: string;
   readonly tipo: string;
   readonly clienteRef: string | null;
+  /**
+   * Só o Asaas: o `checkoutSession` (uuid, minúsculas) do pagamento/assinatura do aviso. Serve para
+   * achar a empresa quando o `clienteRef` ainda não foi gravado; é ponteiro, nunca estado.
+   */
+  readonly checkoutRef?: string | null;
 }
 
 /** A única verdade que o provedor nos dá — relida na API. Tradução: `lib/cobranca/estado.ts`. */

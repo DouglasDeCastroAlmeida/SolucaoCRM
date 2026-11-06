@@ -21,7 +21,7 @@ import { brandIdDoCadastro, MARCA_PADRAO_EMBUTIDA } from "@/lib/brands/tipos";
 import { audit, hashEmail } from "@/lib/audit";
 import { authRateLimited, AUTH_LIMITS } from "@/lib/auth/rate-limit";
 import { env } from "@/lib/env";
-import { reservarEnvioDeAcesso } from "@/lib/auth/contexto-de-email";
+import { liberarEnvioDeAcesso, reservarEnvioDeAcesso } from "@/lib/auth/contexto-de-email";
 import { MENSAGEM_DE_FALHA_DO_GANCHO } from "@/lib/auth/gancho-de-email/processar";
 
 export type SignUpResult =
@@ -326,7 +326,15 @@ export async function signUp(
     // confirmation email", e a tela mandava "Tente novamente" — seis vezes na
     // trilha, nenhuma podia dar certo. Não fura a anti-enumeração: conta que já
     // existe recebe sucesso ofuscado sem e-mail, então nunca chega aqui.
-    if (error.message.includes(MENSAGEM_DE_FALHA_DO_GANCHO)) return { ok: false, error: "email_nao_enviado" };
+    if (error.message.includes(MENSAGEM_DE_FALHA_DO_GANCHO)) {
+      // Nenhum e-mail saiu: devolve a reserva, senão a próxima tentativa (< 60 s)
+      // cai em "Já enviamos" sem que nada tenha sido enviado. Só aqui — sucesso e
+      // sucesso ofuscado (conta existente) nunca passam por este ramo.
+      if (env.AUTH_HOOK_SECRET) {
+        await liberarEnvioDeAcesso({ email: parsed.data.email, acao: "signup", brandId: marcaDoHost.id });
+      }
+      return { ok: false, error: "email_nao_enviado" };
+    }
     if (/error sending/i.test(error.message)) return { ok: false, error: "email_indisponivel" };
     return { ok: false, error: "signup_failed" };
   }

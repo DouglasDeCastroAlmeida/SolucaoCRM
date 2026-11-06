@@ -329,7 +329,7 @@ describe("verificarWebhook", () => {
   const cab = (valor: string) => new Headers({ "asaas-access-token": valor });
 
   it("⭐ token certo: sinal só com ponteiros, nada do corpo", () => {
-    expect(verificarWebhookAsaas(CORPO, cab(TOKEN), TOKEN)).toEqual({ eventoId: EVENTO.id, tipo: "PAYMENT_RECEIVED", clienteRef: CLIENTE });
+    expect(verificarWebhookAsaas(CORPO, cab(TOKEN), TOKEN)).toEqual({ eventoId: EVENTO.id, tipo: "PAYMENT_RECEIVED", clienteRef: CLIENTE, checkoutRef: null });
   });
 
   it("⭐ token vazado: corpo que jura 'pago' com o token certo vira só ponteiros (Review Focus 1)", () => {
@@ -342,15 +342,37 @@ describe("verificarWebhook", () => {
       subscription: { id: "sub_x", status: "ACTIVE", customer: CLIENTE },
     });
     const sinal = verificarWebhookAsaas(mentira, cab(TOKEN), TOKEN);
-    expect(Object.keys(sinal ?? {}).sort()).toEqual(["clienteRef", "eventoId", "tipo"]);
+    expect(Object.keys(sinal ?? {}).sort()).toEqual(["checkoutRef", "clienteRef", "eventoId", "tipo"]);
     // O `tipo` ("PAYMENT_RECEIVED") é o nome do evento, não um status: o que não pode passar é o resto.
     expect(JSON.stringify(sinal)).not.toMatch(/9999|pay_inventado|2026-10-05|sub_x/);
   });
 
   it("evento de assinatura: o cliente sai de subscription.customer", () => {
     const corpo = JSON.stringify({ id: "evt_sub_1", event: "SUBSCRIPTION_DELETED", subscription: { id: "sub_1", customer: CLIENTE } });
-    expect(verificarWebhookAsaas(corpo, cab(TOKEN), TOKEN)).toEqual({ eventoId: "evt_sub_1", tipo: "SUBSCRIPTION_DELETED", clienteRef: CLIENTE });
+    expect(verificarWebhookAsaas(corpo, cab(TOKEN), TOKEN)).toEqual({ eventoId: "evt_sub_1", tipo: "SUBSCRIPTION_DELETED", clienteRef: CLIENTE, checkoutRef: null });
   });
+
+  const CK = "5B7C0E6A-1D2F-4A3B-9C8D-7E6F5A4B3C2D";
+
+  it("AC-001.2: o checkoutSession do pagamento sai como checkoutRef, em minúsculas", () => {
+    const corpo = JSON.stringify({ id: "evt_ck", event: "PAYMENT_CONFIRMED", payment: { customer: CLIENTE, checkoutSession: CK } });
+    expect(verificarWebhookAsaas(corpo, cab(TOKEN), TOKEN)?.checkoutRef).toBe(CK.toLowerCase());
+  });
+
+  it("AC-001.2: o checkoutSession da assinatura também; sem customer o checkoutRef ainda vem", () => {
+    const corpo = JSON.stringify({ id: "evt_ck2", event: "SUBSCRIPTION_CREATED", subscription: { checkoutSession: CK } });
+    const sinal = verificarWebhookAsaas(corpo, cab(TOKEN), TOKEN);
+    expect(sinal?.clienteRef).toBeNull();
+    expect(sinal?.checkoutRef).toBe(CK.toLowerCase());
+  });
+
+  it.each([["não uuid", "abc"], ["objeto", { x: 1 }], ["gigante", "x".repeat(5_000)], ["número", 7]])(
+    "AC-001.3: checkoutSession %s vira checkoutRef null, sem derrubar o aviso",
+    (_n, valor) => {
+      const corpo = JSON.stringify({ id: "evt_ck3", event: "PAYMENT_RECEIVED", payment: { customer: CLIENTE, checkoutSession: valor } });
+      expect(verificarWebhookAsaas(corpo, cab(TOKEN), TOKEN)).toEqual({ eventoId: "evt_ck3", tipo: "PAYMENT_RECEIVED", clienteRef: CLIENTE, checkoutRef: null });
+    },
+  );
 
   it("evento sem payment nem subscription: clienteRef null (a rota grava cliente_desconhecido)", () => {
     const corpo = JSON.stringify({ id: "evt_x", event: "ACCOUNT_STATUS_UPDATED" });

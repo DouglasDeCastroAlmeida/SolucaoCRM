@@ -101,7 +101,22 @@ export async function POST(req: NextRequest, { params }: Rota) {
         .maybeSingle()
     : { data: null, error: null };
   if (erroDaDona) return fail("internal_error", "Não foi possível identificar a empresa.", 500, { requestId });
-  const org = (dona as { organization_id: string } | null)?.organization_id ?? null;
+  let org = (dona as { organization_id: string } | null)?.organization_id ?? null;
+  if (!org && provedor === "asaas" && sinal.checkoutRef) {
+    // Quem paga sem o navegador voltar: o cliente ainda não está na linha, mas o checkout
+    // que NÓS abrimos está. Achar por ele só acorda a releitura (o estado vem da API) e,
+    // por vir ANTES do balde abaixo, cliente achado nunca entra no limite de desconhecidos.
+    const { data: doCheckout, error: erroDoCheckout } = await admin
+      .from("cobranca_assinaturas")
+      .select("organization_id")
+      .eq("provedor", provedor)
+      .eq("checkout_provedor_id", sinal.checkoutRef)
+      .limit(1)
+      .maybeSingle();
+    if (erroDoCheckout) return fail("internal_error", "Não foi possível identificar a empresa.", 500, { requestId });
+    org = (doCheckout as { organization_id: string } | null)?.organization_id ?? null;
+    if (org) logger.info("cobranca.webhook_achado_por_checkout", { organization_id: org, provedor });
+  }
   if (!org && provedor === "asaas") {
     // O token do Asaas é estático: vazado, ele assina avisos de clientes que não
     // existem, e cada um viraria uma linha nova. Acima do balde, 200 SEM gravar:
@@ -119,6 +134,8 @@ export async function POST(req: NextRequest, { params }: Rota) {
   if (linha === "erro") return fail("internal_error", "Não foi possível registrar o aviso.", 500, { requestId });
   if (linha.status === "processed") return ok({ duplicado: true }, { requestId });
   if (!org) {
+    // Medição do payload real (sem token, e-mail nem documento): o Asaas manda checkoutSession?
+    logger.info("cobranca.webhook_cliente_desconhecido", { provedor, tem_checkout_session: Boolean(sinal.checkoutRef) });
     await admin
       .from("webhook_events_log")
       .update({ status: "error", error_message: "cliente_desconhecido", processed_at: agora })
