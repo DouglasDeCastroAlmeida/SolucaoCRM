@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+### Atrito do comprador no cadastro e no pagamento — 2026-11-07 (`011-atrito-do-comprador-no-cadastro-e-no-pagamento`)
+
+- Porte: M
+- Specs vivas atualizadas: cobranca-com-trial-no-cartao
+- Histórico: `.sdd/archive/2026-11-07-011-atrito-do-comprador-no-cadastro-e-no-pagamento/`
+
 ### Billing com trial no cartão (Asaas) — 2026-11-06 (`003-billing-com-trial-no-cartao-asaas`)
 
 - Porte: L
@@ -19,6 +25,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - Porte: L
 - Specs vivas atualizadas: canal-de-email
 - Histórico: `.sdd/archive/2026-11-06-005-canal-de-e-mail-imap-smtp/`
+
 
 
 
@@ -50,6 +57,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.89.0] — 2026-10-28
 
 ### Adicionado
@@ -61,6 +69,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **Inbox com o visual de mensageria** O inbox ganhou lista de conversas com prévia, horário e não lidas, conversa com balões agrupados, separador de dia e recibos de enviada, entregue e lida, e o atalho "/" para respostas prontas (só para quem tem permissão). As cores seguem a marca da organização com contraste legível nos temas claro e escuro. Nenhuma rota, tabela ou configuração mudou.
 
 - **Imagens, instalação e publicação passam a depender só do repositório do dono** As imagens, o instalador, o atualizador e a publicação das versões passam a apontar para o repositório do dono do produto, sem nenhuma dependência do repositório de origem. O `update.sh` leva as instalações existentes para as imagens novas sozinho, sem edição de arquivo. A publicação de uma versão agora é feita em dois passos manuais no GitHub (corte da versão e publicação da versão). Nenhuma tela, rota, tabela ou configuração mudou.
+
 
 
 
@@ -152,6 +161,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.87.0] — 2026-10-27
 
 ### Adicionado
@@ -235,6 +245,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   « publicada » e « Handoff » no cartão da sequência, a jornada e a duração dos modelos prontos, o rótulo « Email » do
   cadastro, o exemplo de atalho das respostas rápidas e os rótulos do vocabulário do funil, que eram em inglês (Lead,
   Deal, Won, Lost). Em português nada muda na tela. Crédito: @FabioMundoDigital.
+
 
 
 
@@ -374,6 +385,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **Trocar a localização no primeiro acesso não derruba a tela traduzida pelo navegador** Os seletores continuam funcionando quando a tradução automática do navegador altera o texto da opção selecionada. No primeiro acesso, escolher onde a empresa atende não interrompe mais a configuração com um erro de interface.
 
   Contribuição de @rominparekh (#3066).
+
 
 
 
@@ -544,6 +556,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.84.0] — 2026-10-16
 
 ### ⚠️ Requer atenção
@@ -688,6 +701,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **Um atendente não assume nem transfere conversa que não pode ver** Assumir ou transferir uma conversa passa a respeitar o mesmo escopo que define quem a enxerga (o modo de visibilidade em Configurações › Atendimento). Um atendente só assume ou repassa conversa que já aparece para ele. Gestores e administradores seguem com visão de toda a operação, e o modo "todos veem tudo" continua valendo onde estiver ligado. Na transferência, a tela mostra uma recusa clara em vez de erro interno. A atualização aplica a mudança de banco sozinha.
 
   Contribuição de @andersontomazi-ctrl (#2865).
+
 
 
 
@@ -845,6 +859,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **Parar ou atualizar o worker não o mata mais à força aos 5 segundos** Quando a VPS parava o worker (atualização, reinício ou `docker stop`), o processo era morto à força uns 5 segundos depois, mesmo sem nada para fazer. Se havia uma mensagem saindo nesse momento, ela podia chegar ao WhatsApp sem que o worker anotasse o envio: o sistema a mostrava como presa e depois como falha, embora tivesse saído. Agora o worker recebe o aviso de parada, para de começar trabalho novo e usa o tempo de parada para terminar o que estava em andamento. Nenhuma configuração nova, nenhum passo manual: a atualização leva a correção.
 
   Contribuição de @webtecnica (#2826), a partir da issue #2823.
+
 
 
 
@@ -1013,6 +1028,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   Você não precisa fazer nada.
 
   Contribuição de @webtecnica (#2900), fechando restos declarados nos #2687 e #2709.
+
 
 
 
@@ -1241,6 +1257,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.80.0] — 2026-10-11
 
 ### Adicionado
@@ -1350,6 +1367,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   Você não precisa fazer nada.
 
   Contribuição de @Natan2121 (#2712).
+
 
 
 
@@ -1520,6 +1538,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **O agente pela assinatura fecha o turno — a fita da resposta chega ao fechamento** Com "OpenAI pela assinatura (ChatGPT)", o turno quebrava depois da resposta; agora fecha na prévia e no WhatsApp, e as sugestões com ferramenta (propostas, "preencher com a conversa") passam a funcionar.
 
   Contribuição de @webtecnica (#2675), a partir da issue #2657 de @GabrielBottan.
+
 
 
 
@@ -1702,6 +1721,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.77.0] — 2026-10-08
 
 ### Adicionado
@@ -1853,6 +1873,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 - **Reabrir uma tarefa cancelada a devolve para Pendente, não para Concluída** E a linha do tempo do negócio deixa de ganhar "Tarefa concluída".
 
   Contribuição de @webtecnica (#2557), a partir da issue #2549 de @hudson-souza-mkt.
+
 
 
 
@@ -2028,6 +2049,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.75.0] — 2026-10-06
 
 ### Adicionado
@@ -2105,6 +2127,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   Contribuição de @valterhjr (#2423, refs #2422).
 
 - **Desconectar uma rede social apaga a assinatura de webhook que ficou órfã no provedor** Conectar uma rede social cria a assinatura no provedor e grava o id dela no canal só no fim; quando essa gravação falhava, o canal ficava `FAILED` com a assinatura viva lá fora e sem nenhuma referência a ela aqui. Desconectar então arquivava o canal e rotacionava o token do webhook, e a assinatura seguia mandando evento para uma URL que acabou de virar 404 — para sempre, sem erro na tela: o operador via a conta desconectada e o provedor reenviando. Agora, sem o id gravado, a assinatura é encontrada pela URL do próprio canal (o mesmo casamento que a conexão já faz, para não duplicar) e apagada antes do arquivamento. Quem tem o id gravado continua exatamente pelo caminho de antes, e uma falha do provedor segura a desconexão com a linha intacta para poder ser tentada de novo. Contribuição de @webtecnica (#2412, fecha #2364).
+
 
 
 
@@ -2266,6 +2289,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.73.0] — 2026-10-05
 
 ### Adicionado
@@ -2387,6 +2411,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   Agora o nome é o exato da documentação (nos três composes e no runbook). Na atualização o contêiner do WAHA é recriado e passa a mandar `X-Webhook-Hmac` em toda entrega; quem tem a exigência ligada volta a receber mensagens, agora com `valid_signature = true` no log. Nenhuma ação do operador: o segredo é o mesmo, só o nome da variável mudou.
 
   Contribuição de @paulolimajr77 (#2268).
+
 
 
 
@@ -2579,6 +2604,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 
 
+
 ## [1.71.0] — 2026-10-04
 
 ### Adicionado
@@ -2702,6 +2728,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
   Nada é preciso fazer na instalação.
 
   Contribuição de @Tong-bit-art (#2202, continua #2115).
+
 
 
 
@@ -2928,6 +2955,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **O lixo interno do JetFormBuilder não aparece mais no lead** Contribuição de @paulolimajr77 (#2051).
 
 
+
 ## [1.69.0] — 2026-09-30
 
 ### Adicionado
@@ -2962,6 +2990,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   "Aguardar" antes do "Classificar resposta" para contornar o problema vai ver os
   dois tempos somados (a espera do "Aguardar" e depois o prazo do classificar);
   se a espera extra não faz mais sentido, basta tirar o "Aguardar" do fluxo.
+
 
 
 
@@ -3005,6 +3034,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.67.0] — 2026-09-30
 
 ### Adicionado
@@ -3023,11 +3053,13 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.66.1] — 2026-09-30
 
 ### Corrigido
 
 - **Anonimizar um contato passa a apagar também a transcrição dos áudios e o texto lido das imagens dele** Quando um contato era anonimizado (LGPD), o texto das mensagens virava "[mensagem anonimizada]", mas a transcrição automática dos áudios e o texto lido das imagens e documentos continuavam guardados e legíveis, inclusive para o agente de IA. Agora a anonimização apaga esse texto junto, pelo pedido formal e pelo botão da ficha, e a atualização limpa também os contatos que já tinham sido anonimizados antes. Não é preciso fazer nada na instalação. Achado na triagem do #1988 (@AlecLimaDev).
+
 
 
 
@@ -3042,6 +3074,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Nada muda ao atualizar: enquanto a janela de resposta estiver em branco, ela segue a janela de disparo, como antes. O teto diário, o aquecimento do número e o intervalo entre envios continuam valendo para os dois tipos de envio.
 
   Contribuição de @suporteubere99-coder (#1983).
+
 
 
 
@@ -3080,6 +3113,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Refs: #1940, #1943
 
   Contribuição de @webtecnica (#1968).
+
 
 
 
@@ -3131,6 +3165,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.64.0] — 2026-09-29
 
 ### Adicionado
@@ -3161,6 +3196,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.63.6] — 2026-09-29
 
 ### Corrigido
@@ -3181,6 +3217,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.63.5] — 2026-09-29
 
 ### Corrigido
@@ -3198,6 +3235,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   A espera pela recarga de saldo não reconhecia a frase "You have no credits remaining" da OpenAI. Nesse caso a fila voltava a gastar as tentativas e gerava um `job_dead` por conversa. Agora a frase é reconhecida e a resposta espera a recarga como nos outros casos. Nenhuma configuração ou ação é necessária.
 
   Contribuição de @automatikpg-ux (#1936).
+
 
 
 
@@ -3233,6 +3271,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.63.3] — 2026-09-29
 
 ### Alterado
@@ -3242,6 +3281,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 ### Corrigido
 
 - **O histórico de um follow-up e as versões publicadas de um fluxo não podem mais ser apagados por quem só visualiza** Qualquer membro da organização, inclusive quem só tem o papel de visualizador, conseguia apagar ou alterar o histórico de uma inscrição de follow-up (o que foi enviado, pulado ou cancelado) e as versões publicadas de um fluxo, que são a base para voltar a uma versão anterior, falando direto com o banco pela chave pública do sistema e pela própria sessão, sem passar pelas telas. Agora o histórico só recebe registros novos, e só de quem é gerente ou administrador, que é o papel que as telas já exigiam para pausar, retomar, pular, adiar ou cancelar um follow-up. Ninguém altera nem apaga um registro do histórico por esse caminho, e as versões de um fluxo só saem quando um gerente ou administrador apaga o fluxo inteiro. A leitura continua liberada para todos os membros, e as telas e os envios automáticos funcionam como antes. Não há nada para fazer: a regra entra sozinha na próxima atualização.
+
 
 
 
@@ -3263,6 +3303,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.63.1] — 2026-09-29
 
 ### Corrigido
@@ -3274,6 +3315,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Se a sua atualização para a 1.61.0, 1.62.0 ou 1.63.0 parou nesse aviso, o CRM está fora do ar e o botão da tela não responde. Entre no servidor e rode a atualização de novo, na pasta do CRM: `bash hostgator-setup-kit/update.sh`. Ela termina e tira a página de manutenção do ar. Se mesmo assim parar no mesmo aviso, rode estes três comandos, que trocam o código para esta versão antes de atualizar e assim usam a conferência nova: `git fetch --tags origin`, depois `git checkout v1.63.1`, depois `bash hostgator-setup-kit/update.sh --to v1.63.1 --force`.
 
   Contribuição de @webtecnica (#1906). Relatado por @emersonraza (#1893), @Draven9 (#1897) e @pmfproducer (#1899).
+
 
 
 
@@ -3322,6 +3364,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Não exige ação de ninguém.
 
   Contribuição de @webtecnica (#1900).
+
 
 
 
@@ -3392,6 +3435,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Agora toda anotação do assistente numa conversa é conferida contra os negócios da pessoa com quem ele está falando. Se o negócio informado é dessa pessoa, segue. Se não é e ela tem um único negócio aberto, a anotação vai para ele. Com nenhum ou com vários abertos, o assistente recebe a recusa com o motivo e segue a conversa, em vez de escolher por palpite. Anotações feitas por pessoas, pela API ou por automações não mudam. Crédito: @paulolimajr77.
 
   Contribuição de @paulolimajr77 (#1874).
+
 
 
 
@@ -3475,6 +3519,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **Follow-up de silêncio para de mandar mensagem a cada poucos minutos para o mesmo contato** Um fluxo de follow-up disparado por silêncio (ex.: "Triagem parada") reinscrevia o mesmo contato a cada rodada do relógio (1×/min), assim que o envio anterior terminava — em vez de esperar o intervalo de silêncio configurado (ex.: 2 horas) entre uma tentativa e outra. Um contato que nunca respondia recebia uma mensagem nova a cada poucos minutos, indefinidamente — medido numa instalação real: 32 disparos em cerca de 9 horas para o mesmo número, risco real de o número ser marcado como spam pelo WhatsApp. Agora a varredura respeita o intervalo configurado entre o fim de uma tentativa e o início da próxima para o mesmo contato no mesmo fluxo. Ninguém precisa reconfigurar nada.
 
   Contribuição de @nsbastosconsultoria (#1578).
+
 
 
 
@@ -3598,6 +3643,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.59.0] — 2026-09-28
 
 ### Adicionado
@@ -3698,6 +3744,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.58.1] — 2026-09-28
 
 ### Corrigido
@@ -3715,6 +3762,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Depois disso as atualizações seguintes voltam a rodar sozinhas.
 
   Contribuição de @gideony (#1837).
+
 
 
 
@@ -3763,6 +3811,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Levantamento de @franceschini-lucas (#1531).
 
   Contribuição de @in100tiva (#1829).
+
 
 
 
@@ -3866,6 +3915,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.56.1] — 2026-09-27
 
 ### Corrigido
@@ -3915,6 +3965,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   deixou de bloquear.
 
   Contribuição de @deskcommopp4s-cmd (#1607, trazida no #1805).
+
 
 
 
@@ -3997,6 +4048,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   estava ligada.
 
   Contribuição de @hiro-nikaitou (#1798, issue #1710).
+
 
 
 
@@ -4176,6 +4228,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.54.0] — 2026-09-27
 
 ### Adicionado
@@ -4272,6 +4325,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   em que o app fechava, ela morria no meio e a pessoa via um erro 502 raro e sem explicação —
   um salvamento podia falhar e dar certo ao tentar de novo. Agora o app segura a conexão por
   125 segundos, e quem fecha primeiro é sempre o proxy. Nada a fazer: vale ao atualizar.
+
 
 
 
@@ -4488,6 +4542,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.52.0] — 2026-09-26
 
 ### Adicionado
@@ -4590,6 +4645,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.51.0] — 2026-09-26
 
 ### Adicionado
@@ -4668,6 +4724,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.50.0] — 2026-09-25
 
 ### Adicionado
@@ -4695,6 +4752,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **O botão "Anonimizar contato" da ficha passa a apagar tudo o que o pedido formal de LGPD apaga** Anonimizar um contato pelo botão da ficha agora usa a mesma redação completa do pedido formal de LGPD: além do contato, das conversas e das mensagens, passam a ser redigidos os pedidos e as vendas (valores e datas continuam, só sai o dado pessoal), as chamadas de voz, a prospecção, os casos do agente e seus avisos, as demandas, as passagens de atendimento, e o consentimento, a origem e as etiquetas do contato. O nome do contato passa a ficar como "Cliente Anonimizado #…", o mesmo rótulo do pedido formal. Contatos anonimizados antes desta versão não são reprocessados. Crédito: @webtecnica (#1659).
 
 - **O Testar do agente consulta o catálogo e o acervo de conhecimento** Na aba Teste do agente, as capacidades "Procurar produto na loja" e "Consultar o que a empresa já sabe" eram recusadas com "Esta consulta precisa de um contato real autorizado". Quem perguntava preço, agenda ou disponibilidade recebia "vou confirmar e já te retorno", como se o catálogo estivesse vazio, embora o mesmo agente respondesse certo no WhatsApp. Agora o Teste faz essas duas consultas como o atendimento real, só leitura. Consultas sobre um contato ou lead continuam exigindo um contato real.
+
 
 
 
@@ -4747,6 +4805,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **O agente espera a foto ficar legível quando o cliente manda a foto e depois escreve** Quando o cliente mandava uma foto (um comprovante, por exemplo) e logo depois escrevia a pergunta em outra mensagem, o turno do agente saía pela mensagem de texto sem esperar a leitura da foto, e o agente pedia ao cliente que descrevesse uma imagem que o sistema terminava de ler segundos depois. Agora a espera olha a conversa inteira: se há mídia recebida ainda sendo lida, o turno aguarda até o mesmo teto de antes, contado a partir da hora em que a mídia chegou. Mídia que o sistema não vai ler (vídeo com leitura desligada, arquivo que não chegou ao storage) não segura a resposta.
 
   Contribuição de @deskcommopp4s-cmd (#1594).
+
 
 
 
@@ -4979,6 +5038,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.47.0] — 2026-09-24
 
 ### Adicionado
@@ -4998,6 +5058,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Trabalho de @vgamkt, recortado do PR #1130 (segunda de quatro partes).
 
 - **No Inbox, a resposta enviada não some mais e o texto seguinte não é apagado** Numa conversa com histórico carregado, a resposta recém-enviada podia aparecer e sumir: ela entrava no pedaço mais antigo da conversa, não no mais recente. Agora ela aparece no fim da conversa e é trocada pela mensagem confirmada sem duplicar; se o envio falha, só ela sai da tela. Quem já tinha começado a digitar a próxima resposta enquanto a anterior era enviada também perdia esse texto quando a anterior era confirmada, e agora ele fica. E a conferência periódica que recupera mensagens perdidas pelo Inbox voltou a rodar: ela recomeçava a contagem a cada atualização da tela e, com a tela mudando, nunca chegava a rodar. Contribuição de @gustavorodcruz96 (#1527).
+
 
 
 
@@ -5104,6 +5165,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.45.0] — 2026-09-23
 
 ### Adicionado
@@ -5160,6 +5222,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.44.0] — 2026-09-23
 
 ### Adicionado
@@ -5208,6 +5271,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Diagnóstico de @vgamkt (#1130).
 
 - **A criação e a sincronização de modelos do parceiro passam a exigir papel de administrador** Na tela de modelos do canal intermediado, criar e sincronizar modelos de mensagem passa a exigir o papel de administrador, como já acontece com os modelos do canal oficial. Ver a lista continua disponível a quem atende, porque o seletor do inbox usa a mesma lista. O pedido de criação agora é validado antes de chegar à plataforma, e o registro de auditoria passa a indicar quem criou o modelo.
+
 
 
 
@@ -5456,6 +5520,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **Duas bibliotecas internas sobem de versão para fechar avisos de segurança** O aviso automático de segurança do repositório apontou quatro problemas em bibliotecas que o sistema usa por dentro. Três são da `hono` (que atende chamadas HTTP internas): um pedido malformado podia fazer o serviço consumir memória sem limite, um endereço com fragmento podia confundir cache e proxy, e uma função de exportação ainda escrevia fora da pasta de destino. O quarto é da `js-yaml`, usada só no desenvolvimento do projeto, que podia gastar processador à toa.
 
   As duas subiram para as versões que corrigem tudo isso (`hono` 4.13.8 e `js-yaml` 4.3.2). Nenhuma tela, nenhuma configuração e nenhum comando mudam: quem opera uma VPS só precisa atualizar como de costume.
+
 
 
 
@@ -5737,6 +5802,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   O teste passa a isolar essas variáveis, e a devolvê-las depois.
 
   Contribuição de @lussandro (#1427).
+
 
 
 
@@ -6086,6 +6152,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.40.0] — 2026-09-19
 
 ### Adicionado
@@ -6113,6 +6180,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   passar pela tela, driblaria as duas primeiras.
 
 - **Follow-up ganha horário próprio por agente** Cada agente pode limitar os follow-ups automáticos a dias e horários próprios, sem reduzir o período em que responde mensagens recebidas. Fora da faixa, o envio fica aguardando a próxima abertura no fuso da organização e ainda passa pelas regras anti-ban do número. Crédito: @joaopaulomirandamatias.
+
 
 
 
@@ -6265,6 +6333,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Agora o sistema **pergunta se há o que baixar** antes de oferecer. E se a VPS estiver sem acesso ao registro, ele **continua oferecendo**: deixar de oferecer para sempre, em silêncio, por causa de um problema de rede seria pior.
 
   Trabalho de @paulolimajr77, recortado do #803.
+
 
 
 
@@ -6582,6 +6651,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.37.0] — 2026-09-19
 
 ### Adicionado
@@ -6728,6 +6798,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   responde já está rodando a versão que o aviso diz ter falhado, o aviso sai e o
   botão volta. Numa falha de verdade, em que o sistema voltou mesmo para a versão
   anterior, o aviso continua aparecendo como antes, com o comando para retornar.
+
 
 
 
@@ -6934,6 +7005,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.35.1] — 2026-09-18
 
 ### Alterado
@@ -7044,6 +7116,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   verificação do projeto, antes de qualquer versão ser publicada. O que muda é o
   tempo até um conserto chegar até você, porque contribuições boas deixam de ficar
   paradas por um diagnóstico errado.
+
 
 
 
@@ -7316,6 +7389,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.34.0] — 2026-09-18
 
 ### Adicionado
@@ -7487,6 +7561,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.33.0] — 2026-09-17
 
 ### Adicionado
@@ -7618,11 +7693,13 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.32.1] — 2026-09-17
 
 ### Corrigido
 
 - **A senha das rotinas automáticas deixa de ser gravada no log do servidor** A rotina que processa a fila de eventos a cada minuto levava a senha interna escrita na própria linha do agendamento, e o servidor anota cada execução no log do sistema: a senha ia parar lá uma vez por minuto. Agora ela fica num arquivo que só o administrador do servidor lê, e a linha do agendamento só aponta para ele. Instalações novas já nascem assim; nas existentes, a troca acontece sozinha a partir da atualização SEGUINTE a esta, porque a atualização em curso ainda roda o instalador da versão anterior. Crédito: @rafaeskytrabalho.
+
 
 
 
@@ -7644,6 +7721,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.31.1] — 2026-09-17
 
 ### Corrigido
@@ -7659,6 +7737,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **A atualização deixa de reabrir, no meio do caminho, permissões que ela mesma fecha adiante** O instalador aplica o arquivo de banco inteiro a cada atualização, um comando de cada vez. Três linhas dele concediam uma permissão que o próprio arquivo retira adiante — o banco ficava, no meio do caminho, com uma permissão a mais do que teria no fim.
 
   As três linhas saíram. O estado final do banco é exatamente o mesmo de antes: quem termina a atualização fica com as mesmas permissões de sempre, e nada muda para quem usa o sistema. Duas guardas novas impedem a volta: uma lê o arquivo e recusa concessão no corpo que seja revogada adiante, e a outra prova em banco que reaplicar o arquivo não deixa nenhuma função ganhar permissão que ela não tinha.
+
 
 
 
@@ -7775,6 +7854,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **Tag em lote no funil mostra as tags que já existem** No funil, ao selecionar vários cards, o menu "Tag…" da barra de ações só oferecia um campo para digitar uma tag nova, sem mostrar as tags que os leads já usam. Agora o menu lista até 10 tags já usadas pelos leads do funil, filtrando pelo que você digita, e clicar aplica a tag a todos os cards selecionados. Digitar uma tag nova continua funcionando. A atualização não muda nada no seu banco: a tela passa a mostrar tags que já existem. Crédito: @rafaelbatistazz.
 
 - **Tags do contato no Inbox sugerem as tags que já existem** No painel lateral do Inbox, o editor de tags do contato não sugeria nada: cada pessoa digitava a tag do zero, e a mesma ideia virava várias tags diferentes ("google", "gogle", "google ads"). Agora ele mostra, como botões "+ tag", as tags que já existem nos contatos mais recentes da organização — até oito por vez —, do mesmo jeito que o editor de tags da conversa já fazia. Clicar aplica a tag, sempre em minúsculas — é a mesma forma com que o editor já gravava o que se digita, então o rótulo do botão diz exatamente o que vai ser gravado. A atualização não mexe em nenhum dado: as tags que já estão gravadas continuam como estão, e o que muda é a sugestão aparecendo na tela. Crédito: @rafaelbatistazz.
+
 
 
 
@@ -7916,6 +7996,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.29.0] — 2026-09-16
 
 ### Adicionado
@@ -7996,6 +8077,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.28.0] — 2026-09-16
 
 ### Adicionado
@@ -8011,6 +8093,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Agora nenhum login de usuário lê esse nome — nem os colegas, nem a própria pessoa que conectou a agenda, já que nenhuma tela o exibia. Os horários ocupados continuam contando exatamente como antes. Esta versão não apaga os nomes que sobraram: ela fecha a leitura.
 
   Continua ao alcance de qualquer pessoa da organização o identificador de cada agenda sincronizada — que, na agenda principal do Google, é o e-mail da conta conectada. Dá para fechar isso sem mudar nenhuma tela — limitando a leitura dessas linhas a quem conectou a agenda e a quem gerencia a equipe, que já vê essa conta —, mas isso muda quem enxerga o quê e não entra nesta correção.
+
 
 
 
@@ -8035,6 +8118,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
     encerrar uma ligação que já tinha acabado não registra mais nada.
   - O canal que atualiza a tela em tempo real voltava de uma queda e, pouco
     depois, caía de novo sozinho. Isso afetava também a caixa de entrada.
+
 
 
 
@@ -8073,6 +8157,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.27.1] — 2026-09-15
 
 ### Corrigido
@@ -8080,6 +8165,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **O dia bloqueado também vale para o horário da noite** Em agendas com fuso diferente de UTC — no Brasil, os horários da noite —, a folga ou o feriado cadastrado para um dia não barrava o horário perto da virada: a lista de horários livres o oferecia, e a IA conseguia marcá-lo. As exceções de data passam a ser buscadas pelo dia local da jornada, e não pelo dia UTC do horário pedido — o mesmo dia que a lista de horários pergunta. A tela, a IA e a conferência da marcação feita pela IA usam a mesma leitura, então mudam juntas. O encaixe que uma pessoa marca fora da lista continua dispensando a exceção de data, como antes.
 
 - **A ocupação do Google Agenda vale para quem marca na agenda de outra pessoa** Um Atendente que marca na agenda de outra pessoa passa a conferir a ocupação contra o Google Agenda dela, e não só contra os compromissos do sistema. Antes, a conexão de Google do dono não era visível para o Atendente, e com ela sumiam os compromissos pessoais do dono: a lista de horários livres os oferecia e a marcação era aceita por cima deles, tanto no horário da lista quanto no encaixe fora dela. A tela e a recusa dizem só ocupado ou livre; para conferir, o sistema lê o início e o fim de cada compromisso do Google de quem atende, nunca o título ou o conteúdo do evento. A grade da agenda ainda não desenha esses compromissos para o Atendente; quando ele escolhe um desses horários, a recusa avisa que o horário já está ocupado na agenda de quem atende.
+
 
 
 
@@ -8102,6 +8188,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **A falha ao atualizar a conversa depois de uma mensagem passa a ficar registrada nos três canais** Quando uma mensagem é gravada e a atualização da conversa falha logo em seguida, a mensagem existe, mas a conversa não sobe na lista do Inbox e, no canal oficial, a janela de resposta de 24 horas não abre. No canal oficial essa falha não era registrada em lugar nenhum; no canal intermediado ficava só no log do servidor, que se perde quando ele reinicia. Agora os três canais gravam a ocorrência no registro de eventos do banco, com a conversa, o sentido da mensagem e o motivo. Nenhuma tela mostra esse registro ainda: ele serve para quem investiga uma conversa que ficou para trás. O texto da mensagem do cliente não é copiado para ele.
 
 - **Foto ou áudio que o provedor de IA recusou passa a abrir aviso na Central** O aviso "O agente não conseguiu ler uma foto ou áudio que o cliente enviou" já aparecia na Central quando o modelo escolhido não enxerga imagens, quando o provedor não está disponível nesta instalação ou quando falta a chave para transcrever áudio. Quando a falha vinha da própria chamada ao provedor — chave recusada, modelo que a conta não pode usar, tempo esgotado — ou do download do arquivo, o sistema tentava cinco vezes e desistia sem avisar ninguém. Agora essa desistência abre o mesmo aviso, com a frase de erro do provedor, que diferencia chave errada de modelo não liberado. No mesmo momento a Central recebe também o aviso de processamento que parou de tentar, se não houver um desses já aberto; numa pane, fica no máximo um de cada aberto por organização. Esses avisos não escondem o de que a IA deixou de responder um cliente, que abre por conta própria.
+
 
 
 
@@ -8212,6 +8299,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.25.1] — 2026-09-15
 
 ### Corrigido
@@ -8298,6 +8386,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.25.0] — 2026-09-15
 
 ### Adicionado
@@ -8345,6 +8434,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Nada para fazer na VPS além de atualizar quando o aviso aparecer.
 
 - **O primeiro pareamento de chamada de voz recebe o código QR** Com o serviço de voz configurado, a tela prepara a sessão antes de abrir a conexão de eventos e pedir o QR. A conexão do pareamento e a ponte que acompanha as chamadas passam a enviar a credencial já usada nas demais operações. Falhas ao receber o código aparecem na tela e permitem tentar novamente.
+
 
 
 
@@ -8399,6 +8489,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   próxima gravação da tela ou do script. Você não precisa fazer nada para adotar.
 
   Achado e corrigido por @webtecnica.
+
 
 
 
@@ -8574,6 +8665,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   ali desligaria o sistema do WhatsApp que está no ar e exigiria um QR novo.
 
   Nada muda para quem já tem número conectado.
+
 
 
 
@@ -8993,6 +9085,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.21.0] — 2026-09-14
 
 ### Adicionado
@@ -9143,6 +9236,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.20.0] — 2026-09-12
 
 ### Adicionado
@@ -9222,6 +9316,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   Agora conectar o aparelho e fazer uma ligação exigem que a chamada de voz esteja ligada para a empresa. Quem tentar antes recebe uma mensagem clara dizendo que um administrador precisa ligá-la na tela — e não um erro técnico.
 
   Quem já tinha ligado pela tela não vê diferença nenhuma.
+
 
 
 
@@ -9423,6 +9518,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.18.1] — 2026-09-11
 
 ### Corrigido
@@ -9432,6 +9528,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 - **A letra volta a aparecer sobre o destaque colorido da agenda** Na agenda, o que estava selecionado — a aba do histórico, o dia de hoje na grade, o horário escolhido na marcação — pintava o fundo com a cor da marca e deixava a letra na cor do texto da página. Em instalação com marca escura, isso era escuro sobre escuro. A letra agora recebe a cor de contraste que a marca calcula, nos dois temas.
 
 - **O seletor de tema não gera mais erro de hidratação no console** Quem tinha o tema escuro (ou claro) salvo via, no console do navegador, um aviso de "hydration mismatch" ao abrir qualquer tela — o React reclamando que o HTML do servidor e o do navegador não batiam no ícone e no texto do botão de tema. O visual não quebrava, mas o erro aparecia sempre. Agora a primeira renderização do navegador bate com a do servidor, e o tema salvo é aplicado logo em seguida, sem gerar aviso nenhum.
+
 
 
 
@@ -9572,6 +9669,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.17.0] — 2026-09-08
 
 ### Adicionado
@@ -9664,6 +9762,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.16.1] — 2026-09-07
 
 ### Corrigido
@@ -9677,6 +9776,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
   Nada muda para quem não trocou o registro: continua conferindo os mesmos
   pacotes, com o mesmo resultado.
+
 
 
 
@@ -9782,6 +9882,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.15.1] — 2026-09-05
 
 ### Corrigido
@@ -9811,6 +9912,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
   O achado é de @KIRAzinx566, que instalou o sistema para um cliente e o encontrou
   parado nessa tela.
+
 
 
 
@@ -10031,6 +10133,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   `agent_inbox_items.resolved_at`. Toda tentativa de fechar o aviso falhava
   silenciosamente. Agora a coluna existe, e o aviso fecha sozinho no mesmo
   turno em que a janela é encontrada aberta, como sempre foi a intenção.
+
 
 
 
@@ -10493,6 +10596,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   R$ 10.990) e às vezes eram remendadas com um espaço a mais ("R$ 7. 990").
 
   Agora um "." só conta como fim de frase quando não está entre dois dígitos.
+
 
 
 
@@ -10979,6 +11083,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.12.0] — 2026-09-02
 
 ### Adicionado
@@ -11075,6 +11180,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.11.1] — 2026-08-31
 
 > **Não publicada** — a tag `v1.11.1` nunca existiu: o corte não publicou imagens, e o que está abaixo chegou na 1.12.0.
@@ -11135,6 +11241,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   efeito era o atendente responder "não sei" com o material publicado ao lado, e o
   cadastro de negócios, em que um responsável inexistente ficava gravado e sumia
   dos filtros por dono.
+
 
 
 
@@ -11234,6 +11341,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.10.2] — 2026-08-30
 
 ### Corrigido
@@ -11261,6 +11369,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   ainda" mesmo com o agente respondendo. Passou a ler o registro vivo. Execuções
   anteriores a esta versão não aparecem ali — para o histórico completo, use
   IA › Execuções.
+
 
 
 
@@ -11360,6 +11469,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
   A falha também deixou de ser silenciosa: quando o Google recusar, o motivo passa
   a aparecer no registro do sistema, e não só numa coluna interna que ninguém abre.
+
 
 
 
@@ -11487,6 +11597,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.9.1] — 2026-08-28
 
 ### Corrigido
@@ -11545,6 +11656,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   outro site, e a volta do Google era exatamente isso. Agora o retorno passa por
   uma página intermediária do próprio sistema, e a pessoa cai direto na Agenda,
   ainda conectada. Quem já usava não precisa fazer nada.
+
 
 
 
@@ -11607,6 +11719,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   — inclusive quando ele foi marcado para outra semana, que era o caso em que
   mesmo fechar o painel não teria adiantado, porque a agenda continuaria mostrando
   a semana atual.
+
 
 
 
@@ -11817,6 +11930,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
 
 
 
+
 ## [1.7.0] — 2026-08-27
 
 ### Adicionado
@@ -11844,6 +11958,7 @@ Esta versão junta 106 mudanças. Cada item é curto para caber na tela de atual
   tinha mudado no meio do caminho, e isso incluía os avisos de coisas que exigiam
   a sua ação. Agora a tela lista todas as versões entre a sua e a nova, com os
   avisos reunidos no topo e cada um dizendo de que versão veio.
+
 
 
 
@@ -11940,6 +12055,7 @@ aparência de algumas telas — e para melhor, na maioria dos casos:
 
 - A lista de opções de um `<select>` nativo perdeu 2px de recuo interno. Efeito visual
   não confirmado — o menu é desenhado pelo sistema operacional, não pelo navegador.
+
 
 
 
@@ -12097,6 +12213,7 @@ para não passarem em branco. Se você já atualizou para a 1.4.1, já os leu �
 
 
 
+
 ## [1.4.1] — 2026-08-25
 
 O primeiro acesso passa a **perguntar como você já usa o seu número**, em vez de supor que
@@ -12166,6 +12283,7 @@ Fora isso, nada exige ação sua. Não há mudança de banco de dados nesta vers
 - **Um controle citado pelo nome errado.** A 1.4.0 mandava procurar "Parar a IA no limite" na
   tela de orçamento de IA. O rótulo real mostra o seu número: "Parar a IA ao chegar em
   US$ 50,00". Nada mudou na tela — mudou a descrição.
+
 
 
 
@@ -12498,6 +12616,7 @@ quem já passou por ali precisa corrigir à mão.
 
 
 
+
 ## [1.3.0] — 2026-08-13
 
 Esta versão mexe em como o sistema **chega e se atualiza** no seu servidor. Em uso, três
@@ -12561,6 +12680,7 @@ novas têm valor padrão e o próprio `update.sh` as acrescenta.
 
 
 
+
 ## [1.2.1] — 2026-08-12
 
 **Versão de segurança. Se você roda o DeskcommCRM numa VPS, atualize.**
@@ -12605,6 +12725,7 @@ cada um com um teste automático que impede o problema de voltar.
   alguém do seu time mexia nessas telas sem ser administrador, promova a pessoa a
   administrador antes de atualizar — ou ela vai encontrar as ações bloqueadas.
 - **Nenhuma ação manual no banco é necessária.** O `update.sh` aplica tudo sozinho.
+
 
 
 
@@ -12751,6 +12872,7 @@ publicado para comparar.
 
 
 
+
 ## [1.1.0] — 2026-07-30
 
 ### Adicionado
@@ -12772,6 +12894,7 @@ Quem já tem o CRM instalado precisa rodar `bash hostgator-setup-kit/update.sh` 
 terminal para ativar o botão. Não é engano: a primeira execução ainda é a do programa antigo, que
 baixa o novo mas não sabe ligar o agente da tela; a segunda já roda o programa atualizado e liga.
 Depois disso, nunca mais é preciso o terminal.
+
 
 
 
@@ -12961,5 +13084,6 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 [1.2.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/melgarafael/DeskcommCRM/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/melgarafael/DeskcommCRM/releases/tag/v1.0.0
+
 
 

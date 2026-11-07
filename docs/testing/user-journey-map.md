@@ -3645,3 +3645,13 @@ Prova em **produção**, organização "Minha Empresa", WhatsApp real, com autor
 | J50.4 | Remarcar pela equipe limpa o pedido e fecha só o aviso daquele horário | **PASS** |
 | J50.5 | Com a chave do tipo desligada o "1" não confirma nada | **PASS** |
 | J50.6 | As respostas automáticas chegam ao celular | **NÃO PROVADO**: o canal em modo de teste (`pre_go_live`) as barra |
+
+## J51 — Comprador paga sem o navegador voltar `[P0]` (2026-11-07, mudança 011)
+
+Prova na hml com conta nova pela tela da marca de teste e o Checkout do sandbox. Detalhe em `docs/solucao-crm/evidencias/003-billing/jornada-hml.md` e `evidence/011-atrito/`.
+
+| Caso | O que prova | Resultado |
+| :-- | :-- | :-- |
+| J51.1 | Pagar o Checkout e não voltar ao site reativa a conta pelo webhook em segundos (cerca de 14 s), com uma só assinatura | **PASS** (banco + Asaas, A1–A4 e B1–B4) |
+| J51.2 | O hub da conta suspensa em "confirmando" explica a espera e mantém "Verificar agora" | **PASS** (tela, captura em `evidence/011-atrito/hub-confirmando.png`) |
+| J51.3 | Falha no envio do e-mail de confirmação libera o reenvio e nunca diz "Já enviamos" | **PASS** em unidade; **NÃO PROVADO** pela tela na hml |

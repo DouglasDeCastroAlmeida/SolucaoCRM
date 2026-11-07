@@ -1,0 +1,15 @@
+Conferencia pos-pagamento na hml, 07/11/2026, conta NOVA (marca de teste), pagamento SEM voltar ao site
+(scripts/sondas/conferir-pagamento-hml.mjs, ids e chaves nao impressos)
+PASSOU  A1 existe assinatura com checkoutSession = id do checkout da organização
+PASSOU  A2 a assinatura está ACTIVE (status ACTIVE)
+PASSOU  A3 a primeira cobrança é PENDING, vence no fim do teste e não foi confirmada (status PENDING, vence 2026-11-14, esperado 2026-11-14)
+PASSOU  A4 há UMA só assinatura (por checkoutSession e pelo cliente) (1 / 1)
+PASSOU  B1 a organização saiu da suspensão (status active)
+PASSOU  B2 a linha de cobranca_assinaturas tem provedor, cliente e assinatura preenchidos (provedor asaas, modo teste, cliente ok, assinatura sub_...e0l)
+PASSOU  B3 pagamento_inicial_pendente = false (valor false)
+PASSOU  B4 a assinatura gravada no banco é a do Asaas
+
+TUDO PASSOU
+
+Linha do tempo (UTC): aviso SUBSCRIPTION_CREATED recebido 13:18:25; empresa achada pelo checkout (log cobranca.webhook_achado_por_checkout 13:18:25); tenant.reactivated 13:18:39. Cerca de 14 s, sem o navegador voltar e antes da conciliacao horaria (minuto 43).
+Payload medido: o webhook do Asaas TRAZ o checkoutSession (log tem_checkout_session=true em 07/11 00:22Z). A 1a tentativa falhou porque a busca filtrava provedor=asaas e a coluna provedor e NULA antes de o cliente ser gravado; corrigido no PR 76.

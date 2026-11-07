@@ -82,3 +82,16 @@ Achados (para melhoria, nenhum bloqueia a 003):
 Produção (06/11/2026, após o deploy da main, todas as marcas desligadas): `sonda-producao-cobranca.mjs` P1 a P3 PASSOU (`/` 200, `/app` 307, health 200); contagens no banco por leitura: marcas com cobrança ligada 0, organizações suspensas por cobrança 0, assinaturas em trial com cartão 0, organizações 1.
 
 Resíduos: no sandbox do Asaas há agora 4 assinaturas ACTIVE (a nova é a do checkout `57c55a90…`); na hml, uma organização e um usuário de teste novos (`delivered+t003…@resend.dev`); credenciais só em `~/.secrets/teste-003-novo-hml.env`.
+
+## Mudança 011 (07/11/2026): pagar sem voltar ao site reativa em segundos
+
+Fecha os dois achados da rodada final de 06/11. Ambiente: hml, marca de teste `marca-a`, código da main `1587b98`. Provas em `evidence/011-atrito/`.
+
+1. **Payload do webhook (T-001).** O aviso `SUBSCRIPTION_CREATED` do Asaas **traz** o `checkoutSession` (log `cobranca.webhook_cliente_desconhecido` com `tem_checkout_session: true`). O corpo do aviso continua sem ser gravado.
+2. **Defeito achado só pela prova real.** A 1ª tentativa (07/11 00:22Z) ainda caiu em `cliente_desconhecido`: a busca por `checkout_provedor_id` filtrava `provedor = asaas`, e a coluna `provedor` é NULA até o cliente do Asaas ser gravado. Corrigido no PR #76 (a busca aceita `provedor` nulo ou o do aviso).
+3. **Conta nova paga sem voltar ao site (T-014).** Aviso recebido às 13:18:25Z, empresa achada pelo checkout (`cobranca.webhook_achado_por_checkout`), `tenant.reactivated` às 13:18:39Z: cerca de 14 s, antes da conciliação horária (minuto 43). `conferir-pagamento-hml.mjs`: A1 a A4 e B1 a B4 PASSOU, uma só assinatura (`evidence/011-atrito/conferir-pagamento.txt`).
+4. **Hub na espera (T-015).** Conta suspensa em "confirmando" mostra "Confirmando seu pagamento", "Se passar de 1 hora, fale com o suporte" e o botão "Verificar agora" (`evidence/011-atrito/hub-confirmando.png`). Essa conta de teste não foi paga; o estado foi reproduzido gravando na linha o que o retorno do navegador grava (`checkout_url` nulo, sessão guardada, prazo de 1 h).
+5. **Cadastro.** Coberto por testes de unidade (`envio-de-acesso-da-marca.test.ts`, AC-003.1 a AC-003.5): falha de envio devolve a reserva de 60 s, sucesso a mantém. Não houve prova pela tela na hml (o e-mail de teste não falha de propósito).
+
+Resíduos na hml: 3 organizações de teste `[teste-011]` e seus usuários (`delivered+t011…@resend.dev`); a de ids `f84f30c7…` segue suspensa, sem pagamento. O cadastro da hml foi aberto só durante cada criação de conta e voltou a "só convite" (verificado).
+Observação: o worker registrou `cobranca.nota_nao_pedida` com `parse_error` logo após a reativação; fora do escopo da 011, a investigar.
