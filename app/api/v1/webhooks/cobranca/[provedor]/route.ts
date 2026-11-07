@@ -109,7 +109,9 @@ export async function POST(req: NextRequest, { params }: Rota) {
     const { data: doCheckout, error: erroDoCheckout } = await admin
       .from("cobranca_assinaturas")
       .select("organization_id")
-      .eq("provedor", provedor)
+      // `provedor` ainda é NULO enquanto o cliente do Asaas não foi gravado (medido na hml em
+      // 06/11/2026): filtrar por ele nunca achava a empresa que acabou de pagar.
+      .or(`provedor.is.null,provedor.eq.${provedor}`)
       .eq("checkout_provedor_id", sinal.checkoutRef)
       .limit(1)
       .maybeSingle();

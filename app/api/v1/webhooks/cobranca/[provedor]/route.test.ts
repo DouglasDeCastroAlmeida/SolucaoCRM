@@ -231,7 +231,10 @@ describe("webhook do Asaas achando a empresa pelo checkout (mudança 011, AC-001
     expect(emits()[0]?.args).toMatchObject({ p_event_type: "cobranca.sinal", p_entity_id: ORG, p_organization_id: ORG });
     expect(argumentos(doLog("update")[0]!, "update")?.[0]).toMatchObject({ status: "processed" });
     expect(valorDoFiltro(consultasPorCheckout()[0]!, "eq", "checkout_provedor_id")).toBe(CK);
-    expect(valorDoFiltro(consultasPorCheckout()[0]!, "eq", "provedor")).toBe("asaas");
+    // Medido na hml (06/11/2026): antes de o cliente do Asaas ser gravado a coluna `provedor` é NULA,
+    // então filtrar por provedor = asaas nunca achava a empresa. O filtro aceita NULA ou asaas.
+    expect(valorDoFiltro(consultasPorCheckout()[0]!, "eq", "provedor")).toBeUndefined();
+    expect(consultasPorCheckout()[0]!.passos.some((p) => p.metodo === "or" && p.args[0] === "provedor.is.null,provedor.eq.asaas")).toBe(true);
   });
 
   it("AC-001.2: achado pelo checkout nunca passa pelo balde de desconhecidos e deixa o log de medição sem dado pessoal", async () => {
