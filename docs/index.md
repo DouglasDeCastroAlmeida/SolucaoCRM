@@ -93,6 +93,7 @@ Detalham schema SQL e payloads exatos. **Consulte antes de modelar qualquer cois
 | [`doctrine/restricao-de-canal.md`](doctrine/restricao-de-canal.md) | Auto-restrição × hetero-restrição de canais externos; contrato de parâmetros derivado |
 | [`doctrine/separacao-fala-e-operacao.md`](doctrine/separacao-fala-e-operacao.md) | Vocabulário interno nunca vaza para o cliente |
 | [`doctrine/packaging.md`](doctrine/packaging.md) | **Doutrina de Packaging — a LEI.** 8 invariantes + política de canais + checklist de release (item 15 do DoD) |
+| [`doctrine/claude-md-completo.md`](doctrine/claude-md-completo.md) | Texto INTEGRAL do CLAUDE.md até 07/11/2026 (incidentes medidos, comandos de prova, histórico). O CLAUDE.md guarda o resumo; leia a seção daqui sob demanda. |
 | [`doctrine/prova-em-par.md`](doctrine/prova-em-par.md) | **Prova em Par — emenda ao item 12 do DoD.** Caso de aceite que atravessa agente de IA mede tela + ferramenta com o mesmo texto cru, e só conta quando os dois concordam |
 | [`doctrine/destrutivo-pede-confirmacao.md`](doctrine/destrutivo-pede-confirmacao.md) | Ação destrutiva pede confirmação que **nomeia o alvo** — dois botões gêmeos, o mesmo contrato |
 | [`doctrine/extensoes.md`](doctrine/extensoes.md) | **Doutrina de Extensões — a LEI.** Núcleo × extensão pela pergunta "com zero ativações a operação comum continua inteira?" + 13 não-negociáveis, com as políticas do DEC-004 (item 18 do DoD) |
