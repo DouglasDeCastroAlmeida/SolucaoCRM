@@ -781,6 +781,31 @@ Antes de declarar uma task pronta:
 
 Um staff engineer aprovaria? Se não, itera.
 
-## Esteira SDD
-Este projeto usa a esteira SDD (`.sdd/`). Toda mudança de comportamento passa por /sdd:new.
-Constituição: `.sdd/constitution.md`. Specs vivas: `.sdd/specs/`. Em conflito, este CLAUDE.md prevalece.
+## Esteira de desenvolvimento
+
+Desde 07/11/2026 o projeto usa as skills do `mattpocock/skills` (instaladas como skills globais do dono), no lugar da esteira SDD. O fluxo de uma mudança:
+
+1. `/grill-with-docs`: alinhar o pedido, uma pergunta por vez, antes de qualquer código.
+2. `/to-spec`: a spec vira uma issue no GitHub. **O dono aprova a spec antes de implementar.**
+3. `/to-tickets`: quebra em tarefas finas, com dependências.
+4. `/implement` (ou `/implement-spec`): TDD, uma fatia vertical por vez.
+5. `/code-review`, depois `/pr`.
+6. Bug difícil: `/diagnosing-bugs`. Trabalho grande demais para uma sessão: `/wayfinder`.
+
+O que **não muda**: só o dono manda mesclar ("Mesclar"); a Definition of Done acima; o fragmento em `.changes/`; migrations com a tripla; os 5 checks obrigatórios do CI.
+
+O histórico SDD (mudanças 001 a 011) fica em `.sdd/archive/` e as specs vivas em `.sdd/specs/`, **somente leitura**: não abrir `/sdd:new`. Cercas de teste e o CHANGELOG apontam para `.sdd/archive/`, então a pasta não pode ser renomeada. O gate do SDD (`.sdd/config.json`) está em `warn`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues vivem no GitHub Issues de DouglasDeCastroAlmeida/SolucaoCRM (CLI `gh`). Ver `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Vocabulário padrão: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. Ver `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context (`GLOSSARY.md` na raiz + `docs/adr/`). Ver `docs/agents/domain.md`.
