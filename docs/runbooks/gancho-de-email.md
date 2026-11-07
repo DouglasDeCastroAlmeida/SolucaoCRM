@@ -32,6 +32,13 @@ GOTRUE_HOOK_SEND_EMAIL_SECRETS=<o mesmo valor>
 
 Recrie o serviço `auth` do Supabase e o `app`.
 
+**A URI precisa ser `https` com o domínio público do app.** O GoTrue recente recusa
+`http://app:3000/...` (só aceita `http` para localhost) e o `auth` entra em loop de
+reinício com `only localhost, 127.0.0.1, and ::1 are supported with http`. Medido em
+produção em 07/11/2026; use `https://<domínio público do app>/api/hooks/auth/send-email`.
+Confira também que o override instalado na VPS (`docker-compose.deskcomm.yml`) mapeia as
+três chaves: um override antigo as ignora e o GoTrue segue no SMTP falso `supabase-mail`.
+
 ## Supabase Cloud
 
 Painel do projeto: Authentication > Hooks > Send Email > tipo HTTPS.
