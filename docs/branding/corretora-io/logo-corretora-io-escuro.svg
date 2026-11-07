@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" width="760" height="180">
+<g transform="translate(10,10)">
+<rect x="0" y="0" width="160" height="160" rx="36" fill="#2dd4bf"/>
+<path d="M30 82 L80 38 L130 82" fill="none" stroke="#0b1f1c" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M46 74 V122 H114 V74" fill="none" stroke="#0b1f1c" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="68" y="92" width="24" height="30" rx="5" fill="#0b1f1c"/>
+</g>
+<text x="196" y="116" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif" font-size="84" font-weight="700" letter-spacing="-1.5" fill="#f4f7f6">corretora<tspan fill="#2dd4bf">.io</tspan></text>
+</svg>
