@@ -1,4 +1,4 @@
-<!-- Texto integral do CLAUDE.md até 07/11/2026, movido sem alteração. O CLAUDE.md guarda o resumo das regras; leia a seção daqui sob demanda (incidentes medidos, comandos de prova, histórico). Mesma ordem e mesmos títulos. -->
+<!-- Texto integral do CLAUDE.md até 07/11/2026, movido da raiz do repositório (só os links relativos foram reapontados a partir desta pasta). O CLAUDE.md guarda o resumo das regras; leia a seção daqui sob demanda (incidentes medidos, comandos de prova, histórico). Mesma ordem e mesmos títulos. -->
 
 # CLAUDE.md — DeskcommCRM
 
@@ -6,11 +6,11 @@
 
 **Este arquivo é a doutrina — a autoridade final sobre convenção e anti-pattern.** Complementos, na ordem em que ajudam:
 
-- [`AGENTS.md`](AGENTS.md) — mesmo contrato em forma portável (para Codex/Cursor/Copilot e afins). É derivado deste arquivo, não o substitui. **Ao mudar doutrina aqui, verifique se `AGENTS.md` desatualizou.**
-- [`docs/index.md`](docs/index.md) — índice dos 149 docs, com regra de precedência quando dois docs discordam. Use antes de sair varrendo `docs/`.
-- [`docs/current-state.md`](docs/current-state.md) — o que está pronto, incompleto e quebrado. **Leia antes de estimar ou prometer qualquer coisa.**
-- [`docs/harness-audit.md`](docs/harness-audit.md) — onde a verificação tem buraco. Importante: `pnpm gov:verify` **não** cobre `test:db` nem `test:e2e` — verde ali não é prova para mudança de schema ou de UI.
-- [`docs/threat-model.md`](docs/threat-model.md) — superfície de ataque real do self-host.
+- [`AGENTS.md`](../../AGENTS.md) — mesmo contrato em forma portável (para Codex/Cursor/Copilot e afins). É derivado deste arquivo, não o substitui. **Ao mudar doutrina aqui, verifique se `AGENTS.md` desatualizou.**
+- [`docs/index.md`](../../docs/index.md) — índice dos 149 docs, com regra de precedência quando dois docs discordam. Use antes de sair varrendo `docs/`.
+- [`docs/current-state.md`](../../docs/current-state.md) — o que está pronto, incompleto e quebrado. **Leia antes de estimar ou prometer qualquer coisa.**
+- [`docs/harness-audit.md`](../../docs/harness-audit.md) — onde a verificação tem buraco. Importante: `pnpm gov:verify` **não** cobre `test:db` nem `test:e2e` — verde ali não é prova para mudança de schema ou de UI.
+- [`docs/threat-model.md`](../../docs/threat-model.md) — superfície de ataque real do self-host.
 
 ---
 
@@ -173,7 +173,7 @@ DeskcommCRM é um sistema operacional de vendas open source com agentes de IA na
 - **Resolvedor NUNCA lança.** `lib/branding/instalacao.ts` e `lib/branding/saida.ts` degradam para o padrão do produto e seguem: `branding()` roda em `app/layout.tsx`, e um throw ali é 500 em todas as telas
 - **Saída sem DOM usa `marcaDaSaida()`** (`lib/branding/saida.ts`) — e-mail, remetente, ícone, `issuer` do MFA. Um hex e uma frente legível, tema **claro** sempre. Nunca passe `MarcaResolvida` a template de e-mail
 - **O PDF de LGPD NUNCA leva marca.** Ele nomeia o **controlador** (`organizations.legal_name`) e o DPO resolvido. Nomear ali o revendedor — que é operador — inverteria papéis num documento que responde a direito legal. Vigiado em `tests/unit/mapas-de-arquitetura.test.ts`
-- Vazamento de marca no código é vigiado por `tests/unit/branding.test.ts` (varre `app|components|lib|workers|hooks`), com allowlist que **só encolhe**. Contexto de venda em [`docs/white-label.md`](docs/white-label.md); mapa em `docs/architecture/marca-propria.architecture.json`
+- Vazamento de marca no código é vigiado por `tests/unit/branding.test.ts` (varre `app|components|lib|workers|hooks`), com allowlist que **só encolhe**. Contexto de venda em [`docs/white-label.md`](../../docs/white-label.md); mapa em `docs/architecture/marca-propria.architecture.json`
 
 ### Doutrina DIRC (antes de adicionar campo)
 - **D**uplicar — vive aqui mesmo?
@@ -285,9 +285,9 @@ reprova o retorno do padrão. Ver a doutrina abaixo.
 
 ## Packaging e distribuição — DOUTRINA (NÃO NEGOCIÁVEL)
 
-Lei completa em [`docs/doctrine/packaging.md`](docs/doctrine/packaging.md);
+Lei completa em [`docs/doctrine/packaging.md`](../../docs/doctrine/packaging.md);
 decisões estruturais e o que foi recusado em
-[`docs/adr/0001-packaging-e-distribuicao.md`](docs/adr/0001-packaging-e-distribuicao.md).
+[`docs/adr/0001-packaging-e-distribuicao.md`](../../docs/adr/0001-packaging-e-distribuicao.md).
 O não-negociável, em quatro linhas:
 
 1. **Nenhum serviço de `docker-compose.prod.yml` constrói na máquina do
@@ -318,9 +318,9 @@ migração e vai para uma major.
 
 ## Extensões — DOUTRINA (NÃO NEGOCIÁVEL)
 
-Lei completa em [`docs/doctrine/extensoes.md`](docs/doctrine/extensoes.md); o
+Lei completa em [`docs/doctrine/extensoes.md`](../../docs/doctrine/extensoes.md); o
 contrato que existe hoje em
-[`docs/specs/extensoes-declarativas-v1.md`](docs/specs/extensoes-declarativas-v1.md).
+[`docs/specs/extensoes-declarativas-v1.md`](../../docs/specs/extensoes-declarativas-v1.md).
 A pergunta que decide o destino de uma mudança não é "isto serve a muita gente?",
 e sim **"se nenhuma organização ativar isto, a operação comum continua inteira?"**.
 O não-negociável:
@@ -339,7 +339,7 @@ O não-negociável:
 5. **Não anunciar o que não existe** (SDK, código isolado, marketplace público), e
    não extrair do núcleo recurso já distribuído sem equivalência e migração.
 6. **Módulo oficial com dados não põe tabela no baseline para todos**
-   ([ADR-0002](docs/adr/0002-tabelas-de-modulo-num-banco-so.md), aceita em 17/09/2026). Um banco
+   ([ADR-0002](../../docs/adr/0002-tabelas-de-modulo-num-banco-so.md), aceita em 17/09/2026). Um banco
    só, schema `public`; as tabelas nascem por função provisionadora fixa do módulo, quando ele é
    **instalado na instância**. Ninguém opera segundo banco — é decisão do dono, e seria impossível
    com chave estrangeira para o núcleo.
@@ -708,7 +708,7 @@ naquele clone — no Claude Code a skill GLOBAL vence a do projeto com o mesmo n
 Não há página pública própria dos guias hoje: a fonte de cada guia é o seu `SKILL.md` em
 `.agents/skills/`. Guia criado, renomeado ou com comando novo atualiza o `SKILL.md` no mesmo PR.
 Sobre a vitrine do changelog, vale a seção "A vitrine" de
-[`docs/doctrine/versionamento.md`](docs/doctrine/versionamento.md).
+[`docs/doctrine/versionamento.md`](../../docs/doctrine/versionamento.md).
 
 - `superpowers:brainstorming` — antes de implementar feature não-trivial
 - `superpowers:writing-plans` — pra task com mais de 1 etapa de DB/API
@@ -738,7 +738,7 @@ Antes de declarar uma task pronta:
 9. Env vars novas adicionadas em `.env.example` + `lib/env.ts`
 10. Doc atualizada se mudou contrato (PRD/spec)
 11. **Mudança de schema saiu como migration versionada (com `-- manifest:` no cabeçalho) + apêndice no baseline** (ver Doutrina de Migrations) — clones conseguem atualizar
-12. **Se tocou UI/fluxo de usuário: provado pela tela como um leigo faria**, em ambiente fresco estilo VPS, com evidência visual (ver Doutrina de QA Visual com Recursos Reais) — curl não conta. Quando o caminho passa por um agente de IA, o caso de aceite mede o **par** (a tela pelo agente + a ferramenta chamada direto, com o mesmo texto cru) e só conta como prova quando os dois concordam — emenda em [`docs/doctrine/prova-em-par.md`](docs/doctrine/prova-em-par.md) (#489)
+12. **Se tocou UI/fluxo de usuário: provado pela tela como um leigo faria**, em ambiente fresco estilo VPS, com evidência visual (ver Doutrina de QA Visual com Recursos Reais) — curl não conta. Quando o caminho passa por um agente de IA, o caso de aceite mede o **par** (a tela pelo agente + a ferramenta chamada direto, com o mesmo texto cru) e só conta como prova quando os dois concordam — emenda em [`docs/doctrine/prova-em-par.md`](../../docs/doctrine/prova-em-par.md) (#489)
 13. **Living System Checklist respondido** (lei em `docs/doctrine/sistema-vivo.md`; racional no manual `docs/doctrine/sistema-vivo/`) — a feature não é ilha: tem entrada + saída, emite atividade/log, aparece na tela, tem porta na navegação, tem mecanismo anti-morte, **declara seu laço de retorno** (invariante 7 — o que muda no sistema quando ela erra), e o mapa vivo (`docs/architecture/`) reflete peça nova com ≥2 arestas. Resposta que não **nomeia o artefato concreto** (consumidor real, tela real, log real) não conta
 14. **Tela nova tem porta** — declarada em **`lib/navigation/catalogo.ts`** (no `NAV_CATALOG`, com seu grupo), ou na allowlist de `tests/unit/navegacao-completude.test.ts` **com justificativa escrita**. Ter tela e ser alcançável são coisas diferentes: o CI reprova tela que existe mas em que só se chega digitando a URL.
 
@@ -756,12 +756,12 @@ Antes de declarar uma task pronta:
     sobre o que você mudou, e só nos documentos de autoridade — não saia caçando pelo repo. A
     documentação afirma como o mundo *está*, e uma auditoria de 2026-08-14 achou **227
     afirmações desatualizadas em 393 medidas**
-    ([`docs/audits/2026-08-14-afirmacoes-de-estado.md`](docs/audits/2026-08-14-afirmacoes-de-estado.md)).
+    ([`docs/audits/2026-08-14-afirmacoes-de-estado.md`](../../docs/audits/2026-08-14-afirmacoes-de-estado.md)).
     Onde a afirmação puder virar **comando**, troque em vez de corrigir: um número corrigido
     envelhece de novo; um `rode isto para saber` não envelhece nunca
 
 17. **Se o PR muda comportamento visível a quem opera uma VPS, ele traz o seu fragmento em
-    `.changes/`** (lei em [`docs/doctrine/versionamento.md`](docs/doctrine/versionamento.md)).
+    `.changes/`** (lei em [`docs/doctrine/versionamento.md`](../../docs/doctrine/versionamento.md)).
     O fragmento declara **o efeito no operador** — `nada_mudou` / `capacidade_nova` /
     `exige_acao` —, nunca o número: o número é calculado a partir do conjunto, e é por isso
     que duas sessões paralelas não colidem mais. Confira com `pnpm release:conferir`.
@@ -776,7 +776,7 @@ Antes de declarar uma task pronta:
     seção "O corte e a vitrine" de `versionamento.md`.
 
 18. **Se o PR muda comportamento, ele declara o destino: núcleo, extensão, ambos ou
-    infraestrutura** (lei em [`docs/doctrine/extensoes.md`](docs/doctrine/extensoes.md)), com a razão
+    infraestrutura** (lei em [`docs/doctrine/extensoes.md`](../../docs/doctrine/extensoes.md)), com a razão
     medida pela pergunta "se nenhuma organização ativar isto, a operação comum continua inteira?".
     "Ambos" traz o consumidor real do ponto novo do núcleo e a prova dos dois lados. Classificar como
     extensão não autoriza remover nem desligar o que já foi distribuído.

@@ -124,7 +124,61 @@ Guias deste repo em `.claude/skills/` (espelho de `.agents/skills/`): `deskcomm-
 
 ## Definition of Done
 
-1. `pnpm typecheck` zerado. 2. `pnpm lint` zerado. 3. Testes unit/e2e relevantes existem e passam. 4. RLS testada se toca tabela tenant-aware. 5. Audit log se há mutação relevante. 6. Rate limit em rota pública. 7. Zod em todo input externo. 8. Sem `console.log`. 9. Env var nova em `.env.example` + `lib/env.ts`. 10. Doc atualizada se mudou contrato. 11. **Schema: migration com `-- manifest:` + apêndice no baseline.** 12. **UI/fluxo: provado pela tela como um leigo**, com evidência visual; caminho por agente de IA mede o par (`docs/doctrine/prova-em-par.md`). 13. **Living System Checklist** respondido nomeando artefatos concretos (`docs/doctrine/sistema-vivo.md`). 14. **Tela nova tem porta** em `lib/navigation/catalogo.ts` (o `registry.ts` só deriva) ou na allowlist com justificativa. 15. **Dockerfile/compose/setup kit:** a mudança chega a quem já instalou (`docs/doctrine/packaging.md`); rode `pnpm test:shell`. 16. **Mudou comportamento: procure a afirmação de estado** sobre ele nos docs de autoridade e troque por comando quando der. 17. **Comportamento visível ao operador traz fragmento em `.changes/`** (`nada_mudou` / `capacidade_nova` / `exige_acao`; `pnpm release:conferir`; o texto vira nota pública do changelog; ninguém escreve o `CHANGELOG.md` à mão). 18. **O PR declara o destino: núcleo, extensão, ambos ou infraestrutura** (`docs/doctrine/extensoes.md`).
+Antes de declarar uma task pronta:
+
+1. `pnpm typecheck` passa zerado
+2. `pnpm lint` zerado
+3. Testes unit/e2e relevantes existem e passam
+4. RLS testada se feature toca tabela tenant-aware
+5. Audit log emitido se há mutação relevante
+6. Rate limit aplicado se rota é pública
+7. Zod valida todo input externo
+8. Sem `console.log` esquecido
+9. Env vars novas adicionadas em `.env.example` + `lib/env.ts`
+10. Doc atualizada se mudou contrato (PRD/spec)
+11. **Mudança de schema saiu como migration versionada (com `-- manifest:` no cabeçalho) + apêndice no baseline** (ver Doutrina de Migrations) — clones conseguem atualizar
+12. **Se tocou UI/fluxo de usuário: provado pela tela como um leigo faria**, em ambiente fresco estilo VPS, com evidência visual (ver Doutrina de QA Visual com Recursos Reais) — curl não conta. Quando o caminho passa por um agente de IA, o caso de aceite mede o **par** (a tela pelo agente + a ferramenta chamada direto, com o mesmo texto cru) e só conta como prova quando os dois concordam — emenda em [`docs/doctrine/prova-em-par.md`](docs/doctrine/prova-em-par.md) (#489)
+13. **Living System Checklist respondido** (lei em `docs/doctrine/sistema-vivo.md`; racional no manual `docs/doctrine/sistema-vivo/`) — a feature não é ilha: tem entrada + saída, emite atividade/log, aparece na tela, tem porta na navegação, tem mecanismo anti-morte, **declara seu laço de retorno** (invariante 7 — o que muda no sistema quando ela erra), e o mapa vivo (`docs/architecture/`) reflete peça nova com ≥2 arestas. Resposta que não **nomeia o artefato concreto** (consumidor real, tela real, log real) não conta
+14. **Tela nova tem porta** — declarada em **`lib/navigation/catalogo.ts`** (no `NAV_CATALOG`, com seu grupo), ou na allowlist de `tests/unit/navegacao-completude.test.ts` **com justificativa escrita**. Ter tela e ser alcançável são coisas diferentes: o CI reprova tela que existe mas em que só se chega digitando a URL.
+
+    ⚠️ Esta linha dizia `lib/navigation/registry.ts`, e quem a seguisse abria um
+    arquivo **sem um único lugar onde declarar**: o `registry.ts` só deriva
+    (`NAV_DESTINATIONS` sai de `NAV_CATALOG`) e reexporta. Ele é a FACE do
+    módulo — é dele que o teste importa, e por isso o engano é fácil. Quem
+    declara é o catálogo. Para conferir sem acreditar nesta linha:
+
+    ```bash
+    grep -c 'href:' lib/navigation/catalogo.ts lib/navigation/registry.ts
+    ```
+15. **Se tocou Dockerfile, compose ou setup kit: a mudança chega a quem já instalou** (lei em `docs/doctrine/packaging.md`) — nenhum serviço de produção ficou `build:`-only; variável nova tem default que não quebra `.env` antigo; a atualização não pede edição manual de arquivo; e, se mudou o que a imagem contém, o `update.sh` alcança essa peça. Rode `pnpm test:shell` — é o único gate que exercita o kit
+16. **Se o PR muda comportamento, procure a afirmação de estado sobre esse comportamento.** Só
+    sobre o que você mudou, e só nos documentos de autoridade — não saia caçando pelo repo. A
+    documentação afirma como o mundo *está*, e uma auditoria de 2026-08-14 achou **227
+    afirmações desatualizadas em 393 medidas**
+    ([`docs/audits/2026-08-14-afirmacoes-de-estado.md`](docs/audits/2026-08-14-afirmacoes-de-estado.md)).
+    Onde a afirmação puder virar **comando**, troque em vez de corrigir: um número corrigido
+    envelhece de novo; um `rode isto para saber` não envelhece nunca
+
+17. **Se o PR muda comportamento visível a quem opera uma VPS, ele traz o seu fragmento em
+    `.changes/`** (lei em [`docs/doctrine/versionamento.md`](docs/doctrine/versionamento.md)).
+    O fragmento declara **o efeito no operador** — `nada_mudou` / `capacidade_nova` /
+    `exige_acao` —, nunca o número: o número é calculado a partir do conjunto, e é por isso
+    que duas sessões paralelas não colidem mais. Confira com `pnpm release:conferir`.
+    O CI valida a FORMA de todo fragmento, mas **não** cobra a presença de um — cobrar
+    presença num check obrigatório reprovaria PR de Dependabot, PR de fork, e o próprio PR
+    de release, que consome os fragmentos e deixa o diretório vazio. A presença é cobrada
+    aqui, e por quem revisa.
+    **O `CHANGELOG.md` da `main` é a vitrine das versões.** Ninguém o escreve à mão: o corte
+    (`.github/workflows/corte-de-versao.yml`) o monta a partir dos fragmentos e abre o PR de
+    release; depois do merge, `.github/workflows/publicar-versao.yml` cria a tag e dispara a
+    publicação das imagens. O texto do fragmento é, portanto, nota pública do changelog. Lei:
+    seção "O corte e a vitrine" de `versionamento.md`.
+
+18. **Se o PR muda comportamento, ele declara o destino: núcleo, extensão, ambos ou
+    infraestrutura** (lei em [`docs/doctrine/extensoes.md`](docs/doctrine/extensoes.md)), com a razão
+    medida pela pergunta "se nenhuma organização ativar isto, a operação comum continua inteira?".
+    "Ambos" traz o consumidor real do ponto novo do núcleo e a prova dos dois lados. Classificar como
+    extensão não autoriza remover nem desligar o que já foi distribuído.
 
 Um staff engineer aprovaria? Se não, itera.
 
