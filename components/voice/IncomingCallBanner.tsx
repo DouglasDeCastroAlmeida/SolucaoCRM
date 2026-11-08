@@ -113,7 +113,7 @@ export function IncomingCallBanner() {
         </Button>
         <Button
           size="icon"
-          className="rounded-full bg-success text-white hover:brightness-95"
+          className="rounded-full bg-success text-primary-foreground hover:brightness-95"
           onClick={() => void acceptCall()}
           aria-label={t("Atender chamada")}
         >

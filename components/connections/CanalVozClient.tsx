@@ -202,7 +202,7 @@ export function CanalVozClient({ wacallsConfigured }: { wacallsConfigured: boole
           <img
             src={qrDataUrl}
             alt={t("QR Code para parear chamada de voz")}
-            className="h-64 w-64 rounded-md border bg-white p-2"
+            className="h-64 w-64 rounded-md border bg-qr-bg p-2"
           />
         </div>
       ) : pareando ? (
