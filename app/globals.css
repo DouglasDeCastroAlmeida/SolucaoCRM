@@ -36,20 +36,20 @@
      greige quente) e listas e cartões ficam no surface branco. Nenhum hex de
      superfície mudou: a régua de contraste da marca mede estes pares. Nenhum
      verde ou logo do WhatsApp: só tons da paleta do produto. */
-  --color-bg: #faf9f6;
+  --color-bg: #f7f8f9;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f5f3ee;
+  --color-surface-elevated: #f0f2f4;
   --color-overlay: rgba(28, 26, 22, 0.42);
 
-  /* Text (light) — 009: subtle escurecido (antes #7d786c, 4,40:1 no branco e
-     3,69:1 no fundo novo) para metadados de 12-13px atingirem 4,5:1. */
-  --color-text: #1c1a16;
-  --color-text-muted: #5d594f;
-  --color-text-subtle: #6b675c;
+  /* Text (light) — 009: subtle escurecido (antes 4,40:1 no branco e
+     3,69:1 no fundo anterior) para metadados de 12-13px atingirem 4,5:1. */
+  --color-text: #17222b;
+  --color-text-muted: #4f6069;
+  --color-text-subtle: #5f707a;
 
   /* Borders (light) */
-  --color-border: #e7e3da;
-  --color-border-strong: #d2cdbf;
+  --color-border: #e3e7ea;
+  --color-border-strong: #cfd5d9;
 
   /* Accent — Sage (11 stops) */
   --color-accent-50: #f3f6f1;
@@ -69,17 +69,17 @@
   --color-accent-hover: var(--color-accent-700);
 
   /* Neutrals — greige (11 stops, light) */
-  --color-neutral-50: #faf9f6;
-  --color-neutral-100: #f3f1ec;
-  --color-neutral-200: #e7e3da;
-  --color-neutral-300: #d2cdbf;
-  --color-neutral-400: #a9a395;
-  --color-neutral-500: #7d786c;
-  --color-neutral-600: #5d594f;
-  --color-neutral-700: #46433b;
-  --color-neutral-800: #2e2c26;
-  --color-neutral-900: #1c1a16;
-  --color-neutral-950: #0e0d0a;
+  --color-neutral-50: #f7f8f9;
+  --color-neutral-100: #eef0f2;
+  --color-neutral-200: #e3e7ea;
+  --color-neutral-300: #cfd5d9;
+  --color-neutral-400: #9aa7af;
+  --color-neutral-500: #6c7c86;
+  --color-neutral-600: #4f6069;
+  --color-neutral-700: #3a4852;
+  --color-neutral-800: #27333b;
+  --color-neutral-900: #17222b;
+  --color-neutral-950: #0a1015;
 
   /* States (light) */
   --color-success: #5a8a5f;
@@ -269,30 +269,30 @@
    (lib/branding/css.ts), que só ganha consumidor com a tela de marca.
    ───────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --color-bg: #faf9f6;
+  --color-bg: #f7f8f9;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f5f3ee;
+  --color-surface-elevated: #f0f2f4;
   --color-overlay: rgba(28, 26, 22, 0.42);
-  --color-text: #1c1a16;
-  --color-text-muted: #5d594f;
-  --color-text-subtle: #6b675c;
-  --color-border: #e7e3da;
-  --color-border-strong: #d2cdbf;
+  --color-text: #17222b;
+  --color-text-muted: #4f6069;
+  --color-text-subtle: #5f707a;
+  --color-border: #e3e7ea;
+  --color-border-strong: #cfd5d9;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
-  --color-neutral-50: #faf9f6;
-  --color-neutral-100: #f3f1ec;
-  --color-neutral-200: #e7e3da;
-  --color-neutral-300: #d2cdbf;
-  --color-neutral-400: #a9a395;
-  --color-neutral-500: #7d786c;
-  --color-neutral-600: #5d594f;
-  --color-neutral-700: #46433b;
-  --color-neutral-800: #2e2c26;
-  --color-neutral-900: #1c1a16;
-  --color-neutral-950: #0e0d0a;
+  --color-neutral-50: #f7f8f9;
+  --color-neutral-100: #eef0f2;
+  --color-neutral-200: #e3e7ea;
+  --color-neutral-300: #cfd5d9;
+  --color-neutral-400: #9aa7af;
+  --color-neutral-500: #6c7c86;
+  --color-neutral-600: #4f6069;
+  --color-neutral-700: #3a4852;
+  --color-neutral-800: #27333b;
+  --color-neutral-900: #17222b;
+  --color-neutral-950: #0a1015;
   --color-success: #5a8a5f;
   --color-success-bg: rgba(90, 138, 95, 0.12);
   --color-success-fg: #41673f;
@@ -347,20 +347,20 @@
 
 [data-theme="dark"] {
   /* Surfaces (dark — drawn) */
-  --color-bg: #161510;
-  --color-surface: #1d1c17;
-  --color-surface-elevated: #272620;
+  --color-bg: #0e171d;
+  --color-surface: #1a252c;
+  --color-surface-elevated: #232f37;
   --color-overlay: rgba(0, 0, 0, 0.55);
 
-  /* Text (dark) — 009: subtle clareado (antes #605e54, 2,3:1) para 4,5:1 sobre
+  /* Text (dark) — 009: subtle clareado (antes 2,3:1) para 4,5:1 sobre
      bg, surface e elevated; segue abaixo do muted na hierarquia. */
-  --color-text: #f5f4ef;
-  --color-text-muted: #9a978b;
-  --color-text-subtle: #8f8c80;
+  --color-text: #e7ecef;
+  --color-text-muted: #a2b2bb;
+  --color-text-subtle: #8fa0aa;
 
   /* Borders (dark) */
-  --color-border: #33312a;
-  --color-border-strong: #444239;
+  --color-border: #2a373f;
+  --color-border-strong: #394850;
 
   /* Accent stays same hex stops; default shifts up for dark contrast */
   --color-accent-50: #f3f6f1;
@@ -375,22 +375,22 @@
   --color-accent-900: #2f3c2b;
   --color-accent-950: #171f15;
   --color-accent: var(--color-accent-400);
-  --color-accent-fg: #161510;
+  --color-accent-fg: #0e171d;
   --color-accent-soft: rgba(130, 160, 119, 0.16);
   --color-accent-hover: var(--color-accent-300);
 
   /* Neutrals — greige (11 stops, dark) */
-  --color-neutral-50: #f5f4ef;
-  --color-neutral-100: #e6e4dc;
-  --color-neutral-200: #bbb8ac;
-  --color-neutral-300: #8e8b7f;
-  --color-neutral-400: #605e54;
-  --color-neutral-500: #444239;
-  --color-neutral-600: #33312a;
-  --color-neutral-700: #272620;
-  --color-neutral-800: #1d1c17;
-  --color-neutral-900: #161510;
-  --color-neutral-950: #0c0b08;
+  --color-neutral-50: #e7ecef;
+  --color-neutral-100: #d3dce1;
+  --color-neutral-200: #a2b2bb;
+  --color-neutral-300: #8fa0aa;
+  --color-neutral-400: #5b6b75;
+  --color-neutral-500: #394850;
+  --color-neutral-600: #2a373f;
+  --color-neutral-700: #232f37;
+  --color-neutral-800: #1a252c;
+  --color-neutral-900: #0e171d;
+  --color-neutral-950: #080d11;
 
   /* States (dark) */
   --color-success: #82a077;
@@ -429,12 +429,12 @@
   --accent-foreground: var(--color-accent-fg);
   --destructive: var(--color-error);
   /* 009: branco sobre o coral do tema escuro dava 3,48:1 (o 3 do sino); escuro do fundo dá mais de 4,5:1. */
-  --destructive-foreground: #161510;
+  --destructive-foreground: #0e171d;
   --border: var(--color-border);
   --input: var(--color-border);
   --ring: var(--color-accent-400);
   /* ---- Agenda · cor de pessoa (tema escuro) ----------------------------
-   * Mais claras e menos saturadas que as do claro: sobre `#161510` a versão
+   * Mais claras e menos saturadas que as do claro: sobre `#0e171d` a versão
    * escura de cada matiz sumiria. Mesma ordem, mesmos nomes.
    */
   --agenda-pessoa-1: #f89080;
@@ -561,7 +561,7 @@
   --text-base: 0.9375rem;
   --text-base--line-height: 1.5;
   --font-sans:
-    var(--font-atkinson), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Espaçamento. Os valores são px LITERAIS (`--space-6` = 24px), não rem — e
@@ -798,7 +798,6 @@
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family:
-      var(--font-atkinson),
       ui-sans-serif,
       system-ui,
       -apple-system,
