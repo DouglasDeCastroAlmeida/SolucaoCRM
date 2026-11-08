@@ -50,11 +50,11 @@ const ESTADO_LEGIVEL: Record<string, string> = {
 
 /** Verde só para quem está realmente entregando; âmbar para o que pede atenção. */
 const TOM_DO_ESTADO: Record<string, string> = {
-  ACTIVE: "text-emerald-600 dark:text-emerald-400",
-  WITH_ISSUES: "text-amber-600 dark:text-amber-400",
-  DISAPPROVED: "text-red-600 dark:text-red-400",
-  PENDING_BILLING_INFO: "text-amber-600 dark:text-amber-400",
-  PENDING_REVIEW: "text-amber-600 dark:text-amber-400",
+  ACTIVE: "text-success-fg",
+  WITH_ISSUES: "text-warning-fg",
+  DISAPPROVED: "text-error-fg",
+  PENDING_BILLING_INFO: "text-warning-fg",
+  PENDING_REVIEW: "text-warning-fg",
 };
 
 const TRACO = "—";
@@ -178,7 +178,7 @@ export function TabelaDeCampanhas({ linhas, moeda, avisos }: Props) {
       São 15 colunas; em telas estreitas a tabela rola dentro do próprio quadro e
       a página segue parada, que é o combinado do produto para conteúdo largo.
     */
-    <div className="overflow-x-auto rounded-md border">
+    <div className="overflow-x-auto rounded-xl border border-border">
       <Table>
         <TableHeader>
           <TableRow>
