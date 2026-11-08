@@ -311,8 +311,8 @@ export function MessageBubble({
                 "rounded-lg px-2.5 py-1.5 shadow-sm",
                 temMenu && "pr-8",
                 isOutbound
-                  ? cn("bg-primary text-primary-foreground", !colada && "rounded-tr-none")
-                  : cn("bg-card text-foreground", !colada && "rounded-tl-none"),
+                  ? cn("bg-bubble-out text-bubble-out-fg", !colada && "rounded-tr-none")
+                  : cn("bg-bubble-in text-foreground", !colada && "rounded-tl-none"),
               ),
           isFailed && "border border-destructive",
           // A marca da busca é ANEL, não cor de fundo: o fundo já diz de quem é
@@ -332,8 +332,8 @@ export function MessageBubble({
             className={cn(
               "absolute top-0 h-3 w-2",
               isOutbound
-                ? "-right-2 bg-primary [clip-path:polygon(0_0,0_100%,100%_0)]"
-                : "-left-2 bg-card [clip-path:polygon(100%_0,100%_100%,0_0)]",
+                ? "-right-2 bg-bubble-out [clip-path:polygon(0_0,0_100%,100%_0)]"
+                : "-left-2 bg-bubble-in [clip-path:polygon(100%_0,100%_100%,0_0)]",
             )}
           />
         )}
@@ -344,7 +344,7 @@ export function MessageBubble({
                 className={cn(
                   "absolute right-1 top-1 z-10 rounded-md p-0.5 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-1",
                   "opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100",
-                  isOutbound ? "text-primary-foreground hover:bg-primary-foreground/15" : "text-muted-foreground hover:bg-background/70",
+                  isOutbound ? "text-bubble-out-fg hover:bg-bubble-out-fg/15" : "text-muted-foreground hover:bg-background/70",
                 )}>
                 <CaretDown size={16} weight="bold" aria-hidden />
               </button>
@@ -404,7 +404,7 @@ export function MessageBubble({
             className={cn(
               "mb-1 rounded-md border-l-2 px-2 py-1 text-xs",
               isOutbound
-                ? "border-primary-foreground/50 bg-primary-foreground/10"
+                ? "border-bubble-out-fg/50 bg-bubble-out-fg/10"
                 : "border-primary bg-background/60",
             )}
           >
@@ -529,7 +529,7 @@ export function MessageBubble({
           data-testid="balao-rodape"
           className={cn(
             "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-xs leading-none",
-            isOutbound ? "text-primary-foreground" : "text-muted-foreground",
+            isOutbound ? "text-bubble-out-meta" : "text-muted-foreground",
           )}
         >
           {editada && (

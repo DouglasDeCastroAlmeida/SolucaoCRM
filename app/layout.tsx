@@ -46,7 +46,7 @@ const plexMono = localFont({
 /**
  * A pilha de camadas da marca da instalação: BANCO acima, `.env` embaixo.
  *
- * Uma função só porque `generateMetadata`, `EstiloDaMarca` e `MarcaNoNavegador`
+ * Uma função só porque `generateMetadata`, `MarcaNoNavegador`
  * precisam da MESMA resolução — montagens separadas da pilha divergiriam, e a
  * divergência apareceria como título da aba com uma marca, cor com outra e barra
  * lateral com uma terceira.
@@ -55,7 +55,7 @@ const plexMono = localFont({
  * chamadas por requisição custam UMA consulta a cada TTL.
  */
 async function marcaResolvida(): Promise<{
-  /** A linha crua — só `EstiloDaMarca` precisa dela, para gravar o estado. */
+  /** A linha crua — guardada para quem precisar do registro bruto. */
   readonly linha: LinhaDaMarca | null;
   readonly marca: MarcaResolvida;
 }> {
@@ -157,105 +157,10 @@ export const viewport: Viewport = {
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('deskcomm-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var r=(s==='dark'||s==='light')?s:((s==='system'||!s)&&d?'dark':'light');document.documentElement.setAttribute('data-theme',r);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
 
 /**
- * Motivos já registrados neste processo. `EstiloDaMarca` roda em TODA
- * requisição e os motivos são os mesmos até alguém mudar o `.env` — repetir o
- * aviso a cada render seria ruído, e ruído é como um log deixa de ser lido.
+ * A cor da MARCA não colore mais a interface (ADR 0008, issue #114): o verde de mensageiro e os
+ * neutros são fixos e moram em `app/globals.css`. A marca da instalação continua em nome, logo,
+ * favicon e e-mails; por isso este layout não injeta mais nenhum `<style>` de cor.
  */
-const motivosRegistrados = new Set<string>();
-
-/**
- * A cor da instalação, injetada como CSS no `<head>`.
- *
- * É HTML no primeiro byte — antes do CSS e antes do `THEME_INIT_SCRIPT` — então
- * não há flash: o navegador nunca chega a pintar a cor do produto para depois
- * trocar. Server Component de propósito: a leitura é do BANCO e do `.env` em
- * runtime (a imagem self-host é pré-buildada; ver `lib/branding.ts`), e enviar
- * isso pelo cliente reintroduziria justamente o flash. Desde a migration 0155 a
- * fonte primária é `platform_branding`; o `.env` continua embaixo como semente —
- * e, para NOME e LOGO, como rede de rollback (ver `lib/branding/instalacao.ts`).
- * Para COR não existe rede: `APP_ACCENT_HEX` nasceu no mesmo épico que a tabela,
- * então nenhuma versão velha o bastante para desconhecê-la pinta accent.
- *
- * ⚠️ A segunda metade desta frase mudou em 2026-08-14 e o comentário foi
- * atualizado junto: o `install.sh` **passou a perguntar e gravar** a chave
- * (campo em `FIELDS`, validador `v_hex`, `envq` no bloco do `.env`). Antes disso
- * ele não a gravava — medido na época: 0 ocorrências contra 7 de `APP_NAME` —,
- * e a semente da cor só existia se alguém a escrevesse à mão. A ausência de rede
- * de rollback continua valendo pela razão de cima, que é sobre VERSÃO, não sobre
- * o instalador. A correção da prosa está no cabeçalho da migration 0155.
- *
- * Os motivos NÃO morrem aqui, e desde 2026-08-13 eles têm DUAS telas:
- * `/admin/marca` (instalação) e `/app/settings/marca` (organização) mostram os
- * motivos e o `fallback_at` — é `_estado.tsx` quem os renderiza. O log
- * estruturado continua sendo o caminho de quem lê servidor, não o único.
- *
- * ⚠️ Este parágrafo dizia "enquanto a tela de marca não existe (fase seguinte,
- * `/app/settings/tenant/branding`)". Era falso em dois pontos: as telas existem,
- * e aquela rota NUNCA existiu. Ele sobreviveu a uma varredura de comentários
- * falsos que corrigiu o parágrafo seis linhas acima, no MESMO docblock — a
- * varredura entrou pelo bloco e parou no parágrafo. Varrer por classe é varrer o
- * bloco inteiro, não a frase que se veio consertar.
- */
-async function EstiloDaMarca() {
-  // `await headers()` força render dinâmico, pelo mesmo motivo do
-  // `<PublicEnvScript/>`: numa imagem pré-buildada, um render ESTÁTICO
-  // congelaria o valor lido durante o `next build` — que é vazio — e a cor do
-  // revendedor nunca apareceria. Hoje o layout já é dinâmico por causa do
-  // vizinho; declarar aqui torna a garantia local, em vez de depender de um
-  // componente que alguém pode mover.
-  await headers();
-  const { linha, marca } = await marcaResolvida();
-  const { css, motivos } = cssDaMarca(marca.cor);
-
-  // O ESTADO da recusa vai para o banco, não só para o log. Sem isto, o degrade
-  // ("o produto ficou com a cor dele") é indistinguível de "a feature nunca foi
-  // instalada", e o operador conclui que o campo de cor não funciona.
-  //
-  // Sem `await`: gravar diagnóstico não pode atrasar — nem derrubar — a página
-  // que o diagnóstico descreve. `registrarEstadoDaMarca` já não lança.
-  void registrarEstadoDaMarca(
-    linha,
-    // O estado gravado é o da INSTALAÇÃO: motivo da camada de marca não é dela.
-    motivoDoFallback([...marca.motivos.filter((m) => m.origem !== "marca"), ...motivos]),
-  );
-
-  const avisos = [
-    ...marca.motivos.map((m) => ({
-      codigo: m.codigo,
-      origem: m.origem,
-      tema: m.tema,
-      alvo: m.alvo,
-      detalhe: m.detalhe,
-    })),
-    ...motivos.map((m) => ({
-      codigo: m.codigo,
-      origem: "css",
-      tema: null,
-      alvo: m.alvo,
-      detalhe: m.detalhe,
-    })),
-  ];
-  for (const aviso of avisos) {
-    const chave = `${aviso.codigo}|${aviso.tema ?? ""}|${aviso.alvo ?? ""}`;
-    if (motivosRegistrados.has(chave)) continue;
-    motivosRegistrados.add(chave);
-    logger.warn("marca da instalação: a cor configurada não foi aplicada como está", aviso);
-  }
-
-  // `null` sem motivo é o caso de fábrica (nenhuma cor configurada): não há o
-  // que injetar, e o produto fica com a cor dele.
-  if (!css) return null;
-  // Conteúdo derivado do `.env` do servidor e já passado pela allowlist de forma
-  // de `lib/branding/css.ts`, que recusa `<` e devolve `null` em vez de string
-  // parcial. Mesmo contrato do `THEME_INIT_SCRIPT` acima.
-  //
-  // O `id` é o que torna este bloco IDENTIFICÁVEL na tela: sem ele, achá-lo no
-  // `<head>` só dá por varredura de todos os `<style>` procurando um `--color-`
-  // no texto (foi como a prova em tela deste marco teve de fazer), e distinguir
-  // o bloco da INSTALAÇÃO do bloco da ORGANIZAÇÃO — que a fase seguinte injeta —
-  // seria impossível. Vale para diagnóstico, para spec de e2e e para o suporte.
-  return <style id="marca-instalacao" dangerouslySetInnerHTML={{ __html: css }} />;
-}
 
 /**
  * CSS visual, escopado e validado do administrador da instalação. `?sem_css=1`
@@ -272,7 +177,7 @@ async function EstiloCssPersonalizado() {
  * A marca que atravessa para o NAVEGADOR — a MESMA pilha da aba e do CSS.
  *
  * Componente próprio, e não uma chamada dentro do `RootLayout`, pelo mesmo
- * motivo de `EstiloDaMarca`: só este nó do `<head>` espera o banco, e o resto do
+ * motivo do antigo bloco de cor: só este nó do `<head>` espera o banco, e o resto do
  * documento não passa a depender de uma consulta que a marca já memoiza.
  *
  * Antes desta onda, `<PublicEnvScript/>` lia `env.APP_NAME`/`env.APP_LOGO_URL`
@@ -303,7 +208,7 @@ async function MarcaNoNavegador() {
  * `hooks/auth/AuthProvider.tsx`.
  *
  * Custa ZERO consulta a mais: `marcaResolvida()` chama `marcaDaInstalacao()`,
- * memoizada por TTL no módulo, e `<EstiloDaMarca/>` no `<head>` já espera a
+ * memoizada por TTL no módulo, e o `<head>` já espera a
  * mesma resposta antes de o documento ser liberado.
  */
 async function MarcaDosClientComponents({ children }: { children: React.ReactNode }) {
@@ -335,7 +240,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <head>
         {/* Primeiro de tudo: a cor da instalação, antes do CSS e do script de tema. */}
-        <EstiloDaMarca />
         <EstiloCssPersonalizado />
         {/* Config pública do Supabase + marca resolvida, em runtime (imagem
             genérica self-host). */}

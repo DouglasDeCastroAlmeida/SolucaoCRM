@@ -72,14 +72,14 @@ function contraste(a: Rgba, b: Rgba): number {
   return (x! + 0.05) / (y! + 0.05);
 }
 
-/** Classe `bg-accent-soft` solta — `hover:bg-accent-soft` não pinta em repouso. */
-const PINTA_ACCENT_SOFT = /(?:^|\s)bg-accent-soft(?=\s|$)/;
+/** Classe `bg-selected` solta — `hover:bg-selected` não pinta em repouso. */
+const PINTA_ACCENT_SOFT = /(?:^|\s)bg-selected(?=\s|$)/;
 
 describe("a conversa selecionada é legível no tema escuro", () => {
   it("o fundo da selecionada é o token que muda com o tema, não um degrau fixo da rampa", () => {
     render(<ConversationListItem {...conversaDeExemplo.props} conversation={conversaDeExemplo.conversation} isSelected />);
     const linha = screen.getByRole("button", { current: true });
-    expect(linha.className).toContain("bg-accent-soft");
+    expect(linha.className).toContain("bg-selected");
     expect(linha.className).not.toMatch(/\bbg-accent-(50|100|200|300|400|500|600|700|800|900|950)\b/);
   });
 
@@ -87,7 +87,7 @@ describe("a conversa selecionada é legível no tema escuro", () => {
     render(<ConversationListItem {...conversaDeExemplo.props} conversation={conversaDeExemplo.conversation} isSelected={false} />);
     const linha = screen.getByRole("button");
     expect(linha.getAttribute("aria-current")).toBeNull();
-    expect(linha.className).not.toContain("bg-accent-soft");
+    expect(linha.className).not.toContain("bg-selected");
   });
 
   it("aberta E marcada no lote: o accent-soft é pintado uma vez só (no escuro ele é translúcido e somava)", () => {
@@ -122,12 +122,12 @@ describe("a conversa selecionada é legível no tema escuro", () => {
     expect(classes.filter((c) => /^(hover|focus-visible):bg-(?!transparent$)/.test(c))).toEqual([]);
   });
 
-  it.each(["dark", "light"] as const)("na aberta, a prévia tem contraste ≥ 4,5 sobre o accent-soft (%s)", (tema) => {
+  it.each(["dark", "light"] as const)("na aberta, a prévia tem contraste ≥ 4,5 sobre o fundo selecionado (cinza neutro fixo) (%s)", (tema) => {
     render(<ConversationListItem {...conversaDeExemplo.props} conversation={conversaDeExemplo.conversation} isSelected />);
     const classe = screen.getByText("bom dia").closest("p")?.getAttribute("class") ?? "";
     const m = classe.match(/(?:^|\s)text-(text(?:-muted|-subtle)?)(?=\s|$)/);
     expect(m?.[1], `classe de cor da prévia: ${classe}`).toBeTruthy();
-    const fundo = sobre(cor(token(tema, "--color-accent-soft")), cor(token(tema, "--color-bg")));
+    const fundo = sobre(cor(token(tema, "--color-selected")), cor(token(tema, "--color-bg")));
     const valor = contraste(cor(token(tema, `--color-${m![1]}`)), fundo);
     expect(valor, `prévia ${m![1]} no ${tema}: ${valor.toFixed(2)}`).toBeGreaterThanOrEqual(4.5);
   });

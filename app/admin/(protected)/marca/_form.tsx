@@ -21,6 +21,7 @@ import { platformBrandingSchema, type PlatformBrandingInput } from "@/lib/schema
 import { EstadoDaMarca } from "./_estado";
 import { avisosDaMarca, type DistanciaAteSuaCor } from "@/lib/branding/linguagem";
 import { TiraDeTons, type ItemDaLegenda } from "@/components/branding/TiraDeTons";
+import { AvisoDaCorDaMarca } from "@/components/branding/AvisoDaCorDaMarca";
 import { useT } from "@/hooks/i18n/useT";
 import { MENSAGEM_DA_RECUSA_DE_ESCRITA } from "@/lib/auth/recusa-de-escrita-de-admin";
 
@@ -339,6 +340,7 @@ export function FormularioDaMarca({
           <p id="ajuda-da-cor" className="text-xs text-text-muted">
             {t("Deixe em branco para voltar à cor padrão do sistema.")}
           </p>
+          <AvisoDaCorDaMarca />
         </div>
 
         {/*

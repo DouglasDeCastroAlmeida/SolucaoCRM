@@ -58,21 +58,30 @@
   --color-border-strong: #cfd5d9;
 
   /* Accent — Sage (11 stops) */
-  --color-accent-50: #f3f6f1;
-  --color-accent-100: #e4ebe0;
-  --color-accent-200: #c8d6c1;
-  --color-accent-300: #a4ba9a;
-  --color-accent-400: #82a077;
-  --color-accent-500: #67885d;
-  --color-accent-600: #506d48;
-  --color-accent-700: #41573b;
-  --color-accent-800: #374731;
-  --color-accent-900: #2f3c2b;
-  --color-accent-950: #171f15;
+  --color-accent-50: #eefaf5;
+  --color-accent-100: #dcf5ea;
+  --color-accent-200: #b1e6d0;
+  --color-accent-300: #7cd5b4;
+  --color-accent-400: #25c28f;
+  --color-accent-500: #0c8f6c;
+  --color-accent-600: #067a63;
+  --color-accent-700: #056652;
+  --color-accent-800: #0a5143;
+  --color-accent-900: #0c4036;
+  --color-accent-950: #05211b;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
+  /* Verde de mensageiro (ADR 0008): FIXO em todas as marcas. Hex próprios, na família do app de
+     mensagens, nunca os mesmos. Bolha enviada pálida; recebida branca; tique lido azul; linha
+     selecionada em cinza neutro. */
+  --color-bubble-out: #d7f6cc;
+  --color-bubble-out-fg: #17222b;
+  --color-bubble-out-meta: #4f6069;
+  --color-bubble-in: #ffffff;
+  --color-tick-read: #1587c0;
+  --color-selected: #eff2f3;
 
   /* Neutrals — greige (11 stops, light) */
   --color-neutral-50: #f7f8f9;
@@ -295,6 +304,15 @@
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
+  /* Verde de mensageiro (ADR 0008): FIXO em todas as marcas. Hex próprios, na família do app de
+     mensagens, nunca os mesmos. Bolha enviada pálida; recebida branca; tique lido azul; linha
+     selecionada em cinza neutro. */
+  --color-bubble-out: #d7f6cc;
+  --color-bubble-out-fg: #17222b;
+  --color-bubble-out-meta: #4f6069;
+  --color-bubble-in: #ffffff;
+  --color-tick-read: #1587c0;
+  --color-selected: #eff2f3;
   --color-neutral-50: #f7f8f9;
   --color-neutral-100: #eef0f2;
   --color-neutral-200: #e3e7ea;
@@ -383,21 +401,29 @@
   --color-border-strong: #394850;
 
   /* Accent stays same hex stops; default shifts up for dark contrast */
-  --color-accent-50: #f3f6f1;
-  --color-accent-100: #e4ebe0;
-  --color-accent-200: #c8d6c1;
-  --color-accent-300: #a4ba9a;
-  --color-accent-400: #82a077;
-  --color-accent-500: #67885d;
-  --color-accent-600: #506d48;
-  --color-accent-700: #41573b;
-  --color-accent-800: #374731;
-  --color-accent-900: #2f3c2b;
-  --color-accent-950: #171f15;
+  --color-accent-50: #eefaf5;
+  --color-accent-100: #dcf5ea;
+  --color-accent-200: #b1e6d0;
+  --color-accent-300: #7cd5b4;
+  --color-accent-400: #25c28f;
+  --color-accent-500: #0c8f6c;
+  --color-accent-600: #067a63;
+  --color-accent-700: #056652;
+  --color-accent-800: #0a5143;
+  --color-accent-900: #0c4036;
+  --color-accent-950: #05211b;
   --color-accent: var(--color-accent-400);
   --color-accent-fg: #0e171d;
-  --color-accent-soft: rgba(130, 160, 119, 0.16);
+  --color-accent-soft: rgba(37, 194, 143, 0.16);
   --color-accent-hover: var(--color-accent-300);
+  /* Verde de mensageiro (ADR 0008): FIXO em todas as marcas. Bolha enviada verde-petróleo escura;
+     recebida cinza-esverdeada; tique lido azul claro; linha selecionada em cinza neutro. */
+  --color-bubble-out: #0a5a4c;
+  --color-bubble-out-fg: #e7ecef;
+  --color-bubble-out-meta: #c5d3d8;
+  --color-bubble-in: #1f2f31;
+  --color-tick-read: #5cc4f0;
+  --color-selected: #263538;
 
   /* Neutrals — greige (11 stops, dark) */
   --color-neutral-50: #e7ecef;
@@ -507,11 +533,17 @@
   --color-text-muted: var(--color-text-muted);
   --color-text-subtle: var(--color-text-subtle);
 
-  /* Accent — Sage */
+  /* Accent — verde de mensageiro fixo (ADR 0008) */
   --color-accent: var(--color-accent);
   --color-accent-foreground: var(--color-accent-fg);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-hover: var(--color-accent-hover);
+  --color-bubble-out: var(--color-bubble-out);
+  --color-bubble-out-fg: var(--color-bubble-out-fg);
+  --color-bubble-out-meta: var(--color-bubble-out-meta);
+  --color-bubble-in: var(--color-bubble-in);
+  --color-tick-read: var(--color-tick-read);
+  --color-selected: var(--color-selected);
   --color-accent-50: var(--color-accent-50);
   --color-accent-100: var(--color-accent-100);
   --color-accent-200: var(--color-accent-200);
