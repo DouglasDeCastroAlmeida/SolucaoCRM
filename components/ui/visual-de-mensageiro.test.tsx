@@ -25,14 +25,14 @@ const CRUA =
 
 describe("visual de mensageiro: componentes básicos (#86)", () => {
   it("botões são em pílula e usam a cor de destaque da marca", () => {
-    render(<Button>Salvar</Button>);
+    render(<Button onClick={() => undefined}>Salvar</Button>);
     const c = classes(screen.getByRole("button"));
     expect(c).toContain("rounded-full");
     expect(c).toContain("bg-accent");
   });
 
   it("botão tem foco visível por teclado", () => {
-    render(<Button>Salvar</Button>);
+    render(<Button onClick={() => undefined}>Salvar</Button>);
     expect(classes(screen.getByRole("button"))).toContain("focus-visible:ring-2");
   });
 

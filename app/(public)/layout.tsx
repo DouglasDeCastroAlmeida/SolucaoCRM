@@ -85,7 +85,7 @@ export default async function PublicLayout({ children }: { children: React.React
                 className={
                   marca.logoDarkUrl
                     ? "rounded-md"
-                    : "rounded-md dark:bg-foreground dark:px-3 dark:py-2 dark:shadow-sm"
+                    : "rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm"
                 }
               >
                 {marca.logoUrl ? (

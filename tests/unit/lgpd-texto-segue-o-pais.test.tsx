@@ -29,6 +29,15 @@
  * a citação, o prazo, os links e a estrutura continuam os mesmos, e as
  * comparações seguem byte a byte contra o fixture regravado.
  *
+ * Sexta exceção (épico #82, tarefa #84): `email.json`, `alarmes.json` e
+ * `alarmes-store-redact.json` foram REGRAVADOS só nas duas cores neutras do
+ * e-mail: o texto (`#1c1a16` -> `#17222b`) e o texto suave (`#7d786c` ->
+ * `#6c7c86`). Elas vêm de `NEUTROS_DE_SAIDA`, que de propósito lê a régua de
+ * neutros do produto (`lib/branding/saida.ts`), e a paleta neutra do produto
+ * trocou de greige para cinza azulado. Palavras, links, prazos e estrutura
+ * seguem byte a byte: a prova é que, trocando os hex por um marcador, os dois
+ * lados ficam idênticos.
+ *
  * Quinta exceção: o rodapé do PDF virou UMA string no JSX (o rótulo vem do
  * perfil, e não mais de texto estático ao lado da interpolação). O `join` por
  * filho de texto perdeu separadores (`\u0001`) que eram detalhe do parser — o
