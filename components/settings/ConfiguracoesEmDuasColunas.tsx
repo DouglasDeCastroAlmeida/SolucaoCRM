@@ -30,7 +30,9 @@ export function ConfiguracoesEmDuasColunas({ children }: { children: ReactNode }
     activeOrg?.role ?? null,
     activeOrg?.interface_settings,
     activeOrg?.modulos_ligados ?? [],
-    activeOrg?.capacidades_ligadas ?? [],
+    // SEM capacidades, como o hub antigo (`NavHub` em /app/settings não as recebia): passar
+    // `capacidades_ligadas` escondia "Modelos de proposta" quando a capacidade da empresa está
+    // desligada, uma seção que o hub mostrava.
   );
 
   const noHub = pathname === RAIZ;
@@ -39,6 +41,10 @@ export function ConfiguracoesEmDuasColunas({ children }: { children: ReactNode }
     .flatMap((s) => s.items.map((i) => i.href))
     .filter((h) => pathname === h || pathname.startsWith(`${h}/`))
     .sort((a, b) => b.length - a.length)[0];
+
+  // Rotas de /app/settings que o hub nunca listou (Canal oficial, Modelos, Atualização...): a página
+  // abre normalmente; a lista só sinaliza que a pessoa está fora dela.
+  const foraDaLista = !noHub && pathname.startsWith(`${RAIZ}/`) && !hrefAtual;
 
   return (
     <div className="flex h-full min-h-0 bg-background">
@@ -93,6 +99,15 @@ export function ConfiguracoesEmDuasColunas({ children }: { children: ReactNode }
               </div>
             );
           })}
+          {foraDaLista ? (
+            <p
+              data-testid="secao-fora-da-lista"
+              aria-current="page"
+              className="mt-3 border-t border-border px-4 pt-3 text-sm font-medium text-foreground"
+            >
+              {t("Outra seção")}
+            </p>
+          ) : null}
         </nav>
       </div>
 
