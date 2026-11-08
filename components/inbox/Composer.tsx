@@ -799,7 +799,8 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           data-testid="campo-de-escrever"
           className={cn(
             "flex min-h-12 min-w-0 flex-1 items-end gap-0.5 rounded-3xl px-1.5 py-1 shadow-md focus-within:ring-1 focus-within:ring-ring",
-            mode === "note" ? "bg-warning-bg" : "bg-card",
+            mode === "note" && "ring-2 ring-warning/60",
+            "bg-card",
           )}
          >
           <EmojiButton

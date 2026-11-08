@@ -953,7 +953,7 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
       <div
         data-testid="inbox-painel-cabecalho"
         className={cn(
-          "sticky top-0 z-10 -mx-4 -mt-4 flex h-[60px] shrink-0 items-center gap-3 bg-muted px-4",
+          "sticky -top-4 z-10 -mx-4 -mt-4 flex h-[60px] shrink-0 items-center gap-3 bg-muted px-4",
           !onAlternarRecolhido && "pr-12",
         )}
       >

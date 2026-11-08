@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -74,7 +75,7 @@ interface Props {
    * WhatsApp. Só aparece abaixo do `md`; no computador a lista fica ao lado e não há para onde voltar.
    */
   aoVoltar?: () => void;
-  /** Celular (#118): a porta da ficha do contato, no grupo de ícones da direita (abaixo do `md`). */
+  /** Celular (#118): a porta da ficha do contato, no lugar do ícone de contato (abaixo do `md`). */
   acaoDaFicha?: ReactNode;
 }
 
@@ -349,7 +350,14 @@ export function ConversationHeader({
         <div className="flex shrink-0 items-center">
           {acaoDaFicha}
           {c?.id && (
-            <Button asChild size="icon" variant="ghost" className="size-10 rounded-full text-muted-foreground">
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              // No celular o ícone de contato abre a ficha por cima (`acaoDaFicha`), como no WhatsApp; a
+              // ficha traz o mesmo link "Ver contato" para a página completa.
+              className={cn("size-10 rounded-full text-muted-foreground", acaoDaFicha && "max-md:hidden")}
+            >
               <Link
                 href={`/app/contacts/${c.id}`}
                 aria-label={t("Ver contato")}

@@ -34,7 +34,8 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { ChatCircle, IdentificationCard, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
+import { UserRound } from "lucide-react";
+import { ChatCircle, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -845,7 +846,7 @@ export function InboxLayout({
                       className="size-10 rounded-full text-muted-foreground md:hidden"
                       aria-label={t("Ficha")}
                     >
-                      <IdentificationCard size={22} aria-hidden />
+                      <UserRound className="size-5" aria-hidden />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-sm">
