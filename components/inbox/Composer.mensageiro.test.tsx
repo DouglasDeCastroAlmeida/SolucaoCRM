@@ -31,7 +31,7 @@ vi.mock("@/components/inbox/composer/ReplyReviewPanel", () => ({
 }));
 
 import { Composer } from "@/components/inbox/Composer";
-import { Clipe } from "@/lib/ui/icons";
+import { Plus } from "@/lib/ui/icons";
 
 function renderComposer() {
   return render(
@@ -97,15 +97,13 @@ describe("Composer: pílula flutuante do WhatsApp Web", () => {
     }
   });
 
-  it("o botão de anexo desenha o clipe do mapa único", () => {
+  it("o botão de anexo é o \"+\" do print do WhatsApp (glifo do mapa único), não um clipe", () => {
     renderComposer();
-    const caminhoDoAnexo = screen
-      .getByRole("button", { name: /anexar/i })
-      .querySelector("svg path")
-      ?.getAttribute("d");
-    const { container } = render(<Clipe />);
-    expect(caminhoDoAnexo).toBeTruthy();
-    expect(caminhoDoAnexo).toBe(container.querySelector("path")?.getAttribute("d"));
+    const botao = screen.getByRole("button", { name: /anexar/i });
+    const { container } = render(<Plus size={24} />);
+    const esperado = container.querySelector("svg")?.innerHTML;
+    expect(esperado).toBeTruthy();
+    expect(botao.querySelector("svg")?.innerHTML).toBe(esperado);
   });
 });
 
@@ -126,5 +124,40 @@ describe("Composer: Nota interna como opção do clipe", () => {
     fireEvent.click(screen.getByRole("button", { name: /^responder$/i }));
     expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", expect.stringMatching(/mensagem/i));
     expect(screen.queryByRole("button", { name: /^responder$/i })).toBeNull();
+  });
+});
+
+describe("Composer: janela de 24h fechada", () => {
+  const JANELA = "A janela de 24 horas fechou.";
+  function renderFechada() {
+    return render(
+      <QueryClientProvider client={new QueryClient()}>
+        <Composer conversationId="conv-1" janelaFechada={JANELA} />
+      </QueryClientProvider>,
+    );
+  }
+
+  it("o clipe segue acessível e a Nota interna funciona; as opções de resposta ficam desligadas", () => {
+    renderFechada();
+    const anexar = screen.getByRole("button", { name: /anexar/i });
+    expect(anexar).not.toBeDisabled();
+    fireEvent.click(anexar);
+    expect(screen.getByRole("button", { name: /fotos e vídeos/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /documento/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /contato/i })).toBeDisabled();
+    const nota = screen.getByRole("button", { name: /nota interna/i });
+    expect(nota).not.toBeDisabled();
+    fireEvent.click(nota);
+    const campo = screen.getByRole("textbox");
+    expect(campo).not.toBeDisabled();
+    expect(campo).toHaveAttribute("placeholder", expect.stringMatching(/nota interna/i));
+    fireEvent.change(campo, { target: { value: "cliente sumiu" } });
+    expect(screen.getByRole("button", { name: /^enviar$/i })).not.toBeDisabled();
+  });
+
+  it("em modo resposta o campo e o envio continuam barrados", () => {
+    renderFechada();
+    expect(screen.getByRole("textbox")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: /^enviar$/i })).toBeNull();
   });
 });

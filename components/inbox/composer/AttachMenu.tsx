@@ -4,10 +4,16 @@ import { useT } from "@/hooks/i18n/useT";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Clipe, FileText, ImageSquare, Note, UserCircle } from "@/lib/ui/icons";
+import { FileText, ImageSquare, Note, Plus, UserCircle } from "@/lib/ui/icons";
 
 interface Props {
+  /** Trava o menu inteiro (conversa bloqueada, envio em curso). */
   disabled?: boolean;
+  /**
+   * Trava só as opções de RESPOSTA (fotos, documento, contato): janela de 24h fechada. A "Nota
+   * interna" não sai para o cliente e continua alcançável por aqui.
+   */
+  respostaBarrada?: boolean;
   onPick: (file: File) => void;
   onPickContact?: () => void;
   /**
@@ -17,8 +23,8 @@ interface Props {
   onNotaInterna?: () => void;
 }
 
-/** Menu do clipe no composer (padrão de mensageiro): Fotos e vídeos / Documento / Contato. */
-export function AttachMenu({ disabled, onPick, onPickContact, onNotaInterna }: Props) {
+/** Menu do "+" no composer (padrão de mensageiro): Fotos e vídeos / Documento / Contato. */
+export function AttachMenu({ disabled, respostaBarrada, onPick, onPickContact, onNotaInterna }: Props) {
   const t = useT();
   const [aberto, setAberto] = useState(false);
   const mediaRef = useRef<HTMLInputElement | null>(null);
@@ -42,46 +48,49 @@ export function AttachMenu({ disabled, onPick, onPickContact, onNotaInterna }: P
             aria-label={t("Anexar")}
             disabled={disabled}
           >
-            <Clipe size={24} aria-hidden />
+            <Plus size={24} aria-hidden />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" side="top" className="w-52 p-1">
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+            disabled={respostaBarrada}
             onClick={() => mediaRef.current?.click()}
           >
-            <ImageSquare size={18} weight="duotone" className="text-primary" aria-hidden />
+            <ImageSquare size={20} weight="duotone" className="text-primary" aria-hidden />
             {t("Fotos e vídeos")}
           </button>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+            disabled={respostaBarrada}
             onClick={() => docRef.current?.click()}
           >
-            <FileText size={18} weight="duotone" className="text-primary" aria-hidden />
+            <FileText size={20} weight="duotone" className="text-primary" aria-hidden />
             {t("Documento")}
           </button>
           {onPickContact && (
             <button
               type="button"
-              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+              disabled={respostaBarrada}
               onClick={onPickContact}
             >
-              <UserCircle size={18} weight="duotone" className="text-primary" aria-hidden />
+              <UserCircle size={20} weight="duotone" className="text-primary" aria-hidden />
               {t("Contato")}
             </button>
           )}
           {onNotaInterna && (
             <button
               type="button"
-              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
               onClick={() => {
                 setAberto(false);
                 onNotaInterna();
               }}
             >
-              <Note size={18} weight="duotone" className="text-primary" aria-hidden />
+              <Note size={20} weight="duotone" className="text-primary" aria-hidden />
               {t("Nota interna")}
             </button>
           )}

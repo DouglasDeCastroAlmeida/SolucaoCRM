@@ -827,10 +827,12 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               documento — porque a nota passou a aceitar anexo. A terceira
               (Contato) some: cartão de contato é `type: "contact"`, uma MENSAGEM
               para o cliente, e nota com cartão de contato não existe. O `disabled`
-              continua o de sempre: em modo nota `respostaBarrada` é só
-              `isDisabled`, e a janela fechada barra a resposta, não a nota. */}
+              só trava inteiro com `isDisabled`; a janela fechada
+              (`respostaBarrada`, em resposta) desliga só as opções de resposta e deixa a
+              "Nota interna" alcançável, porque ela não sai para o cliente. */}
           <AttachMenu
-            disabled={respostaBarrada}
+            disabled={isDisabled}
+            respostaBarrada={respostaBarrada}
             onPick={escolherArquivo}
             onPickContact={mode === "reply" ? () => setContactPickerOpen(true) : undefined}
             onNotaInterna={mode === "reply" ? () => setMode("note") : undefined}
