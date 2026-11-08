@@ -91,7 +91,7 @@ const ITENS_DO_MENU = [
 ];
 
 function Avatar({ nome, tamanho, indice }: { nome: string; tamanho: string; indice: number }) {
-  const [fundo, texto] = CORES_AVATAR[indice % CORES_AVATAR.length];
+  const [fundo, texto] = CORES_AVATAR[indice % CORES_AVATAR.length] ?? CORES_AVATAR[0];
   const iniciais = nome
     .split(" ")
     .filter((p) => p.length > 2)
