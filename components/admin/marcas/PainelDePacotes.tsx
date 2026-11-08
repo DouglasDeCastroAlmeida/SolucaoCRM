@@ -1,6 +1,7 @@
 "use client";
 
 /** Pacotes verticais: listar, criar e editar (AC-008.4). */
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCallback, useEffect, useState } from "react";
 
 import { useT } from "@/hooks/i18n/useT";
@@ -70,36 +71,36 @@ export function PainelDePacotes() {
   return (
     <div className="space-y-6">
       <Erro texto={erro} />
-      <table className="w-full text-sm">
-        <caption className="sr-only">Pacotes verticais</caption>
-        <thead>
-          <tr className="text-left">
-            <th scope="col">Nome</th>
-            <th scope="col">Identificador</th>
-            <th scope="col">{t("Versão")}</th>
-            <th scope="col">Estado</th>
-            <th scope="col">{t("Ações")}</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-sm">
+        <TableCaption className="sr-only">Pacotes verticais</TableCaption>
+        <TableHeader>
+          <TableRow className="text-left">
+            <TableHead scope="col">Nome</TableHead>
+            <TableHead scope="col">Identificador</TableHead>
+            <TableHead scope="col">{t("Versão")}</TableHead>
+            <TableHead scope="col">Estado</TableHead>
+            <TableHead scope="col">{t("Ações")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {pacotes.map((p) => (
-            <tr key={p.id} className="border-t">
-              <td>{p.name}</td>
-              <td>{p.slug}</td>
-              <td>{p.version}</td>
-              <td>{p.status === "active" ? "Ativo" : "Inativo"}</td>
-              <td className="space-x-2">
+            <TableRow key={p.id} className="border-t">
+              <TableCell>{p.name}</TableCell>
+              <TableCell>{p.slug}</TableCell>
+              <TableCell>{p.version}</TableCell>
+              <TableCell>{p.status === "active" ? "Ativo" : "Inativo"}</TableCell>
+              <TableCell className="space-x-2">
                 <Button type="button" variant="outline" size="sm" aria-label={`Editar pacote ${p.name}`} onClick={() => iniciarEdicao(p)}>
                   Editar
                 </Button>
                 <Button type="button" variant="outline" size="sm" aria-label={`${p.status === "active" ? "Desativar" : "Ativar"} pacote ${p.name}`} onClick={() => void alternar(p)}>
                   {p.status === "active" ? "Desativar" : "Ativar"}
                 </Button>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
 
       <form onSubmit={salvar} className="space-y-3 rounded-md border p-4">
         <h2 className="text-lg font-semibold">{editando ? `Editar pacote ${editando.name}` : "Novo pacote"}</h2>

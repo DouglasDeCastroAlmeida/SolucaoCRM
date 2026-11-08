@@ -7,6 +7,7 @@
  * marca pela rota /api/v1/admin/organizations/{id}/brand e acesso de suporte
  * pelo fluxo existente (ImpersonateButton -> tenants/[id]/impersonate).
  */
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCallback, useEffect, useState } from "react";
 
 import { ImpersonateButton } from "@/components/admin/ImpersonateButton";
@@ -113,8 +114,8 @@ function LinhaDeConta({
   const [confirmando, setConfirmando] = useState(false);
   const cobranca = conta.cobranca;
   return (
-    <tr className="block border-t py-2 md:table-row">
-      <td className="block py-1 md:table-cell">
+    <TableRow className="block border-t py-2 md:table-row">
+      <TableCell className="block py-1 md:table-cell">
         <span className="font-medium">{conta.name}</span>
         {cobranca ? (
           <>
@@ -132,10 +133,10 @@ function LinhaDeConta({
             {aberto ? <Detalhes conta={conta} cobranca={cobranca} /> : null}
           </>
         ) : null}
-      </td>
-      <td className="block py-1 md:table-cell">{nomeDaMarca(conta)}</td>
-      <td className="block py-1 md:table-cell">{cobranca ? t(ROTULO_DO_ESTADO[cobranca.estado]) : "—"}</td>
-      <td className="block space-x-2 py-1 md:table-cell">
+      </TableCell>
+      <TableCell className="block py-1 md:table-cell">{nomeDaMarca(conta)}</TableCell>
+      <TableCell className="block py-1 md:table-cell">{cobranca ? t(ROTULO_DO_ESTADO[cobranca.estado]) : "—"}</TableCell>
+      <TableCell className="block space-x-2 py-1 md:table-cell">
         <Label htmlFor={`troca-${conta.id}`} className="sr-only">
           {`${t("Nova marca de")} ${conta.name}`}
         </Label>
@@ -158,8 +159,8 @@ function LinhaDeConta({
         >
           {t("Trocar marca")}
         </Button>
-      </td>
-      <td className="block space-x-2 py-1 md:table-cell">
+      </TableCell>
+      <TableCell className="block space-x-2 py-1 md:table-cell">
         <ImpersonateButton organizationId={conta.id} displayName={conta.name} />
         {cobranca?.estado === "cortesia" ? (
           confirmando ? (
@@ -194,8 +195,8 @@ function LinhaDeConta({
             </Button>
           )
         ) : null}
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -277,23 +278,23 @@ export function PainelDeContas() {
         </p>
       ) : null}
       <Erro texto={erro} />
-      <table className="w-full text-sm">
-        <caption className="sr-only">{t("Contas de todas as marcas")}</caption>
-        <thead className="sr-only md:table-header-group">
-          <tr className="text-left">
-            <th scope="col">{t("Conta")}</th>
-            <th scope="col">{t("Marca")}</th>
-            <th scope="col">{t("Estado")}</th>
-            <th scope="col">{t("Trocar marca")}</th>
-            <th scope="col">{t("Suporte")}</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-sm">
+        <TableCaption className="sr-only">{t("Contas de todas as marcas")}</TableCaption>
+        <TableHeader className="sr-only md:table-header-group">
+          <TableRow className="text-left">
+            <TableHead scope="col">{t("Conta")}</TableHead>
+            <TableHead scope="col">{t("Marca")}</TableHead>
+            <TableHead scope="col">{t("Estado")}</TableHead>
+            <TableHead scope="col">{t("Trocar marca")}</TableHead>
+            <TableHead scope="col">{t("Suporte")}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {visiveis.map((c) => (
             <LinhaDeConta key={`${c.id}-${c.brand_id ?? ""}`} conta={c} marcas={marcas} aoTrocar={trocar} aoConverter={converter} />
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

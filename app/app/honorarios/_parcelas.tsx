@@ -7,6 +7,7 @@
  * `financial_entry_id`. Por isso pagar pede uma CONTA, a mesma lista do
  * catálogo financeiro usada em Faturamento.
  */
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -133,19 +134,19 @@ export function Parcelas({
       {lista.length === 0 ? (
         <p className="text-sm text-text-muted">{t("Nenhuma parcela ainda.")}</p>
       ) : (
-        <table className="w-full text-sm">
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableBody>
             {lista.map((p) => (
-              <tr key={p.id} className="border-b border-border/60" data-testid={`parcela-${p.id}`}>
-                <td className="py-1 text-text-muted">#{p.numero}</td>
-                <td className="py-1">{new Date(p.vencimento).toLocaleDateString(tagDoIdioma)}</td>
-                <td className="py-1 text-right tabular-nums">
+              <TableRow key={p.id} className="border-b border-border/60" data-testid={`parcela-${p.id}`}>
+                <TableCell className="py-1 text-text-muted">#{p.numero}</TableCell>
+                <TableCell className="py-1">{new Date(p.vencimento).toLocaleDateString(tagDoIdioma)}</TableCell>
+                <TableCell className="py-1 text-right tabular-nums">
                   {formatCents(p.valor_cents, "BRL")}
-                </td>
-                <td className="py-1 text-right text-xs text-text-muted">
+                </TableCell>
+                <TableCell className="py-1 text-right text-xs text-text-muted">
                   {p.status === "pago" ? t("pago") : t("pendente")}
-                </td>
-                <td className="w-24 py-1 text-right">
+                </TableCell>
+                <TableCell className="w-24 py-1 text-right">
                   {podeGerenciar && p.status === "pendente" ? (
                     <button
                       type="button"
@@ -157,11 +158,11 @@ export function Parcelas({
                       {t("Pagar")}
                     </button>
                   ) : null}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
     </section>
   );

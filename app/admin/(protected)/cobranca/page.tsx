@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -89,46 +90,46 @@ export default async function CobrancaPage({ searchParams }: { searchParams: Pro
       <p className="text-sm text-muted-foreground">{t("Nenhuma empresa paga ainda. Atribua um plano no painel da empresa, em Tenants.")}</p>
     ) : (
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-muted-foreground">
-              <th className="py-2 pr-4 font-medium">{t("Empresa")}</th>
-              <th className="pr-4 font-medium">{t("Plano")}</th>
-              <th className="pr-4 font-medium">{t("Situação")}</th>
-              <th className="pr-4 font-medium">{t("Próximo vencimento")}</th>
-              <th className="pr-4 font-medium">{t("Em atraso desde")}</th>
-              <th className="pr-4 font-medium">{t("Última leitura")}</th>
-              <th className="pr-4 font-medium">{t("Problema")}</th>
-              <th><span className="sr-only">{t("Abrir")}</span></th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableHeader>
+            <TableRow className="text-left text-muted-foreground">
+              <TableHead className="py-2 pr-4 font-medium">{t("Empresa")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Plano")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Situação")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Próximo vencimento")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Em atraso desde")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Última leitura")}</TableHead>
+              <TableHead className="pr-4 font-medium">{t("Problema")}</TableHead>
+              <TableHead><span className="sr-only">{t("Abrir")}</span></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {pagantes.map((c) => {
               const a = c.cobranca_assinaturas;
               const atrasada = a.provedor !== null && leituraAtrasada(a.relida_em, agora, 26);
               return (
-                <tr key={c.id} className="border-t">
-                  <td className="py-2 pr-4">{c.display_name}</td>
-                  <td className="pr-4">
+                <TableRow key={c.id} className="border-t">
+                  <TableCell className="py-2 pr-4">{c.display_name}</TableCell>
+                  <TableCell className="pr-4">
                     {nomeDoPlano.get(a.plano_id) ?? "—"}
                     {a.plano_agendado_id && ` → ${nomeDoPlano.get(a.plano_agendado_id) ?? "—"}`}
-                  </td>
-                  <td className="pr-4">{t(ROTULO_DO_ESTADO[a.estado])}</td>
-                  <td className="pr-4">{quando(a.estado === "trial" ? a.trial_ate : a.proximo_vencimento)}</td>
-                  <td className={a.estado === "em_atraso" ? "pr-4 text-error-fg" : "pr-4"}>{a.estado === "em_atraso" ? quando(a.vencida_desde) : "—"}</td>
-                  <td className={atrasada ? "pr-4 text-error-fg" : "pr-4"}>{a.provedor ? quando(a.relida_em) : "—"}</td>
-                  <td className="pr-4">{a.ultimo_erro ? t(ROTULO_DO_ERRO[a.ultimo_erro]) : "—"}</td>
-                  <td className="py-1">
+                  </TableCell>
+                  <TableCell className="pr-4">{t(ROTULO_DO_ESTADO[a.estado])}</TableCell>
+                  <TableCell className="pr-4">{quando(a.estado === "trial" ? a.trial_ate : a.proximo_vencimento)}</TableCell>
+                  <TableCell className={a.estado === "em_atraso" ? "pr-4 text-error-fg" : "pr-4"}>{a.estado === "em_atraso" ? quando(a.vencida_desde) : "—"}</TableCell>
+                  <TableCell className={atrasada ? "pr-4 text-error-fg" : "pr-4"}>{a.provedor ? quando(a.relida_em) : "—"}</TableCell>
+                  <TableCell className="pr-4">{a.ultimo_erro ? t(ROTULO_DO_ERRO[a.ultimo_erro]) : "—"}</TableCell>
+                  <TableCell className="py-1">
                     <div className="flex flex-wrap items-center gap-2">
                       {a.link_de_pagamento && <CopiarLinkDePagamento link={a.link_de_pagamento} />}
                       <Link href={`/admin/tenants/${c.id}`} className="underline">{t("Abrir")}</Link>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     );
 

@@ -39,6 +39,7 @@
  * "Âmbar"/"Roxo", e o leitor de tela anuncia o mesmo. É a régua de redundância
  * não-cromática que o design system já usa nos estados.
  */
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -256,22 +257,22 @@ export function PainelDeTags({ tags, idioma }: { tags: LinhaDeVocabulario[]; idi
   return (
     <div className="flex flex-col gap-4">
       <Card className="overflow-hidden">
-        <table className="w-full text-sm">
-          <caption className="sr-only">{t("Etiquetas da organização e onde são usadas")}</caption>
-          <thead className="bg-muted/50 text-left">
-            <tr>
-              <th className="p-3 font-medium">{t("Etiqueta")}</th>
-              <th className="p-3 font-medium">{t("Contatos")}</th>
-              <th className="p-3 font-medium">{t("Leads")}</th>
-              <th className="p-3 font-medium">{t("Conversas")}</th>
-              <th className="p-3 font-medium">{t("Regras de agente")}</th>
-              <th className="p-3 font-medium">{t("Ações")}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableCaption className="sr-only">{t("Etiquetas da organização e onde são usadas")}</TableCaption>
+          <TableHeader className="bg-muted/50 text-left">
+            <TableRow>
+              <TableHead className="p-3 font-medium">{t("Etiqueta")}</TableHead>
+              <TableHead className="p-3 font-medium">{t("Contatos")}</TableHead>
+              <TableHead className="p-3 font-medium">{t("Leads")}</TableHead>
+              <TableHead className="p-3 font-medium">{t("Conversas")}</TableHead>
+              <TableHead className="p-3 font-medium">{t("Regras de agente")}</TableHead>
+              <TableHead className="p-3 font-medium">{t("Ações")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {tags.map((linha) => (
-              <tr key={linha.tag} className="border-t border-border/60">
-                <td className="p-3">
+              <TableRow key={linha.tag} className="border-t border-border/60">
+                <TableCell className="p-3">
                   {/* A cor do SERVIDOR, não a do cache do chip: esta lista acabou
                       de ler o vocabulário, e mostrar o que a outra leitura
                       devolveu seria a tela discordando de si mesma por alguns
@@ -286,18 +287,18 @@ export function PainelDeTags({ tags, idioma }: { tags: LinhaDeVocabulario[]; idi
                       {t("em uso, fora do vocabulário")}
                     </span>
                   )}
-                </td>
-                <td className="p-3 tabular-nums">{linha.uso_em_contatos}</td>
-                <td className="p-3 tabular-nums">{linha.uso_em_leads}</td>
-                <td className="p-3 tabular-nums">{linha.uso_em_conversas}</td>
-                <td className="p-3 tabular-nums">
+                </TableCell>
+                <TableCell className="p-3 tabular-nums">{linha.uso_em_contatos}</TableCell>
+                <TableCell className="p-3 tabular-nums">{linha.uso_em_leads}</TableCell>
+                <TableCell className="p-3 tabular-nums">{linha.uso_em_conversas}</TableCell>
+                <TableCell className="p-3 tabular-nums">
                   {linha.em_regras > 0 ? (
                     <span className="font-medium">{linha.em_regras}</span>
                   ) : (
                     <span className="text-muted-foreground">0</span>
                   )}
-                </td>
-                <td className="flex flex-wrap gap-2 p-3">
+                </TableCell>
+                <TableCell className="flex flex-wrap gap-2 p-3">
                   <Button size="sm" variant="outline" onClick={() => abrir(linha, "definir_cor")}>
                     {t("Cor")}
                   </Button>
@@ -310,11 +311,11 @@ export function PainelDeTags({ tags, idioma }: { tags: LinhaDeVocabulario[]; idi
                   <Button size="sm" variant="outline" onClick={() => abrir(linha, "excluir")}>
                     {t("Excluir")}
                   </Button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
         {tags.length >= TETO_DA_LISTA && (
           <p className="border-t border-border/60 p-3 text-sm text-muted-foreground">
             {t(

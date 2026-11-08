@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LinksRastreaveis } from "./_linksRastreaveis";
 import { listarLinks, metricasLinks } from "@/lib/plataformas-de-anuncio/rastreio/links";
 /**
@@ -410,64 +411,64 @@ export default async function ConversoesPage({
               </p>
             ) : (
               <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-left">
-                    <tr>
-                      <th className="p-3 font-medium">{t("Negócio")}</th>
-                      <th className="p-3 font-medium">{t("Evento")}</th>
-                      <th className="p-3 font-medium">{t("Origem")}</th>
-                      <th className="p-3 font-medium">{t("Valor")}</th>
-                      <th className="p-3 font-medium">{t("O que houve")}</th>
-                      <th className="p-3 font-medium">{t("Quando")}</th>
-                      <th className="p-3 font-medium">{t("Próximo passo")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full text-sm">
+                  <TableHeader className="bg-muted/50 text-left">
+                    <TableRow>
+                      <TableHead className="p-3 font-medium">{t("Negócio")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("Evento")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("Origem")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("Valor")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("O que houve")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("Quando")}</TableHead>
+                      <TableHead className="p-3 font-medium">{t("Próximo passo")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {pendencias.map((p) => (
-                      <tr key={`${p.leadId}:${p.evento}`} className="border-t align-top">
-                        <td className="p-3">
+                      <TableRow key={`${p.leadId}:${p.evento}`} className="border-t align-top">
+                        <TableCell className="p-3">
                           <a
                             className="underline underline-offset-2"
                             href={`/app/kanban?lead=${p.leadId}`}
                           >
                             {p.tituloDoLead ?? t("(sem título)")}
                           </a>
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           {t(rotuloDoEvento(p.evento, rotulosDeEtapa))}
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           {p.plataforma === "meta_ads"
                             ? "Meta Ads"
                             : p.plataforma === "google_ads"
                               ? "Google Ads"
                               : "—"}
-                        </td>
-                        <td className="p-3 whitespace-nowrap">
+                        </TableCell>
+                        <TableCell className="p-3 whitespace-nowrap">
                           {p.valorCentavos === null ? "—" : formatCentsBRL(p.valorCentavos)}
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           <span>{t(MOTIVO_LEGIVEL[p.motivo ?? ""] ?? p.motivo ?? "—")}</span>
                           {p.detalhe && (
                             <span className="mt-1 block text-xs text-muted-foreground">
                               {p.detalhe}
                             </span>
                           )}
-                        </td>
-                        <td className="p-3 whitespace-nowrap text-muted-foreground">
+                        </TableCell>
+                        <TableCell className="p-3 whitespace-nowrap text-muted-foreground">
                           {new Date(p.tentadoEm).toLocaleString(idioma)}
-                        </td>
-                        <td className="p-3">
+                        </TableCell>
+                        <TableCell className="p-3">
                           <ReprocessarConversao
                             leadId={p.leadId}
                             idioma={idioma}
                             evento={p.evento}
                           />
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </section>
