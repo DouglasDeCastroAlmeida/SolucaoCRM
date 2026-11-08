@@ -119,7 +119,9 @@ function registrar(r: RegistroDeCaptura): void {
 async function loginNaHomologacao(page: Page): Promise<void> {
   const { email, senha } = CREDS_HML!;
   try {
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
+    // Espera a página hidratar antes de preencher: com "domcontentloaded" o clique em "Entrar" podia chegar antes do React
+    // e o formulário não saía de /login (visto em 08/11/2026, depois do deploy com dependências novas).
+    await page.goto("/login", { waitUntil: "networkidle" });
     await page.locator("#email").fill(email);
     await page.locator("#password").fill(senha);
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
