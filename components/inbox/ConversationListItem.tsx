@@ -350,11 +350,8 @@ export function ConversationListItem({
         )}
         aria-current={isSelected ? "true" : undefined}
       >
-      {isSelected && (
-        <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />
-      )}
       <div className="relative shrink-0">
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-12 w-12 rounded-full">
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
               foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
@@ -366,7 +363,7 @@ export function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-xs font-medium text-text-muted">
+          <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
@@ -400,7 +397,7 @@ export function ConversationListItem({
           <span className="flex min-w-0 items-center gap-1.5">
             <span
               className={cn(
-                "truncate text-sm",
+                "truncate text-[15px]",
                 unread > 0 ? "font-semibold text-text" : "font-medium text-text",
                 c?.is_anonymized && "font-normal italic text-text-muted",
               )}
@@ -452,7 +449,7 @@ export function ConversationListItem({
             {truncated}
           </p>
           {unread > 0 && (
-            <span className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-semibold tabular-nums text-accent-foreground">
               {unread}
             </span>
           )}
