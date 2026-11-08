@@ -55,7 +55,7 @@ interface Props {
   /**
    * O clique do controle. Só existe na coluna do desktop: o painel do celular
    * abre dentro de um `Sheet`, que já tem o próprio gesto de fechar — por isso o
-   * controle é OPCIONAL, como o `showCollapseControl` do menu da esquerda, e o
+   * controle é OPCIONAL, e o
    * `Sheet` do Inbox não o passa.
    */
   onAlternarRecolhido?: () => void;

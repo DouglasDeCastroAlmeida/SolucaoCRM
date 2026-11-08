@@ -2,11 +2,10 @@
 import Link from "next/link";
 import { useT } from "@/hooks/i18n/useT";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
-import { ArrowRight, CaretDoubleLeft, CaretDoubleRight, CaretDown, Gear } from "@/lib/ui/icons";
+import { useEffect, useState } from "react";
+import { ArrowRight, CaretDown, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
 import { ContadorDeCasos } from "@/components/shell/ContadorDeCasos";
@@ -21,7 +20,6 @@ const CHAVE_GRUPOS_FECHADOS = "sidebar-grupos-fechados";
 
 interface SidebarContentProps {
   collapsed: boolean;
-  showCollapseControl?: boolean;
   onNavigate?: () => void;
 }
 
@@ -35,14 +33,12 @@ interface SidebarContentProps {
  */
 export function SidebarContent({
   collapsed,
-  showCollapseControl = true,
   onNavigate,
 }: SidebarContentProps) {
   // A barra lateral aparece em TODA tela — traduzi-la aqui é o que faz a
   // escolha de idioma virar algo visível no primeiro clique.
   const t = useT();
   const pathname = usePathname();
-  const [isPending, startTransition] = useTransition();
   const { user, activeOrg } = useAuth();
   const todos = sidebarGroups(
     user.is_platform_admin && !user.support,
@@ -140,7 +136,7 @@ export function SidebarContent({
             className={cn(
               // `min-w-0`: item de flex não encolhe abaixo do `min-width: auto`,
               // que é o valor padrão — sem isso, uma arte própria larga empurra o
-              // botão de recolher para fora da barra em vez de encolher.
+              // o conteúdo para fora da barra em vez de encolher.
               "min-w-0 rounded-md",
               !logoEscuro && "dark:bg-white dark:px-2 dark:py-1 dark:shadow-sm",
             )}
@@ -214,32 +210,7 @@ export function SidebarContent({
             {[...nome][0]?.toUpperCase() ?? brand.initial}
           </span>
         )}
-        {/* Issue #2722 — o controle de recolher mora no ALTO, como no
-            mercado: na linha da logo, à direita, quando a barra está aberta. */}
-        {showCollapseControl && !collapsed && (
-          // `shrink-0`: sem isso o botão é o primeiro a ser espremido quando a
-          // marca é larga — e ele é o controle, não sobra.
-          <div className="ml-auto shrink-0 pl-2">
-            <BotaoDeRecolher
-              collapsed={false}
-              isPending={isPending}
-              soIcone
-              onClick={() => startTransition(() => toggleSidebar(collapsed))}
-            />
-          </div>
-        )}
       </div>
-      {/* Issue #2722 — no trilho recolhido (64px) não cabe controle ao lado
-          do símbolo: ele vira uma faixa imediatamente abaixo da marca. */}
-      {showCollapseControl && collapsed && (
-        <div className="border-b px-2 py-1">
-          <BotaoDeRecolher
-            collapsed
-            isPending={isPending}
-            onClick={() => startTransition(() => toggleSidebar(collapsed))}
-          />
-        </div>
-      )}
       {/*
         A DENSIDADE É MEDIDA, NÃO ESTÉTICA.
 
@@ -432,56 +403,5 @@ function DicaRecolhida({
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent side="right">{rotulo}</TooltipContent>
     </Tooltip>
-  );
-}
-
-/**
- * Issue #2722 — o MESMO controle de antes (classes, `toggleSidebar` via
- * `startTransition`, `isPending`, `aria-label` Recolher/Expandir), só que no
- * ALTO: na linha da logo quando aberta (padrão de mercado), e numa faixa sob
- * o símbolo quando recolhida — os 64px do trilho não comportam botão ao lado
- * da marca sem espremer.
- */
-function BotaoDeRecolher({
-  collapsed,
-  isPending,
-  onClick,
-  soIcone = false,
-}: {
-  collapsed: boolean;
-  isPending: boolean;
-  onClick: () => void;
-  /**
-   * Barra aberta, sem o rótulo. O review mediu (#2723) que o rótulo custa
-   * ~54px de uma linha com ~207px úteis, e uma logo-palavra de 5:1 (140px)
-   * já estourava por causa disso. Só o ícone devolve ~161px para a marca.
-   *
-   * Acessibilidade não muda: o `aria-label` é o mesmo ("Recolher sidebar"),
-   * e o `title` cobre o hover para quem só enxerga o desenho.
-   */
-  soIcone?: boolean;
-}) {
-  const t = useT();
-  // Um rótulo só para `aria-label` e `title`: os dois nomeiam a MESMA ação.
-  const rotulo = collapsed ? t("Expandir sidebar") : t("Recolher sidebar");
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={isPending}
-      className={cn(
-        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-        (collapsed || soIcone) && "justify-center px-2",
-      )}
-      aria-label={rotulo}
-      title={collapsed || soIcone ? rotulo : undefined}
-    >
-      {collapsed ? (
-        <CaretDoubleRight size={14} aria-hidden />
-      ) : (
-        <CaretDoubleLeft size={14} aria-hidden />
-      )}
-      {!collapsed && !soIcone && <span>{t("Recolher")}</span>}
-    </button>
   );
 }

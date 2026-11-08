@@ -1925,8 +1925,6 @@ export const DICIONARIO: Traducoes = {
   // O estado de carregando da tela de Desempenho, que passou a usar o mesmo
   // molde de vazio/erro das outras telas.
   "Carregando o desempenho": { es: "Cargando el rendimiento" },
-  "Expandir sidebar": { es: "Expandir barra lateral" },
-  "Recolher sidebar": { es: "Contraer barra lateral" },
   Versão: { es: "Versión" },
   versão: { es: "versión" },
   "Nova versão": { es: "Nueva versión" },

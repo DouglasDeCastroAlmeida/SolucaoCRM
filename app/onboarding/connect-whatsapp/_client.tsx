@@ -473,7 +473,7 @@ export function ConnectWhatsappClient({
                   key={qrTick}
                   src={`/api/v1/onboarding/whatsapp/qr?t=${qrTick}`}
                   alt={t("Código QR para conectar o WhatsApp")}
-                  className="h-48 w-48 rounded-md border bg-white object-contain sm:h-56 sm:w-56"
+                  className="h-48 w-48 rounded-md border bg-qr-bg object-contain sm:h-56 sm:w-56"
                   onError={() => setQrFailed(true)}
                   onLoad={() => setQrFailed(false)}
                 />

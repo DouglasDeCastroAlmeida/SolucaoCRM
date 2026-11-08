@@ -115,7 +115,6 @@ export function GavetaDeNavegacao({
         <SheetTitle className="sr-only">{t("Navegação principal")}</SheetTitle>
         <SidebarContent
           collapsed={false}
-          showCollapseControl={false}
           onNavigate={() => setOpen(false)}
         />
       </SheetContent>
