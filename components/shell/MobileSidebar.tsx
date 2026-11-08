@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useT } from "@/hooks/i18n/useT";
 import { SidebarContent } from "@/components/shell/Sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DotsThree, List } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
@@ -42,19 +43,31 @@ import { cn } from "@/lib/utils";
  * navegação é uma gaveta temporária: abrir/fechar não escreve esse cookie, para
  * não trocar a preferência que a pessoa escolheu no laptop.
  */
-export function GavetaDeNavegacao({ comoAba = false }: { comoAba?: boolean }) {
+export function GavetaDeNavegacao({
+  comoAba = false,
+  comoFaixa = false,
+}: {
+  comoAba?: boolean;
+  /**
+   * Visual de mensageiro (#87): o "mais" da FAIXA de ícones do desktop. Só o
+   * ícone, num círculo de 40px, com o nome num balão ao passar o mouse. Abre a
+   * mesma gaveta com a navegação completa: o hub não é uma segunda lista.
+   */
+  comoFaixa?: boolean;
+}) {
   const t = useT();
   const [open, setOpen] = useState(false);
 
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
+  const gatilho = (
       <SheetTrigger asChild>
         <Button
           type="button"
           variant="ghost"
           size={comoAba ? undefined : "icon"}
           className={cn(
-            comoAba
+            comoFaixa
+              ? "h-10 w-10 rounded-full text-muted-foreground hover:bg-surface hover:text-foreground"
+              : comoAba
               ? // Como aba: ocupa a vaga inteira na fila do rodapé, ícone em
                 // cima e rótulo embaixo, igual às outras quatro.
                 "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1 text-muted-foreground"
@@ -65,9 +78,17 @@ export function GavetaDeNavegacao({ comoAba = false }: { comoAba?: boolean }) {
           // Como aba, o nome acessível é o rótulo visível "Mais". Herdar
           // "Abrir navegação" deixava DOIS controles com o mesmo nome na tela de
           // celular (este e o hambúrguer da barra de cima).
-          aria-label={comoAba ? undefined : t("Abrir navegação")}
+          aria-label={comoFaixa ? t("Mais") : comoAba ? undefined : t("Abrir navegação")}
         >
-          {comoAba ? <DotsThree size={22} aria-hidden /> : <List size={22} aria-hidden />}
+          {comoAba ? (
+            <span className="flex h-7 w-12 items-center justify-center rounded-full">
+              <DotsThree size={22} aria-hidden />
+            </span>
+          ) : comoFaixa ? (
+            <DotsThree size={22} aria-hidden />
+          ) : (
+            <List size={22} aria-hidden />
+          )}
           {comoAba ? (
             <span className="w-full truncate text-center text-[10px] leading-tight">
               {t("Mais")}
@@ -75,6 +96,18 @@ export function GavetaDeNavegacao({ comoAba = false }: { comoAba?: boolean }) {
           ) : null}
         </Button>
       </SheetTrigger>
+  );
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      {comoFaixa ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{gatilho}</TooltipTrigger>
+          <TooltipContent side="right">{t("Mais")}</TooltipContent>
+        </Tooltip>
+      ) : (
+        gatilho
+      )}
       <SheetContent
         side="left"
         className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 p-0 sm:max-w-xs"

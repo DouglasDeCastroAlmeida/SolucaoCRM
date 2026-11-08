@@ -42,7 +42,7 @@ vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (texto: string) => texto }));
 // As peças da casca que NÃO são o assunto: barra lateral, barra de cima, barra
 // de progresso e os vigias de notificação/presença. Ficam fora para o teste
 // medir o rodapé, e não a rede delas.
-vi.mock("@/components/shell/Sidebar", () => ({ Sidebar: () => null }));
+vi.mock("@/components/shell/FaixaDeIcones", () => ({ FaixaDeIcones: () => null }));
 vi.mock("@/components/shell/TopBar", () => ({ TopBar: () => null }));
 vi.mock("@/components/shell/BarraDeProgressoNavegacao", () => ({
   BarraDeProgressoNavegacao: () => null,
