@@ -26,6 +26,7 @@ import { expect, test, type Page } from "./helpers/test";
 import { createClient } from "@supabase/supabase-js";
 
 import { carregarEnvLocal } from "../../scripts/lib/env-de-teste";
+import { abrirMaisAcoes, clicarAcaoDoCabecalho } from "./helpers/menu-do-cabecalho";
 
 const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 const EVIDENCIA = path.join(process.cwd(), "evidence/inbox-quem-manda");
@@ -281,7 +282,7 @@ test.describe("Inbox — quem manda nesta conversa", () => {
       if (error) throw new Error(`conferir comando: ${error.message}`);
       return data;
     }
-    await page.getByRole("button", { name: /^Assumir$/i }).click();
+    await clicarAcaoDoCabecalho(page, /^Assumir$/i);
 
     // -----------------------------------------------------------------
     // (3) A tela passa a dizer QUEM manda, e o selo explica o porquê.
@@ -338,6 +339,7 @@ test.describe("Inbox — quem manda nesta conversa", () => {
     // -----------------------------------------------------------------
     // (6) A VOLTA existe e funciona — o interruptor tem os dois lados.
     // -----------------------------------------------------------------
+    await abrirMaisAcoes(page);
     const voltar = page.getByTestId("devolver-ao-automatico");
     await expect(voltar).toBeVisible();
     await voltar.click();
