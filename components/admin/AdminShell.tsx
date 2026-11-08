@@ -102,7 +102,7 @@ export function AdminShell({
             {/* Sem TopBar própria no admin (era só sidebar + main): esta barra
                 existe só pra carregar o hambúrguer abaixo de `lg`, onde a
                 sidebar fixa não está mais no DOM. */}
-            <header className="flex h-12 items-center gap-2 border-b bg-background px-3 lg:hidden">
+            <header className="flex h-12 items-center gap-2 border-b border-border bg-surface-elevated px-3 lg:hidden">
               <Button
                 type="button"
                 variant="ghost"
