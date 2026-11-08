@@ -268,7 +268,7 @@ export function ConversationHeader({
           data-avatar
           data-testid="avatar-da-conversa"
           aria-hidden
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-[15px] font-medium text-muted-foreground"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-medium text-muted-foreground"
         >
           {iniciaisDe(displayName)}
         </span>

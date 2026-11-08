@@ -59,10 +59,10 @@ describe("bolha de mensageiro", () => {
     expect(screen.getByTestId("balao-pontinha").getAttribute("data-lado")).toBe("direita");
   });
 
-  it("a hora é pequena (11 px) e esmaecida, no canto inferior direito dentro da bolha", () => {
+  it("a hora é pequena (12 px, o piso do design system) e esmaecida, no canto inferior direito dentro da bolha", () => {
     render(<MessageBubble message={msg()} />);
     const rodape = screen.getByTestId("balao-rodape");
-    expect(rodape.className).toContain("text-[11px]");
+    expect(rodape.className).toContain("text-xs");
     expect(rodape.className).toContain("justify-end");
     expect(rodape.className).toContain("text-muted-foreground");
     expect(screen.getByTestId("message-bubble").contains(rodape)).toBe(true);

@@ -9,6 +9,7 @@ import { credenciaisSupabaseDeTeste } from "../../scripts/lib/env-de-teste";
 import { reconcileAppointment } from "../../lib/agenda/google/sync-executor";
 import { createMeetDeliveryHandler } from "../../lib/agent-engine/agent/meet-delivery";
 import { escolherDiaDesenhado, irParaASemanaSeguinte } from "./helpers/agenda-semana-integra";
+import { clicarAcaoDoCabecalho } from "./helpers/menu-do-cabecalho";
 
 const credentials = credenciaisSupabaseDeTeste();
 const db = createClient(credentials.url, credentials.serviceRole, {
@@ -506,7 +507,7 @@ test("marca Meet, copia link, autoriza em atendimento humano e entrega novamente
     // tema) — é o `AlertDialog` da casa. O botão que abre e o que confirma
     // têm o MESMO rótulo "Fechar"; o segundo clique escopado ao
     // `alertdialog` é o que desambigua.
-    await page.getByRole("button", { name: "Fechar", exact: true }).click();
+    await clicarAcaoDoCabecalho(page, "Fechar");
     await page
       .getByRole("alertdialog")
       .getByRole("button", { name: "Fechar", exact: true })

@@ -529,7 +529,7 @@ export function MessageBubble({
         <div
           data-testid="balao-rodape"
           className={cn(
-            "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-[11px] leading-none",
+            "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-xs leading-none",
             isOutbound ? "text-bubble-out-meta" : "text-muted-foreground",
           )}
         >
