@@ -16,7 +16,7 @@ export function VideoMedia({ messageId, src }: { messageId: string; src?: string
   const [failed, setFailed] = useState(false);
 
   return (
-    <div className="relative w-full max-w-sm aspect-video overflow-hidden rounded-md bg-black/5">
+    <div className="relative w-full max-w-sm aspect-video overflow-hidden rounded-md bg-foreground/5">
       {failed ? (
         <MediaUnavailable kind="Vídeo" className="h-full w-full" />
       ) : (

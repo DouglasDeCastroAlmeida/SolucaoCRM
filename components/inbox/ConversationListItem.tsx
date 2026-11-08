@@ -115,7 +115,7 @@ interface Props {
 /**
  * A COR SAI DE QUEM MANDA, NÃO DO STATUS.
  *
- * O mapa anterior era por `conversations.status`, e o `bg-purple-500` de
+ * O mapa anterior era por `conversations.status`, e o ponto roxo de
  * `ai_handling` era a mesma mentira das abas em forma de cor: `ai_handling` é
  * escrito por UM caminho só em produção, então a bolinha do automático quase
  * nunca aparecia — enquanto o robô atendia a maior parte da lista — e, quando
@@ -127,9 +127,9 @@ interface Props {
  * podem ser mantidas em arquivos diferentes.
  */
 const COR_DO_COMANDO: Record<string, string> = {
-  humano: "bg-blue-500",
-  automatico: "bg-purple-500",
-  aguardando: "bg-amber-500",
+  humano: "bg-info",
+  automatico: "bg-primary",
+  aguardando: "bg-warning",
   ninguem: "bg-muted-foreground/60",
   encerrada: "bg-muted-foreground/30",
 };
@@ -521,9 +521,9 @@ export function ConversationListItem({
 
         Desmarcado usa `text-text-muted`, não `text-text-subtle`: é componente
         gráfico e precisa de 3:1 contra o fundo da linha. Medido na prova de
-        tela, subtle dava 2,81:1 no escuro (#605e54 sobre #161510). Muted, no
+        tela, subtle dava 2,81:1 no escuro (o tom subtle sobre o fundo escuro). Muted, no
         pior fundo de cada tema (linha selecionada, `bg-accent-soft`): 5,74:1 no
-        claro (#5d594f sobre #e4ebe0) e 4,23:1 no escuro (#8e8b7f sobre #272b20).
+        claro (muted sobre accent-soft) e 4,23:1 no escuro (muted sobre accent-soft escuro).
       */}
       {onAlternarExemplo && (
         <button
