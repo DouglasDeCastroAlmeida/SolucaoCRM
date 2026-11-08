@@ -100,11 +100,14 @@ describe("guarda de white-label (self-host)", () => {
     expect(
       layoutRaiz.match(/await marcaResolvida\(\)/g) ?? [],
       "os consumidores do layout raiz são `generateMetadata` (aba), " +
-        "(a cor saiu em ADR 0008) `MarcaNoNavegador` (`window.__PUBLIC_ENV__`) e " +
-        "`MarcaDosClientComponents` (o contexto que os `\"use client\"` leem). " +
+        "`RegistroDoEstadoDaMarca` (grava `fallback_at`/motivos que `/admin/marca` lê; desde o " +
+        "ADR 0008 a cor não é mais injetada, mas o diagnóstico continua, e vem da MESMA " +
+        "`marcaResolvida()`, não de uma segunda pilha), `MarcaNoNavegador` " +
+        "(`window.__PUBLIC_ENV__`) e `MarcaDosClientComponents` (o contexto que os " +
+        "`\"use client\"` leem). " +
         "Consumidor a mais é legítimo — atualize o número. Consumidor a MENOS " +
         "significa que alguém voltou a montar a pilha por fora.",
-    ).toHaveLength(3);
+    ).toHaveLength(4);
   });
 
   it("os client components recebem a marca por PROP, não por fonte só-do-navegador", () => {
