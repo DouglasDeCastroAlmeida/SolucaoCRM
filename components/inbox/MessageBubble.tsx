@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
+import { VISUAL_DO_RECIBO } from "@/lib/inbox/recibo-visual";
 import { horaNoFuso } from "@/lib/inbox/agrupar-mensagens";
 import type { ReacaoNoBalao } from "@/lib/inbox/reacoes-no-fio";
 import { lerRemetenteDeGrupo, rotuloDoRemetente } from "@/lib/messaging/remetente-de-grupo";
@@ -89,13 +90,13 @@ function AckIndicator({
     return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
   }
   if (status === "read") {
-    return <TickEntregue size={16} className="text-primary-foreground" aria-label={t("Lida")} />;
+    return <TickEntregue size={16} stroke="currentColor" strokeWidth={VISUAL_DO_RECIBO.lida.traco} className={VISUAL_DO_RECIBO.lida.classe} aria-label={t("Lida")} />;
   }
   if (status === "delivered") {
-    return <TickEntregue size={16} className="text-current/70" aria-label={t("Entregue")} />;
+    return <TickEntregue size={16} className={VISUAL_DO_RECIBO.entregue.classe} aria-label={t("Entregue")} />;
   }
   if (status === "sent") {
-    return <TickEnviado size={16} className="text-current/70" aria-label={t("Enviada")} />;
+    return <TickEnviado size={16} className={VISUAL_DO_RECIBO.enviada.classe} aria-label={t("Enviada")} />;
   }
   return null;
 }
