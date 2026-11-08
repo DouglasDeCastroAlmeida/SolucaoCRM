@@ -60,7 +60,7 @@ const DO_WHATSAPP = [
 
 const NOMES_NOVOS = [
   "--color-bubble-out", "--color-bubble-out-fg", "--color-bubble-out-meta", "--color-bubble-in",
-  "--color-tick-read", "--color-selected",
+  "--color-tick-read", "--color-selected", "--color-accent-text",
 ];
 
 describe("tokens fixos do verde de mensageiro (ADR 0008)", () => {
@@ -70,14 +70,33 @@ describe("tokens fixos do verde de mensageiro (ADR 0008)", () => {
         for (const nome of NOMES_NOVOS) expect(() => token(tema, nome), nome).not.toThrow();
       });
 
-      it("o verde de ação é verde e o texto sobre ele passa de 4,5:1", () => {
-        const accent = token(tema, "--color-accent-600") && bloco(tema).includes("--color-accent:");
-        expect(accent).toBe(true);
-        const alvo = token(tema, tema === "claro" ? "--color-accent-600" : "--color-accent-400");
-        expect(matiz(alvo)).toBeGreaterThanOrEqual(140);
-        expect(matiz(alvo)).toBeLessThanOrEqual(180);
-        expect(espalhamento(alvo), "verde vivo, não oliva apagado").toBeGreaterThan(90);
+      it("o verde de preenchimento é VIVO (faixa do verde-folha) e o texto sobre ele passa de 4,5:1", () => {
+        expect(bloco(tema)).toContain("--color-accent:");
+        const alvo = token(tema, tema === "claro" ? "--color-accent-500" : "--color-accent-400");
+        expect(matiz(alvo)).toBeGreaterThanOrEqual(135);
+        expect(matiz(alvo)).toBeLessThanOrEqual(155);
+        expect(espalhamento(alvo), "verde vivo, não oliva apagado").toBeGreaterThan(120);
+        expect(luminancia(alvo), "claro o bastante para ser vivo").toBeGreaterThan(0.25);
         expect(razaoDeContraste(token(tema, "--color-accent-fg"), alvo)).toBeGreaterThanOrEqual(PISOS.texto);
+        // ícone/elemento gráfico sobre o verde (o "+" do círculo): piso de 3:1.
+        expect(razaoDeContraste(token(tema, "--color-accent-fg"), alvo)).toBeGreaterThanOrEqual(3);
+      });
+
+      it("o texto verde (links, chip ativo) tem degrau próprio e passa de 4,5:1 nos fundos onde aparece", () => {
+        const texto = token(tema, "--color-accent-text");
+        expect(matiz(texto)).toBeGreaterThanOrEqual(135);
+        expect(matiz(texto)).toBeLessThanOrEqual(155);
+        const fundos = [token(tema, "--color-surface"), token(tema, "--color-selected")];
+        if (tema === "claro") fundos.push(token(tema, "--color-accent-100"));
+        for (const f of fundos) expect(razaoDeContraste(texto, f), f).toBeGreaterThanOrEqual(PISOS.texto);
+      });
+
+      it("o fundo suave do chip ativo é verde bem claro no claro", () => {
+        if (tema !== "claro") return;
+        const suave = token(tema, "--color-accent-100");
+        expect(luminancia(suave)).toBeGreaterThan(0.8);
+        expect(matiz(suave)).toBeGreaterThanOrEqual(100);
+        expect(matiz(suave)).toBeLessThanOrEqual(130);
       });
 
       it("texto da bolha enviada, da hora e da bolha recebida passa de 4,5:1", () => {
