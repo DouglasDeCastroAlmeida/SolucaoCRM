@@ -57,7 +57,7 @@ export function ConfiguracoesEmDuasColunas({ children }: { children: ReactNode }
             <div key={section}>
               {section ? (
                 <h2 className="px-4 pt-3 pb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  {t(section)}
+                  {section}
                 </h2>
               ) : null}
               <ul>
