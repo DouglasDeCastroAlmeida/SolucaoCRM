@@ -941,11 +941,21 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
         primeira seção. Sem `onAlternarRecolhido` (o `Sheet` do celular) não
         desenha nada: quem já tem o gesto de fechar não precisa deste.
       */}
-      {onAlternarRecolhido && (
-        <div className="sticky top-0 z-10 -mx-4 -mt-4 flex shrink-0 justify-end border-b border-border bg-background px-4 py-1">
+      {/* #90: o cabeçalho "Dados do contato" (estilo dos mensageiros) leva o
+          título sempre; o controle de recolher só quando há como recolher. No
+          `Sheet` do celular sobra espaço à direita para o X do próprio painel. */}
+      <div
+        data-testid="inbox-painel-cabecalho"
+        className={cn(
+          "sticky top-0 z-10 -mx-4 -mt-4 flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 py-2",
+          !onAlternarRecolhido && "pr-12",
+        )}
+      >
+        <h2 className="min-w-0 truncate text-sm font-semibold text-text">{t("Dados do contato")}</h2>
+        {onAlternarRecolhido && (
           <BotaoDeRecolherDoPainel recolhido={false} onAlternar={onAlternarRecolhido} />
-        </div>
-      )}
+        )}
+      </div>
       <section>
         <h3 className="text-xs font-semibold text-text">
           {t("Contato")}

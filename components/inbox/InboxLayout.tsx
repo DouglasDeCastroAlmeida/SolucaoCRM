@@ -34,7 +34,7 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { CaretLeft, ChatCircle, IdentificationCard, MagnifyingGlass, X } from "@/lib/ui/icons";
+import { ChatCircle, IdentificationCard, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -818,9 +818,10 @@ export function InboxLayout({
               variant="ghost"
               size="sm"
               className="h-9 gap-1 px-2"
+              aria-label={t("Voltar para as conversas")}
               onClick={() => handleSelect(null)}
             >
-              <CaretLeft size={16} />
+              <Voltar size={22} aria-hidden />
               {t("Conversas")}
             </Button>
             <div className="flex-1" />
