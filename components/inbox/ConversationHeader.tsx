@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
-import { Phone, ArrowRight, MagnifyingGlass } from "@/lib/ui/icons";
+import { Phone, ArrowRight, Lupa } from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useReleaseConversation } from "@/hooks/inbox/useReleaseConversation";
@@ -335,7 +335,7 @@ export function ConversationHeader({
             title={t("Buscar nesta conversa")}
             aria-expanded={buscaAberta}
           >
-            <MagnifyingGlass size={16} aria-hidden />
+            <Lupa size={20} aria-hidden />
           </Button>
         )}
         {/* A chamada usa o telefone da ficha, mesmo quando o contato chegou por
