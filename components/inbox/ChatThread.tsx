@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,6 +91,8 @@ export function ChatThread({
   const claim = useClaimConversation();
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
+  // O botão "ir ao fim" (#117): só aparece quando a pessoa rolou para longe do fim.
+  const [longeDoFim, setLongeDoFim] = useState(false);
   const paginasVistas = useRef(0);
   /**
    * Esta conversa já ancorou no fim ALGUMA vez, com conteúdo na tela?
@@ -343,7 +346,15 @@ export function ChatThread({
           {t("Resultados nas mensagens carregadas")}: {resultados.size}
         </div>
       )}
-      <div ref={scrollerRef} className="fundo-da-conversa min-w-0 flex-1 overflow-y-auto py-2">
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <div
+        ref={scrollerRef}
+        onScroll={(e) => {
+          const sc = e.currentTarget;
+          setLongeDoFim(sc.scrollHeight - sc.scrollTop - sc.clientHeight > 120);
+        }}
+        className="fundo-da-conversa min-w-0 flex-1 overflow-y-auto py-2"
+      >
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button
@@ -466,6 +477,18 @@ export function ChatThread({
         })}
 
         <div ref={bottomRef} />
+      </div>
+      {longeDoFim && (
+        <button
+          type="button"
+          aria-label={t("Ir para o fim da conversa")}
+          title={t("Ir para o fim da conversa")}
+          onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })}
+          className="absolute bottom-4 right-4 z-20 flex size-10 items-center justify-center rounded-full bg-card text-muted-foreground shadow-md"
+        >
+          <ChevronDown className="size-5" aria-hidden />
+        </button>
+      )}
       </div>
     </div>
   );
