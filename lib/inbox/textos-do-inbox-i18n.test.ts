@@ -56,6 +56,8 @@ const IGUAL_EM_ES = new Set([
   "Documento",
   "Enviando",
   "Filtrar por número de WhatsApp",
+  // Botão do ícone de filtro da lista (#116): "Filtro" se escreve igual em espanhol.
+  "Filtro",
   "Grupo",
   "Grupos",
   "Sistema",
