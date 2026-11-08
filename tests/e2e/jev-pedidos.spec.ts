@@ -82,6 +82,7 @@ import {
   mandarMensagemDoCliente,
 } from "./helpers/jev";
 import { lerCreds, loginComoAdmin, type CredsE2E } from "./helpers/login-admin";
+import { abrirMaisAcoes, clicarAcaoDoCabecalho } from "./helpers/menu-do-cabecalho";
 
 const BASE_DO_JEV = process.env.JEV_API_BASE_URL ?? "";
 /** A chave que o dublê aceita. Não é segredo: só vale para ele. */
@@ -641,8 +642,10 @@ test.describe("Jev — os pedidos do cliente, pela tela", () => {
       const item = page.getByTestId("inbox-item").filter({ hasText: TITULO_DO_AVISO_DE_PARAR });
       await item.getByRole("link", { name: "Abrir a conversa" }).click();
       await expect(page).toHaveURL(new RegExp(`/app/inbox(/|\\?id=)${quemSai}`), { timeout: 30_000 });
-      await page.getByRole("button", { name: "Assumir", exact: true }).click();
-      await expect(page.getByRole("button", { name: "Liberar", exact: true })).toBeVisible({ timeout: 30_000 });
+      await clicarAcaoDoCabecalho(page, "Assumir");
+      await abrirMaisAcoes(page);
+      await expect(page.getByRole("menuitem", { name: "Liberar", exact: true })).toBeVisible({ timeout: 30_000 });
+      await page.keyboard.press("Escape");
       // Controle: assumiu de verdade — é o passo 1 do aviso.
       const { data: conv } = await admin.from("conversations").select("assigned_to_user_id").eq("id", quemSai).single();
       expect((conv as { assigned_to_user_id: string | null }).assigned_to_user_id).not.toBeNull();

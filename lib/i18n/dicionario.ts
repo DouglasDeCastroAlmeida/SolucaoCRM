@@ -7652,6 +7652,7 @@ export const DICIONARIO: Traducoes = {
     es: "Cuando el agente avanza en la atención, la tarjeta del cliente puede moverse sola por tu embudo. Elige a qué etapa va en cada momento. Dejarlo en «no mover» también es válido: la tarjeta se queda donde está y el agente sigue trabajando.",
   },
   "Ir para as etapas do funil": { es: "Ir a las etapas del embudo" },
+  "Ir para o fim da conversa": { es: "Ir al final de la conversación" },
   "Etapa para": { es: "Etapa para" },
   "Não mover o card": { es: "No mover la tarjeta" },
   "As escolhas voltaram para o que está gravado agora — confira e escolha de novo.": {

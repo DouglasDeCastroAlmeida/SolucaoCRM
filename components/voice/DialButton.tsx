@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Phone } from "@/lib/ui/icons";
 import { useVoiceCall } from "@/components/voice/VoiceCallContext";
 import { useVoiceSessionStatus } from "@/hooks/voice/useVoiceSessionStatus";
@@ -9,13 +10,15 @@ interface Props {
   contactId: string;
   /** Contato sem telefone não tem pra onde ligar — o chamador já sabe disso. */
   hasPhone: boolean;
+  /** #117: item do menu "Mais ações" do cabeçalho, em vez de botão solto. */
+  comoItemDeMenu?: boolean;
 }
 
 /**
  * Botão "Ligar" do Customer 360 (spec §5.1). Só aparece quando a org pareou
  * chamada de voz — feature opt-in (§1.2), nunca ligada por padrão.
  */
-export function DialButton({ contactId, hasPhone }: Props) {
+export function DialButton({ contactId, hasPhone, comoItemDeMenu = false }: Props) {
   const { data: sessionStatus } = useVoiceSessionStatus();
   const { call, startCall } = useVoiceCall();
   const t = useT();
@@ -23,6 +26,15 @@ export function DialButton({ contactId, hasPhone }: Props) {
   if (!sessionStatus?.configured || !sessionStatus.paired || !hasPhone) return null;
 
   const jaEmLigacao = !!call && call.status !== "ended";
+
+  if (comoItemDeMenu) {
+    return (
+      <DropdownMenuItem disabled={jaEmLigacao} onSelect={() => void startCall(contactId)}>
+        <Phone size={16} weight="bold" aria-hidden />
+        <span>{jaEmLigacao ? t("Em ligação") : t("Chamar")}</span>
+      </DropdownMenuItem>
+    );
+  }
 
   return (
     <Button

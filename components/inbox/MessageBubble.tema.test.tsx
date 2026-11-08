@@ -47,25 +47,25 @@ describe("MessageBubble - visual de mensageiro", () => {
   it("a enviada fica a direita, na cor de destaque e com o texto calculado da marca", () => {
     const { container } = render(<MessageBubble message={msg({ direction: "outbound" })} />);
     const balao = screen.getByTestId("message-bubble");
-    expect(balao.className).toContain("bg-primary");
-    expect(balao.className).toContain("text-primary-foreground");
+    expect(balao.className).toContain("bg-bubble-out");
+    expect(balao.className).toContain("text-bubble-out-fg");
     expect(container.firstElementChild?.className).toContain("justify-end");
   });
 
   it("a recebida fica a esquerda, em balao claro (card) sem moldura", () => {
     const { container } = render(<MessageBubble message={msg({ direction: "inbound" })} />);
     const balao = screen.getByTestId("message-bubble");
-    expect(balao.className).toContain("bg-card");
+    expect(balao.className).toContain("bg-bubble-in");
     expect(balao.className).toContain("text-foreground");
     expect(balao.className).not.toContain("border-border");
-    expect(balao.className).not.toContain("bg-primary");
+    expect(balao.className).not.toContain("bg-bubble-out");
     expect(container.firstElementChild?.className).toContain("justify-start");
   });
 
-  it("o canto tem raio de balao do mensageiro (rounded-lg), nao o pilula antigo", () => {
+  it("o canto tem raio de balao do mensageiro (rounded-[8px]), nao o pilula antigo", () => {
     render(<MessageBubble message={msg()} />);
     const balao = screen.getByTestId("message-bubble");
-    expect(balao.className).toContain("rounded-lg");
+    expect(balao.className).toContain("rounded-[8px]");
     expect(balao.className).not.toContain("rounded-2xl");
   });
 
@@ -80,9 +80,9 @@ describe("MessageBubble - visual de mensageiro", () => {
 
   it("a pontinha tem a mesma cor do balao (enviada: destaque; recebida: card)", () => {
     const { rerender } = render(<MessageBubble message={msg({ direction: "outbound" })} />);
-    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-primary");
+    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-bubble-out");
     rerender(<MessageBubble message={msg({ direction: "inbound" })} />);
-    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-card");
+    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-bubble-in");
   });
 
   it("hora e ticks ficam dentro do balao, no rodape", () => {

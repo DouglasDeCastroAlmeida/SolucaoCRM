@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -82,7 +82,8 @@ describe("ConversationHeader - Assumir e Devolver (AC-002.6)", () => {
   it("AC-002.6: Assumir chama a mesma rota com a conversa e o dono esperado", async () => {
     const user = userEvent.setup();
     montar({ assigned_to_user_id: null });
-    await user.click(screen.getByRole("button", { name: "Assumir" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: "Assumir" }));
     expect(claimMutate).toHaveBeenCalledTimes(1);
     expect(claimMutate).toHaveBeenCalledWith({ conversation_id: "conv-1", expected_assignee: null });
   });
@@ -94,20 +95,23 @@ describe("ConversationHeader - Assumir e Devolver (AC-002.6)", () => {
       assignee_kind: "user",
       bot_silenced_until: new Date(Date.now() + 10 * 60_000).toISOString(),
     });
-    await user.click(screen.getByTestId("devolver-ao-automatico"));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByTestId("devolver-ao-automatico"));
     expect(retomarMutate).toHaveBeenCalledTimes(1);
     expect(retomarMutate).toHaveBeenCalledWith({ conversation_id: "conv-1" });
     expect(claimMutate).not.toHaveBeenCalled();
   });
 
-  it("AC-002.6: a cor dos dois botoes vem dos tokens, nunca de cor fixa", () => {
+  it("AC-002.6: a cor dos dois itens vem dos tokens, nunca de cor fixa", async () => {
     montar({
       assigned_to_user_id: "u1",
       assignee_kind: "user",
       bot_silenced_until: new Date(Date.now() + 10 * 60_000).toISOString(),
     });
+    await userEvent.setup().click(screen.getByRole("button", { name: "Mais ações" }));
+    const menu = await screen.findByRole("menu");
     for (const nome of ["Assumir", "Devolver ao automático"]) {
-      const classe = screen.getByRole("button", { name: nome }).className;
+      const classe = within(menu).getByRole("menuitem", { name: nome }).className;
       expect(classe, nome).not.toMatch(/#[0-9a-f]{3,6}|\b(bg|text|border)-(blue|green|red|emerald|sky|indigo|violet|slate|gray|zinc)-\d/i);
     }
   });
