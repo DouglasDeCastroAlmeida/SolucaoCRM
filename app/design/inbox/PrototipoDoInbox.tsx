@@ -173,7 +173,7 @@ function ListaDeConversas({ escondida }: { escondida: boolean }) {
             readOnly
             aria-label="Buscar conversas"
             placeholder="Pesquisar ou começar uma nova conversa"
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-hidden placeholder:text-muted-foreground"
           />
         </label>
       </div>
@@ -399,7 +399,7 @@ function Conversa({ escondida, menuAberto }: { escondida: boolean; menuAberto: b
             style={{ background: "linear-gradient(135deg, #b9cfc9 0%, #8fb0a8 55%, #6f948b 100%)" }}
           >
             <FileText className="size-10 text-white/80" aria-hidden />
-            <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded bg-black/40 px-1.5 py-0.5 text-[11px] text-white">
+            <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-[11px] text-white">
               <Play className="size-3" aria-hidden /> planta-2-quartos.pdf
             </span>
           </div>
@@ -428,7 +428,7 @@ function Conversa({ escondida, menuAberto }: { escondida: boolean; menuAberto: b
           readOnly
           aria-label="Mensagem"
           placeholder="Digite uma mensagem"
-          className="mx-1 h-10 min-w-0 flex-1 rounded-full bg-card px-4 text-[15px] text-foreground outline-none placeholder:text-muted-foreground"
+          className="mx-1 h-10 min-w-0 flex-1 rounded-full bg-card px-4 text-[15px] text-foreground outline-hidden placeholder:text-muted-foreground"
         />
         <button
           type="button"
