@@ -77,6 +77,14 @@ interface Props {
   aoVoltar?: () => void;
   /** Celular (#118): a porta da ficha do contato, no lugar do ícone de contato (abaixo do `md`). */
   acaoDaFicha?: ReactNode;
+  /**
+   * Computador (rodada 2): "Ver contato" abre/recolhe o painel "Dados do contato" em vez de levar
+   * a pessoa para fora do Inbox; o link para a página completa mora dentro do painel. O nome do
+   * contato faz o mesmo. Ausente = o ícone continua sendo o link para a ficha completa.
+   */
+  aoAbrirContato?: () => void;
+  /** O painel do contato está aberto? Só reflete no `aria-pressed` do ícone. */
+  contatoAberto?: boolean;
 }
 
 /**
@@ -120,6 +128,8 @@ export function ConversationHeader({
   botaoBuscaRef,
   aoVoltar,
   acaoDaFicha,
+  aoAbrirContato,
+  contatoAberto,
 }: Props) {
   const t = useT();
   const { user, activeOrg } = useAuth();
@@ -255,11 +265,12 @@ export function ConversationHeader({
   </header>;
 
   /**
-   * O SEGUNDO TEXTO DO SUBTÍTULO: o estado que a pessoa precisa ler SEM abrir nada.
-   * O motivo do silêncio ("Automático pausado — alguém assumiu") vence; senão, conversa
-   * encerrada diz como terminou; senão, o telefone do contato.
+   * O SUBTÍTULO: o estado da conversa ("Aberta", "Fechada"...) aparece SEMPRE, sem precisar abrir
+   * nada; depois dele vem o motivo do silêncio ("Automático pausado — alguém assumiu") e, só sem
+   * motivo, o telefone do contato.
    */
-  const estadoDoSubtitulo = motivo !== null ? t(ROTULO_DO_MOTIVO[motivo]) : encerrada ? t(STATUS_LABEL[status] ?? status) : null;
+  const estadoDaConversa = t(STATUS_LABEL[status] ?? status);
+  const motivoDoSilencio = motivo !== null ? t(ROTULO_DO_MOTIVO[motivo]) : null;
 
   return (
     <div className="shrink-0">
@@ -273,7 +284,7 @@ export function ConversationHeader({
           atendimento moram todas no menu "Mais ações", com a mesma lógica de estado de antes. */}
       <div
         data-testid="cabecalho-da-conversa"
-        className="flex h-[60px] shrink-0 items-center gap-3 border-b border-border bg-card px-4"
+        className="flex h-[60px] shrink-0 items-center gap-3 border-b border-border bg-card px-4 max-md:gap-2 max-md:px-2"
       >
         {aoVoltar && (
           <Button
@@ -298,8 +309,19 @@ export function ConversationHeader({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5">
-            <ChannelLogo channel={conversation.channel_sessions} size={18} />
-            <h2 className="min-w-0 truncate text-[17px] font-normal leading-6" title={displayName}>{displayName}</h2>
+            {/* No celular o NOME tem prioridade: o logo do canal (secundário) some antes de o nome ser cortado. */}
+            <span className="inline-flex shrink-0 max-md:hidden" data-testid="logo-do-canal">
+              <ChannelLogo channel={conversation.channel_sessions} size={20} />
+            </span>
+            <h2 className="min-w-0 truncate text-[17px] font-normal leading-6" title={displayName}>
+              {aoAbrirContato ? (
+                <button type="button" onClick={aoAbrirContato} className="max-w-full truncate text-left">
+                  {displayName}
+                </button>
+              ) : (
+                displayName
+              )}
+            </h2>
             <span className="hidden shrink-0 sm:inline-flex">
               <JanelaSelo
                 provider={conversation.channel_sessions?.provider ?? null}
@@ -323,13 +345,13 @@ export function ConversationHeader({
                 <OwnerBadge compacto ownerKind={null} ownerName={null} />
               )}
             </span>
-            {estadoDoSubtitulo ? (
-              <span
-                className="min-w-0 truncate"
-                title={estadoDoSubtitulo}
-                data-testid={motivo !== null ? "badge-atendimento-humano" : "estado-da-conversa"}
-              >
-                · {estadoDoSubtitulo}
+            {/* O estado nunca é cortado (shrink-0): no celular é o mínimo que a linha precisa dizer. */}
+            <span className="shrink-0" data-testid="estado-da-conversa">
+              · {estadoDaConversa}
+            </span>
+            {motivoDoSilencio ? (
+              <span className="min-w-0 truncate" title={motivoDoSilencio} data-testid="badge-atendimento-humano">
+                · {motivoDoSilencio}
               </span>
             ) : (
               phone && <span className="min-w-0 truncate">· {phone}</span>
@@ -349,7 +371,23 @@ export function ConversationHeader({
 
         <div className="flex shrink-0 items-center">
           {acaoDaFicha}
-          {c?.id && (
+          {c?.id && aoAbrirContato && (
+            // Computador: abre/recolhe o painel "Dados do contato"; a página completa fica no
+            // link "Ver contato" de dentro do painel (o mesmo que a ficha do celular traz).
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className={cn("size-10 rounded-full text-muted-foreground", acaoDaFicha && "max-md:hidden")}
+              aria-label={t("Ver contato")}
+              title={t("Abre os dados deste contato.")}
+              aria-pressed={contatoAberto}
+              onClick={aoAbrirContato}
+            >
+              <UserRound className="size-5" aria-hidden />
+            </Button>
+          )}
+          {c?.id && !aoAbrirContato && (
             <Button
               asChild
               size="icon"

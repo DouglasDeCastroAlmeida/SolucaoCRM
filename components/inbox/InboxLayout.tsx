@@ -260,6 +260,24 @@ export function InboxLayout({
     });
   }, [painelRecolhido]);
   /**
+   * "Ver contato" no cabeçalho abre o PAINEL (rodada 2): no `xl` a coluna ao lado (abre/recolhe),
+   * abaixo dele a ficha deslizante, que é a mesma do celular. Nada leva a pessoa para fora do Inbox.
+   */
+  const [ehXl, setEhXl] = useState(false);
+  useEffect(() => {
+    // Só decide o gesto do clique e o `aria-pressed`; o layout em si segue em CSS (sem piscar).
+    const mq = window.matchMedia?.("(min-width: 1280px)");
+    if (!mq) return;
+    const atualizar = () => setEhXl(mq.matches);
+    atualizar();
+    mq.addEventListener("change", atualizar);
+    return () => mq.removeEventListener("change", atualizar);
+  }, []);
+  const abrirContato = useCallback(() => {
+    if (window.matchMedia?.("(min-width: 1280px)").matches) alternarPainelDoContato();
+    else setFichaAberta((aberta) => !aberta);
+  }, [alternarPainelDoContato]);
+  /**
    * A busca dentro da conversa (#1793) pertence à CONVERSA em que foi aberta.
    * Guardar o id junto fecha a busca em qualquer troca — clique, atalho j/k,
    * voltar do navegador — sem que cada caminho precise lembrar de limpá-la.
@@ -837,6 +855,8 @@ export function InboxLayout({
               conversation={selectedConversation}
               onAbrirConversa={handleSelect}
               aoVoltar={() => handleSelect(null)}
+              aoAbrirContato={abrirContato}
+              contatoAberto={ehXl ? !painelRecolhido : fichaAberta}
               acaoDaFicha={
                 <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
                   <SheetTrigger asChild>
