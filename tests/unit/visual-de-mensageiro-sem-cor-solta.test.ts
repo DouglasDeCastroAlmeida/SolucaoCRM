@@ -114,6 +114,14 @@ const EXCECOES: Excecao[] = [
     motivo: "Logo do cliente sem arte para o escuro precisa de fundo claro fixo atrás (proteção de contraste do #659).",
   },
   {
+    onde: "app/(public)/layout.tsx",
+    linha: /dark:bg-white/,
+    motivo:
+      "Logo do cliente na tela de entrada, sem arte para o escuro, precisa de fundo claro fixo " +
+      "atrás (proteção de contraste do #659). `dark:bg-foreground` ficava escuro-sobre-escuro " +
+      "no tema escuro; a cerca logo-nao-some-no-tema-escuro.test.ts exige este chip.",
+  },
+  {
     onde: "components/shell/FaixaDeIcones.tsx",
     linha: /dark:bg-white/,
     motivo: "Logo do cliente sem arte para o escuro precisa de fundo claro fixo atrás (proteção de contraste do #659).",
