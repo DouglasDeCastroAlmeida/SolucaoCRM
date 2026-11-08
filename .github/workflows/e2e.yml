@@ -1332,6 +1332,9 @@ jobs:
       # autor (sem Docker/Supabase local). Rodada à mão por etapa: `VISUAL_ETAPA=1 VISUAL_FASE=antes
       # pnpm playwright test tests/e2e/visual-de-mensageiro-jornada.spec.ts` (cabeçalho da spec). A lista
       # de telas é conferida contra o disco por `tests/unit/visual-de-mensageiro-telas.test.ts`.
+      # Desde a #103 ela também roda contra a homologação (`VISUAL_ALVO=hml`, configuração
+      # `playwright.visual-hml.config.ts`), sem Docker nem banco local; depende de servidor externo e de
+      # uma conta de teste, mais um motivo para ficar fora do CI.
       #
       # `jev-chave-real` entrou aqui em 2026-09-23: EXIGE UMA CHAVE PAGA da
       # TypeSafe AI (`JEV_API_KEY`), e segredo de repositório público não é
