@@ -16,9 +16,9 @@ import { useT } from "@/hooks/i18n/useT";
  * larguras, então é o único lugar onde um controle global cabe sem inventar
  * uma barra nova (o que mudaria o layout de todas as telas do admin).
  *
- * ── Por que as cores são token e não `amber-*` ───────────────────────────────
+ * ── Por que as cores são token e não paleta crua ───────────────────────────────
  *
- * A versão anterior usava `bg-amber-100 border-amber-300 text-amber-900`, cru
+ * A versão anterior usava classes de paleta crua (âmbar claro), cru
  * do Tailwind e portanto FIXO: a tarja não acompanhava claro e escuro, e num
  * tema escuro ela virava uma faixa clara gritando no topo. Os tokens de
  * `warning` são os mesmos que o `Badge variant="warning"` usa, e existem nos
