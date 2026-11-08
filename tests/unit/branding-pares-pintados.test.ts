@@ -36,7 +36,9 @@ import { camadaDoAmbiente, resolverMarca, type CorResolvida } from "@/lib/brandi
  */
 
 const RAIZ = process.cwd();
-const CSS = fs.readFileSync(path.join(RAIZ, "app/globals.css"), "utf8");
+// ADR 0008: a derivação por marca deixou de colorir a interface; este teste calibra a biblioteca
+// contra a rampa Sage de antes (congelada), não contra a paleta fixa do app (ver verde-de-mensageiro-fixo.test.ts).
+const CSS = fs.readFileSync(path.join(RAIZ, "tests/fixtures/globals-sage-legado.css"), "utf8");
 const REGUA = extrairRegua(CSS);
 
 /** A mesma fixture adversarial versionada de `branding-contraste.test.ts`. */

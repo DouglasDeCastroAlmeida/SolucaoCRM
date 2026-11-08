@@ -329,25 +329,17 @@ describe("guardas de mecanismo", () => {
         forasteiros.push(`${alvo}: ${chamada}`);
       }
     }
-    // Controle positivo: uma varredura que não achasse chamada nenhuma passaria
-    // no `toEqual([])` acima sem medir nada. Quatro é o que existe hoje — o
-    // layout raiz, o layout de `/app` e as duas telas de marca.
-    expect(chamadas.length, chamadas.join("\n")).toBeGreaterThanOrEqual(4);
+    // Controle positivo: uma varredura que não achasse chamada nenhuma passaria no `toEqual([])` sem
+    // medir nada. Desde o ADR 0008 os layouts não chamam mais: restam as duas telas de marca (prévia).
+    expect(chamadas.length, chamadas.join("\n")).toBeGreaterThanOrEqual(2);
     expect(forasteiros).toEqual([]);
   });
 
-  it("o layout injeta o bloco no <head>, antes do script de tema", () => {
-    // Zero flash depende disso: o bloco é HTML no primeiro byte. Se ele descer
-    // para o <body> ou virar efeito de cliente, a tela pinta a cor do produto e
-    // troca depois — que é exatamente o que o self-hoster reporta como "piscou".
+  it("o layout raiz não injeta mais o bloco de cor da instalação (ADR 0008)", () => {
     const layout = fs.readFileSync(path.join(RAIZ, "app/layout.tsx"), "utf8");
-    const head = layout.indexOf("<head>");
-    const estilo = layout.indexOf("<EstiloDaMarca />");
-    const tema = layout.indexOf("THEME_INIT_SCRIPT }}");
-    expect(head).toBeGreaterThan(-1);
-    expect(estilo).toBeGreaterThan(head);
-    expect(estilo).toBeLessThan(layout.indexOf("</head>"));
-    expect(estilo).toBeLessThan(tema);
+    expect(layout).not.toContain("<EstiloDaMarca");
+    expect(layout).not.toContain('id="marca-instalacao"');
+    expect(layout).not.toMatch(/cssDaMarca\s*\(/);
   });
 
   it("o layout de /app envolve a árvore inteira no marcador do escopo", () => {
@@ -369,38 +361,10 @@ describe("guardas de mecanismo", () => {
     expect(marcador).toBeLessThan(layout.indexOf("MfaEnrollGate enrolled"));
   });
 
-  it("o bloco da organização é emitido DENTRO da subárvore, não na raiz", () => {
+  it("o layout de /app não emite mais bloco de cor da organização (ADR 0008)", () => {
     const layout = fs.readFileSync(path.join(RAIZ, "app/app/layout.tsx"), "utf8");
-    const marcador = layout.indexOf('<div data-marca-org=""');
-    const estilo = layout.indexOf("<EstiloDaMarcaDaOrganizacao");
-    // Vacuidade: sem o marcador, `-1 < estilo` seria verde e este caso passaria
-    // a não ordenar coisa nenhuma.
-    expect(marcador).toBeGreaterThan(-1);
-    expect(estilo).toBeGreaterThan(marcador);
-    // E o layout RAIZ não conhece o escopo da organização: emitir o bloco lá o
-    // faria sobreviver ao logout, que é Server Action + `redirect` — navegação
-    // client-side, sem full reload, sem o `<head>` desmontar.
-    const raiz = fs.readFileSync(path.join(RAIZ, "app/layout.tsx"), "utf8");
-    expect(raiz).not.toContain("ESCOPO_DA_ORGANIZACAO");
-  });
-
-  it("o bloco da organização tem id próprio e não é içado pelo React", () => {
-    const fonte = fs.readFileSync(
-      path.join(RAIZ, "app/app/_components/EstiloDaMarcaDaOrganizacao.tsx"),
-      "utf8",
-    );
-    // O `id` é o que distingue este bloco do da instalação (`marca-instalacao`,
-    // no `<head>`) para o suporte, para o diagnóstico e para a spec de e2e — que
-    // afirma a AUSÊNCIA dele em `/login` como uma das três provas de não-vazamento.
-    expect(fonte).toContain('<style id="marca-organizacao"');
-    // `href` e `precedence` são exatamente as duas props que fazem o React 19
-    // IÇAR um `<style>` para o `<head>` e gerenciá-lo como recurso. Com elas, o
-    // bloco deixaria de desmontar junto com a subárvore de `/app`.
-    const semComentario = fonte
-      .split("\n")
-      .filter((l) => !l.trimStart().startsWith("*"))
-      .join("\n");
-    expect(semComentario).not.toMatch(/\bhref=/);
-    expect(semComentario).not.toMatch(/\bprecedence\b/);
+    expect(layout).not.toContain("EstiloDaMarcaDaOrganizacao");
+    expect(layout).not.toMatch(/cssDaMarca\s*\(/);
+    expect(fs.existsSync(path.join(RAIZ, "app/app/_components/EstiloDaMarcaDaOrganizacao.tsx"))).toBe(false);
   });
 });

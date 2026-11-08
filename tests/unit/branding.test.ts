@@ -99,12 +99,12 @@ describe("guarda de white-label (self-host)", () => {
     // cabeçalho daquela função existe para impedir.
     expect(
       layoutRaiz.match(/await marcaResolvida\(\)/g) ?? [],
-      "os quatro consumidores do layout raiz são `generateMetadata` (aba), " +
-        "`EstiloDaMarca` (cor), `MarcaNoNavegador` (`window.__PUBLIC_ENV__`) e " +
+      "os consumidores do layout raiz são `generateMetadata` (aba), " +
+        "(a cor saiu em ADR 0008) `MarcaNoNavegador` (`window.__PUBLIC_ENV__`) e " +
         "`MarcaDosClientComponents` (o contexto que os `\"use client\"` leem). " +
         "Consumidor a mais é legítimo — atualize o número. Consumidor a MENOS " +
         "significa que alguém voltou a montar a pilha por fora.",
-    ).toHaveLength(4);
+    ).toHaveLength(3);
   });
 
   it("os client components recebem a marca por PROP, não por fonte só-do-navegador", () => {

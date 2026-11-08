@@ -47,6 +47,7 @@ import {
 } from "@/lib/branding/resolve";
 import { marcaDaOrganizacaoSchema } from "@/lib/schemas/settings";
 import { dicaDoRelatorio, type VocabularioDaEmpresa } from "@/lib/legal/dica-do-relatorio-de-dados";
+import { AvisoDaCorDaMarca } from "@/components/branding/AvisoDaCorDaMarca";
 import { useT } from "@/hooks/i18n/useT";
 
 interface Props {
@@ -353,6 +354,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente, 
           <p id="ajuda-da-cor-da-organizacao" className="text-xs text-text-muted">
             {t("Deixe em branco para voltar à cor que o sistema já usa.")}
           </p>
+          <AvisoDaCorDaMarca />
         </div>
 
         {/*

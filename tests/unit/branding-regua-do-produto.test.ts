@@ -7,7 +7,9 @@ import { extrairRegua } from "@/lib/branding/contraste";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 
 const RAIZ = process.cwd();
-const CSS = fs.readFileSync(path.join(RAIZ, "app/globals.css"), "utf8");
+// ADR 0008: a régua congelada é a da derivação por marca (legada, sem efeito na interface); ela espelha a
+// rampa Sage de antes, guardada em tests/fixtures. A paleta fixa do app é vigiada por verde-de-mensageiro-fixo.test.ts.
+const CSS = fs.readFileSync(path.join(RAIZ, "tests/fixtures/globals-sage-legado.css"), "utf8");
 
 describe("régua congelada em módulo", () => {
   it("é exatamente o que `extrairRegua` tira do globals.css de hoje", () => {

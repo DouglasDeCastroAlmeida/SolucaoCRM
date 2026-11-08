@@ -7,10 +7,8 @@ import { clientePelaAgendaLigado } from "@/lib/schemas/settings";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { ProvedorDeCoresDasEtiquetas } from "@/components/tags/CoresDasEtiquetas";
 import { AppShell } from "./_components/AppShell";
-import { EstiloDaMarcaDaOrganizacao } from "./_components/EstiloDaMarcaDaOrganizacao";
 import { EstiloDoTemaDaExtensao } from "./_components/EstiloDoTemaDaExtensao";
 import { MfaEnrollGate } from "@/components/auth/MfaEnrollGate";
-import { cssDaMarca, ESCOPO_DA_ORGANIZACAO } from "@/lib/branding/css";
 import { cssDaExtensaoDeTema, linhaBrutaDeTema, temaAplicavel } from "@/lib/extensions/tema";
 import { marcaDaInstalacao } from "@/lib/branding/instalacao";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
@@ -63,7 +61,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
    * meio, arquivo de instalação embaixo) mora em `lib/branding/organizacao.ts`,
    * e não aqui: a precedência é regra do produto, não detalhe deste layout.
    */
-  let cssDaOrganizacao: string | null = null;
   // O tema de extensão, se a organização escolheu um. `null` = quem não
   // escolheu — e aí o `EstiloDoTemaDaExtensao` não renderiza nada.
   let cssDoTemaDaExtensao: string | null = null;
@@ -189,18 +186,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       (await marcaDoPedido()).brand,
     );
 
-    // SÓ quando a cor veio mesmo da organização. Se ela não configurou nada, a
-    // resolução devolve a cor da instalação — e reemiti-la aqui, escopada no
-    // `<body>`, seria repetir no documento um bloco que já vale pela raiz. Além
-    // de bytes, custaria a única pergunta que a presença do bloco responde.
-    if (marca.origens.cor === "organizacao") {
-      // Os `motivos` de uma cor recusada NÃO são registrados aqui de propósito:
-      // este caminho roda para todo tenant a cada render, e um aviso por
-      // organização no log da instalação é como um alarme deixa de ser lido. O
-      // laço de retorno desta feature é a tela `/app/settings/marca`, que mostra
-      // os motivos para quem pode consertá-los — o admin daquela organização.
-      cssDaOrganizacao = cssDaMarca(marca.cor, ESCOPO_DA_ORGANIZACAO).css;
-    }
+    // A cor da organização não colore a interface (ADR 0008): o verde de mensageiro é fixo.
 
     cssDoTemaDaExtensao = await temaDaExtensao;
 
@@ -304,7 +290,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         instalação, e depois o resto do produto com a dele.
       */}
       <div data-marca-org="" className="contents">
-        <EstiloDaMarcaDaOrganizacao css={cssDaOrganizacao} />
         <EstiloDoTemaDaExtensao css={cssDoTemaDaExtensao} />
         <ImpersonateBanner impersonating={impersonating} />
         <ConexaoCaidaBanner caidas={conexoesCaidas} />

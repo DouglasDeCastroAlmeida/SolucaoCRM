@@ -65,7 +65,7 @@ describe("lista de conversas no padrão de mensageiro (#88)", () => {
   it("a conversa aberta é destacada na linha inteira, sem listra lateral", () => {
     render(linha({}, true));
     const botao = document.querySelector("button[data-conversation-id]")!;
-    expect(botao.className).toContain("bg-accent-soft");
+    expect(botao.className).toContain("bg-selected");
     expect(botao.querySelector("span.w-0\\.5")).toBeNull();
   });
 

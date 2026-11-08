@@ -299,7 +299,7 @@ export function ConversationListItem({
     <div
       className={cn(
         "relative flex w-full items-start border-b border-border/70",
-        selecionado && "bg-accent-soft",
+        selecionado && "bg-selected",
       )}
     >
       {/*
@@ -346,7 +346,7 @@ export function ConversationListItem({
           isSelected &&
             (selecionado
               ? "hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
-              : "bg-accent-soft hover:bg-accent-soft"),
+              : "bg-selected hover:bg-selected"),
         )}
         aria-current={isSelected ? "true" : undefined}
       >
