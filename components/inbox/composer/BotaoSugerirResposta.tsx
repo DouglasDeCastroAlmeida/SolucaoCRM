@@ -18,15 +18,19 @@ import { useT } from "@/hooks/i18n/useT";
 export function BotaoSugerirResposta({
   conversationId,
   disabled,
+  aoSugerir,
 }: {
   conversationId: string;
   disabled?: boolean;
+  /** Chamado no início do pedido: o painel de revisão apaga o aviso da sugestão anterior. */
+  aoSugerir?: () => void;
 }) {
   const t = useT();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
 
   async function gerar() {
+    aoSugerir?.();
     setBusy(true);
     try {
       await apiClient.post(`/api/v1/conversations/${conversationId}/draft-reply`, {});
@@ -45,7 +49,7 @@ export function BotaoSugerirResposta({
       variant="ghost"
       className="size-10 shrink-0 rounded-full text-muted-foreground"
       aria-label={t("Sugerir resposta")}
-      title={t("Sugerir resposta")}
+      title={busy ? t("Preparando…") : t("Sugerir resposta")}
       aria-busy={busy}
       disabled={disabled || busy}
       onClick={gerar}

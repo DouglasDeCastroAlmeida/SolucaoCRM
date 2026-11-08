@@ -191,6 +191,8 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   const [contactPickerOpen, setContactPickerOpen] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
   const [mode, setMode] = useState<"reply" | "note">(initialMode);
+  // Cada clique em "Sugerir resposta" incrementa; o painel de revisão apaga o aviso antigo.
+  const [pedidoDeSugestao, setPedidoDeSugestao] = useState(0);
   /**
    * Menção de atendente (#2372) — e o motivo de ser quatro estados.
    *
@@ -677,7 +679,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           branca flutua por cima, como no WhatsApp Web. */}
       <div data-testid="area-de-escrever" className="fundo-da-conversa relative px-3 pb-3 pt-1">
         {mode === "reply" && (
-          <ReplyReviewPanel conversationId={conversationId} disabled={isDisabled} />
+          <ReplyReviewPanel
+            conversationId={conversationId}
+            disabled={isDisabled}
+            pedidoDeSugestao={pedidoDeSugestao}
+          />
         )}
         <TemplateMenu
           open={menuOpen}
@@ -827,10 +833,12 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
               documento — porque a nota passou a aceitar anexo. A terceira
               (Contato) some: cartão de contato é `type: "contact"`, uma MENSAGEM
               para o cliente, e nota com cartão de contato não existe. O `disabled`
-              continua o de sempre: em modo nota `respostaBarrada` é só
-              `isDisabled`, e a janela fechada barra a resposta, não a nota. */}
+              só trava inteiro com `isDisabled`; a janela fechada
+              (`respostaBarrada`, em resposta) desliga só as opções de resposta e deixa a
+              "Nota interna" alcançável, porque ela não sai para o cliente. */}
           <AttachMenu
-            disabled={respostaBarrada}
+            disabled={isDisabled}
+            respostaBarrada={respostaBarrada}
             onPick={escolherArquivo}
             onPickContact={mode === "reply" ? () => setContactPickerOpen(true) : undefined}
             onNotaInterna={mode === "reply" ? () => setMode("note") : undefined}
@@ -891,7 +899,11 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             aria-label={t("Mensagem")}
           />
           {mode === "reply" && (
-            <BotaoSugerirResposta conversationId={conversationId} disabled={isDisabled} />
+            <BotaoSugerirResposta
+              conversationId={conversationId}
+              disabled={isDisabled}
+              aoSugerir={() => setPedidoDeSugestao((n) => n + 1)}
+            />
           )}
           {!(text.trim() || mode === "note") &&
             active &&

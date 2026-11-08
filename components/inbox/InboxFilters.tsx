@@ -444,7 +444,7 @@ export function InboxFilters({ value, onChange }: Props) {
       <div data-testid="linha-da-busca" className="px-3 pb-2 pt-1">
         <div className="relative">
           <MagnifyingGlass
-            size={18}
+            size={20}
             weight="regular"
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             aria-hidden
@@ -483,7 +483,7 @@ export function InboxFilters({ value, onChange }: Props) {
               aria-label={t("Aba anterior")}
               className="absolute left-0 top-0 z-10 hidden h-full w-7 items-center justify-start bg-linear-to-r from-background via-background to-transparent pl-0.5 text-text-muted hover:text-text group-hover/chips:flex focus-visible:flex focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <CaretLeft size={14} aria-hidden />
+              <CaretLeft size={16} aria-hidden />
             </button>
           )}
           <TabsList
@@ -523,7 +523,7 @@ export function InboxFilters({ value, onChange }: Props) {
               aria-label={t("Próxima aba")}
               className="absolute right-0 top-0 z-10 hidden h-full w-7 items-center justify-end bg-linear-to-l from-background via-background to-transparent pr-0.5 text-text-muted hover:text-text group-hover/chips:flex focus-visible:flex focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <CaretRight size={14} aria-hidden />
+              <CaretRight size={16} aria-hidden />
             </button>
           )}
           </div>

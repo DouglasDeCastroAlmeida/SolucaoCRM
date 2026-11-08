@@ -293,3 +293,59 @@ describe("cabeçalho — as ações vivem em Mais ações, com o mesmo efeito", 
     expect(m.desmarcar).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("cabeçalho — estado sempre à vista e abrir o painel do contato (rodada 2)", () => {
+  it("'Aberta' aparece no subtítulo mesmo sem motivo de silêncio e com o telefone", () => {
+    render(<ConversationHeader conversation={conversa()} />);
+    expect(screen.getByTestId("estado-da-conversa").textContent).toContain("Aberta");
+  });
+
+  it("'Aberta' aparece também quando há motivo de silêncio (selo do motivo vem junto)", () => {
+    render(
+      <ConversationHeader
+        conversation={conversa({
+          assigned_to_user_id: "u2",
+          assignee_kind: "user",
+          bot_silenced_until: "infinity",
+        })}
+      />,
+    );
+    expect(screen.getByTestId("estado-da-conversa").textContent).toContain("Aberta");
+    expect(screen.getByTestId("badge-atendimento-humano").textContent).toContain("pausado");
+  });
+
+  it("conversa encerrada mostra o estado encerrado (não 'Aberta')", () => {
+    render(<ConversationHeader conversation={conversa({ status: "closed" })} />);
+    expect(screen.getByTestId("estado-da-conversa").textContent).toContain("Fechada");
+  });
+
+  it("no celular o logo do canal some antes de o nome ser cortado", () => {
+    render(<ConversationHeader conversation={conversa()} />);
+    expect(screen.getByTestId("logo-do-canal").className).toContain("max-md:hidden");
+    expect(screen.getByRole("heading", { name: "Marina Souza" }).className).not.toContain("max-md:hidden");
+  });
+
+  it("com aoAbrirContato, o ícone Ver contato abre o painel (botão, sem navegar) e reflete o estado", async () => {
+    const abrir = vi.fn();
+    const { rerender } = render(<ConversationHeader conversation={conversa()} aoAbrirContato={abrir} contatoAberto />);
+    const icone = screen.getByRole("button", { name: "Ver contato" });
+    expect(icone.closest("a")).toBeNull();
+    expect(icone).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(icone);
+    expect(abrir).toHaveBeenCalledTimes(1);
+    rerender(<ConversationHeader conversation={conversa()} aoAbrirContato={abrir} contatoAberto={false} />);
+    expect(screen.getByRole("button", { name: "Ver contato" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("o nome do contato também abre o painel", async () => {
+    const abrir = vi.fn();
+    render(<ConversationHeader conversation={conversa()} aoAbrirContato={abrir} />);
+    await userEvent.click(screen.getByRole("button", { name: "Marina Souza" }));
+    expect(abrir).toHaveBeenCalledTimes(1);
+  });
+
+  it("sem aoAbrirContato o ícone continua sendo o link para a ficha completa", () => {
+    render(<ConversationHeader conversation={conversa()} />);
+    expect(screen.getByRole("link", { name: "Ver contato" })).toHaveAttribute("href", "/app/contacts/contato-1");
+  });
+});

@@ -7968,6 +7968,7 @@ export const DICIONARIO: Traducoes = {
     es: "Guarda la conversación en la pestaña Archivadas. Si todavía está abierta, la atención se cierra.",
   },
   "Abre a ficha completa deste contato.": { es: "Abre la ficha completa de este contacto." },
+  "Abre os dados deste contato.": { es: "Abre los datos de este contacto." },
   Automático: { es: "Automático" },
   Alguém: { es: "Alguien" },
   "Nota interna · só o time vê": { es: "Nota interna · solo la ve el equipo" },

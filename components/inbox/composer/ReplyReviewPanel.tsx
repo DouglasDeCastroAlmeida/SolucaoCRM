@@ -20,9 +20,16 @@ type Draft = {
 export function ReplyReviewPanel({
   conversationId,
   disabled,
+  pedidoDeSugestao = 0,
 }: {
   conversationId: string;
   disabled?: boolean;
+  /**
+   * Contador de pedidos do botão "Sugerir resposta" (que mora na linha de escrever, fora daqui).
+   * Cada clique o incrementa, e o aviso antigo some NA HORA, como sumia quando o botão morava neste
+   * painel, e não só quando outro rascunho chega.
+   */
+  pedidoDeSugestao?: number;
 }) {
   const t = useT(),
     qc = useQueryClient(),
@@ -44,6 +51,11 @@ export function ReplyReviewPanel({
       message: string;
       kind: "success" | "error";
     } | null>(null);
+  const [pedidoVisto, setPedidoVisto] = useState(pedidoDeSugestao);
+  if (pedidoDeSugestao !== pedidoVisto) {
+    setPedidoVisto(pedidoDeSugestao);
+    setNotice(null);
+  }
   // Antes: `drafts[0]`, o mais recente, QUALQUER que fosse o estado dele — então
   // uma sugestão rejeitada ficava na tela para sempre, sem botão de fechar.
   const draft = sugestaoParaMostrar(query.data?.data.drafts);

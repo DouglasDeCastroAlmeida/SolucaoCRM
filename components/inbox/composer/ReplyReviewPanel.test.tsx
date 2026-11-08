@@ -12,12 +12,13 @@
  * CONTROLE garante que a causa não vaza para um rascunho que não falhou.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const deps = vi.hoisted(() => ({ get: vi.fn() }));
+const deps = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 
-vi.mock("@/lib/api/client", () => ({ apiClient: { get: deps.get, post: vi.fn() } }));
+vi.mock("@/lib/api/client", () => ({ apiClient: { get: deps.get, post: deps.post } }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (texto: string) => texto }));
 
 import { ReplyReviewPanel } from "./ReplyReviewPanel";
@@ -74,5 +75,25 @@ describe("o painel diz QUAL veto barrou a sugestão (issue #2975)", () => {
 
     expect(await screen.findByText("Sugestão para revisar")).toBeTruthy();
     expect(screen.queryByText(/janela de 24 horas/)).toBeNull();
+  });
+});
+
+describe("aviso antigo some quando se pede uma nova sugestão (rodada 2)", () => {
+  it("o aviso da rejeição some ao clicar em Sugerir resposta, sem esperar outro rascunho chegar", async () => {
+    deps.get.mockResolvedValue({ data: { drafts: [draft({ status: "pending", original_body: "Oi" })] } });
+    deps.post.mockResolvedValue({});
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const arvore = (pedido: number) => (
+      <QueryClientProvider client={qc}>
+        <ReplyReviewPanel conversationId="c1" pedidoDeSugestao={pedido} />
+      </QueryClientProvider>
+    );
+    const { rerender } = render(arvore(0));
+    await userEvent.click(await screen.findByRole("button", { name: "Rejeitar" }));
+    deps.get.mockResolvedValue({ data: { drafts: [] } });
+    const aviso = await screen.findByText(/Sugestão rejeitada\. O feedback/, undefined, { timeout: 5000 });
+    expect(aviso).toBeTruthy();
+    rerender(arvore(1));
+    await waitFor(() => expect(screen.queryByText(/Sugestão rejeitada\. O feedback/)).toBeNull());
   });
 });

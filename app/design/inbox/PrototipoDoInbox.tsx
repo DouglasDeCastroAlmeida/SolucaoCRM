@@ -299,7 +299,7 @@ function Bolha({
         <span
           data-testid="proto-hora-bolha"
           className={cn(
-            "float-right -mb-0.5 ml-3 mt-2 inline-flex items-center gap-1 text-[11px] leading-4",
+            "float-right -mb-0.5 ml-3 mt-2 inline-flex items-center gap-1 text-xs leading-4",
             saida ? "text-bubble-out-meta" : "text-muted-foreground",
           )}
         >
@@ -365,7 +365,7 @@ function Conversa({ escondida, menuAberto }: { escondida: boolean; menuAberto: b
 
       <div className="fundo-da-conversa flex min-h-0 flex-1 flex-col justify-end gap-1.5 overflow-hidden py-4">
         <div className="flex justify-center pb-1">
-          <span className="rounded-lg bg-card px-3 py-1 text-[12.5px] text-muted-foreground shadow-sm">
+          <span className="rounded-lg bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm">
             Ontem
           </span>
         </div>
@@ -381,7 +381,7 @@ function Conversa({ escondida, menuAberto }: { escondida: boolean; menuAberto: b
         <div className="flex justify-center pb-1 pt-2">
           <span
             data-testid="proto-separador-de-data"
-            className="rounded-lg bg-card px-3 py-1 text-[12.5px] text-muted-foreground shadow-sm"
+            className="rounded-lg bg-card px-3 py-1 text-xs text-muted-foreground shadow-sm"
           >
             Hoje
           </span>
@@ -399,7 +399,7 @@ function Conversa({ escondida, menuAberto }: { escondida: boolean; menuAberto: b
             style={{ background: "linear-gradient(135deg, #b9cfc9 0%, #8fb0a8 55%, #6f948b 100%)" }}
           >
             <FileText className="size-10 text-white/80" aria-hidden />
-            <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-[11px] text-white">
+            <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-md bg-black/40 px-1.5 py-0.5 text-xs text-white">
               <Play className="size-3" aria-hidden /> planta-2-quartos.pdf
             </span>
           </div>
