@@ -1,4 +1,5 @@
 "use client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { randomId } from "@/lib/random-id";
@@ -1596,11 +1597,11 @@ export function ProspectingClient() {
                     </div>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
-                        <tr>
+                    <Table className="w-full text-left text-sm">
+                      <TableHeader className="border-b bg-muted/30 text-xs text-muted-foreground">
+                        <TableRow>
                           {canSelect && (
-                            <th className="p-4">
+                            <TableHead className="p-4">
                               <label className="flex items-center gap-2">
                                 <input
                                   type="checkbox"
@@ -1616,20 +1617,20 @@ export function ProspectingClient() {
                                 />
                                 <span>{t("Abordar")}</span>
                               </label>
-                            </th>
+                            </TableHead>
                           )}
-                          <th className="p-4">{t("Empresa")}</th>
-                          <th className="p-4">{t("Informações")}</th>
-                          <th className="p-4">{t("Progresso")}</th>
-                          <th className="p-4">{t("Auditoria")}</th>
-                          <th className="p-4">{t("Conversa")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                          <TableHead className="p-4">{t("Empresa")}</TableHead>
+                          <TableHead className="p-4">{t("Informações")}</TableHead>
+                          <TableHead className="p-4">{t("Progresso")}</TableHead>
+                          <TableHead className="p-4">{t("Auditoria")}</TableHead>
+                          <TableHead className="p-4">{t("Conversa")}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {visiveis.map((c) => (
-                          <tr key={c.id} className="border-b last:border-0">
+                          <TableRow key={c.id} className="border-b last:border-0">
                             {canSelect && (
-                              <td className="p-4 align-top">
+                              <TableCell className="p-4 align-top">
                                 {marcavel(c) && (
                                   <input
                                     type="checkbox"
@@ -1639,16 +1640,16 @@ export function ProspectingClient() {
                                     aria-label={t("Marcar empresa para abordagem")}
                                   />
                                 )}
-                              </td>
+                              </TableCell>
                             )}
-                            <td className="p-4 align-top">
+                            <TableCell className="p-4 align-top">
                               <p className="font-medium">{c.data.name}</p>
                               <p className="mt-1 text-xs text-muted-foreground">
                                 {c.data.category}
                               </p>
                               <p className="mt-1 text-xs">{c.data.phone ?? t("Sem telefone")}</p>
-                            </td>
-                            <td className="max-w-64 p-4 align-top">
+                            </TableCell>
+                            <TableCell className="max-w-64 p-4 align-top">
                               <p className="text-xs text-muted-foreground">{c.data.address}</p>
                               {safePublicLink(c.data.website) && (
                                 <a
@@ -1668,8 +1669,8 @@ export function ProspectingClient() {
                                   {email}
                                 </p>
                               ))}
-                            </td>
-                            <td className="max-w-64 p-4 align-top">
+                            </TableCell>
+                            <TableCell className="max-w-64 p-4 align-top">
                               <Badge variant="outline">{t(labels[c.progress] ?? c.progress)}</Badge>
                               {c.error && (
                                 <p className="mt-2 text-xs text-muted-foreground">{c.error}</p>
@@ -1688,8 +1689,8 @@ export function ProspectingClient() {
                                     : t("Saída ainda não oferecida")}
                                 </p>
                               )}
-                            </td>
-                            <td className="max-w-80 p-4 align-top">
+                            </TableCell>
+                            <TableCell className="max-w-80 p-4 align-top">
                               <AuditoriaDoCandidato
                                 candidateId={c.id}
                                 data={c.data}
@@ -1708,8 +1709,8 @@ export function ProspectingClient() {
                                 previaDesligada={!opcoes.gerarPrevia}
                                 agoraIso={agora}
                               />
-                            </td>
-                            <td className="p-4 align-top">
+                            </TableCell>
+                            <TableCell className="p-4 align-top">
                               {c.conversation_id && (
                                 <Link
                                   className="underline"
@@ -1718,11 +1719,11 @@ export function ProspectingClient() {
                                   {t("Abrir no Inbox")}
                                 </Link>
                               )}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </Card>
               )}

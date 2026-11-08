@@ -17,6 +17,7 @@
  * `por_moeda`. A ordem dos blocos é a única decisão da tela, e ela não é uma
  * conta: a moeda da organização primeiro, as demais em ordem alfabética.
  */
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 
@@ -320,52 +321,52 @@ function BlocoDaMoeda({
 
       <Tabela titulo={t("Por forma de pagamento")} vazio={t("Nenhuma comanda no período.")}>
         {totais.por_forma.map((f) => (
-          <tr key={f.nome} className="border-b border-border/60">
-            <td className="py-1">{f.nome}</td>
-            <td className="py-1 text-right text-text-muted">{f.quantidade}</td>
-            <td className="py-1 text-right tabular-nums">{formatCents(f.total_cents, moeda)}</td>
-            <td className="py-1 text-right text-text-muted">
+          <TableRow key={f.nome} className="border-b border-border/60">
+            <TableCell className="py-1">{f.nome}</TableCell>
+            <TableCell className="py-1 text-right text-text-muted">{f.quantidade}</TableCell>
+            <TableCell className="py-1 text-right tabular-nums">{formatCents(f.total_cents, moeda)}</TableCell>
+            <TableCell className="py-1 text-right text-text-muted">
               {totais.faturado_cents > 0
                 ? `${Math.round((f.total_cents / totais.faturado_cents) * 100)}%`
                 : "—"}
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
       </Tabela>
 
       <Tabela titulo={t("Serviços que mais faturaram")} vazio={t("Nenhum item no período.")}>
         {totais.por_servico.map((sv) => (
-          <tr key={sv.nome} className="border-b border-border/60">
-            <td className="py-1">{sv.nome}</td>
-            <td className="py-1 text-right text-text-muted">{sv.quantidade}</td>
-            <td className="py-1 text-right tabular-nums" colSpan={2}>
+          <TableRow key={sv.nome} className="border-b border-border/60">
+            <TableCell className="py-1">{sv.nome}</TableCell>
+            <TableCell className="py-1 text-right text-text-muted">{sv.quantidade}</TableCell>
+            <TableCell className="py-1 text-right tabular-nums" colSpan={2}>
               {formatCents(sv.total_cents, moeda)}
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
       </Tabela>
 
       <Tabela titulo={t("Clientes que mais gastaram")} vazio={t("Nenhum cliente no período.")}>
         {totais.por_cliente.map((c) => (
-          <tr key={c.contact_id} className="border-b border-border/60">
-            <td className="py-1">{nomeDoContato(c.contact_id)}</td>
-            <td className="py-1 text-right text-text-muted">{c.comandas}</td>
-            <td className="py-1 text-right tabular-nums" colSpan={2}>
+          <TableRow key={c.contact_id} className="border-b border-border/60">
+            <TableCell className="py-1">{nomeDoContato(c.contact_id)}</TableCell>
+            <TableCell className="py-1 text-right text-text-muted">{c.comandas}</TableCell>
+            <TableCell className="py-1 text-right tabular-nums" colSpan={2}>
               {formatCents(c.total_cents, moeda)}
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
       </Tabela>
 
       <Tabela titulo={t("Comissão por pessoa")} vazio={t("Nenhuma comissão no período.")}>
         {totais.por_profissional.map((p) => (
-          <tr key={p.attendant_user_id ?? "sem"} className="border-b border-border/60">
-            <td className="py-1">{nomeDe(p.attendant_user_id)}</td>
-            <td className="py-1 text-right text-text-muted">{p.itens}</td>
-            <td className="py-1 text-right tabular-nums" colSpan={2}>
+          <TableRow key={p.attendant_user_id ?? "sem"} className="border-b border-border/60">
+            <TableCell className="py-1">{nomeDe(p.attendant_user_id)}</TableCell>
+            <TableCell className="py-1 text-right text-text-muted">{p.itens}</TableCell>
+            <TableCell className="py-1 text-right tabular-nums" colSpan={2}>
               {formatCents(p.comissao_cents, moeda)}
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
       </Tabela>
     </>
@@ -403,9 +404,9 @@ function Tabela({
     <section className="rounded-md border border-border p-3">
       <h2 className="mb-2 text-sm font-semibold">{titulo}</h2>
       {temLinha ? (
-        <table className="w-full text-sm">
-          <tbody>{children}</tbody>
-        </table>
+        <Table className="w-full text-sm">
+          <TableBody>{children}</TableBody>
+        </Table>
       ) : (
         <p className="text-sm text-text-muted">{vazio}</p>
       )}

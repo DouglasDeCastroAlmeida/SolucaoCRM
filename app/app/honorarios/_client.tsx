@@ -7,6 +7,7 @@
  * mesmo texto que a rota manda (quem resolve é o administrador da instalação,
  * em Configurações da instalação › Módulos, não quem está nesta tela).
  */
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
@@ -98,10 +99,10 @@ export function Honorarios({ podeGerenciar }: { podeGerenciar: boolean }) {
         {(contratos.data ?? []).length === 0 ? (
           <p className="text-sm text-text-muted">{t("Nenhum contrato ainda.")}</p>
         ) : (
-          <table className="w-full text-sm">
-            <tbody>
+          <Table className="w-full text-sm">
+            <TableBody>
               {(contratos.data ?? []).map((c) => (
-                <tr
+                <TableRow
                   key={c.id}
                   className={`cursor-pointer border-b border-border/60 ${
                     selecionado === c.id ? "bg-surface-elevated" : ""
@@ -109,15 +110,15 @@ export function Honorarios({ podeGerenciar }: { podeGerenciar: boolean }) {
                   onClick={() => setSelecionado(c.id)}
                   data-testid={`contrato-${c.id}`}
                 >
-                  <td className="py-2">{rotuloDoModelo(c.modelo, t)}</td>
-                  <td className="py-2 tabular-nums">{resumoDoValor(c, t)}</td>
-                  <td className="py-2 text-right text-xs text-text-muted">
+                  <TableCell className="py-2">{rotuloDoModelo(c.modelo, t)}</TableCell>
+                  <TableCell className="py-2 tabular-nums">{resumoDoValor(c, t)}</TableCell>
+                  <TableCell className="py-2 text-right text-xs text-text-muted">
                     {new Date(c.created_at).toLocaleDateString(tagDoIdioma)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </section>
 

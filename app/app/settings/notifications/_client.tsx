@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useT } from "@/hooks/i18n/useT";
 
 import { useSyncExternalStore } from "react";
@@ -51,19 +52,19 @@ export function NotificationPrefsClient() {
 
   return (
     <Card className="p-0">
-      <table className="w-full text-sm">
-        <thead className="border-b">
-          <tr>
-            <th className="px-4 py-3 text-left font-medium">{t("Categoria")}</th>
-            <th className="px-4 py-3 text-center font-medium">Email</th>
-            <th className="px-4 py-3 text-center font-medium">In-app</th>
-            <th className="px-4 py-3 text-center font-medium">Push</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table className="w-full text-sm">
+        <TableHeader className="border-b">
+          <TableRow>
+            <TableHead className="px-4 py-3 text-left font-medium">{t("Categoria")}</TableHead>
+            <TableHead className="px-4 py-3 text-center font-medium">Email</TableHead>
+            <TableHead className="px-4 py-3 text-center font-medium">In-app</TableHead>
+            <TableHead className="px-4 py-3 text-center font-medium">Push</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {NOTIFY_UI_CATEGORIES.map((cat) => (
-            <tr key={cat} className="border-b last:border-0">
-              <td className="px-4 py-3">
+            <TableRow key={cat} className="border-b last:border-0">
+              <TableCell className="px-4 py-3">
                 {t(LABELS[cat])}
                 {cat === "message" && denied ? (
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -77,18 +78,18 @@ export function NotificationPrefsClient() {
                     {t("Desligar o push de mensagem desliga todos os avisos deste aparelho fora do app.")}
                   </p>
                 ) : null}
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch checked={false} disabled aria-label={`${t(LABELS[cat])} via email`} />
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch
                   checked={prefs[cat].in_app}
                   onCheckedChange={(on) => void onToggle(cat, "in_app", on)}
                   aria-label={`${t(LABELS[cat])} via in_app`}
                 />
-              </td>
-              <td className="px-4 py-3 text-center">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-center">
                 <Switch
                   checked={pushEfetivo(prefs, cat, "push")}
                   disabled={denied || unsupported || (cat !== "message" && !prefs.message.push)}
@@ -96,11 +97,11 @@ export function NotificationPrefsClient() {
                   aria-label={`${t(LABELS[cat])} via push`}
                   data-testid={cat === "message" ? (prefs.message.push ? "alerts-toggle" : "alerts-enable") : undefined}
                 />
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </Card>
   );
 }

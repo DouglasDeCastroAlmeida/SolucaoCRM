@@ -11,6 +11,7 @@
  * à comanda — mostrar o botão e deixar a recusa para o servidor ensinaria a
  * pessoa a tentar o que nunca vai funcionar.
  */
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -173,25 +174,25 @@ export function ListaDeLancamentos({
       {lancamentos.length === 0 ? (
         <p className="text-sm text-text-muted">{t("Nenhum lançamento no período.")}</p>
       ) : (
-        <table className="w-full text-sm">
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableBody>
             {lancamentos.map((l) => (
-              <tr key={l.id} className="border-b border-border/60">
-                <td className="py-1 text-text-muted">{l.entry_date}</td>
-                <td className="py-1">
+              <TableRow key={l.id} className="border-b border-border/60">
+                <TableCell className="py-1 text-text-muted">{l.entry_date}</TableCell>
+                <TableCell className="py-1">
                   {l.description ?? "—"}
                   {l.origin !== "manual" ? (
                     <span className="ml-2 text-xs text-text-muted">{t("de comanda")}</span>
                   ) : null}
-                </td>
-                <td className="py-1 text-right tabular-nums">
+                </TableCell>
+                <TableCell className="py-1 text-right tabular-nums">
                   {l.direction === "out" ? "-" : "+"}
                   {formatCents(l.amount_cents, l.currency)}
-                </td>
-                <td className="py-1 text-right text-xs text-text-muted">
+                </TableCell>
+                <TableCell className="py-1 text-right text-xs text-text-muted">
                   {l.status === "paid" ? t("pago") : t("pendente")}
-                </td>
-                <td className="w-24 py-1 text-right">
+                </TableCell>
+                <TableCell className="w-24 py-1 text-right">
                   {podeLancar && l.status === "pending" ? (
                     <>
                       <button
@@ -214,11 +215,11 @@ export function ListaDeLancamentos({
                       ) : null}
                     </>
                   ) : null}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
     </section>
   );

@@ -7,6 +7,7 @@
  * Acessibilidade: todo campo tem <label>; a lista é uma <table> com <caption>;
  * erros vão num elemento role="alert"; botões de ação nomeiam a marca/endereço.
  */
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCallback, useEffect, useState } from "react";
 
 import { useT } from "@/hooks/i18n/useT";
@@ -153,27 +154,27 @@ function PainelDeMarcasLista() {
       {carregando ? (
         <p role="status">Carregando marcas...</p>
       ) : (
-        <table className="w-full text-sm">
-          <caption className="sr-only">{t("Marcas da instalação")}</caption>
-          <thead>
-            <tr className="text-left">
-              <th scope="col">Nome</th>
-              <th scope="col">{t("Endereços")}</th>
-              <th scope="col">Estado</th>
-              <th scope="col">{t("Ações")}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableCaption className="sr-only">{t("Marcas da instalação")}</TableCaption>
+          <TableHeader>
+            <TableRow className="text-left">
+              <TableHead scope="col">Nome</TableHead>
+              <TableHead scope="col">{t("Endereços")}</TableHead>
+              <TableHead scope="col">Estado</TableHead>
+              <TableHead scope="col">{t("Ações")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {marcas.map((m) => (
-              <tr key={m.id} className="border-t">
-                <td>{m.name}</td>
-                <td>
+              <TableRow key={m.id} className="border-t">
+                <TableCell>{m.name}</TableCell>
+                <TableCell>
                   {(m.brand_domains ?? []).map((d) => (
                     <div key={d.id}>{d.host}</div>
                   ))}
-                </td>
-                <td>{m.status === "active" ? "Ativa" : "Desativada"}</td>
-                <td className="space-x-2">
+                </TableCell>
+                <TableCell>{m.status === "active" ? "Ativa" : "Desativada"}</TableCell>
+                <TableCell className="space-x-2">
                   <Button type="button" variant="outline" size="sm" aria-label={`Gerenciar ${m.name}`} onClick={() => setAberta(m.id)}>
                     Gerenciar
                   </Button>
@@ -182,11 +183,11 @@ function PainelDeMarcasLista() {
                       Desativar
                     </Button>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       )}
 
       {marcaAberta && <Detalhe marca={marcaAberta} aoMudar={() => void carregar()} />}

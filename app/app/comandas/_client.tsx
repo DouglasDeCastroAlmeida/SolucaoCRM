@@ -11,6 +11,7 @@
  * recalcular aqui criaria um segundo número para a mesma pergunta, e o da tela
  * seria o que a pessoa acredita.
  */
+import { Table, TableBody, TableCell, TableFooter, TableRow } from "@/components/ui/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -244,11 +245,11 @@ export function Comandas({
               </span>
             </header>
 
-            <table className="w-full text-sm">
-              <tbody>
+            <Table className="w-full text-sm">
+              <TableBody>
                 {(comanda.sale_items ?? []).map((i) => (
-                  <tr key={i.id} className="border-b border-border/60">
-                    <td className="py-1">
+                  <TableRow key={i.id} className="border-b border-border/60">
+                    <TableCell className="py-1">
                       {i.description}
                       {i.quantity > 1 ? ` ×${i.quantity}` : ""}
                       {i.commission_percent > 0 ? (
@@ -256,11 +257,11 @@ export function Comandas({
                           {t("comissão")} {i.commission_percent}%
                         </span>
                       ) : null}
-                    </td>
-                    <td className="py-1 text-right tabular-nums">
+                    </TableCell>
+                    <TableCell className="py-1 text-right tabular-nums">
                       {formatCents(i.total_cents, moeda)}
-                    </td>
-                    <td className="w-8 text-right">
+                    </TableCell>
+                    <TableCell className="w-8 text-right">
                       {comanda.status === "open" && podeLancar ? (
                         <button
                           type="button"
@@ -271,20 +272,20 @@ export function Comandas({
                           ×
                         </button>
                       ) : null}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td className="pt-2 font-medium">{t("Total")}</td>
-                  <td className="pt-2 text-right font-medium tabular-nums" data-testid="total-da-comanda">
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell className="pt-2 font-medium">{t("Total")}</TableCell>
+                  <TableCell className="pt-2 text-right font-medium tabular-nums" data-testid="total-da-comanda">
                     {formatCents(comanda.total_cents, moeda)}
-                  </td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
 
             {comanda.status === "open" && podeLancar ? (
               <FormularioDeItem
