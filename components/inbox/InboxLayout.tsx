@@ -696,14 +696,14 @@ export function InboxLayout({
     <div
       ref={gradeRef}
       className={cn(
-        "grid relative h-[calc(100dvh-3.5rem-var(--space-6)-max(var(--space-6),var(--rodape-ocupado,0px)))] w-full grid-cols-1 md:grid-cols-[300px_1fr]",
+        "grid relative h-[calc(100dvh-3.5rem-var(--space-6)-max(var(--space-6),var(--rodape-ocupado,0px)))] w-full grid-cols-1 md:grid-cols-[340px_1fr]",
         // Recolhido (issue #3004), a terceira trilha vira o trilho estreito do
         // botão de expandir e a conversa fica com o que era da ficha. Duas
         // listas em vez de uma classe com valor em variável: o Tailwind precisa
         // do literal para gerar o CSS.
         painelRecolhido
-          ? "xl:grid-cols-[272px_1fr_2.75rem] 2xl:grid-cols-[300px_1fr_2.75rem]"
-          : "xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]",
+          ? "xl:grid-cols-[360px_1fr_2.75rem] 2xl:grid-cols-[400px_1fr_2.75rem]"
+          : "xl:grid-cols-[360px_1fr_296px] 2xl:grid-cols-[400px_1fr_320px]",
       )}
       style={estiloDaGrade}
       /*

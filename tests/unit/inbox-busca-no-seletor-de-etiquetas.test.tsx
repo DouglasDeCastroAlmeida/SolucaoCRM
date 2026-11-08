@@ -94,6 +94,7 @@ afterEach(cleanup);
 /** Abre o menu de etiqueta e devolve o campo de busca dentro dele. */
 async function campoDeBuscaAberto(value: InboxFiltersValue = VALUE) {
   const ctx = abrirMenu(value);
+  await ctx.user.click(screen.getByRole("button", { name: "Filtro" }));
   await ctx.user.click(screen.getByRole("button", { name: GATILHO }));
   const campo = screen.getByPlaceholderText(BUSCA) as HTMLInputElement;
   return { ...ctx, campo };

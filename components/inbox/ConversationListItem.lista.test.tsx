@@ -73,7 +73,7 @@ describe("ConversationListItem — estilo de mensageiro", () => {
 
   it("AC-001.4: com não lidas o nome fica em destaque", () => {
     render(linha({ unread_count_for_assignee: 2 }));
-    expect(screen.getByText("Maria").className).toContain("font-semibold");
+    expect(screen.getByText("Maria").className).toContain("font-medium");
   });
 
   it("AC-001.6/AC-006.3: canal desconhecido usa o ícone genérico e não quebra", () => {

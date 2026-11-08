@@ -207,8 +207,8 @@ function grade(): HTMLElement {
   return el;
 }
 
-const trilhaDaFicha = "xl:grid-cols-[272px_1fr_296px]";
-const trilhaDoTrilho = "xl:grid-cols-[272px_1fr_2.75rem]";
+const trilhaDaFicha = "xl:grid-cols-[360px_1fr_296px]";
+const trilhaDoTrilho = "xl:grid-cols-[360px_1fr_2.75rem]";
 
 const botaoRecolher = () => screen.getByRole("button", { name: "Recolher painel do contato" });
 const botaoExpandir = () => screen.getByRole("button", { name: "Expandir painel do contato" });
