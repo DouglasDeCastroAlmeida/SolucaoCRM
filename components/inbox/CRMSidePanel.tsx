@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Tag, Receipt, Users, ArrowRight, CaretDoubleLeft, CaretDoubleRight } from "@/lib/ui/icons";
+import { Tag, Receipt, Users, ArrowRight, IdentificationCard, X } from "@/lib/ui/icons";
 import { apiClient } from "@/lib/api/client";
 import { toast } from "sonner";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -654,7 +654,7 @@ function CamposDoFunil({
 /**
  * O CONTROLE DE RECOLHER O PAINEL INTEIRO (issue #3004).
  *
- * `CaretDoubleLeft` para recolher, `CaretDoubleRight` para expandir, o verbo
+ * `X` (o fechar do WhatsApp, #118) para recolher, a ficha para expandir, o verbo
  * "Recolher"/"Expandir" no rótulo. (O menu da esquerda tinha um recolhedor com o
  * mesmo vocabulário até o visual de mensageiro removê-lo.) O ALVO na frase ("painel
  * do contato") deixa claro o que se recolhe, e um leitor de tela não ouve só
@@ -681,22 +681,29 @@ function BotaoDeRecolherDoPainel({
       type="button"
       onClick={onAlternar}
       className={cn(
-        "flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-        recolhido && "justify-center",
+        "flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-selected hover:text-foreground",
+        !recolhido && "-ml-2",
       )}
       aria-label={rotulo}
       aria-expanded={!recolhido}
       title={rotulo}
       data-testid="inbox-recolher-painel"
     >
-      {recolhido ? (
-        <CaretDoubleRight size={14} aria-hidden />
-      ) : (
-        <CaretDoubleLeft size={14} aria-hidden />
-      )}
-      {!recolhido && <span>{t("Recolher")}</span>}
+      {/* Aberto: o X de fechar do WhatsApp (#118). Recolhido: a ficha, que é a porta de abrir. */}
+      {recolhido ? <IdentificationCard size={24} aria-hidden /> : <X size={24} aria-hidden />}
     </button>
   );
+}
+
+/** Iniciais do avatar do painel (as duas primeiras palavras com mais de 2 letras, como o cabeçalho). */
+function iniciaisDoPainel(nome: string): string {
+  return nome
+    .split(" ")
+    .filter((p) => p.length > 2)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
 }
 
 export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolhido }: Props) {
@@ -909,7 +916,7 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
   if (recolhido && onAlternarRecolhido) {
     return (
       <aside
-        className="flex h-full flex-col items-center border-l border-border bg-background py-2"
+        className="flex h-full flex-col items-center border-l border-border bg-card py-2"
         data-testid="inbox-painel-recolhido"
       >
         <BotaoDeRecolherDoPainel recolhido onAlternar={onAlternarRecolhido} />
@@ -931,7 +938,7 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
   }
 
   return (
-    <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-border bg-background p-4">
+    <aside className="flex h-full flex-col gap-4 overflow-y-auto border-l border-border bg-card p-4">
       {/*
         O CONTROLE DE RECOLHER, NO ALTO (issue #3004) — mesmo lugar do recolher
         do menu da esquerda. `sticky` para não rolar para fora com o conteúdo, e
@@ -946,24 +953,35 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
       <div
         data-testid="inbox-painel-cabecalho"
         className={cn(
-          "sticky top-0 z-10 -mx-4 -mt-4 flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 py-2",
+          "sticky top-0 z-10 -mx-4 -mt-4 flex h-[60px] shrink-0 items-center gap-3 bg-muted px-4",
           !onAlternarRecolhido && "pr-12",
         )}
       >
-        <h2 className="min-w-0 truncate text-sm font-semibold text-text">{t("Dados do contato")}</h2>
         {onAlternarRecolhido && (
           <BotaoDeRecolherDoPainel recolhido={false} onAlternar={onAlternarRecolhido} />
         )}
+        <h2 className="min-w-0 truncate text-[17px] font-normal text-text">{t("Dados do contato")}</h2>
       </div>
       <section>
-        <h3 className="text-xs font-semibold text-text">
+        <h3 className="sr-only">
           {t("Contato")}
         </h3>
-        <Card className="mt-2 space-y-2 p-3 text-sm">
-          <div className="font-medium">{displayName}</div>
-          {contact?.phone_number && (
-            <div className="text-xs text-muted-foreground">{phoneForDisplay(contact.phone_number)}</div>
-          )}
+        <Card className="space-y-2 border-0 bg-transparent p-0 text-sm shadow-none">
+          {/* O CARTÃO DO CONTATO no estilo do WhatsApp (#118): avatar grande, nome e telefone
+              centralizados. Os mesmos dois textos de antes, só na forma nova. */}
+          <div className="flex flex-col items-center gap-1.5 pb-2 pt-1 text-center">
+            <span
+              aria-hidden
+              data-testid="avatar-do-painel"
+              className="flex size-24 items-center justify-center rounded-full bg-muted text-[34px] font-medium text-muted-foreground"
+            >
+              {iniciaisDoPainel(displayName)}
+            </span>
+            <div className="max-w-full truncate text-xl text-text">{displayName}</div>
+            {contact?.phone_number && (
+              <div className="text-[15px] text-muted-foreground">{phoneForDisplay(contact.phone_number)}</div>
+            )}
+          </div>
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {tags.map((t) => (

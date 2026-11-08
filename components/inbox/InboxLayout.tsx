@@ -811,33 +811,20 @@ export function InboxLayout({
           que ele é a única saída. A porta da ficha, essa sim, depende da
           conversa, e só aparece quando há uma.
         */}
-        {selectedId && (
-          <div className="flex items-center gap-1 border-b border-border px-1 py-1 md:hidden">
+        {/* Sem conversa carregada (carregando ou fora do acesso) não há cabeçalho onde pôr a seta:
+            a barra mínima abaixo garante a saída. Com a conversa carregada, a seta e a porta da
+            ficha moram DENTRO do cabeçalho (#118), como no WhatsApp. */}
+        {selectedId && !selectedConversation && (
+          <div className="flex h-[60px] items-center gap-1 border-b border-border bg-card px-2 md:hidden">
             <Button
               variant="ghost"
-              size="sm"
-              className="h-9 gap-1 px-2"
+              size="icon"
+              className="size-10 rounded-full text-muted-foreground"
               aria-label={t("Voltar para as conversas")}
               onClick={() => handleSelect(null)}
             >
               <Voltar size={24} aria-hidden />
-              {t("Conversas")}
             </Button>
-            <div className="flex-1" />
-            {selectedConversation && (
-              <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 xl:hidden">
-                    <IdentificationCard size={16} />
-                    {t("Ficha")}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[min(22rem,90vw)] overflow-y-auto p-0">
-                  <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
-                  <CRMSidePanel conversation={selectedConversation} />
-                </SheetContent>
-              </Sheet>
-            )}
           </div>
         )}
         {selectedConversation ? (
@@ -848,6 +835,25 @@ export function InboxLayout({
               key={selectedConversation.id}
               conversation={selectedConversation}
               onAbrirConversa={handleSelect}
+              aoVoltar={() => handleSelect(null)}
+              acaoDaFicha={
+                <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-10 rounded-full text-muted-foreground md:hidden"
+                      aria-label={t("Ficha")}
+                    >
+                      <IdentificationCard size={22} aria-hidden />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-sm">
+                    <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
+                    <CRMSidePanel conversation={selectedConversation} />
+                  </SheetContent>
+                </Sheet>
+              }
               onBuscar={() =>
                 buscaAberta
                   ? fecharBusca()

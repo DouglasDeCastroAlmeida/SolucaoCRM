@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConversationHeader } from "./ConversationHeader";
+import { Voltar } from "@/lib/ui/icons";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 
 /**
@@ -135,6 +136,30 @@ describe("cabeçalho — a barra", () => {
       (el) => el.getAttribute("aria-label") ?? el.textContent?.trim(),
     );
     expect(alvos).toEqual(["Ver contato", "Buscar nesta conversa", "Mais ações"]);
+  });
+
+  it("celular (#118): a seta de voltar mora no cabeçalho, antes do avatar, com o glifo Voltar do mapa único", async () => {
+    const aoVoltar = vi.fn();
+    render(<ConversationHeader conversation={conversa()} aoVoltar={aoVoltar} />);
+    const voltar = screen.getByRole("button", { name: "Voltar para as conversas" });
+    expect(voltar.className).toContain("md:hidden");
+    expect(voltar.compareDocumentPosition(screen.getByTestId("avatar-da-conversa"))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    const { container } = render(<Voltar />);
+    expect(voltar.querySelector("svg path")?.getAttribute("d")).toBe(
+      container.querySelector("path")?.getAttribute("d"),
+    );
+    await userEvent.click(voltar);
+    expect(aoVoltar).toHaveBeenCalledTimes(1);
+  });
+
+  it("sem aoVoltar (computador) não há seta; a porta da ficha entra no grupo de ícones", () => {
+    const { unmount } = render(<ConversationHeader conversation={conversa()} />);
+    expect(screen.queryByRole("button", { name: "Voltar para as conversas" })).toBeNull();
+    unmount();
+    render(<ConversationHeader conversation={conversa()} acaoDaFicha={<button type="button">Abrir ficha</button>} />);
+    expect(screen.getByRole("button", { name: "Abrir ficha" })).toBeTruthy();
   });
 
   it("é BRANCO (card), como o WhatsApp Web, com divisória fina entre o contato e a lupa", () => {
