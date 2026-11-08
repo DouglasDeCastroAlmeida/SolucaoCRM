@@ -154,4 +154,24 @@ export {
   ArrowsOutSimple,
   // /admin/modulos: módulo opcional com tabela própria (ADR-0002)
   Stack,
+  // empty states (antes importados direto do pacote em components/empty)
+  ListMagnifyingGlass,
+  ArrowsLeftRight,
 } from "@phosphor-icons/react/dist/ssr";
+
+// Glifos em que o desenho do WhatsApp Web é o mesmo: Material Symbols
+// (Apache-2.0, ver lib/ui/material-symbols/LICENSE). O resto é Phosphor.
+// Nomes em português para não colidir com os homônimos do Phosphor
+// (Check, Paperclip, Microphone...), que seguem existindo para outros usos.
+export {
+  TickEnviado,
+  TickEntregue,
+  Clipe,
+  Microfone,
+  Emoji,
+  TresPontos,
+  Lupa,
+  Voltar,
+  Conversa,
+  Status,
+} from "./material-symbols";

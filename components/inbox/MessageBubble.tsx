@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/hooks/i18n/useT";
-import { ArrowBendUpLeft, CaretDown, Check, Checks, Clock, PencilSimple, Robot, Trash, WarningOctagon } from "@/lib/ui/icons";
+import { ArrowBendUpLeft, CaretDown, Clock, PencilSimple, Robot, TickEntregue, TickEnviado, Trash, WarningOctagon } from "@/lib/ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -89,13 +89,13 @@ function AckIndicator({
     return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
   }
   if (status === "read") {
-    return <Checks size={12} weight="bold" className="text-blue-400" aria-label={t("Lida")} />;
+    return <TickEntregue size={16} className="text-blue-400" aria-label={t("Lida")} />;
   }
   if (status === "delivered") {
-    return <Checks size={12} weight="bold" className="text-current/70" aria-label={t("Entregue")} />;
+    return <TickEntregue size={16} className="text-current/70" aria-label={t("Entregue")} />;
   }
   if (status === "sent") {
-    return <Check size={12} weight="bold" className="text-current/70" aria-label={t("Enviada")} />;
+    return <TickEnviado size={16} className="text-current/70" aria-label={t("Enviada")} />;
   }
   return null;
 }

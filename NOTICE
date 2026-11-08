@@ -12,3 +12,12 @@ crédito ao autor original mantido.
 A instalação deste projeto é feita a partir do repositório do dono das
 modificações. Esse repositório é privado: para instalar é preciso ter acesso
 a ele. O sistema não consulta nenhum endereço externo para saber de onde veio.
+
+ÍCONES DE TERCEIROS
+
+Alguns glifos do mapa único de ícones (lib/ui/icons.ts) são os Material
+Symbols, do Google, distribuídos sob a licença Apache-2.0 (texto integral em
+lib/ui/material-symbols/LICENSE). Eles foram copiados do pacote
+@material-symbols/svg-400, versão 0.48.3, estilo "outlined", sem alteração do
+desenho. Os demais ícones são do Phosphor Icons (licença MIT), pacote
+@phosphor-icons/react.
