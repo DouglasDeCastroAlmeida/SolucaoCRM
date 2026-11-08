@@ -71,6 +71,8 @@
   --color-accent-950: #052514;
   --color-accent: var(--color-accent-500);
   --color-accent-fg: #0a2514;
+  /* Ícone claro sobre o verde vivo (o "+" da nova conversa): branco no claro (3,05:1, texto grande/ícone), escuro no escuro. */
+  --color-icon-on-accent: #ffffff;
   --color-accent-text: #137a42;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-400);
@@ -303,6 +305,8 @@
   --color-border-strong: #cfd5d9;
   --color-accent: var(--color-accent-500);
   --color-accent-fg: #0a2514;
+  /* Ícone claro sobre o verde vivo (o "+" da nova conversa): branco no claro (3,05:1, texto grande/ícone), escuro no escuro. */
+  --color-icon-on-accent: #ffffff;
   --color-accent-text: #137a42;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-400);
@@ -416,6 +420,8 @@
   --color-accent-950: #052514;
   --color-accent: var(--color-accent-400);
   --color-accent-fg: #0a2514;
+  /* Ícone claro sobre o verde vivo (o "+" da nova conversa): branco no claro (3,05:1, texto grande/ícone), escuro no escuro. */
+  --color-icon-on-accent: #0a2514;
   --color-accent-text: #34d070;
   --color-accent-soft: rgba(52, 208, 112, 0.16);
   --color-accent-hover: var(--color-accent-300);
@@ -539,6 +545,7 @@
   /* Accent — verde de mensageiro fixo (ADR 0008) */
   --color-accent: var(--color-accent);
   --color-accent-foreground: var(--color-accent-fg);
+  --color-icon-on-accent: var(--color-icon-on-accent);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-hover: var(--color-accent-hover);
   --color-accent-text: var(--color-accent-text);

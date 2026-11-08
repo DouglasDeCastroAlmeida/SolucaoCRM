@@ -13,9 +13,18 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { ConversationListItem } from "./ConversationListItem";
 import { conversaDeExemplo } from "./__fixtures__/conversa";
+import { BotaoIniciarConversa } from "./PainelIniciarConversa";
 import { InboxFilters, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push() {}, replace() {} }) }));
+vi.mock("@tanstack/react-query", async (orig) => ({
+  ...(await orig<typeof import("@tanstack/react-query")>()),
+  useQueryClient: () => ({ invalidateQueries() {} }),
+}));
+vi.mock("@/hooks/contacts/useContactList", () => ({ useContactList: () => ({ data: [], isLoading: false }) }));
+vi.mock("@/hooks/inbox/useMessageTemplates", () => ({ useMessageTemplates: () => ({ data: [] }) }));
 vi.mock("@/hooks/auth/AuthProvider", () => ({
+  usePermission: () => true,
   useAuth: () => ({
     activeOrg: { orgId: "org-1", name: "Org", role: "manager", visibility_mode: "all" },
   }),
@@ -206,5 +215,24 @@ describe("filtros da lista no padrão de mensageiro (#116)", () => {
   it("o ícone de filtro avisa quando há tag escolhida, mesmo com o menu fechado", () => {
     render(<InboxFilters value={{ ...value, tag: "vip" }} onChange={() => {}} />);
     expect(screen.getByTestId("filtro-ativo")).toBeInTheDocument();
+  });
+});
+
+describe("cabeçalho da lista e linha selecionada (#116, print do WhatsApp Web)", () => {
+  it("o título é verde e o 'Iniciar conversa' é um círculo verde com '+' (mesma função)", () => {
+    render(<BotaoIniciarConversa />);
+    expect(classes(screen.getByRole("heading", { name: "Conversas" }))).toContain("text-accent");
+    const botao = screen.getByRole("button", { name: "Iniciar conversa" });
+    expect(classes(botao)).toEqual(
+      expect.arrayContaining(["rounded-full", "bg-accent", "text-icon-on-accent", "size-10"]),
+    );
+  });
+
+  it("a linha aberta tem cantos arredondados e margem lateral, sem divisória", () => {
+    render(linha({}, true));
+    const raiz = document.querySelector("button[data-conversation-id]")!.parentElement!;
+    expect(classes(raiz)).toEqual(expect.arrayContaining(["mx-2", "rounded-lg"]));
+    expect(raiz.className).not.toContain("border-b");
+    expect(raiz.className).not.toContain("after:");
   });
 });

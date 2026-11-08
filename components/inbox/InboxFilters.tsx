@@ -438,7 +438,7 @@ export function InboxFilters({ value, onChange }: Props) {
   const chipDaAba = (tab: InboxTab) => chipsDaAba.get(tab) ?? null;
 
   return (
-    <div className="bg-background">
+    <div className="bg-card">
       {/* A BUSCA SOZINHA NA LINHA, com a largura toda (#116): os filtros foram
           para a linha de chips e para o menu do ícone de filtro. */}
       <div data-testid="linha-da-busca" className="px-3 pb-2 pt-1">

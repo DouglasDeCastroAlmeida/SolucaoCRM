@@ -239,7 +239,7 @@ describe("a regra pura — limites, piso da conversa e memória por faixa", () =
 /* ─── A alça na tela ──────────────────────────────────────────────────── */
 
 /** Largura da grade devolvida pelo `getBoundingClientRect` de todo elemento. */
-let larguraGrade = 1240;
+let larguraGrade = 1040;
 
 function janelaEm(largura: number): void {
   Object.defineProperty(window, "innerWidth", { value: largura, configurable: true, writable: true });
@@ -294,7 +294,7 @@ describe("no layout — duas divisorias arrastáveis (#2579)", () => {
 
   beforeEach(() => {
     window.localStorage.clear();
-    larguraGrade = 1240;
+    larguraGrade = 1040;
     janelaEm(1440); // faixa xl: padrão 360 (lista) / 296 (ficha)
     window.HTMLElement.prototype.setPointerCapture = vi.fn();
     window.HTMLElement.prototype.releasePointerCapture = vi.fn();
@@ -327,6 +327,8 @@ describe("no layout — duas divisorias arrastáveis (#2579)", () => {
   });
 
   it("a seta move a divisória, atualiza o valor e grava na faixa certa", async () => {
+    // O padrão novo da lista (360, #116) pede uma grade que comporte lista + ficha + 420 de conversa.
+    larguraGrade = 1240;
     montar();
     const lista = await alca(0);
     fireEvent.keyDown(lista, { key: "ArrowRight" });
@@ -341,7 +343,7 @@ describe("no layout — duas divisorias arrastáveis (#2579)", () => {
       lista: 360 + 2 * PASSO_TECLADO,
       ficha: 296,
     });
-    expect(grade().style.gridTemplateColumns).toBe("304px minmax(0,1fr) 296px");
+    expect(grade().style.gridTemplateColumns).toBe("392px minmax(0,1fr) 296px");
   });
 
   it("arrastar prende no limite e no piso da conversa, e persiste no pointerup", async () => {
@@ -446,6 +448,7 @@ describe("no layout — duas divisorias arrastáveis (#2579)", () => {
       },
     });
     try {
+      larguraGrade = 1240;
       montar();
       expect(await screen.findByText("Selecione uma conversa")).toBeInTheDocument();
       const lista = await alca(0);
