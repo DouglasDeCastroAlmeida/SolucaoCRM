@@ -1,19 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { MagnifyingGlass, Plus, UserCircle } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import {
   Dialog,
   DialogContent,
@@ -102,45 +93,29 @@ export function PeopleListClient() {
         />
       </div>
 
-      <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("Nome")}</TableHead>
-              <TableHead>E-mail</TableHead>
-              <TableHead>{t("Atualizado")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={3}>{t("Carregando…")}</TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                  <UserCircle className="mx-auto mb-2 size-8 opacity-40" />
-                  {t("Nenhuma pessoa ainda.")}
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <Link className="font-medium hover:underline" href={`/app/people/${p.id}`}>
-                      {p.full_name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{p.email || "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {new Date(p.updated_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        {loading ? (
+          <p className="p-4 text-sm text-muted-foreground">{t("Carregando…")}</p>
+        ) : rows.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            <UserCircle className="mx-auto mb-2 size-8 opacity-40" />
+            {t("Nenhuma pessoa ainda.")}
+          </div>
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {rows.map((p) => (
+              <LinhaDeLista
+                key={p.id}
+                avatar={{ nome: p.full_name }}
+                titulo={p.full_name}
+                href={`/app/people/${p.id}`}
+                direita={<span>{new Date(p.updated_at).toLocaleString()}</span>}
+                previa={<span>{p.email || "—"}</span>}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>

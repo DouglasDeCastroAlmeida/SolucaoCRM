@@ -696,11 +696,11 @@ export function InboxFilters({ value, onChange }: Props) {
                   key={tab}
                   value={tab}
                   title={dica}
-                  className="shrink-0 gap-1 rounded-none border-b-2 border-transparent px-0 pb-2 pt-1 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-text data-[state=active]:shadow-none"
+                  className="shrink-0 gap-1 rounded-full border border-transparent bg-surface-elevated px-3 py-1 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
                 >
                   {t(meta.label)}
                   {typeof count === "number" && count > 0 && (
-                    <span className="text-[11px] tabular-nums text-text-subtle">{count}</span>
+                    <span className="text-[11px] tabular-nums">{count}</span>
                   )}
                 </TabsTrigger>
               );
