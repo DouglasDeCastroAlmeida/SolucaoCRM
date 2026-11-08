@@ -863,7 +863,7 @@ export function InboxLayout({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-10 rounded-full text-muted-foreground md:hidden"
+                      className="size-9 rounded-full text-muted-foreground md:hidden"
                       aria-label={t("Ficha")}
                     >
                       <UserRound className="size-5" aria-hidden />

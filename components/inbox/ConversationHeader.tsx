@@ -291,7 +291,7 @@ export function ConversationHeader({
             type="button"
             size="icon"
             variant="ghost"
-            className="-ml-2 size-10 shrink-0 rounded-full text-muted-foreground md:hidden"
+            className="-ml-2 size-9 shrink-0 rounded-full text-muted-foreground md:hidden"
             aria-label={t("Voltar para as conversas")}
             data-testid="voltar-para-as-conversas"
             onClick={aoVoltar}
@@ -303,7 +303,7 @@ export function ConversationHeader({
           data-avatar
           data-testid="avatar-da-conversa"
           aria-hidden
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-medium text-muted-foreground"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-medium text-muted-foreground max-md:size-9"
         >
           {iniciaisDe(displayName)}
         </span>
@@ -313,7 +313,7 @@ export function ConversationHeader({
             <span className="inline-flex shrink-0 max-md:hidden" data-testid="logo-do-canal">
               <ChannelLogo channel={conversation.channel_sessions} size={20} />
             </span>
-            <h2 className="min-w-0 truncate text-[17px] font-normal leading-6" title={displayName}>
+            <h2 className="min-w-0 truncate text-[17px] font-normal leading-6 max-md:text-base" title={displayName}>
               {aoAbrirContato ? (
                 <button type="button" onClick={aoAbrirContato} className="max-w-full truncate text-left">
                   {displayName}
@@ -378,7 +378,7 @@ export function ConversationHeader({
               type="button"
               size="icon"
               variant="ghost"
-              className={cn("size-10 rounded-full text-muted-foreground", acaoDaFicha && "max-md:hidden")}
+              className={cn("size-10 rounded-full text-muted-foreground max-md:size-9", acaoDaFicha && "max-md:hidden")}
               aria-label={t("Ver contato")}
               title={t("Abre os dados deste contato.")}
               aria-pressed={contatoAberto}
@@ -394,7 +394,7 @@ export function ConversationHeader({
               variant="ghost"
               // No celular o ícone de contato abre a ficha por cima (`acaoDaFicha`), como no WhatsApp; a
               // ficha traz o mesmo link "Ver contato" para a página completa.
-              className={cn("size-10 rounded-full text-muted-foreground", acaoDaFicha && "max-md:hidden")}
+              className={cn("size-10 rounded-full text-muted-foreground max-md:size-9", acaoDaFicha && "max-md:hidden")}
             >
               <Link
                 href={`/app/contacts/${c.id}`}
@@ -407,14 +407,14 @@ export function ConversationHeader({
           )}
           {/* A divisória fina do WhatsApp Web entre o grupo de ações e a lupa. */}
           {c?.id && onBuscar && (
-            <span aria-hidden data-testid="divisoria-do-cabecalho" className="mx-1 h-6 w-px bg-border" />
+            <span aria-hidden data-testid="divisoria-do-cabecalho" className="mx-1 h-6 w-px bg-border max-md:hidden" />
           )}
           {onBuscar && (
             <Button
               ref={botaoBuscaRef}
               size="icon"
               variant="ghost"
-              className="size-10 rounded-full text-muted-foreground"
+              className="size-10 rounded-full text-muted-foreground max-md:size-9"
               onClick={onBuscar}
               aria-label={t("Buscar nesta conversa")}
               title={t("Buscar nesta conversa")}
@@ -428,7 +428,7 @@ export function ConversationHeader({
               <Button
                 size="icon"
                 variant="ghost"
-                className="size-10 rounded-full text-muted-foreground"
+                className="size-10 rounded-full text-muted-foreground max-md:size-9"
                 aria-label={t("Mais ações")}
                 title={t("Mais ações")}
               >
