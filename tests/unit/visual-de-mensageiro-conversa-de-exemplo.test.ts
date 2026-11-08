@@ -24,6 +24,16 @@ describe("acharConversaPeloNome", () => {
     expect(acharConversaPeloNome(itens, NOME_DO_CONTATO_DE_EXEMPLO)).toBe("c2");
   });
 
+  it("acha o nome mesmo quando a primeira linha sao as iniciais do avatar (como na lista real)", () => {
+    const real = [{ id: "c9", texto: "CV\nContato de teste do visual\n09:23\n\nVocê:Teste do visual de mensageiro" }];
+    expect(acharConversaPeloNome(real, NOME_DO_CONTATO_DE_EXEMPLO)).toBe("c9");
+  });
+
+  it("nao confunde o nome que aparece so na previa, da terceira linha em diante", () => {
+    const previa = [{ id: "c8", texto: "JP\nJoão Pedro\nContato de teste do visual\n09:00" }];
+    expect(acharConversaPeloNome(previa, NOME_DO_CONTATO_DE_EXEMPLO)).toBeNull();
+  });
+
   it("ignora maiuscula, acento e espaco sobrando", () => {
     expect(
       acharConversaPeloNome([{ id: "x", texto: "  CONTÁTO de teste  do visual \n..." }], "Contato de teste do visual"),

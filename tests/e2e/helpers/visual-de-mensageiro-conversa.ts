@@ -28,14 +28,18 @@ function normalizar(s: string): string {
 }
 
 /**
- * Acha a conversa cujo NOME de contato (primeira linha nao vazia do item) e o procurado. Uma linha que so
- * cita o nome na previa da mensagem nao conta.
+ * Acha a conversa cujo NOME de contato e o procurado. O texto da linha comeca pelas iniciais do avatar
+ * (ex.: "CV") e so depois traz o nome, por isso o nome pode ser a primeira OU a segunda linha nao vazia.
+ * Uma linha que so cita o nome na previa da mensagem (da terceira linha em diante) nao conta.
  */
 export function acharConversaPeloNome(itens: ItemDaLista[], nome: string): string | null {
   const alvo = normalizar(nome);
   for (const item of itens) {
-    const primeira = item.texto.split(/\r?\n/).find((l) => l.trim() !== "") ?? "";
-    if (normalizar(primeira) === alvo) return item.id;
+    const candidatas = item.texto
+      .split(/\r?\n/)
+      .filter((l) => l.trim() !== "")
+      .slice(0, 2);
+    if (candidatas.some((l) => normalizar(l) === alvo)) return item.id;
   }
   return null;
 }
