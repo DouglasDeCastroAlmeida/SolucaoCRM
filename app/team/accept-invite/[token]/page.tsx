@@ -148,8 +148,10 @@ export default async function AcceptInvitePage({ params }: PageProps) {
 function Shell({ idioma, children }: { idioma: Idioma; children: React.ReactNode }) {
   return (
     <IdiomaProvider locale={idioma}>
-      <div className="flex min-h-screen items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-sm">{children}</div>
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          {children}
+        </div>
       </div>
     </IdiomaProvider>
   );
