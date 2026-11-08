@@ -53,7 +53,7 @@ describe("PrototipoDoInbox", () => {
     expect(enviada.className).toContain("rounded-[8px]");
     expect(enviada.className).toContain("bg-bubble-out");
     expect(within(enviada).getByTestId("balao-pontinha")).toBeTruthy();
-    expect(within(enviada).getByTestId("proto-hora-bolha").className).toContain("text-[11px]");
+    expect(within(enviada).getByTestId("proto-hora-bolha").className).toContain("text-xs");
     expect(within(enviada).getByTestId("proto-tique-lido").getAttribute("class")).toContain("text-tick-read");
     expect(screen.getByTestId("proto-bolha-recebida").className).toContain("bg-bubble-in");
     expect(screen.getByTestId("proto-separador-de-data").className).toContain("rounded-lg");

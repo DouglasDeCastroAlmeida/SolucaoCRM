@@ -419,7 +419,7 @@ export function BotaoIniciarConversa() {
             onClick={() => setAberto(true)}
             className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-icon-on-accent transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
-            <Plus size={22} weight="bold" aria-hidden />
+            <Plus size={24} weight="bold" aria-hidden />
           </button>
         )}
       </div>

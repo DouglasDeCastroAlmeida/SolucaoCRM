@@ -23,7 +23,7 @@ Lista canônica do que **não fazer** no DeskcommCRM. Anti-patterns ficam aqui p
 ## 3. ❌ Gradient roxo/azul/rosa em hero ou primary button
 
 **Por quê:** símbolo do "AI SaaS 2024". Datado e clichê. Não combina com soft-tech calmo.
-**✅ Sim:** solid `accent-500` (Sage `#67885d`). Profundidade vem de border + shadow neutro, não gradient.
+**✅ Sim:** solid `accent-500`, que é o **verde de mensageiro** fixo no app inteiro (ADR 0008; os valores moram em `app/globals.css`). A paleta Sage antiga (`#67885d`) foi substituída e a cor da marca não colore a interface. Profundidade vem de border + shadow neutro, não gradient.
 
 ---
 

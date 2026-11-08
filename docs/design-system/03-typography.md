@@ -145,7 +145,7 @@ A regra é 12px. O teste `tests/unit/visual-de-mensageiro-neutros-e-fonte.test.t
 |------|---------|--------|
 | `components/kanban/OwnerBadge.tsx` (iniciais do disco compacto, 16px) | 10px | O disco do cartão compacto do funil tem 16px; duas iniciais em 12px não cabem. O nome completo do responsável vai ao lado, em 12px, e o disco é `aria-hidden`. |
 
-Para o rodapé do balão (hora e recibo), o WhatsApp usa um corpo menor que 12px; aqui ele sobe para 12px porque o balão comporta, e o recibo ganha o mesmo tamanho.
+Para o rodapé do balão (hora e recibo), o WhatsApp usa um corpo menor que 12px; aqui ele sobe para 12px porque o balão comporta, e o recibo ganha o mesmo tamanho (ADR 0008: a referência de mensageiro dá medida, não arte; o piso de 12px do produto prevalece). O protótipo `app/design/inbox` segue o mesmo piso: nada de `text-[11px]` ou `text-[12.5px]` nele.
 
 ## Como consumir em código
 
