@@ -43,6 +43,7 @@ vi.mock("@/hooks/inbox/useDraftReply", () => ({
   useDraftReply: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
+import { entrarEmNota } from "./_composer-nota";
 import { Composer } from "@/components/inbox/Composer";
 
 function renderComposer() {
@@ -100,7 +101,7 @@ describe("Composer + modo nota interna", () => {
     expect(screen.getByRole("button", { name: /anexar/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /sugerir resposta/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
 
     // F3 (#1863): o "+" deixou de ser exclusivo da resposta — a nota passou a
     // aceitar anexo. O que continua sumindo é o que sairia para o cliente:
@@ -113,7 +114,7 @@ describe("Composer + modo nota interna", () => {
 
   it("modo nota interna: enviar chama useCreateNote e NÃO useSendMessage", () => {
     renderComposer();
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
 
     fireEvent.change(screen.getByPlaceholderText(/nota interna/i), { target: { value: "cliente ligou reclamando" } });
     fireEvent.click(screen.getByRole("button", { name: /^enviar$/i }));
@@ -127,7 +128,7 @@ describe("Composer + modo nota interna", () => {
 
   it("ANEXO em modo NOTA: upload em notes/media + useCreateNote — e NÃO vai para o cliente", async () => {
     renderComposer();
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
     const dialog = await escolherArquivo("print.png", "image/png");
 
     fireEvent.click(within(dialog).getByRole("button", { name: /^enviar$/i }));
@@ -181,7 +182,7 @@ describe("Composer + modo nota interna", () => {
 
   it("escolhido em NOTA e enviado depois em REPLY: continua nota — o destino é o da ESCOLHA", async () => {
     renderComposer();
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
     const dialog = await escolherArquivo("print.png", "image/png");
 
     // O operador troca de modo com o diálogo aberto. No app o modal bloqueia o

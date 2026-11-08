@@ -105,6 +105,7 @@ vi.mock("@/lib/messaging/contact-card", () => ({
 vi.mock("@/components/inbox/composer/ReplyReviewPanel", () => ({
   ReplyReviewPanel: () => null,
 }));
+vi.mock("@/components/inbox/composer/BotaoSugerirResposta", () => ({ BotaoSugerirResposta: () => null }));
 vi.mock("@/components/inbox/composer/TemplateMenu", () => ({
   resolveSlash: (text: string) => {
     if (!text.startsWith("/")) return { open: false, query: "" };
@@ -119,8 +120,14 @@ vi.mock("@/components/inbox/composer/MentionMenu", () => ({
   opcoesDeMencao: () => [],
   MentionMenu: () => null,
 }));
+// O menu do clipe é de outro arquivo; aqui só o contrato que o Composer usa dele: "Nota interna" (#118).
 vi.mock("@/components/inbox/composer/AttachMenu", () => ({
-  AttachMenu: () => null,
+  AttachMenu: ({ onNotaInterna }: { onNotaInterna?: () => void }) =>
+    onNotaInterna ? (
+      <button type="button" onClick={onNotaInterna}>
+        Nota interna
+      </button>
+    ) : null,
 }));
 vi.mock("@/components/inbox/composer/AttachmentPreviewDialog", () => ({
   AttachmentPreviewDialog: () => null,

@@ -32,6 +32,7 @@ vi.mock("@/hooks/inbox/useCreateNote", () => ({
   useCreateNote: () => ({ mutate: createNoteMock, isPending: false }),
 }));
 
+import { entrarEmNota } from "./_composer-nota";
 import { Composer } from "@/components/inbox/Composer";
 import { imagemDoClipboard } from "@/lib/inbox/clipboard-image";
 
@@ -145,7 +146,7 @@ describe("Composer — colar imagem", () => {
     // abriu a colagem para a nota; o que não mudou — e é o que este caso passa
     // a guardar — é o Ctrl+V de texto e o DESTINO do arquivo.
     renderComposer();
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
     const seguiu = fireEvent.paste(campo(), { clipboardData: clipboard({ files: [png()] }) });
 
     // Diferente do caso de texto (logo abaixo): a IMAGEM foi interceptada, e

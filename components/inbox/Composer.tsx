@@ -9,12 +9,13 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
-import { PaperPlaneTilt } from "@/lib/ui/icons";
+import { Note, PaperPlaneTilt } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { AttachMenu } from "@/components/inbox/composer/AttachMenu";
 import { AttachmentPreviewDialog } from "@/components/inbox/composer/AttachmentPreviewDialog";
 import { ContactPickerDialog } from "@/components/inbox/composer/ContactPickerDialog";
 import { AudioRecorder } from "@/components/inbox/composer/AudioRecorder";
+import { BotaoSugerirResposta } from "@/components/inbox/composer/BotaoSugerirResposta";
 import { ReplyReviewPanel } from "@/components/inbox/composer/ReplyReviewPanel";
 import { EmojiButton } from "@/components/inbox/composer/EmojiButton";
 import {
@@ -672,12 +673,9 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
 
   return (
     <>
-      <div
-        className={cn(
-          "relative border-t border-border bg-background px-3 py-2",
-          mode === "note" && "border-warning/40 bg-warning-bg",
-        )}
-      >
+      {/* A ÁREA DE ESCREVER (#118): sem barra. Ela é o próprio fundo da conversa, e a pílula
+          branca flutua por cima, como no WhatsApp Web. */}
+      <div data-testid="area-de-escrever" className="fundo-da-conversa relative px-3 pb-3 pt-1">
         {mode === "reply" && (
           <ReplyReviewPanel conversationId={conversationId} disabled={isDisabled} />
         )}
@@ -704,7 +702,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
         {rascunho && !rascunhoUsado && mode === "reply" && (
           <div
             data-testid="aviso-rascunho"
-            className="mb-1.5 flex items-start gap-2 rounded-md border-l-2 border-primary bg-muted/60 px-2 py-1.5 text-xs"
+            className="mb-1.5 flex items-start gap-2 rounded-lg border-l-2 border-primary bg-card px-3 py-1.5 text-xs shadow-sm"
           >
             <p className="min-w-0 flex-1 text-muted-foreground">
               {rascunho.leitura.estado === "sugerido" ? (
@@ -728,39 +726,28 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
         {motivoCuringa && (
           <div
             data-testid="aviso-curinga-literal"
-            className="mb-1.5 flex items-start gap-2 rounded-md border-l-2 border-warning bg-warning-bg px-2 py-1.5 text-xs text-warning-fg"
+            className="mb-1.5 flex items-start gap-2 rounded-lg border-l-2 border-warning bg-warning-bg px-3 py-1.5 text-xs text-warning-fg shadow-sm"
           >
             <p className="min-w-0 flex-1">
               {t("Contato sem nome no CRM: {{nome}}/{{primeiro_nome}} ficaram literais no texto. Edite antes de enviar.")}
             </p>
           </div>
         )}
-        <div className="mb-1.5 flex gap-1">
-          <button
-            type="button"
-            onClick={() => setMode("reply")}
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-              mode === "reply"
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {t("Responder")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("note")}
-            className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-              mode === "note"
-                ? "bg-warning text-warning-fg"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {t("Nota interna")}
-          </button>
-        </div>
+        {/* "Nota interna" é opção do clipe (#118). Em nota, esta faixa avisa onde se está e é o
+            caminho de volta para a resposta ao cliente. */}
+        {mode === "note" && (
+          <div className="mb-1.5 flex items-center gap-2 rounded-lg bg-warning-bg px-3 py-1.5 text-xs font-medium text-warning-fg shadow-sm">
+            <Note size={16} weight="duotone" aria-hidden />
+            <span className="min-w-0 flex-1 truncate">{t("Nota interna")}</span>
+            <button
+              type="button"
+              onClick={() => setMode("reply")}
+              className="rounded-full px-2.5 py-0.5 text-xs font-medium underline-offset-2 hover:underline"
+            >
+              {t("Responder")}
+            </button>
+          </div>
+        )}
         {/*
           A FAIXA DA CITAÇÃO — o que o atendente escolheu responder.
 
@@ -772,7 +759,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           relê-la — ela está logo acima, no fio.
         */}
         {respondendo && mode === "reply" && (
-          <div className="mb-1 flex items-start gap-2 rounded-md border-l-2 border-primary bg-muted/60 px-2 py-1.5">
+          <div className="mb-1.5 flex items-start gap-2 rounded-lg border-l-2 border-primary bg-card px-3 py-1.5 shadow-sm">
             <div className="min-w-0 flex-1">
               <div className="text-[11px] font-medium text-primary">
                 {respondendo.direction === "outbound" ? t("Você") : t("Cliente")}
@@ -805,11 +792,15 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           />
         )}
         <div className="flex items-end gap-2">
-         {/* A PÍLULA (#90): emoji e clipe DENTRO do campo, à esquerda, na ordem
-             dos mensageiros; o microfone (ou o enviar) fica fora, à direita. */}
+         {/* A PÍLULA (#118, print do dono): emoji e clipe DENTRO, à esquerda; "Sugerir resposta"
+             e o microfone DENTRO, à direita. O círculo verde só nasce como "Enviar", FORA da
+             pílula, quando há texto. */}
          <div
           data-testid="campo-de-escrever"
-          className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-input bg-background px-1 focus-within:ring-1 focus-within:ring-ring"
+          className={cn(
+            "flex min-h-12 min-w-0 flex-1 items-end gap-0.5 rounded-3xl px-1.5 py-1 shadow-md focus-within:ring-1 focus-within:ring-ring",
+            mode === "note" ? "bg-warning-bg" : "bg-card",
+          )}
          >
           <EmojiButton
             disabled={isDisabled}
@@ -841,6 +832,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             disabled={respostaBarrada}
             onPick={escolherArquivo}
             onPickContact={mode === "reply" ? () => setContactPickerOpen(true) : undefined}
+            onNotaInterna={mode === "reply" ? () => setMode("note") : undefined}
           />
           <textarea
             ref={taRef}
@@ -891,28 +883,33 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 : t("Enter envia · Shift+Enter quebra linha")
             }
             className={cn(
-              "max-h-40 min-h-9 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm",
+              "max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] leading-5",
               "placeholder:text-muted-foreground focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
             aria-label={t("Mensagem")}
           />
+          {mode === "reply" && (
+            <BotaoSugerirResposta conversationId={conversationId} disabled={isDisabled} />
+          )}
+          {!(text.trim() || mode === "note") &&
+            active &&
+            capacidadesDoCanal?.mensagemDeVoz !== false && (
+              <AudioRecorder conversationId={conversationId} disabled={respostaBarrada} />
+            )}
          </div>
           {text.trim() || mode === "note" ? (
             <Button
               type="button"
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className="size-10 shrink-0 rounded-full"
               onClick={handleSubmit}
               disabled={(mode === "note" ? isDisabled : envioBarrado) || !text.trim()}
               aria-label={t("Enviar")}
             >
-              <PaperPlaneTilt size={16} weight="fill" aria-hidden />
+              <PaperPlaneTilt size={20} weight="fill" aria-hidden />
             </Button>
-          ) : (
-            active &&
-            capacidadesDoCanal?.mensagemDeVoz !== false && <AudioRecorder conversationId={conversationId} disabled={respostaBarrada} />
-          )}
+          ) : null}
         </div>
       </div>
       <AttachmentPreviewDialog

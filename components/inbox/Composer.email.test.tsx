@@ -18,6 +18,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: h.toastError, warni
 vi.mock("@/lib/inbox/clipboard-image", () => ({ imagemDoClipboard: vi.fn(() => null) }));
 vi.mock("@/lib/messaging/contact-card", () => ({ resolveSharedContact: vi.fn() }));
 vi.mock("@/components/inbox/composer/ReplyReviewPanel", () => ({ ReplyReviewPanel: () => null }));
+vi.mock("@/components/inbox/composer/BotaoSugerirResposta", () => ({ BotaoSugerirResposta: () => null }));
 vi.mock("@/components/inbox/composer/TemplateMenu", () => ({
   resolveSlash: () => ({ open: false, query: "" }),
   TemplateMenu: () => null,
