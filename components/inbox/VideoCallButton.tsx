@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useImperativeHandle, useMemo, useState } from "react";
+import type * as React from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,15 @@ interface Props {
   bloqueio?: string | null;
   /** Conversa encerrada: desabilita o envio sem texto próprio, como o composer. */
   encerrada?: boolean;
+  /**
+   * #117: sem o botão. O cabeçalho abre a sala por um item do menu "Mais ações" (que desmonta ao
+   * fechar), então o diálogo e a sala ficam AQUI, sempre montados, abertos pelo `ref`.
+   */
+  semGatilho?: boolean;
+  ref?: React.Ref<AbrirVideo>;
 }
+
+export type AbrirVideo = { abrir: () => void };
 
 /**
  * O BOTÃO "VÍDEO" DO HEADER (#2440) — videochamada por Jitsi Meet.
@@ -88,6 +97,8 @@ export function VideoCallButton({
   lastInboundAt,
   bloqueio,
   encerrada = false,
+  semGatilho = false,
+  ref,
 }: Props) {
   const t = useT();
   const servidor = useMemo(() => servidorDeVideo(), []);
@@ -114,19 +125,23 @@ export function VideoCallButton({
     setAberto(vaiAbrir);
   };
 
+  useImperativeHandle(ref, () => ({ abrir: () => abrir(true) }));
+
   if (!servidor) return null;
 
   return (
     <>
-      <Button
-        variant="outline"
-        className="shrink-0"
-        onClick={() => abrir(true)}
-        data-testid="btn-videochamada"
-      >
-        <VideoCamera size={16} weight="bold" aria-hidden />
-        <span>{t("Vídeo")}</span>
-      </Button>
+      {!semGatilho && (
+        <Button
+          variant="outline"
+          className="shrink-0"
+          onClick={() => abrir(true)}
+          data-testid="btn-videochamada"
+        >
+          <VideoCamera size={16} weight="bold" aria-hidden />
+          <span>{t("Vídeo")}</span>
+        </Button>
+      )}
 
       {/* O diálogo só existe ABERTO: é a condição que segura a mutação
           (`useSendMessage`) para dentro — ver o cabeçalho deste arquivo.

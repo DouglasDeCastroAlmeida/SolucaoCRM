@@ -5,6 +5,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Clock } from "@/lib/ui/icons";
@@ -14,6 +17,8 @@ interface Props {
   conversationId: string;
   snoozeUntil: string | null;
   disabled?: boolean;
+  /** #117: submenu dentro do "Mais ações" do cabeçalho, em vez de botão com menu próprio. */
+  comoItemDeMenu?: boolean;
 }
 
 const DURATIONS: Array<{ hours: 1 | 3 | 24; label: string }> = [
@@ -26,11 +31,38 @@ function isSnoozeActive(snoozeUntil: string | null): boolean {
   return snoozeUntil != null && new Date(snoozeUntil).getTime() > Date.now();
 }
 
-export function SnoozeButton({ conversationId, snoozeUntil, disabled }: Props) {
+export function SnoozeButton({ conversationId, snoozeUntil, disabled, comoItemDeMenu = false }: Props) {
   const t = useT();
   const { snooze, cancel } = useSnoozeConversation();
   const isActive = isSnoozeActive(snoozeUntil);
   const isPending = snooze.isPending || cancel.isPending;
+
+  const itens = isActive ? (
+    <DropdownMenuItem onClick={() => cancel.mutate({ conversation_id: conversationId })}>
+      {t("Cancelar lembrete")}
+    </DropdownMenuItem>
+  ) : (
+    DURATIONS.map((d) => (
+      <DropdownMenuItem
+        key={d.hours}
+        onClick={() => snooze.mutate({ conversation_id: conversationId, duration_hours: d.hours })}
+      >
+        {t(d.label)}
+      </DropdownMenuItem>
+    ))
+  );
+
+  if (comoItemDeMenu) {
+    return (
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger disabled={disabled || isPending}>
+          <Clock size={16} weight="regular" aria-hidden />
+          {isActive ? t("Lembrete ativo") : t("Lembrar")}
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>{itens}</DropdownMenuSubContent>
+      </DropdownMenuSub>
+    );
+  }
 
   return (
     <DropdownMenu>

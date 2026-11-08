@@ -113,7 +113,8 @@ describe("ConversationHeader — chamada de voz na Inbox", () => {
     };
     render(<ConversationHeader conversation={atual} />);
 
-    await user.click(screen.getByRole("button", { name: "Chamar" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Chamar" }));
     expect(startCall).toHaveBeenCalledWith("contato-1");
   });
 
@@ -131,7 +132,7 @@ describe("ConversationHeader — chamada de voz na Inbox", () => {
       is_anonymized: false,
     };
     render(<ConversationHeader conversation={atual} />);
-    expect(screen.queryByRole("button", { name: "Chamar" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Chamar" })).toBeNull();
   });
 });
 
@@ -140,7 +141,8 @@ describe("ConversationHeader — Fechar e Arquivar por AlertDialog", () => {
     const user = userEvent.setup();
     render(<ConversationHeader conversation={conversa("open")} />);
 
-    await user.click(screen.getByRole("button", { name: "Fechar" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Fechar" }));
 
     const dialogo = await screen.findByRole("alertdialog");
     expect(within(dialogo).getByText("Fechar esta conversa?")).toBeTruthy();
@@ -150,7 +152,8 @@ describe("ConversationHeader — Fechar e Arquivar por AlertDialog", () => {
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
     expect(closeMutate).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "Fechar" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Fechar" }));
     const dialogo2 = await screen.findByRole("alertdialog");
     await user.click(within(dialogo2).getByRole("button", { name: "Fechar" }));
 
@@ -165,7 +168,8 @@ describe("ConversationHeader — Fechar e Arquivar por AlertDialog", () => {
     const user = userEvent.setup();
     render(<ConversationHeader conversation={conversa("open")} />);
 
-    await user.click(screen.getByRole("button", { name: "Arquivar" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Arquivar" }));
 
     const dialogo = await screen.findByRole("alertdialog");
     expect(within(dialogo).getByText("Arquivar esta conversa?")).toBeTruthy();
@@ -188,7 +192,8 @@ describe("ConversationHeader — Fechar e Arquivar por AlertDialog", () => {
     const user = userEvent.setup();
     render(<ConversationHeader conversation={conversa("closed")} />);
 
-    await user.click(screen.getByRole("button", { name: "Arquivar" }));
+    await user.click(screen.getByRole("button", { name: "Mais ações" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Arquivar" }));
 
     const dialogo = await screen.findByRole("alertdialog");
     expect(within(dialogo).getByText("Arquivar esta conversa?")).toBeTruthy();
@@ -240,10 +245,10 @@ describe("ConversationHeader — visual de mensageiro (#89)", () => {
     expect(avatar.compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("o cabecalho e cinza-claro (muted), nao o fundo da pagina, e separado por borda fina", () => {
+  it("o cabecalho e branco (card, como o WhatsApp Web), nao o fundo da pagina, e separado por borda fina", () => {
     render(<ConversationHeader conversation={conversa("open")} />);
     const barra = screen.getByTestId("cabecalho-da-conversa");
-    expect(barra.className).toContain("bg-muted");
+    expect(barra.className).toContain("bg-card");
     expect(barra.className).toContain("border-b");
     expect(barra.className).not.toContain("bg-background");
   });
