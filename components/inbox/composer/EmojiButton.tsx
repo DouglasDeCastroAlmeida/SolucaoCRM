@@ -5,7 +5,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Smiley } from "@/lib/ui/icons";
+import { Emoji } from "@/lib/ui/icons";
 
 // Lazy: o picker (+dados) só carrega quando o usuário abre — zero peso no bundle do inbox.
 const Picker = lazy(() => import("@emoji-mart/react"));
@@ -29,7 +29,7 @@ export function EmojiButton({ disabled, onPick }: Props) {
           aria-label={t("Emoji")}
           disabled={disabled}
         >
-          <Smiley size={18} weight="regular" aria-hidden />
+          <Emoji size={22} aria-hidden />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-auto border-none p-0 shadow-lg">

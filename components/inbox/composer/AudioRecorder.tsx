@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
 
 import { Button } from "@/components/ui/button";
-import { Microphone, PaperPlaneTilt, Trash } from "@/lib/ui/icons";
+import { Microfone, PaperPlaneTilt, Trash } from "@/lib/ui/icons";
 import { useSendMessage } from "@/hooks/inbox/useSendMessage";
 import { useUploadMedia } from "@/hooks/inbox/useUploadMedia";
 
@@ -134,7 +134,7 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
         onClick={start}
         disabled={disabled}
       >
-        <Microphone size={16} weight="fill" aria-hidden />
+        <Microfone size={20} aria-hidden />
       </Button>
     );
   }
