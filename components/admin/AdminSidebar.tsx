@@ -143,11 +143,11 @@ export function AdminSidebar({ userEmail, variant = "desktop", modulosLigados = 
   return (
     <aside
       className={cn(
-        "flex flex-col border-r bg-card",
+        "flex flex-col border-r border-border bg-surface-elevated",
         isMobile ? "h-full w-full" : "hidden w-60 shrink-0 lg:flex",
       )}
     >
-      <div className="flex h-14 items-center gap-3 border-b px-4">
+      <div className="flex h-14 items-center gap-3 border-b border-border px-4">
         {/* O nome já está escrito ao lado — o símbolo é reforço, não legenda. */}
         {marcaEhADoProduto(marca) && (
           <SimboloDoProduto nome={marca.name} decorativo className="h-8 w-8" />
@@ -170,10 +170,10 @@ export function AdminSidebar({ userEmail, variant = "desktop", modulosLigados = 
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-full px-3 py-2 text-sm transition-colors",
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  ? "bg-surface text-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-surface/70 hover:text-foreground",
               )}
             >
               <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
@@ -182,10 +182,10 @@ export function AdminSidebar({ userEmail, variant = "desktop", modulosLigados = 
           );
         })}
       </nav>
-      <div className="space-y-2 border-t p-3">
+      <div className="space-y-2 border-t border-border p-3">
         <Link
           href="/app"
-          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          className="flex items-center gap-2 rounded-full px-2 py-1.5 text-xs text-muted-foreground hover:bg-surface/70 hover:text-foreground"
         >
           <ArrowRight size={14} aria-hidden />
           <span>{t("Voltar pra app")}</span>
