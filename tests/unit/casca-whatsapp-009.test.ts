@@ -24,27 +24,10 @@ function bloco(seletor: string): string {
 }
 const token = (b: string, nome: string) => b.match(new RegExp(String.raw`${nome}:\s*(#[0-9a-f]{6})`, "i"))?.[1] as string;
 
-function arquivos(dir: string): string[] {
-  return fs.readdirSync(path.join(RAIZ, dir), { withFileTypes: true }).flatMap((e) => {
-    const rel = `${dir}/${e.name}`;
-    if (e.isDirectory()) return e.name === "node_modules" ? [] : arquivos(rel);
-    return /\.(tsx?|css)$/.test(e.name) && !/\.test\./.test(e.name) ? [rel] : [];
-  });
-}
-
-/** Identidade do CANAL na caixa de entrada (qual conta é WhatsApp, Instagram…), não a marca do produto: fica de fora, e só ele. */
-const LOGO_DE_CANAL = "components/inbox/ChannelLogo.tsx";
+// AC-003.3 (nenhum verde ou asset do WhatsApp) mudou para `visual-de-mensageiro-sem-arte-da-meta.test.ts`
+// (ADR 0007), que vale para todas as etapas do visual de mensageiro.
 
 describe("casca 009: marca e tokens", () => {
-  it("AC-003.3: nenhum verde ou asset do WhatsApp em app, components ou lib", () => {
-    const proibidos = /#(?:25d366|128c7e|075e54|00a884|008069|dcf8c6|d9fdd3|34b7f1|111b21|202c33)\b/i;
-    const achados = ["app", "components", "lib"]
-      .flatMap(arquivos)
-      .filter((f) => f !== LOGO_DE_CANAL)
-      .filter((f) => proibidos.test(lerArq(f)) || /whatsapp[-_]?(?:logo|icon)\.(?:svg|png)/i.test(lerArq(f)));
-    expect(achados, "cor ou ícone do WhatsApp: use os tokens da marca").toEqual([]);
-  });
-
   it("AC-003.1: o cabeçalho da casca não usa cor fixa nem valor arbitrário", () => {
     const topo = lerArq("components/shell/TopBar.tsx");
     expect(topo).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
