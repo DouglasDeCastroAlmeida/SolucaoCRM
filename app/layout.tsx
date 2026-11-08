@@ -30,27 +30,10 @@ import { Providers } from "./providers";
 import { PublicEnvScript } from "./public-env-script";
 import "./globals.css";
 
-// Fontes versionadas em app/fonts/ (origem e licença no README de lá): o
-// next/font/google as baixava durante o build, e o build caía quando o Google
-// não respondia. A família passa a se chamar como a variável JS ("atkinson"),
-// então use sempre a custom property (--font-atkinson), nunca o nome da fonte.
-const atkinson = localFont({
-  src: [
-    {
-      path: "./fonts/atkinson-hyperlegible-400-latin-latin-ext.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/atkinson-hyperlegible-700-latin-latin-ext.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  display: "swap",
-  variable: "--font-atkinson",
-});
-
+// Visual de mensageiro (#84): o texto usa a fonte do sistema (pilha em
+// `--font-sans`, app/globals.css), então só a monoespaçada é versionada em
+// app/fonts/ (origem e licença no README de lá). A família passa a se chamar
+// como a variável JS: use sempre a custom property (--font-mono).
 const plexMono = localFont({
   src: [
     { path: "./fonts/ibm-plex-mono-400-latin-latin-ext.woff2", weight: "400", style: "normal" },
@@ -348,7 +331,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="pt-BR"
       data-theme="light"
       suppressHydrationWarning
-      className={`${atkinson.variable} ${plexMono.variable}`}
+      className={plexMono.variable}
     >
       <head>
         {/* Primeiro de tudo: a cor da instalação, antes do CSS e do script de tema. */}
