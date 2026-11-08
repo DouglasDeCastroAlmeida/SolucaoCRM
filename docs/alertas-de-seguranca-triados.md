@@ -54,11 +54,11 @@ classe achou **quatro** coisas que não estavam em alerta nenhum.
 
 ### Consertados
 
-| Alertas                                                        | O quê                                                                     | Commit                                                 |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
-| #73, #76, #77, #78, #79, #80 (Dependabot)                      | 5 transitivas com advisory elevadas por `pnpm.overrides`                  | `fix(deps): eleva 5 transitivas com advisory`          |
-| #6, #7 (CodeQL `js/polynomial-redos`)                          | `parseChatId` deixa de fazer backtracking quadrático sobre `payload.from` | `fix(waha): parseChatId deixa de ser ReDoS polinomial` |
-| #1, #2, #4, #9 (CodeQL `actions/missing-workflow-permissions`) | `permissions: contents: read` nos 3 workflows + gate no `verify`          | `fix(ci): jobs declaram o privilegio do GITHUB_TOKEN`  |
+| Alertas | O quê | Commit |
+|---|---|---|
+| #73, #76, #77, #78, #79, #80 (Dependabot) | 5 transitivas com advisory elevadas por `pnpm.overrides` | `fix(deps): eleva 5 transitivas com advisory` |
+| #6, #7 (CodeQL `js/polynomial-redos`) | `parseChatId` deixa de fazer backtracking quadrático sobre `payload.from` | `fix(waha): parseChatId deixa de ser ReDoS polinomial` |
+| #1, #2, #4, #9 (CodeQL `actions/missing-workflow-permissions`) | `permissions: contents: read` nos 3 workflows + gate no `verify` | `fix(ci): jobs declaram o privilegio do GITHUB_TOKEN` |
 
 ### Descartado — #5, `js/clear-text-logging` em `scripts/bootstrap-owner.ts:215`
 
@@ -88,7 +88,7 @@ herda a classificação do objeto todo.
 1. **O conserto não removeria um byte de exposição do produto.** O `install.sh` — o caminho
    que todo self-hoster roda — imprime o mesmo `${OWNER_EMAIL}` três vezes (linhas 1415,
    1552, 1562), e escolheu deliberadamente não imprimir a senha (`senha:  (a que você
-definiu)`, linha 1553). O CodeQL não analisa shell: o `default-setup` cobre
+   definiu)`, linha 1553). O CodeQL não analisa shell: o `default-setup` cobre
    `actions`/`javascript-typescript`, e não há analisador de bash. **O scanner flagrou a
    cópia que ninguém executa e é cego para a original que todo mundo executa** —
    `grep bootstrap-owner hostgator-setup-kit/` devolve zero ocorrências; o kit reimplementa
@@ -128,7 +128,7 @@ varrer a classe de cada alerta com um instrumento independente.
 ### 1. Dois advisories que o Dependabot auto-descartou — consertados
 
 `brace-expansion@1.1.16` carregava `GHSA-mh99-v99m-4gvg` e `GHSA-rgw5-rvv9-x895` (dois
-HIGH). O Dependabot auto-descartou os alertas #72/#75 e marcou #74 como _fixed_ — porque a
+HIGH). O Dependabot auto-descartou os alertas #72/#75 e marcou #74 como *fixed* — porque a
 **outra** árvore (`5.0.9`, via `@sentry/nextjs`) foi mesmo corrigida. A árvore `1.x`
 continuava vulnerável e sem dono.
 
@@ -169,14 +169,14 @@ Varredura dinâmica de 8.404 literais de regex em 1.909 arquivos (controle posit
 detector flagra `lib/waha/ingest.ts`), filtrada por crescimento quadrático confirmado em 3
 pontos **e** entrada externa verificada lendo o call site:
 
-| Local                                                                                                 | Custo em 64 KB | Entrada                                                                                                                                                   |
-| ----------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib/ai/anonymize/index.ts:26,59`                                                                     | ~3,3 s         | **A pior.** `anonymize(transcript)` roda sobre a concatenação dos `messages.body` da conversa — corpo de mensagem de WhatsApp, sem teto de tamanho antes  |
-| `lib/sentry/scrub.ts:56`                                                                              | ~3,2 s         | Indireta (dado de evento Sentry)                                                                                                                          |
-| `lib/agent-engine/guardrails/vazamento-interno.ts:398`                                                | ~4,5 s         | Parcial — por token da saída do LLM; teto real de `max_tokens` **não medido**                                                                             |
-| `lib/ai/skills/package.ts:84,85`                                                                      | ~2,9 s         | Autenticada (`requireRole("manager")`), mas o SKILL.md vem descompactado de zip — zip-bomb de espaços dá N grande com upload pequeno                      |
-| `lib/mcp/auth.ts:72` (a outra ocorrência, em `app/api/internal/agents/run/route.ts`, saiu com a rota) | ~160 ms        | **Não autenticada** — é o próprio check de auth, e `/api/mcp` é rota pública. Limitada pelo teto de 16 KB de header do Node, mas ~6 req/s saturam um core |
-| `app/api/v1/channels/partner/route.ts:78`                                                             | ~166 ms        | Header `origin`, controlado pelo cliente; atrás de `adminGate`                                                                                            |
+| Local | Custo em 64 KB | Entrada |
+|---|---|---|
+| `lib/ai/anonymize/index.ts:26,59` | ~3,3 s | **A pior.** `anonymize(transcript)` roda sobre a concatenação dos `messages.body` da conversa — corpo de mensagem de WhatsApp, sem teto de tamanho antes |
+| `lib/sentry/scrub.ts:56` | ~3,2 s | Indireta (dado de evento Sentry) |
+| `lib/agent-engine/guardrails/vazamento-interno.ts:398` | ~4,5 s | Parcial — por token da saída do LLM; teto real de `max_tokens` **não medido** |
+| `lib/ai/skills/package.ts:84,85` | ~2,9 s | Autenticada (`requireRole("manager")`), mas o SKILL.md vem descompactado de zip — zip-bomb de espaços dá N grande com upload pequeno |
+| `lib/mcp/auth.ts:72` (a outra ocorrência, em `app/api/internal/agents/run/route.ts`, saiu com a rota) | ~160 ms | **Não autenticada** — é o próprio check de auth, e `/api/mcp` é rota pública. Limitada pelo teto de 16 KB de header do Node, mas ~6 req/s saturam um core |
+| `app/api/v1/channels/partner/route.ts:78` | ~166 ms | Header `origin`, controlado pelo cliente; atrás de `adminGate` |
 
 **Por que ficaram de fora desta rodada, e não é por serem menores:** quatro das seis são
 regex de **detecção de PII** ou de **autenticação**. Perder um match ali não degrada
@@ -196,7 +196,7 @@ corrida ou corta a entrada, então a regex nunca vê o caso ruim;
 ## Não medido nesta rodada
 
 - **Que os 12 alertas fecham de fato.** Isso exige uma varredura nova do CodeQL e uma do
-  Dependabot depois do merge. O que está medido é a _causa_ de cada um removida: o
+  Dependabot depois do merge. O que está medido é a *causa* de cada um removida: o
   predicado `jobHasPermissions` satisfeito, a regex quadrática substituída por varredura
   linear equivalente, e o OSV a zero sobre o lock.
 - **`allow: [{dependency-type: "all"}]` em `.github/dependabot.yml`.** O mecanismo que
