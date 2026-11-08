@@ -59,8 +59,8 @@ function EmptyChart() {
 const tooltipStyle = {
   borderRadius: "8px",
   fontSize: "12px",
-  border: "1px solid hsl(var(--border))",
-  background: "hsl(var(--popover))",
+  border: "1px solid var(--border)",
+  background: "var(--popover)",
 };
 
 export function UsageChart({ payload }: Props) {
@@ -120,7 +120,7 @@ export function UsageChart({ payload }: Props) {
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="hsl(142 76% 36%)"
+                stroke="var(--color-success)"
                 strokeWidth={2}
                 dot={false}
               />
@@ -162,7 +162,7 @@ export function UsageChart({ payload }: Props) {
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="hsl(262 83% 58%)"
+                stroke="var(--color-info)"
                 strokeWidth={2}
                 dot={false}
               />
@@ -216,7 +216,7 @@ export function UsageChart({ payload }: Props) {
                 type="monotone"
                 dataKey="p50"
                 name={t("a maioria responde em")}
-                stroke="hsl(199 89% 48%)"
+                stroke="var(--color-text-muted)"
                 strokeWidth={2}
                 dot={false}
               />
@@ -224,7 +224,7 @@ export function UsageChart({ payload }: Props) {
                 type="monotone"
                 dataKey="p95"
                 name={t("pior caso comum")}
-                stroke="hsl(0 84% 60%)"
+                stroke="var(--color-error)"
                 strokeWidth={2}
                 dot={false}
               />
@@ -266,7 +266,7 @@ export function UsageChart({ payload }: Props) {
               <Line
                 type="monotone"
                 dataKey="pct"
-                stroke="hsl(38 92% 50%)"
+                stroke="var(--color-warning)"
                 strokeWidth={2}
                 dot={false}
               />

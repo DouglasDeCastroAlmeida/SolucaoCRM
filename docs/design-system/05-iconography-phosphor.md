@@ -1,6 +1,8 @@
 # 05 — Iconografia Phosphor
 
-> **Source of truth:** `@phosphor-icons/react`, peso default `duotone`.
+> **Source of truth:** o mapa único `lib/ui/icons.ts` (nenhum componente importa pacote de ícone direto). Phosphor (`@phosphor-icons/react`) é a base; Material Symbols cobre os glifos do mapa único em que o desenho é o mesmo do mensageiro.
+>
+> **Atualização (ADR 0007, 07/11/2026):** os glifos `TickEnviado`, `TickEntregue`, `Clipe`, `Microfone`, `Emoji`, `TresPontos`, `Lupa`, `Voltar`, `Conversa` e `Status` vêm dos **Material Symbols** (Google, Apache-2.0, copiados para `lib/ui/material-symbols/`, licença ao lado). **Todo o resto segue Phosphor.** Nenhum ícone do WhatsApp entra no produto. Esta decisão supera o "fechadas até v2.0" do `00-overview.md` para a iconografia. O arquivo mantém o nome `05-iconography-phosphor.md` para não quebrar links.
 
 ## Por que Phosphor
 
@@ -12,7 +14,16 @@ Razões:
 - **Duotone tem peso visual sem ruído.** A camada secundária (preenchimento ~20% opacity) dá presença sem competir com o texto. Regular fica pra contextos onde duotone seria excessivo (sidebar densa).
 - **5 weights disponíveis.** `thin`, `light`, `regular`, `bold`, `duotone`, `fill`. Permite hierarquia dentro do mesmo set sem trocar família.
 - **Cobertura grande e consistente.** ~9000 ícones. Cobre todos os domínios do produto (chat, comércio, dados, IA, gestão).
-- **Família humanista.** Curvas suaves combinam com Atkinson Hyperlegible. Lucide é mais geométrico, Heroicons é mais "clean SaaS"; Phosphor cabe no soft-tech.
+- **Família humanista.** Curvas suaves combinam com a fonte do sistema. Lucide é mais geométrico, Heroicons é mais "clean SaaS"; Phosphor cabe no soft-tech.
+
+## Duas fontes de glifos, um só ponto de entrada
+
+| Fonte | Quando | Como entra |
+|-------|--------|------------|
+| Material Symbols | Os glifos do mapa único listados acima (recibos do balão, clipe, microfone, emoji, três pontos, lupa, voltar, conversa, status) | Exportados por `lib/ui/icons.ts`; a assinatura imita a do Phosphor (`size`, `className`, `aria-*`), `weight` é aceito e ignorado |
+| Phosphor | Todo o resto | Reexportado por `lib/ui/icons.ts` |
+
+Tamanhos continuam na escala 16/20/24/32 (nada de 14, 18 ou 22).
 
 ## Instalação
 

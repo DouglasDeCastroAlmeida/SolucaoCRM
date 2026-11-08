@@ -22,6 +22,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { capabilitiesOf, transportaMensagem, type ChannelProvider } from "@/lib/channels/capabilities";
 import { montarCartoesDaPassagem, type CartaoDaPassagem } from "@/lib/escalacao/cartao-da-passagem";
 import type { Message, Note } from "@/lib/types/messaging";
+import { SeparadorDeData } from "@/components/inbox/SeparadorDeData";
 
 interface Props {
   conversationId: string | null;
@@ -342,7 +343,7 @@ export function ChatThread({
           {t("Resultados nas mensagens carregadas")}: {resultados.size}
         </div>
       )}
-      <div ref={scrollerRef} className="min-w-0 flex-1 overflow-y-auto bg-muted/50 py-2">
+      <div ref={scrollerRef} className="fundo-da-conversa min-w-0 flex-1 overflow-y-auto py-2">
         {q.hasNextPage && (
           <div className="flex justify-center py-2">
             <Button
@@ -376,11 +377,7 @@ export function ChatThread({
           );
           return (
           <div key={g.key} className="space-y-1">
-            <div className="sticky top-0 z-10 flex justify-center py-1">
-              <span className="rounded-full bg-background/80 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground backdrop-blur">
-                {rotuloDoDia(g.ts, agora, fuso, t)}
-              </span>
-            </div>
+            <SeparadorDeData rotulo={rotuloDoDia(g.ts, agora, fuso, t)} />
             {g.items.map((item, idx) =>
               item.kind === "passagem" ? (
                 <PassagemCard

@@ -115,7 +115,7 @@ interface Props {
 /**
  * A COR SAI DE QUEM MANDA, NÃO DO STATUS.
  *
- * O mapa anterior era por `conversations.status`, e o `bg-purple-500` de
+ * O mapa anterior era por `conversations.status`, e o ponto roxo de
  * `ai_handling` era a mesma mentira das abas em forma de cor: `ai_handling` é
  * escrito por UM caminho só em produção, então a bolinha do automático quase
  * nunca aparecia — enquanto o robô atendia a maior parte da lista — e, quando
@@ -127,9 +127,9 @@ interface Props {
  * podem ser mantidas em arquivos diferentes.
  */
 const COR_DO_COMANDO: Record<string, string> = {
-  humano: "bg-blue-500",
-  automatico: "bg-purple-500",
-  aguardando: "bg-amber-500",
+  humano: "bg-info",
+  automatico: "bg-primary",
+  aguardando: "bg-warning",
   ninguem: "bg-muted-foreground/60",
   encerrada: "bg-muted-foreground/30",
 };
@@ -350,11 +350,8 @@ export function ConversationListItem({
         )}
         aria-current={isSelected ? "true" : undefined}
       >
-      {isSelected && (
-        <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />
-      )}
       <div className="relative shrink-0">
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-12 w-12 rounded-full">
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
               foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
@@ -366,7 +363,7 @@ export function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-xs font-medium text-text-muted">
+          <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
@@ -386,12 +383,12 @@ export function ConversationListItem({
         {naFila && (
           <div className="mb-1 flex items-center gap-1.5">
             <span
-              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-medium tabular-nums text-accent"
+              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-xs font-medium tabular-nums text-accent"
               aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
             >
               {queuePosition}º
             </span>
-            <span className="text-[11px] text-text-muted">
+            <span className="text-xs text-text-muted">
               {waitingLabel(conversation, t, localeDaData)}
             </span>
           </div>
@@ -400,7 +397,7 @@ export function ConversationListItem({
           <span className="flex min-w-0 items-center gap-1.5">
             <span
               className={cn(
-                "truncate text-sm",
+                "truncate text-[15px]",
                 unread > 0 ? "font-semibold text-text" : "font-medium text-text",
                 c?.is_anonymized && "font-normal italic text-text-muted",
               )}
@@ -416,13 +413,13 @@ export function ConversationListItem({
               mandou cada mensagem dentro do grupo).
             */}
             {conversation.is_group && (
-              <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-[10px]">
+              <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-xs">
                 {t("Grupo")}
               </Badge>
             )}
           </span>
           <span
-            className="shrink-0 text-[11px] tabular-nums text-text-subtle"
+            className="shrink-0 text-xs tabular-nums text-text-subtle"
             // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
             // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
             // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
@@ -452,7 +449,7 @@ export function ConversationListItem({
             {truncated}
           </p>
           {unread > 0 && (
-            <span className="inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold tabular-nums text-accent-foreground">
               {unread}
             </span>
           )}
@@ -468,17 +465,17 @@ export function ConversationListItem({
               <Badge
                 variant="outline"
                 data-testid="selo-exemplo-ia"
-                className="h-4 gap-1 px-1.5 text-[10px] font-normal text-accent"
+                className="h-4 gap-1 px-1.5 text-xs font-normal text-accent"
               >
                 <Sparkle size={10} weight="fill" aria-hidden />
                 {t("Exemplo para a IA")}
               </Badge>
             )}
             {visibleTags.map((t) => (
-              <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-[10px]" />
+              <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-xs" />
             ))}
             {overflow > 0 && (
-              <span className="text-[10px] text-text-muted">+{overflow}</span>
+              <span className="text-xs text-text-muted">+{overflow}</span>
             )}
             {mostrarAtendente && comando.quem === "humano" && (
               <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
@@ -491,19 +488,19 @@ export function ConversationListItem({
             {mostrarCanal && rotuloCanal && (
               <Badge
                 variant="outline"
-                className="h-4 min-w-0 max-w-[9rem] gap-1 truncate px-1.5 text-[10px] font-normal text-text-muted"
+                className="h-4 min-w-0 max-w-[9rem] gap-1 truncate px-1.5 text-xs font-normal text-text-muted"
                 title={`${t("Entrou por")} ${rotuloCanal}`}
               >
                 <span className="truncate">{rotuloCanal}</span>
               </Badge>
             )}
             {c?.is_blocked && (
-              <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="destructive" className="h-4 px-1.5 text-xs">
                 {t("Bloqueado")}
               </Badge>
             )}
             {c?.is_anonymized && (
-              <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="outline" className="h-4 px-1.5 text-xs">
                 {t("Anonimizado")}
               </Badge>
             )}
@@ -524,9 +521,9 @@ export function ConversationListItem({
 
         Desmarcado usa `text-text-muted`, não `text-text-subtle`: é componente
         gráfico e precisa de 3:1 contra o fundo da linha. Medido na prova de
-        tela, subtle dava 2,81:1 no escuro (#605e54 sobre #161510). Muted, no
+        tela, subtle dava 2,81:1 no escuro (o tom subtle sobre o fundo escuro). Muted, no
         pior fundo de cada tema (linha selecionada, `bg-accent-soft`): 5,74:1 no
-        claro (#5d594f sobre #e4ebe0) e 4,23:1 no escuro (#8e8b7f sobre #272b20).
+        claro (muted sobre accent-soft) e 4,23:1 no escuro (muted sobre accent-soft escuro).
       */}
       {onAlternarExemplo && (
         <button

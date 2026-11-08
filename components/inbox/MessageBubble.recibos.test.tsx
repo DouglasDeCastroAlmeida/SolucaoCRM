@@ -93,7 +93,7 @@ describe("MessageBubble - horario (AC-002.5)", () => {
   it("fica DENTRO do balao, pequeno, no fuso da organizacao", () => {
     render(<MessageBubble message={msg()} fuso="America/Sao_Paulo" />);
     const hora = within(screen.getByTestId("message-bubble")).getByText("12:05");
-    expect(hora.parentElement?.className).toContain("text-[10px]");
+    expect(hora.parentElement?.className).toContain("text-xs");
   });
 
   it("muda com o fuso da organizacao, nao com o do navegador", () => {
@@ -102,20 +102,21 @@ describe("MessageBubble - horario (AC-002.5)", () => {
   });
 });
 
-describe("MessageBubble - cauda e agrupamento (AC-002.1)", () => {
-  it("a cauda so aparece na ultima do grupo", () => {
+describe("MessageBubble - pontinha e agrupamento (AC-002.1)", () => {
+  it("so a primeira do grupo leva a pontinha e o canto reto; as coladas ficam redondas", () => {
     const { rerender } = render(<MessageBubble message={msg()} />);
-    expect(screen.getByTestId("message-bubble").getAttribute("data-cauda")).toBe("true");
-    expect(screen.getByTestId("message-bubble").className).toContain("rounded-br-sm");
+    expect(screen.getByTestId("balao-pontinha")).toBeTruthy();
+    expect(screen.getByTestId("message-bubble").className).toContain("rounded-tr-none");
     rerender(<MessageBubble message={msg()} comCauda={false} colada />);
-    const balao = screen.getByTestId("message-bubble");
-    expect(balao.getAttribute("data-cauda")).toBe("false");
-    expect(balao.className).not.toContain("rounded-br-sm");
+    expect(screen.queryByTestId("balao-pontinha")).toBeNull();
+    expect(screen.getByTestId("message-bubble").className).not.toContain("rounded-tr-none");
+    expect(screen.getByTestId("message-bubble").getAttribute("data-cauda")).toBe("false");
   });
 
-  it("a recebida tem a cauda do lado esquerdo", () => {
+  it("a recebida tem a pontinha e o canto reto do lado esquerdo", () => {
     render(<MessageBubble message={msg({ direction: "inbound" })} />);
-    expect(screen.getByTestId("message-bubble").className).toContain("rounded-bl-sm");
+    expect(screen.getByTestId("message-bubble").className).toContain("rounded-tl-none");
+    expect(screen.getByTestId("balao-pontinha").getAttribute("data-lado")).toBe("esquerda");
   });
 });
 

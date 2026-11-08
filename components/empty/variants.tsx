@@ -1,23 +1,21 @@
 "use client";
 
-import {
-  ChatCircle,
-  Kanban,
-  UsersThree,
-  ListMagnifyingGlass,
-  Funnel,
-  ArrowsLeftRight,
-  Key,
-  ClockCounterClockwise,
-  GitBranch,
-  Users,
-} from "@phosphor-icons/react";
 import { useT } from "@/hooks/i18n/useT";
-// Do barril, e não do `@phosphor-icons/react` que as linhas acima usam: a regra
-// (ADR-05) é o barril, e 116 arquivos a seguem. O import de cima é dívida
-// anterior a esta feature — replicá-la para ficar "consistente com o arquivo"
-// espalharia o problema em vez de parar de crescê-lo.
-import { CalendarBlank } from "@/lib/ui/icons";
+// Tudo pelo mapa único (ADR-05); a regra é vigiada por
+// tests/unit/mapa-unico-de-icones.test.ts.
+import {
+  ArrowsLeftRight,
+  CalendarBlank,
+  ChatCircle,
+  ClockCounterClockwise,
+  Funnel,
+  GitBranch,
+  Kanban,
+  Key,
+  ListMagnifyingGlass,
+  Users,
+  UsersThree,
+} from "@/lib/ui/icons";
 import { EmptyState, type EmptyStateAction } from "./EmptyState";
 
 interface VariantProps {

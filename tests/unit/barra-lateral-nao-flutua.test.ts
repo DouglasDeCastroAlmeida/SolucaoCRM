@@ -35,7 +35,7 @@ import { describe, expect, it } from "vitest";
  * defeito.
  */
 
-const BARRA = readFileSync("components/shell/Sidebar.tsx", "utf8")
+const BARRA = readFileSync("components/shell/FaixaDeIcones.tsx", "utf8")
   .replace(/\/\*[\s\S]*?\*\//g, "")
   .replace(/\/\/.*$/gm, "");
 const CASCA = readFileSync("app/app/_components/AppShell.tsx", "utf8")
@@ -46,6 +46,13 @@ describe("a barra ocupa lugar, em vez de flutuar", () => {
   it("não é `fixed`", () => {
     // `fixed` é o que a tira do fluxo e obriga alguém a compensar por fora.
     expect(BARRA, "a barra voltou a flutuar").not.toMatch(/\bfixed\b/);
+  });
+
+  it("é a faixa estreita de 64px (visual de mensageiro, #87), de largura fixa", () => {
+    expect(BARRA).toMatch(/[ "]w-16[ "]/);
+    expect(BARRA, "a largura não é mais alternada com a barra larga").not.toMatch(/[ "]w-60[ "]/);
+    // A casca monta a faixa, e a barra larga só existe dentro da gaveta do «mais».
+    expect(CASCA).toContain("<FaixaDeIcones />");
   });
 
   it("é `sticky` e ocupa a altura da tela", () => {

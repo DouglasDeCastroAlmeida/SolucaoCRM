@@ -66,7 +66,7 @@ export function TenantSwitcher() {
           variant="ghost"
           size="sm"
           disabled={isPending || !!user.support}
-          className="gap-2"
+          className="gap-2 rounded-full"
           aria-label={`${t("Organização")}: ${active?.name ?? t("Selecionar org")}`}
           title={user.support ? "Saia do acompanhamento para trocar de organização" : undefined}
           data-testid="tenant-switcher"

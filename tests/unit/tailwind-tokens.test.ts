@@ -82,11 +82,11 @@ describe("Tailwind 4 — a ponte token → utilitário", () => {
 
     expect(consumidos.length).toBeGreaterThan(50);
 
-    // As duas fontes são injetadas pelo `next/font` como custom property no
-    // `<html>` (app/layout.tsx), não pelo `:root` do CSS — por isso não caem na
+    // A monoespaçada é injetada pelo `next/font` como custom property no
+    // `<html>` (app/layout.tsx), não pelo `:root` do CSS — por isso não cai na
     // regra acima. A isenção não é um buraco: o teste confere logo abaixo que
-    // elas continuam sendo declaradas lá.
-    const DE_FORA_DO_CSS = ["--font-atkinson", "--font-mono"];
+    // ela continua sendo declarada lá. (O texto usa a fonte do sistema, #84.)
+    const DE_FORA_DO_CSS = ["--font-mono"];
     const layout = fs.readFileSync(path.join(RAIZ, "app/layout.tsx"), "utf8");
     for (const v of DE_FORA_DO_CSS) {
       expect(layout, `${v} deixou de ser declarada pelo next/font`).toContain(`"${v}"`);

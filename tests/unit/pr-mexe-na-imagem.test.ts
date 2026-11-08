@@ -113,7 +113,12 @@ describe("pr-mexe-na-imagem", () => {
   it("nenhum arquivo que entra na imagem importa de pasta que o .dockerignore exclui", () => {
     const pastasFora = new Set(ignorados.filter((e) => !e.includes("*") && !e.includes(".")));
     for (const p of ["docs", "tests", "tasks"]) expect(pastasFora.has(p)).toBe(true);
-    const foraDoContexto = (caminho: string) => pastasFora.has(caminho.split("/")[0] ?? "");
+    // Arquivo solto da raiz que o .dockerignore nomeia (ex.: `playwright.config.ts`,
+    // `playwright.visual-hml.config.ts`) também não entra no contexto: o `next build`
+    // não o vê, então ele pode importar de `tests/`.
+    const arquivosFora = new Set(ignorados.filter((e) => !e.includes("*") && e.includes(".")));
+    const foraDoContexto = (caminho: string) =>
+      pastasFora.has(caminho.split("/")[0] ?? "") || arquivosFora.has(caminho);
 
     const arquivos = execFileSync("git", ["ls-files", "*.ts", "*.tsx", "*.mts", "*.js", "*.mjs"], {
       encoding: "utf-8",

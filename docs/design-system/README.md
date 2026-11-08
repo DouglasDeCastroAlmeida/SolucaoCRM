@@ -3,7 +3,7 @@
 > **Versão:** v1.0 (lockada em 2026-04-28)
 > **Status:** Ativa
 > **Direção:** Soft-tech / calmo, anti-genérico
-> **Stack visual:** Sage + Atkinson Hyperlegible + IBM Plex Mono + Aerada + Phosphor (duotone)
+> **Stack visual:** Sage (acento da marca) + fonte do sistema + IBM Plex Mono + Aerada + Phosphor (duotone) e Material Symbols nos glifos do mapa único — ver o ADR 0007, que supera o "lockado" de 2026-04-28 para fonte, neutros e ícones
 
 Esta pasta é a **fonte canônica** da linguagem visual do DeskcommCRM. Toda decisão de UI deve consultar estes documentos antes de implementação. Quando houver conflito entre código e doc, **a doc vence** — ajuste o código.
 
@@ -14,9 +14,9 @@ Esta pasta é a **fonte canônica** da linguagem visual do DeskcommCRM. Toda dec
 | 00 | [Overview](./00-overview.md) | Filosofia, princípios, referências |
 | 01 | [Foundation Tokens](./01-foundation-tokens.md) | Spacing, radius, shadow, motion, z-index |
 | 02 | [Paleta Sage](./02-palette-sage.md) | 22 stops com hex (light + dark), estados, contraste |
-| 03 | [Tipografia](./03-typography.md) | Atkinson Hyperlegible, escala, IBM Plex Mono |
+| 03 | [Tipografia](./03-typography.md) | Fonte do sistema (ADR 0007), escala, IBM Plex Mono, exceções ao mínimo de 12px |
 | 04 | [Densidade Aerada](./04-density-aerada.md) | Row 56 / gap 24, quando overrider |
-| 05 | [Iconografia Phosphor](./05-iconography-phosphor.md) | Duotone, mapeamento por feature |
+| 05 | [Iconografia](./05-iconography-phosphor.md) | Phosphor + Material Symbols (mapa único), mapeamento por feature |
 | 06 | [Componentes](./06-components.md) | shadcn customizado + componentes do produto |
 | 07 | [Motion Language](./07-motion-language.md) | 4 tipos canônicos, curvas, durations |
 | 08 | [Voz e Tom](./08-voice-and-tone.md) | PT-BR profissional calmo, microcopy |

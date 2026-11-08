@@ -43,6 +43,11 @@ export const DICIONARIO: Traducoes = {
   ...TEXTOS_EMAIL_CANAL,
   ...TEXTOS_AGENDA_SERVICOS,
   ...TEXTOS_AGENDA_CONFIGURACAO,
+  // Configurações em duas colunas (#82)
+  "Seções de configurações": { es: "Secciones de configuración" },
+  "Escolha uma seção para ver os detalhes.": { es: "Elige una sección para ver los detalles." },
+  "Voltar para Configurações": { es: "Volver a Configuración" },
+  "Outra seção": { es: "Otra sección" },
   // Painel /admin/marcas (REQ-008)
   "Caminho do logo": { es: "Ruta del logo" },
   "Pacote padrão": { es: "Paquete predeterminado" },
@@ -614,6 +619,8 @@ export const DICIONARIO: Traducoes = {
 
   "Mensagens rápidas": { es: "Mensajes rápidos" },
   "Voltar às conversas": { es: "Volver a las conversaciones" },
+  "Voltar para as conversas": { es: "Volver a las conversaciones" },
+  "Dados do contato": { es: "Datos del contacto" },
   "Minimizar mensagens": { es: "Minimizar mensajes" },
   "conversas não lidas": { es: "conversaciones no leídas" },
   "Não foi possível atualizar as mensagens.": { es: "No se pudieron actualizar los mensajes." },
@@ -1919,8 +1926,6 @@ export const DICIONARIO: Traducoes = {
   // O estado de carregando da tela de Desempenho, que passou a usar o mesmo
   // molde de vazio/erro das outras telas.
   "Carregando o desempenho": { es: "Cargando el rendimiento" },
-  "Expandir sidebar": { es: "Expandir barra lateral" },
-  "Recolher sidebar": { es: "Contraer barra lateral" },
   Versão: { es: "Versión" },
   versão: { es: "versión" },
   "Nova versão": { es: "Nueva versión" },

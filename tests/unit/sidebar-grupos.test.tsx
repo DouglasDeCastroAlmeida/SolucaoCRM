@@ -12,7 +12,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
-import { Sidebar } from "@/components/shell/Sidebar";
+import { SidebarContent } from "@/components/shell/Sidebar";
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
 
 const authRef: { user: Pick<AuthUser, "is_platform_admin">; activeOrg: ActiveOrg | null } = {
@@ -43,9 +43,6 @@ vi.mock("@/components/shell/ContadorDaFila", () => ({
     <span data-testid="marcador-fila" data-compacto={String(compacto)} />
   ),
 }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({
-  toggleSidebar: vi.fn(),
-}));
 // Busca a versão via react-query; sem QueryClientProvider ele lança, e o
 // rodapé de versão não é o que estes testes examinam.
 vi.mock("@/components/shell/VersionFooter", () => ({
@@ -62,7 +59,7 @@ afterEach(cleanup);
 describe("Sidebar agrupado", () => {
   it("renderiza os títulos de grupo na ordem de uso", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     const titulos = screen
       .getAllByRole("heading")
       .map((el) => el.textContent?.trim())
@@ -74,7 +71,7 @@ describe("Sidebar agrupado", () => {
 
   it("leva às Etapas do funil pelo CRM, e não por Configurações", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     // ⚠️ O CAMINHO MUDOU, A PROPRIEDADE NÃO. Etapas do funil saiu do menu para
     // dentro do hub do CRM quando Tarefas virou o quinto destino do grupo e o
     // menu passou a rolar. A porta continua sendo CRM — "Ver tudo em CRM" leva
@@ -90,7 +87,7 @@ describe("Sidebar agrupado", () => {
 
   it("o número de Casos mora no item de Casos, e o da Fila no item de Inbox", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     const casos = screen.getAllByTestId("marcador-casos");
     const fila = screen.getAllByTestId("marcador-fila");
     expect(casos).toHaveLength(1);
@@ -99,21 +96,19 @@ describe("Sidebar agrupado", () => {
     expect(fila[0]!.closest("a")).toHaveAttribute("href", "/app/inbox");
     // Roteadores saiu do menu para Casos caber (a folga era menos de uma linha).
     expect(screen.queryByRole("link", { name: "Roteadores" })).toBeNull();
-    cleanup();
-    // Recolhido, o contador vira ponto — é o componente que decide, com esta dica.
-    render(<Sidebar collapsed />);
-    expect(screen.getByTestId("marcador-casos")).toHaveAttribute("data-compacto", "true");
+    // Na barra aberta o contador não é compacto.
+    expect(screen.getByTestId("marcador-casos")).toHaveAttribute("data-compacto", "false");
   });
 
   it("e os dois itens de funil não disputam o mesmo nome", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     expect(screen.getByRole("link", { name: "Funis" })).toHaveAttribute("href", "/app/kanban");
   });
 
   it("desenterra Audit Log — e Nuvemshop ficou de fora, por escolha", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     // ⚠️ O CAMINHO MUDOU, A PROPRIEDADE NÃO. O que esta linha sempre prendeu é
     // que Audit Log deixou de existir só como card enterrado em Configurações.
     // Quando Atividades (PR #583) virou o quinto destino do grupo Análise e o
@@ -143,7 +138,7 @@ describe("Sidebar agrupado", () => {
 
   it("Configurações fica no rodapé, nunca dependendo de scroll", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     const config = screen.getByRole("link", { name: /Configurações/ });
     expect(config).toHaveAttribute("href", "/app/settings");
     // Fora da <nav> que rola.
@@ -154,7 +149,7 @@ describe("Sidebar agrupado", () => {
   it("não deixa cabeçalho órfão quando a permissão esvazia o grupo", () => {
     // CANAIS é todo manager+/admin. Um agent não pode ver o título sozinho.
     comoPapel("agent");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     const titulos = screen.getAllByRole("heading").map((el) => el.textContent?.trim());
     expect(titulos).not.toContain("Canais");
     expect(titulos).toContain("Atendimento");
@@ -162,20 +157,13 @@ describe("Sidebar agrupado", () => {
 
   it("oferece o hub dos grupos que têm um", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     expect(screen.getByRole("link", { name: /Ver tudo em IA/ })).toHaveAttribute("href", "/app/ai");
-  });
-
-  it("colapsado esconde os títulos mas mantém os links", () => {
-    comoPapel("admin");
-    render(<Sidebar collapsed />);
-    expect(screen.queryAllByRole("heading")).toHaveLength(0);
-    expect(screen.getByRole("link", { name: /Inbox/ })).toBeTruthy();
   });
 
   it("marca a rota atual com aria-current", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent />);
     expect(screen.getByRole("link", { name: /Inbox/ })).toHaveAttribute("aria-current", "page");
     // "Kanban" saiu da interface; o item da mesma URL agora se chama "Funis".
     expect(screen.getByRole("link", { name: "Funis" })).not.toHaveAttribute("aria-current");

@@ -17,6 +17,20 @@ function fmt(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/**
+ * Alturas (20 a 100%) da onda: a mesma para a mesma mensagem, sem depender do arquivo de áudio.
+ * É DECORATIVA: inventada a partir do id, não representa o volume real do áudio (o arquivo não é
+ * analisado). Quem informa o progresso de verdade é o controle de busca e o par "atual / total".
+ */
+function alturasDaOnda(semente: string): number[] {
+  let h = 2166136261;
+  for (let i = 0; i < semente.length; i++) h = Math.imul(h ^ semente.charCodeAt(i), 16777619);
+  return Array.from({ length: 32 }, () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+    return 20 + (h % 81);
+  });
+}
+
 interface Props {
   messageId: string;
   isOutbound: boolean;
@@ -83,39 +97,57 @@ export function AudioPlayer({ messageId, isOutbound, src }: Props) {
     setCurrent(value);
   };
 
+  const fracao = safeDuration > 0 ? Math.min(1, current / safeDuration) : 0;
+  const barras = alturasDaOnda(messageId);
+
   return (
-    <div className="flex w-60 items-center gap-2 py-1">
+    <div className="flex w-64 max-w-full items-center gap-2 py-1">
       <audio ref={audioRef} src={src ?? mediaSrc(messageId)} preload="metadata" />
       <button
         type="button"
         aria-label={playing ? t("Pausar áudio") : t("Reproduzir áudio")}
         onClick={toggle}
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
           isOutbound
             ? "bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30"
             : "bg-primary/10 text-primary hover:bg-primary/20",
         )}
       >
         {playing ? (
-          <Pause size={16} weight="fill" aria-hidden />
+          <Pause size={20} weight="fill" aria-hidden />
         ) : (
-          <Play size={16} weight="fill" aria-hidden />
+          <Play size={20} weight="fill" aria-hidden />
         )}
       </button>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <input
-          type="range"
-          aria-label={t("Progresso do áudio")}
-          aria-valuetext={`${fmt(current)} ${t("de")} ${fmt(safeDuration)}`}
-          min="0"
-          max={String(safeDuration || 1)}
-          step="0.1"
-          value={current}
-          onChange={(e) => seek(Number(e.target.value))}
-          className="h-1 w-full cursor-pointer accent-current"
-        />
-        <span className="text-[10px] tabular-nums opacity-70">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="relative flex h-7 items-center gap-px rounded-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-current has-[input:focus-visible]:ring-offset-1 has-[input:focus-visible]:ring-offset-transparent">
+          {barras.map((altura, i) => {
+            const tocada = fracao > 0 && (i + 1) / barras.length <= fracao + 1 / barras.length / 2;
+            return (
+              <span
+                key={i}
+                data-testid="barra-do-audio"
+                data-altura={altura}
+                data-tocada={tocada}
+                style={{ height: `${altura}%` }}
+                className={cn("w-[3px] flex-1 rounded-full bg-current", tocada ? "opacity-100" : "opacity-40")}
+              />
+            );
+          })}
+          <input
+            type="range"
+            aria-label={t("Progresso do áudio")}
+            aria-valuetext={`${fmt(current)} ${t("de")} ${fmt(safeDuration)}`}
+            min="0"
+            max={String(safeDuration || 1)}
+            step="0.1"
+            value={current}
+            onChange={(e) => seek(Number(e.target.value))}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          />
+        </div>
+        <span className="text-xs tabular-nums opacity-80">
           {fmt(current)} / {fmt(safeDuration)}
         </span>
       </div>
@@ -124,7 +156,7 @@ export function AudioPlayer({ messageId, isOutbound, src }: Props) {
         aria-label={`${t("Velocidade de reprodução")}: ${RATES[rateIdx]}x`}
         onClick={cycleRate}
         className={cn(
-          "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums transition-colors",
+          "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors",
           isOutbound
             ? "bg-primary-foreground/20 text-primary-foreground"
             : "bg-primary/10 text-primary",

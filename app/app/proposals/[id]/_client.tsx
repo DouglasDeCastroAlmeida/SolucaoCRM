@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useRef, useState } from "react";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -552,24 +553,24 @@ export function ProposalEditorClient({ id, podeEditar, podeRevisar = false }: { 
       )}
 
       <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted">
-            <tr className="border-b">
-              <th scope="col" className="p-3 text-left">{t("Descrição")}</th>
-              <th scope="col" className="p-3 text-right">{t("Qtd")}</th>
-              <th scope="col" className="p-3 text-right">{t("Preço unit.")}</th>
-              <th scope="col" className="p-3 text-right">{t("Desconto")}</th>
-              <th scope="col" className="p-3 text-right">{t("Subtotal")}</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
+        <Table className="w-full text-sm">
+          <TableHeader className="bg-muted">
+            <TableRow className="border-b">
+              <TableHead scope="col" className="p-3 text-left">{t("Descrição")}</TableHead>
+              <TableHead scope="col" className="p-3 text-right">{t("Qtd")}</TableHead>
+              <TableHead scope="col" className="p-3 text-right">{t("Preço unit.")}</TableHead>
+              <TableHead scope="col" className="p-3 text-right">{t("Desconto")}</TableHead>
+              <TableHead scope="col" className="p-3 text-right">{t("Subtotal")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y">
             {proposta.itens.map((it, idx) => {
               const subtotal = it.preco_unitario_cents === null
                 ? null
                 : Math.round(it.quantidade * it.preco_unitario_cents) - it.desconto_cents;
               return (
-                <tr key={it.id ?? idx}>
-                  <td className="p-3">
+                <TableRow key={it.id ?? idx}>
+                  <TableCell className="p-3">
                     <input
                       className="w-full border rounded-md px-2 py-1 text-sm disabled:bg-muted"
                       value={it.descricao}
@@ -577,8 +578,8 @@ export function ProposalEditorClient({ id, podeEditar, podeRevisar = false }: { 
                       onChange={(e) => atualizarItem(idx, { descricao: e.target.value })}
                       placeholder={t("Descrição")}
                     />
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell className="p-3">
                     <input
                       type="number"
                       className="w-full border rounded-md px-2 py-1 text-sm text-right disabled:bg-muted"
@@ -588,8 +589,8 @@ export function ProposalEditorClient({ id, podeEditar, podeRevisar = false }: { 
                       min="0"
                       step="1"
                     />
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell className="p-3">
                     <input
                       type="number"
                       className="w-full border rounded-md px-2 py-1 text-sm text-right disabled:bg-muted"
@@ -605,8 +606,8 @@ export function ProposalEditorClient({ id, podeEditar, podeRevisar = false }: { 
                       min="0"
                       step="0.01"
                     />
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell className="p-3">
                     <input
                       type="number"
                       className="w-full border rounded-md px-2 py-1 text-sm text-right disabled:bg-muted"
@@ -618,15 +619,15 @@ export function ProposalEditorClient({ id, podeEditar, podeRevisar = false }: { 
                       min="0"
                       step="0.01"
                     />
-                  </td>
-                  <td className="p-3 text-right font-medium tabular-nums">
+                  </TableCell>
+                  <TableCell className="p-3 text-right font-medium tabular-nums">
                     {subtotal === null ? t("A definir") : formatCents(Math.max(0, subtotal), proposta.moeda)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editavel && (

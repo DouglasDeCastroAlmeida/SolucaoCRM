@@ -36,20 +36,26 @@
      greige quente) e listas e cartões ficam no surface branco. Nenhum hex de
      superfície mudou: a régua de contraste da marca mede estes pares. Nenhum
      verde ou logo do WhatsApp: só tons da paleta do produto. */
-  --color-bg: #faf9f6;
+  --color-bg: #f7f8f9;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f5f3ee;
-  --color-overlay: rgba(28, 26, 22, 0.42);
+  --color-surface-elevated: #f0f2f4;
+  --color-overlay: rgba(14, 23, 29, 0.42);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
+  /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
+     Para desligar o padrão: --chat-padrao: none. */
+  --color-chat-bg: #ebe5d8;
+  --chat-padrao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='%23d8cfbd' fill-opacity='.55'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='46' cy='46' r='2'/%3E%3Crect x='44' y='8' width='5' height='5' rx='1.5' transform='rotate(45 46.5 10.5)'/%3E%3Crect x='8' y='44' width='5' height='5' rx='1.5' transform='rotate(45 10.5 46.5)'/%3E%3C/g%3E%3C/svg%3E");
 
-  /* Text (light) — 009: subtle escurecido (antes #7d786c, 4,40:1 no branco e
-     3,69:1 no fundo novo) para metadados de 12-13px atingirem 4,5:1. */
-  --color-text: #1c1a16;
-  --color-text-muted: #5d594f;
-  --color-text-subtle: #6b675c;
+  /* Text (light) — 009: subtle escurecido (antes 4,40:1 no branco e
+     3,69:1 no fundo anterior) para metadados de 12-13px atingirem 4,5:1. */
+  --color-text: #17222b;
+  --color-text-muted: #4f6069;
+  --color-text-subtle: #5f707a;
 
   /* Borders (light) */
-  --color-border: #e7e3da;
-  --color-border-strong: #d2cdbf;
+  --color-border: #e3e7ea;
+  --color-border-strong: #cfd5d9;
 
   /* Accent — Sage (11 stops) */
   --color-accent-50: #f3f6f1;
@@ -69,17 +75,17 @@
   --color-accent-hover: var(--color-accent-700);
 
   /* Neutrals — greige (11 stops, light) */
-  --color-neutral-50: #faf9f6;
-  --color-neutral-100: #f3f1ec;
-  --color-neutral-200: #e7e3da;
-  --color-neutral-300: #d2cdbf;
-  --color-neutral-400: #a9a395;
-  --color-neutral-500: #7d786c;
-  --color-neutral-600: #5d594f;
-  --color-neutral-700: #46433b;
-  --color-neutral-800: #2e2c26;
-  --color-neutral-900: #1c1a16;
-  --color-neutral-950: #0e0d0a;
+  --color-neutral-50: #f7f8f9;
+  --color-neutral-100: #eef0f2;
+  --color-neutral-200: #e3e7ea;
+  --color-neutral-300: #cfd5d9;
+  --color-neutral-400: #9aa7af;
+  --color-neutral-500: #6c7c86;
+  --color-neutral-600: #4f6069;
+  --color-neutral-700: #3a4852;
+  --color-neutral-800: #27333b;
+  --color-neutral-900: #17222b;
+  --color-neutral-950: #0a1015;
 
   /* States (light) */
   --color-success: #5a8a5f;
@@ -91,6 +97,7 @@
   --color-error: #a94a3c;
   --color-error-bg: rgba(169, 74, 60, 0.12);
   --color-error-fg: #8a3a2e;
+  --color-on-error: #ffffff;
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
@@ -269,30 +276,36 @@
    (lib/branding/css.ts), que só ganha consumidor com a tela de marca.
    ───────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --color-bg: #faf9f6;
+  --color-bg: #f7f8f9;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f5f3ee;
-  --color-overlay: rgba(28, 26, 22, 0.42);
-  --color-text: #1c1a16;
-  --color-text-muted: #5d594f;
-  --color-text-subtle: #6b675c;
-  --color-border: #e7e3da;
-  --color-border-strong: #d2cdbf;
+  --color-surface-elevated: #f0f2f4;
+  --color-overlay: rgba(14, 23, 29, 0.42);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
+  /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
+     Para desligar o padrão: --chat-padrao: none. */
+  --color-chat-bg: #ebe5d8;
+  --chat-padrao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='%23d8cfbd' fill-opacity='.55'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='46' cy='46' r='2'/%3E%3Crect x='44' y='8' width='5' height='5' rx='1.5' transform='rotate(45 46.5 10.5)'/%3E%3Crect x='8' y='44' width='5' height='5' rx='1.5' transform='rotate(45 10.5 46.5)'/%3E%3C/g%3E%3C/svg%3E");
+  --color-text: #17222b;
+  --color-text-muted: #4f6069;
+  --color-text-subtle: #5f707a;
+  --color-border: #e3e7ea;
+  --color-border-strong: #cfd5d9;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #ffffff;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
-  --color-neutral-50: #faf9f6;
-  --color-neutral-100: #f3f1ec;
-  --color-neutral-200: #e7e3da;
-  --color-neutral-300: #d2cdbf;
-  --color-neutral-400: #a9a395;
-  --color-neutral-500: #7d786c;
-  --color-neutral-600: #5d594f;
-  --color-neutral-700: #46433b;
-  --color-neutral-800: #2e2c26;
-  --color-neutral-900: #1c1a16;
-  --color-neutral-950: #0e0d0a;
+  --color-neutral-50: #f7f8f9;
+  --color-neutral-100: #eef0f2;
+  --color-neutral-200: #e3e7ea;
+  --color-neutral-300: #cfd5d9;
+  --color-neutral-400: #9aa7af;
+  --color-neutral-500: #6c7c86;
+  --color-neutral-600: #4f6069;
+  --color-neutral-700: #3a4852;
+  --color-neutral-800: #27333b;
+  --color-neutral-900: #17222b;
+  --color-neutral-950: #0a1015;
   --color-success: #5a8a5f;
   --color-success-bg: rgba(90, 138, 95, 0.12);
   --color-success-fg: #41673f;
@@ -302,6 +315,7 @@
   --color-error: #a94a3c;
   --color-error-bg: rgba(169, 74, 60, 0.12);
   --color-error-fg: #8a3a2e;
+  --color-on-error: #ffffff;
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
@@ -347,20 +361,26 @@
 
 [data-theme="dark"] {
   /* Surfaces (dark — drawn) */
-  --color-bg: #161510;
-  --color-surface: #1d1c17;
-  --color-surface-elevated: #272620;
+  --color-bg: #0e171d;
+  --color-surface: #1a252c;
+  --color-surface-elevated: #232f37;
   --color-overlay: rgba(0, 0, 0, 0.55);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
+  /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
+     Para desligar o padrão: --chat-padrao: none. */
+  --color-chat-bg: #101b21;
+  --chat-padrao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='%231d2c35' fill-opacity='.7'%3E%3Crect x='8' y='8' width='4' height='4' rx='1'/%3E%3Crect x='44' y='44' width='4' height='4' rx='1'/%3E%3Ccircle cx='46' cy='10' r='1.6'/%3E%3Ccircle cx='10' cy='46' r='1.6'/%3E%3C/g%3E%3C/svg%3E");
 
-  /* Text (dark) — 009: subtle clareado (antes #605e54, 2,3:1) para 4,5:1 sobre
+  /* Text (dark) — 009: subtle clareado (antes 2,3:1) para 4,5:1 sobre
      bg, surface e elevated; segue abaixo do muted na hierarquia. */
-  --color-text: #f5f4ef;
-  --color-text-muted: #9a978b;
-  --color-text-subtle: #8f8c80;
+  --color-text: #e7ecef;
+  --color-text-muted: #a2b2bb;
+  --color-text-subtle: #8fa0aa;
 
   /* Borders (dark) */
-  --color-border: #33312a;
-  --color-border-strong: #444239;
+  --color-border: #2a373f;
+  --color-border-strong: #394850;
 
   /* Accent stays same hex stops; default shifts up for dark contrast */
   --color-accent-50: #f3f6f1;
@@ -375,22 +395,22 @@
   --color-accent-900: #2f3c2b;
   --color-accent-950: #171f15;
   --color-accent: var(--color-accent-400);
-  --color-accent-fg: #161510;
+  --color-accent-fg: #0e171d;
   --color-accent-soft: rgba(130, 160, 119, 0.16);
   --color-accent-hover: var(--color-accent-300);
 
   /* Neutrals — greige (11 stops, dark) */
-  --color-neutral-50: #f5f4ef;
-  --color-neutral-100: #e6e4dc;
-  --color-neutral-200: #bbb8ac;
-  --color-neutral-300: #8e8b7f;
-  --color-neutral-400: #605e54;
-  --color-neutral-500: #444239;
-  --color-neutral-600: #33312a;
-  --color-neutral-700: #272620;
-  --color-neutral-800: #1d1c17;
-  --color-neutral-900: #161510;
-  --color-neutral-950: #0c0b08;
+  --color-neutral-50: #e7ecef;
+  --color-neutral-100: #d3dce1;
+  --color-neutral-200: #a2b2bb;
+  --color-neutral-300: #8fa0aa;
+  --color-neutral-400: #5b6b75;
+  --color-neutral-500: #394850;
+  --color-neutral-600: #2a373f;
+  --color-neutral-700: #232f37;
+  --color-neutral-800: #1a252c;
+  --color-neutral-900: #0e171d;
+  --color-neutral-950: #080d11;
 
   /* States (dark) */
   --color-success: #82a077;
@@ -401,6 +421,7 @@
   --color-warning-fg: #e0ad77;
   --color-error: #c87263;
   --color-error-bg: rgba(200, 114, 99, 0.18);
+  --color-on-error: #0e171d;
   --color-error-fg: #d99182;
   --color-info: #7da9bf;
   --color-info-bg: rgba(125, 169, 191, 0.18);
@@ -429,12 +450,12 @@
   --accent-foreground: var(--color-accent-fg);
   --destructive: var(--color-error);
   /* 009: branco sobre o coral do tema escuro dava 3,48:1 (o 3 do sino); escuro do fundo dá mais de 4,5:1. */
-  --destructive-foreground: #161510;
+  --destructive-foreground: #0e171d;
   --border: var(--color-border);
   --input: var(--color-border);
   --ring: var(--color-accent-400);
   /* ---- Agenda · cor de pessoa (tema escuro) ----------------------------
-   * Mais claras e menos saturadas que as do claro: sobre `#161510` a versão
+   * Mais claras e menos saturadas que as do claro: sobre `#0e171d` a versão
    * escura de cada matiz sumiria. Mesma ordem, mesmos nomes.
    */
   --agenda-pessoa-1: #f89080;
@@ -478,7 +499,9 @@
   --color-bg: var(--color-bg);
   --color-surface: var(--color-surface);
   --color-surface-elevated: var(--color-surface-elevated);
+  --color-chat-bg: var(--color-chat-bg);
   --color-overlay: var(--color-overlay);
+  --color-qr-bg: var(--color-qr-bg);
 
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
@@ -524,6 +547,7 @@
   --color-error: var(--color-error);
   --color-error-bg: var(--color-error-bg);
   --color-error-fg: var(--color-error-fg);
+  --color-on-error: var(--color-on-error);
   --color-info: var(--color-info);
   --color-info-bg: var(--color-info-bg);
   --color-info-fg: var(--color-info-fg);
@@ -561,7 +585,7 @@
   --text-base: 0.9375rem;
   --text-base--line-height: 1.5;
   --font-sans:
-    var(--font-atkinson), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Espaçamento. Os valores são px LITERAIS (`--space-6` = 24px), não rem — e
@@ -798,7 +822,6 @@
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family:
-      var(--font-atkinson),
       ui-sans-serif,
       system-ui,
       -apple-system,
@@ -1526,4 +1549,14 @@
     animation-duration: 1s !important;
     animation-iteration-count: infinite !important;
   }
+}
+
+/* Fundo da conversa do Inbox (#89). Padrão próprio, quase invisível; [data-sem-padrao] o desliga. */
+.fundo-da-conversa {
+  background-color: var(--color-chat-bg);
+  background-image: var(--chat-padrao);
+  background-size: 72px 72px;
+}
+.fundo-da-conversa[data-sem-padrao] {
+  background-image: none;
 }

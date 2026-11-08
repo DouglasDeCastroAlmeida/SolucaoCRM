@@ -428,7 +428,7 @@ function BlocoDeAgendamento({
         agendamento.clientePediuRemarcarEm ? `, ${t("Pediu para remarcar")}` : ""
       }`}
       className={cn(
-        "absolute flex flex-col items-start overflow-hidden rounded-sm px-1.5 py-0.5 text-left",
+        "absolute flex flex-col items-start overflow-hidden rounded-md px-1.5 py-0.5 text-left",
         "border border-border/60 transition-colors duration-fast ease-out",
         doGoogle ? "cursor-default" : "cursor-pointer hover:border-border-strong",
         // `grab` só quando remarcar é possível: o cursor é a única pista de que
@@ -1080,7 +1080,7 @@ export function GradeDaAgenda({
       data-testid="grade-da-agenda"
       data-visao={visao}
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-surface",
+        "flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-surface",
         className,
       )}
     >

@@ -22,6 +22,17 @@ describe("LocationCard", () => {
     expect(screen.getByTestId("pino-detalhe").textContent).toBe("Praça da Matriz");
   });
 
+  it("formato do mensageiro: bloco de mapa em cima, texto embaixo, e o cartao inteiro abre o mapa", () => {
+    render(<LocationCard localizacao={{ latitude: -23.55, longitude: -46.63 }} />);
+    const link = screen.getByRole("link");
+    expect(link.getAttribute("href")).toContain("-23.55");
+    const mapa = screen.getByTestId("pino-mapa");
+    const detalhe = screen.getByTestId("pino-detalhe");
+    expect(link.contains(mapa)).toBe(true);
+    // O mapa vem antes do texto no documento: fica em cima.
+    expect(mapa.compareDocumentPosition(detalhe) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("controle: só coordenadas, o texto de sempre", () => {
     render(<LocationCard localizacao={{ latitude: -23.55, longitude: -46.63 }} />);
     expect(screen.getByTestId("pino-detalhe").textContent).toBe("Localização compartilhada");

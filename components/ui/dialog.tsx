@@ -26,7 +26,7 @@ const DialogOverlay = React.forwardRef<
       // do plugin `tailwindcss-animate`, que nunca foi instalado neste repo, e
       // classe inexistente no Tailwind não gera CSS nem erro. A régua está em
       // `app/globals.css`.
-      "ds-cortina fixed inset-0 z-50 bg-black/80",
+      "ds-cortina fixed inset-0 z-50 bg-overlay",
       className,
     )}
     {...props}
@@ -60,7 +60,7 @@ const DialogContent = React.forwardRef<
           // `ds-modal` animam a mesma propriedade `translate` e terminam no
           // mesmo `-50% -50%`, então o modal nunca sai do centro — o porquê
           // inteiro está no bloco do modal em `app/globals.css`.
-          "ds-modal fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-6 shadow-lg sm:rounded-lg",
+          "ds-modal fixed top-[50%] left-[50%] z-50 grid max-h-[calc(100dvh-2rem)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-6 shadow-lg sm:rounded-2xl",
           className,
         )}
         {...props}
@@ -73,7 +73,7 @@ const DialogContent = React.forwardRef<
           `docs/design-system/screen-flow/07-responsive-strategy.md`, sem
           redesenhar os ~27 diálogos. `lg:m-0 lg:p-0` devolve o desktop idêntico.
         */}
-        <DialogPrimitive.Close className="absolute top-4 right-4 -m-3.5 rounded-sm p-3.5 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground lg:m-0 lg:p-0">
+        <DialogPrimitive.Close className="absolute top-4 right-4 -m-3.5 rounded-full p-3.5 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground lg:m-0 lg:p-0">
           <X className="h-4 w-4" />
           <span className="sr-only">{t("Fechar")}</span>
         </DialogPrimitive.Close>

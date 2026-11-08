@@ -263,8 +263,8 @@ function GraficoDiario({
                   contentStyle={{
                     borderRadius: "8px",
                     fontSize: "12px",
-                    border: "1px solid hsl(var(--border))",
-                    background: "hsl(var(--popover))",
+                    border: "1px solid var(--border)",
+                    background: "var(--popover)",
                   }}
                 />
                 <Line type="monotone" dataKey="value" stroke={cor} strokeWidth={2} dot={false} />
@@ -482,7 +482,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
               "Quantas vezes o agente puxou uma habilidade especializada para dar conta da conversa.",
             )}
             dados={activity.series.skill_activations}
-            cor="hsl(262 83% 58%)"
+            cor="var(--color-text-muted)"
             vazio={
               <Vazio
                 texto={t(
@@ -498,7 +498,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
               "Quantas vezes o sistema leu o que o cliente queria e escolheu qual atendimento devia responder.",
             )}
             dados={activity.series.router_decisions}
-            cor="hsl(199 89% 48%)"
+            cor="var(--color-info)"
             vazio={
               <Vazio
                 texto={t(
@@ -514,7 +514,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
               "Quantas vezes o agente foi procurar a resposta no que você escreveu, em vez de improvisar.",
             )}
             dados={activity.series.knowledge_searches}
-            cor="hsl(142 76% 36%)"
+            cor="var(--color-success)"
             vazio={
               <Vazio
                 texto={t(
@@ -534,7 +534,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
             "Quantas vezes alguém da equipe perguntou ao acervo pela caixa ao lado da conversa. Não entra nos números do agente.",
           )}
           dados={activity.series.knowledge_searches_equipe}
-          cor="hsl(32 95% 44%)"
+          cor="var(--color-warning)"
           vazio={
             <Vazio
               texto={t("Ninguém da equipe consultou o acervo pela conversa neste período.")}

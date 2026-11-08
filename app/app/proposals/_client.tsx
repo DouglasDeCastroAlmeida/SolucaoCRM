@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -107,44 +108,44 @@ export function ProposalsClient({ podeCriar }: { podeCriar: boolean }) {
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left">
-                <th scope="col" className="p-3">{t("Número")}</th>
-                <th scope="col" className="p-3">{t("Título")}</th>
-                <th scope="col" className="p-3">{t("Status")}</th>
-                <th scope="col" className="p-3 text-right">{t("Valor")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+          <Table className="w-full text-sm">
+            <TableHeader>
+              <TableRow className="border-b text-left">
+                <TableHead scope="col" className="p-3">{t("Número")}</TableHead>
+                <TableHead scope="col" className="p-3">{t("Título")}</TableHead>
+                <TableHead scope="col" className="p-3">{t("Status")}</TableHead>
+                <TableHead scope="col" className="p-3 text-right">{t("Valor")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y">
               {propostas.map((p) => (
-                <tr key={p.id}>
-                  <td className="whitespace-nowrap p-3">
+                <TableRow key={p.id}>
+                  <TableCell className="whitespace-nowrap p-3">
                     {p.numero !== null && p.ano !== null
                       ? `${String(p.numero).padStart(4, "0")}/${p.ano} v${p.versao}`
                       : t("Rascunho")}
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell className="p-3">
                     <Link href={`/app/proposals/${p.id}`} className="underline underline-offset-4">
                       {p.titulo}
                     </Link>
-                  </td>
-                  <td className="p-3">
+                  </TableCell>
+                  <TableCell className="p-3">
                     {aguardaRevisao(p) ? (
-                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                      <span className="rounded-md bg-warning-bg px-2 py-0.5 text-xs font-medium text-warning-fg">
                         {t("Aguardando revisão")}
                       </span>
                     ) : (
                       statusLabels[p.status]
                     )}
-                  </td>
-                  <td className="whitespace-nowrap p-3 text-right tabular-nums">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap p-3 text-right tabular-nums">
                     {formatCents(p.total_cents, p.moeda)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

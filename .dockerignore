@@ -8,6 +8,7 @@ node_modules
 test-results
 tests
 playwright.config.ts
+playwright.visual-hml.config.ts
 *.png
 *.log
 .lina

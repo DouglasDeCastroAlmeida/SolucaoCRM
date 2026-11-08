@@ -149,7 +149,7 @@ function Trecho({ texto }: { texto: string }) {
           <span
             key={i}
             data-testid="parametro-em-falta"
-            className="rounded-md bg-primary/10 px-1 py-0.5 font-mono text-[11px] font-medium text-primary ring-1 ring-primary/20"
+            className="rounded-md bg-primary/10 px-1 py-0.5 font-mono text-xs font-medium text-primary ring-1 ring-primary/20"
           >
             {parte}
           </span>
@@ -173,14 +173,14 @@ function Bloco({ bloco, prefixo }: { bloco: BlocoDaPrevia; prefixo: string }) {
               <img
                 src={bloco.midia.link}
                 alt={t("Prévia da mídia do cabeçalho")}
-                className="max-h-36 w-full rounded-md border border-amber-300/60 object-cover dark:border-amber-800/60"
+                className="max-h-36 w-full rounded-md border border-warning/40 object-cover"
               />
             ) : bloco.midia.formato === "video" ? (
               <video
                 src={bloco.midia.link}
                 controls
                 preload="metadata"
-                className="max-h-36 w-full rounded-md border border-amber-300/60 dark:border-amber-800/60"
+                className="max-h-36 w-full rounded-md border border-warning/40"
               />
             ) : (
               <a
@@ -195,7 +195,7 @@ function Bloco({ bloco, prefixo }: { bloco: BlocoDaPrevia; prefixo: string }) {
           ) : (
             // Sem link não há o que desenhar. Dizer isso é melhor que um
             // retângulo de imagem quebrada — e o campo acima é onde ele entra.
-            <p className="text-xs text-amber-900/70 dark:text-amber-200/70">
+            <p className="text-xs text-warning-fg">
               {t("Cole o link da mídia para ver a prévia aqui.")}
             </p>
           )}
@@ -205,7 +205,7 @@ function Bloco({ bloco, prefixo }: { bloco: BlocoDaPrevia; prefixo: string }) {
       {bloco.cabecalho && (
         <p
           data-testid={`${prefixo}cabecalho`}
-          className="wrap-anywhere text-sm font-semibold text-amber-900 dark:text-amber-200"
+          className="wrap-anywhere text-sm font-semibold text-warning-fg"
         >
           <Trecho texto={bloco.cabecalho} />
         </p>
@@ -214,7 +214,7 @@ function Bloco({ bloco, prefixo }: { bloco: BlocoDaPrevia; prefixo: string }) {
       {bloco.corpo && (
         <p
           data-testid={`${prefixo}corpo`}
-          className="whitespace-pre-wrap wrap-anywhere text-sm leading-relaxed text-amber-900 dark:text-amber-200"
+          className="whitespace-pre-wrap wrap-anywhere text-sm leading-relaxed text-warning-fg"
         >
           <Trecho texto={bloco.corpo} />
         </p>
@@ -229,7 +229,7 @@ function Botoes({ bloco, prefixo }: { bloco: BlocoDaPrevia; prefixo: string }) {
   return (
     <div
       data-testid={`${prefixo}botoes`}
-      className="flex flex-col gap-1 border-t border-amber-300/60 pt-1.5 dark:border-amber-800/60"
+      className="flex flex-col gap-1 border-t border-warning/40 pt-1.5"
     >
       {bloco.botoes.map((botao, i) => (
         <div
@@ -268,9 +268,9 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
       data-testid="previa-modelo"
       role="group"
       aria-label={t("Prévia da mensagem")}
-      className="mt-2 flex flex-col gap-1.5 rounded-md border border-amber-300/70 bg-background/60 p-2.5 dark:border-amber-800/70 dark:bg-black/25"
+      className="mt-2 flex flex-col gap-1.5 rounded-md border border-warning/40 bg-background/60 p-2.5"
     >
-      <span className="text-[10px] font-medium uppercase tracking-wide text-amber-900/70 dark:text-amber-200/70">
+      <span className="text-xs font-medium uppercase tracking-wide text-warning-fg">
         {t("Prévia da mensagem")}
       </span>
 
@@ -279,7 +279,7 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
       {previa.rodape && (
         <p
           data-testid="previa-rodape"
-          className="text-[11px] text-amber-900/70 dark:text-amber-200/70"
+          className="text-xs text-warning-fg"
         >
           {previa.rodape}
         </p>
@@ -290,9 +290,9 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
       {previa.cards.map((card) => (
         <div
           key={card.indice}
-          className="flex flex-col gap-1.5 rounded-md border border-dashed border-amber-300/70 p-1.5 dark:border-amber-800/70"
+          className="flex flex-col gap-1.5 rounded-md border border-dashed border-warning/40 p-1.5"
         >
-          <span className="text-[10px] font-medium uppercase tracking-wide text-amber-900/70 dark:text-amber-200/70">
+          <span className="text-xs font-medium uppercase tracking-wide text-warning-fg">
             {t("Item do carrossel")} {card.indice + 1}
           </span>
           <Bloco bloco={card} prefixo={`previa-card-${card.indice}-`} />
@@ -440,13 +440,13 @@ export function JanelaFechadaAviso({
   if (!fonte) return <p role="status" className="border-t px-4 py-3 text-sm text-muted-foreground">{motivo}</p>;
 
   return (
-    <div className="border-t border-amber-300 bg-amber-50/60 px-4 py-3 dark:border-amber-800/60 dark:bg-amber-950/30">
-      <p className="mb-2 text-xs text-amber-900 dark:text-amber-200">{motivo}</p>
+    <div className="border-t border-warning/40 bg-warning-bg px-4 py-3">
+      <p className="mb-2 text-xs text-warning-fg">{motivo}</p>
 
       {aprovados.length === 0 ? (
         // Sem modelo aprovado não há saída por aqui, e dizer isso é melhor que
         // um seletor vazio que se lê como "ainda não carregou".
-        <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
+        <p className="text-xs text-warning-fg">
           {t("Nenhum modelo aprovado ainda. Crie um em")} <strong>{t("Conexões → Templates")}</strong>{" "}
           {t("e envie quando a plataforma aprovar.")}
         </p>
@@ -493,7 +493,7 @@ export function JanelaFechadaAviso({
         <div className="mt-2 flex flex-col gap-2">
           {slots.map((slot) => (
             <label key={slot.valueKey} className="flex flex-col gap-1">
-              <span className="text-[11px] text-amber-900/80 dark:text-amber-200/80">
+              <span className="text-xs text-warning-fg">
                 {rotuloDoSlot(slot, t)}
               </span>
               <input
@@ -510,7 +510,7 @@ export function JanelaFechadaAviso({
                 )}
               />
               {ehMidia(slot) && atual?.savedValues !== undefined && (
-                <span className="flex items-center gap-1.5 text-[11px] text-amber-900/80 dark:text-amber-200/80">
+                <span className="flex items-center gap-1.5 text-xs text-warning-fg">
                   <input
                     type="checkbox"
                     checked={salvar[slot.valueKey] ?? false}
@@ -531,7 +531,7 @@ export function JanelaFechadaAviso({
               parâmetro de novo, sempre — sem ele vem `132012 Format mismatch,
               expected IMAGE, received UNKNOWN`. */}
           {slots.some(ehMidia) && (
-            <p className="text-[11px] text-amber-900/70 dark:text-amber-200/70">
+            <p className="text-xs text-warning-fg">
               {t("A mídia do modelo entra por link público — a plataforma baixa o arquivo na hora do envio.")}
             </p>
           )}

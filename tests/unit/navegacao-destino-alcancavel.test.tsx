@@ -10,7 +10,7 @@
  * Nada é mockado da projeção: `sidebarGroups`, `hubSections` e `searchable`
  * entram de verdade.
  */
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/hooks/auth/AuthProvider", () => ({
@@ -27,7 +27,6 @@ vi.mock("@/hooks/auth/AuthProvider", () => ({
 }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (s: string) => s }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/app/inbox" }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({ toggleSidebar: vi.fn() }));
 vi.mock("@/components/connections/ConnectionHealthDot", () => ({
   ConnectionHealthDot: () => null,
 }));
@@ -35,6 +34,7 @@ vi.mock("@/components/shell/ContadorDaFila", () => ({ ContadorDaFila: () => null
 vi.mock("@/components/shell/ContadorDeCasos", () => ({ ContadorDeCasos: () => null }));
 vi.mock("@/components/shell/VersionFooter", () => ({ VersionFooter: () => null }));
 
+import { FaixaDeIcones } from "@/components/shell/FaixaDeIcones";
 import { SidebarContent } from "@/components/shell/Sidebar";
 import { hubSections, searchable, sidebarGroups } from "@/lib/navigation/registry";
 
@@ -50,14 +50,69 @@ const SO_NA_PALETA: Record<string, string> = {
 
 const ADMIN_DE_PLATAFORMA = [true, "admin", undefined, [], []] as const;
 
-function hrefsRenderizados(collapsed: boolean): Set<string> {
-  const { container, unmount } = render(<SidebarContent collapsed={collapsed} />);
+function hrefsRenderizados(): Set<string> {
+  const { container, unmount } = render(<SidebarContent />);
   const hrefs = new Set(
     [...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href") as string),
   );
   unmount();
   return hrefs;
 }
+
+/**
+ * Visual de mensageiro (#87): o menu do desktop é a FAIXA de ícones. O que não
+ * cabe nela está atrás do ícone «mais», que abre a gaveta com a navegação
+ * completa. Os hrefs contam faixa + gaveta aberta, exatamente como a pessoa os
+ * alcança com dois cliques.
+ */
+function hrefsDaFaixaComMais(): Set<string> {
+  const { unmount } = render(<FaixaDeIcones />);
+  fireEvent.click(screen.getByRole("button", { name: "Mais" }));
+  const hrefs = new Set(
+    [...document.querySelectorAll("a[href]")].map((a) => a.getAttribute("href") as string),
+  );
+  unmount();
+  return hrefs;
+}
+
+describe("faixa de ícones + «mais»: nenhuma rota do menu atual some (#87)", () => {
+  const todos = searchable(...ADMIN_DE_PLATAFORMA);
+
+  it("todo ícone e todo \"Ver tudo\" de sidebarGroups() é alcançável pela faixa ou pelo «mais»", () => {
+    const links = hrefsDaFaixaComMais();
+    const esperados = sidebarGroups(...ADMIN_DE_PLATAFORMA).flatMap(({ group, items }) => [
+      ...items.map((i) => i.href),
+      ...(group.hub ? [group.hub.href] : []),
+    ]);
+    expect(esperados.length).toBeGreaterThan(10);
+    expect(esperados.filter((h) => !links.has(h))).toEqual([]);
+  });
+
+  it("nenhum destino do catálogo fica sem porta (faixa, «mais», \"Ver tudo\" ou ⌘K registrado)", () => {
+    const links = hrefsDaFaixaComMais();
+    const porHub = new Set<string>();
+    for (const { group } of sidebarGroups(...ADMIN_DE_PLATAFORMA)) {
+      if (!group.hub || !links.has(group.hub.href)) continue;
+      for (const s of hubSections(group.id, ...ADMIN_DE_PLATAFORMA)) {
+        for (const d of s.items) porHub.add(d.href);
+      }
+    }
+    const semPorta = todos
+      .map((d) => d.href)
+      .filter((h) => !links.has(h) && !porHub.has(h) && !(h in SO_NA_PALETA));
+    expect(semPorta).toEqual([]);
+  });
+
+  it("a faixa leva os principais e o «mais» leva o resto: a faixa sozinha não é o inventário", () => {
+    const { container, unmount } = render(<FaixaDeIcones />);
+    const soFaixa = new Set(
+      [...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href") as string),
+    );
+    unmount();
+    expect(soFaixa.size).toBeLessThan(10);
+    expect(hrefsDaFaixaComMais().size).toBeGreaterThan(soFaixa.size + 10);
+  });
+});
 
 describe("todo destino do catálogo é alcançável pelo menu desenhado", () => {
   const todos = searchable(...ADMIN_DE_PLATAFORMA);
@@ -68,7 +123,7 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
 
   it("AC-006.3: todo destino só-na-paleta está de fato no ⌘K e não tem outra porta no menu", () => {
     const naPaleta = new Set(todos.map((d) => d.href));
-    const links = hrefsRenderizados(true);
+    const links = hrefsRenderizados();
     for (const [href, motivo] of Object.entries(SO_NA_PALETA)) {
       expect(motivo.trim().length).toBeGreaterThan(20);
       expect(naPaleta.has(href), `${href} saiu do ⌘K`).toBe(true);
@@ -76,10 +131,10 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
     }
   });
 
-  for (const recolhido of [true, false]) {
-    const quem = recolhido ? "menu recolhido" : "gaveta do celular";
+  {
+    const quem = "gaveta do celular";
     it(`AC-006.3: no ${quem}, nenhum destino fica sem porta (ícone, "Ver tudo" ou ⌘K)`, () => {
-      const links = hrefsRenderizados(recolhido);
+      const links = hrefsRenderizados();
       const porHub = new Set<string>();
       for (const { group } of sidebarGroups(...ADMIN_DE_PLATAFORMA)) {
         if (!group.hub || !links.has(group.hub.href)) continue;
@@ -101,7 +156,7 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
     });
 
     it(`AC-001.5: o ${quem} renderiza todo ícone e todo "Ver tudo" de sidebarGroups()`, () => {
-      const links = hrefsRenderizados(recolhido);
+      const links = hrefsRenderizados();
       const esperados = sidebarGroups(...ADMIN_DE_PLATAFORMA).flatMap(({ group, items }) => [
         ...items.map((i) => i.href),
         ...(group.hub ? [group.hub.href] : []),

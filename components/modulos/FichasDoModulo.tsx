@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,11 +144,11 @@ export function FichasDoModulo({
         {dados.fichas.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("Nada guardado aqui ainda.")}</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted-foreground">
+          <Table className="w-full text-sm">
+            <TableHeader>
+              <TableRow className="text-left text-muted-foreground">
                 {dados.campos.map((c) => (
-                  <th key={c.slug} className="pb-1 pr-4 font-medium">
+                  <TableHead key={c.slug} className="pb-1 pr-4 font-medium">
                     {/*
                       SEM `t()`: o nome do campo é do AUTOR do módulo, não do produto. Passá-lo pelo
                       dicionário procuraria uma chave que nunca existirá, e a frase montada em tempo
@@ -156,22 +157,22 @@ export function FichasDoModulo({
                       que a onda 1 ainda não tem.
                     */}
                     {rotuloDoCampo(c.slug)}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {dados.fichas.map((f) => (
-                <tr key={String(f.id)} className="border-t">
+                <TableRow key={String(f.id)} className="border-t">
                   {dados.campos.map((c) => (
-                    <td key={c.slug} className="py-1 pr-4">
+                    <TableCell key={c.slug} className="py-1 pr-4">
                       {valorDoCampo(f, c, idioma)}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>

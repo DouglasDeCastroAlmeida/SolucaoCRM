@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
-import { Phone, ArrowRight, MagnifyingGlass } from "@/lib/ui/icons";
+import { Phone, ArrowRight, Lupa } from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useReleaseConversation } from "@/hooks/inbox/useReleaseConversation";
@@ -86,6 +86,13 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Fechada",
   archived: "Arquivada",
 };
+
+/** "Raphael Souza" vira "RS"; sem letras (só número), cai em "#". */
+function iniciaisDe(nome: string): string {
+  const letras = nome.split(/\s+/).map((p) => Array.from(p).find((ch) => /\p{L}/u.test(ch)) ?? "").filter(Boolean);
+  if (!letras.length) return "#";
+  return (letras.length === 1 ? letras[0]! : letras[0]! + letras[letras.length - 1]!).toUpperCase();
+}
 
 export function ConversationHeader({
   conversation,
@@ -239,7 +246,7 @@ export function ConversationHeader({
     // fileira que rola na horizontal — a mesma régua de não esconder ação, sem
     // pagar em altura. `py-2` pelo mesmo motivo: cada pixel de altura ali é
     // tirado da conversa.
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-background px-3 py-2 md:gap-3 md:px-4 md:py-3">
+    <div data-testid="cabecalho-da-conversa" className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted px-3 py-2 md:gap-3 md:px-4 md:py-3">
       {/* FAIXA DA CARTEIRA (#2591, regra 2): "este cliente pertence à carteira de
           A". `w-full` a põe numa linha própria acima da identidade, sem disputar
           espaço com a barra de ações — a faixa só existe quando o dono é OUTRA
@@ -247,7 +254,17 @@ export function ConversationHeader({
       {c?.id && (
         <FaixaDaCarteira contactId={c.id} quemAtendeId={conversation.assigned_to_user_id} />
       )}
-      <div className="min-w-0">
+      {/* Avatar redondo à esquerda do nome, como no mensageiro (#89): grade de duas colunas, o
+          avatar ocupa a primeira e centra na altura do bloco; o resto fica na segunda. */}
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 [&>*:not([data-avatar])]:col-start-2">
+        <span
+          data-avatar
+          data-testid="avatar-da-conversa"
+          aria-hidden
+          className="col-start-1 row-span-2 flex h-10 w-10 items-center justify-center rounded-full bg-card text-sm font-semibold text-muted-foreground"
+        >
+          {iniciaisDe(displayName)}
+        </span>
         <div className="flex min-w-0 items-center gap-1.5">
           <ChannelLogo channel={conversation.channel_sessions} size={20} />
           <h2 className="min-w-0 truncate text-sm font-semibold" title={displayName}>{displayName}</h2>
@@ -335,7 +352,7 @@ export function ConversationHeader({
             title={t("Buscar nesta conversa")}
             aria-expanded={buscaAberta}
           >
-            <MagnifyingGlass size={16} aria-hidden />
+            <Lupa size={20} aria-hidden />
           </Button>
         )}
         {/* A chamada usa o telefone da ficha, mesmo quando o contato chegou por

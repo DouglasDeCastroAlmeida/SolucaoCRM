@@ -162,6 +162,7 @@ vi.mock("@/hooks/contacts/useUpdateContact", () => ({
 vi.mock("@/components/contacts/RoteirosDoContato", () => ({ RoteirosDoContato: () => null }));
 
 import { InboxLayout } from "@/components/inbox/InboxLayout";
+import { Voltar } from "@/lib/ui/icons";
 
 beforeAll(() => {
   // A faixa `xl` é onde a ficha existe como coluna (`lg`/`md` não têm ficha).
@@ -239,8 +240,7 @@ describe("Inbox — recolher o painel do contato (#3004)", () => {
     // A grade devolve a largura: a trilha da ficha vira o trilho estreito.
     await waitFor(() => expect(grade().className).toContain(trilhaDoTrilho));
     expect(grade().className).not.toContain(trilhaDaFicha);
-    // E a preferência vai para o servidor — o mesmo caminho do recolher da
-    // esquerda (`toggleSidebar`), com o estado ATUAL.
+    // E a preferência vai para o servidor, com o estado ATUAL.
     expect(togglePainelDoContato).toHaveBeenCalledWith(false);
   });
 
@@ -310,5 +310,26 @@ describe("Inbox — recolher o painel do contato (#3004)", () => {
     } finally {
       window.innerWidth = 1440;
     }
+  });
+});
+
+describe("Inbox no formato de mensageiro (#90)", () => {
+  it("a ficha abre com o título 'Dados do contato' e o controle de recolher no mesmo cabeçalho", async () => {
+    montar();
+    await screen.findByTestId("inbox-demandas");
+    const titulo = screen.getByRole("heading", { name: "Dados do contato" });
+    const cabecalho = titulo.closest("[data-testid='inbox-painel-cabecalho']");
+    expect(cabecalho).not.toBeNull();
+    expect(cabecalho).toContainElement(botaoRecolher());
+  });
+
+  it("celular: a seta de voltar é o glifo Voltar do mapa único e tem nome acessível", async () => {
+    montar();
+    await screen.findByTestId("inbox-demandas");
+    const voltar = screen.getByRole("button", { name: "Voltar para as conversas" });
+    const { container } = render(<Voltar />);
+    expect(voltar.querySelector("svg path")?.getAttribute("d")).toBe(
+      container.querySelector("path")?.getAttribute("d"),
+    );
   });
 });

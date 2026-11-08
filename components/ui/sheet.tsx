@@ -26,7 +26,7 @@ const SheetOverlay = React.forwardRef<
       // do plugin `tailwindcss-animate`, que NUNCA foi instalado neste repo, e
       // classe inexistente no Tailwind não gera CSS nem erro — a cortina
       // aparecia e desaparecia seca. A régua está em `app/globals.css`.
-      "ds-cortina fixed inset-0 z-50 bg-black/80",
+      "ds-cortina fixed inset-0 z-50 bg-overlay",
       className,
     )}
     {...props}
@@ -115,7 +115,7 @@ const SheetContent = React.forwardRef<
 
           `lg:m-0 lg:p-0` devolve o desktop idêntico ao que era.
         */}
-        <SheetPrimitive.Close className="absolute top-4 right-4 -m-3.5 rounded-sm p-3.5 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary lg:m-0 lg:p-0">
+        <SheetPrimitive.Close className="absolute top-4 right-4 -m-3.5 rounded-full p-3.5 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary lg:m-0 lg:p-0">
           <X className="h-4 w-4" />
           <span className="sr-only">{t("Fechar")}</span>
         </SheetPrimitive.Close>

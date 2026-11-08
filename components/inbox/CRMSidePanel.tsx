@@ -55,7 +55,7 @@ interface Props {
   /**
    * O clique do controle. Só existe na coluna do desktop: o painel do celular
    * abre dentro de um `Sheet`, que já tem o próprio gesto de fechar — por isso o
-   * controle é OPCIONAL, como o `showCollapseControl` do menu da esquerda, e o
+   * controle é OPCIONAL, e o
    * `Sheet` do Inbox não o passa.
    */
   onAlternarRecolhido?: () => void;
@@ -654,11 +654,11 @@ function CamposDoFunil({
 /**
  * O CONTROLE DE RECOLHER O PAINEL INTEIRO (issue #3004).
  *
- * Mesmo ícone e mesmo vocabulário do recolher do menu da esquerda
- * (`BotaoDeRecolher` em `components/shell/Sidebar.tsx`): `CaretDoubleLeft` para
- * recolher, `CaretDoubleRight` para expandir, o verbo "Recolher"/"Expandir" no
- * rótulo. O que muda é o ALVO na frase: aqui há dois recolhedores na mesma tela,
- * e um leitor de tela que ouvisse "Recolher" nos dois não saberia qual. O
+ * `CaretDoubleLeft` para recolher, `CaretDoubleRight` para expandir, o verbo
+ * "Recolher"/"Expandir" no rótulo. (O menu da esquerda tinha um recolhedor com o
+ * mesmo vocabulário até o visual de mensageiro removê-lo.) O ALVO na frase ("painel
+ * do contato") deixa claro o que se recolhe, e um leitor de tela não ouve só
+ * "Recolher". O
  * alvo explícito ("painel do contato") é o que os distingue — o vocabulário
  * continua o mesmo.
  *
@@ -680,7 +680,6 @@ function BotaoDeRecolherDoPainel({
     <button
       type="button"
       onClick={onAlternar}
-      // Vocabulário e ícone iguais aos do menu da esquerda (`BotaoDeRecolher`).
       className={cn(
         "flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground",
         recolhido && "justify-center",
@@ -941,11 +940,21 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
         primeira seção. Sem `onAlternarRecolhido` (o `Sheet` do celular) não
         desenha nada: quem já tem o gesto de fechar não precisa deste.
       */}
-      {onAlternarRecolhido && (
-        <div className="sticky top-0 z-10 -mx-4 -mt-4 flex shrink-0 justify-end border-b border-border bg-background px-4 py-1">
+      {/* #90: o cabeçalho "Dados do contato" (estilo dos mensageiros) leva o
+          título sempre; o controle de recolher só quando há como recolher. No
+          `Sheet` do celular sobra espaço à direita para o X do próprio painel. */}
+      <div
+        data-testid="inbox-painel-cabecalho"
+        className={cn(
+          "sticky top-0 z-10 -mx-4 -mt-4 flex shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 py-2",
+          !onAlternarRecolhido && "pr-12",
+        )}
+      >
+        <h2 className="min-w-0 truncate text-sm font-semibold text-text">{t("Dados do contato")}</h2>
+        {onAlternarRecolhido && (
           <BotaoDeRecolherDoPainel recolhido={false} onAlternar={onAlternarRecolhido} />
-        </div>
-      )}
+        )}
+      </div>
       <section>
         <h3 className="text-xs font-semibold text-text">
           {t("Contato")}

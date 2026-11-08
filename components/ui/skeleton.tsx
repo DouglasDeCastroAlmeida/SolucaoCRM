@@ -53,7 +53,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
   // Classe é implementação e muda; "isto é um esqueleto" é contrato e não muda.
   // Por isso o atributo — no mesmo padrão de `data-rodape-ocupado` e
   // `data-quadro-do-funil`, que o produto já usa para ser medido.
-  return <div data-esqueleto className={cn("ds-esqueleto rounded-md", className)} {...props} />;
+  return <div data-esqueleto className={cn("ds-esqueleto rounded-lg", className)} {...props} />;
 }
 
 export { Skeleton };

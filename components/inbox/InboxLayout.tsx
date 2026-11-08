@@ -34,7 +34,7 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { CaretLeft, ChatCircle, IdentificationCard, MagnifyingGlass, X } from "@/lib/ui/icons";
+import { ChatCircle, IdentificationCard, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -246,15 +246,14 @@ export function InboxLayout({
    * que redistribui a largura, e o painel é só quem desenha o controle.
    *
    * Nasce do cookie lido no servidor (`painelRecolhidoInicial`); o clique grava
-   * pelo server action `togglePainelDoContato`, o mesmo caminho do recolher da
-   * esquerda (`toggleSidebar`). O estado local dá o retorno IMEDIATO do clique —
+   * pelo server action `togglePainelDoContato`. O estado local dá o retorno IMEDIATO do clique —
    * sem ele o painel só reagiria depois da volta ao servidor.
    */
   const [painelRecolhido, setPainelRecolhido] = useState(painelRecolhidoInicial);
   const alternarPainelDoContato = useCallback(() => {
     const proximo = !painelRecolhido;
     setPainelRecolhido(proximo);
-    // O action recebe o estado ATUAL, como o `toggleSidebar` do menu da esquerda.
+    // O action recebe o estado ATUAL, não o próximo.
     startTransition(() => {
       void togglePainelDoContato(painelRecolhido);
     });
@@ -818,9 +817,10 @@ export function InboxLayout({
               variant="ghost"
               size="sm"
               className="h-9 gap-1 px-2"
+              aria-label={t("Voltar para as conversas")}
               onClick={() => handleSelect(null)}
             >
-              <CaretLeft size={16} />
+              <Voltar size={24} aria-hidden />
               {t("Conversas")}
             </Button>
             <div className="flex-1" />

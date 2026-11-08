@@ -1,5 +1,6 @@
 "use client";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -132,29 +133,29 @@ export function LinksRastreaveis({
         </p>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr>
+        <Table className="w-full text-sm">
+          <TableHeader>
+            <TableRow>
               {[t("Nome"), t("Cliques"), t("Contatos"), t("Negócios"), t("Estado"), t("Ação")].map(
                 (h) => (
-                  <th key={h} className="p-2 text-left">
+                  <TableHead key={h} className="p-2 text-left">
                     {t(h)}
-                  </th>
+                  </TableHead>
                 ),
               )}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {links.map((l) => {
               const m = metricas?.find((v) => v.link_id === l.id);
               return (
-                <tr key={l.id} className="border-t">
-                  <td className="p-2">{l.name}</td>
-                  <td>{metricas ? (m?.clicks ?? 0) : "—"}</td>
-                  <td>{metricas ? (m?.contacts ?? 0) : "—"}</td>
-                  <td>{metricas ? (m?.leads ?? 0) : "—"}</td>
-                  <td>{t(l.enabled ? "Ativo" : "Desativado")}</td>
-                  <td>
+                <TableRow key={l.id} className="border-t">
+                  <TableCell className="p-2">{l.name}</TableCell>
+                  <TableCell>{metricas ? (m?.clicks ?? 0) : "—"}</TableCell>
+                  <TableCell>{metricas ? (m?.contacts ?? 0) : "—"}</TableCell>
+                  <TableCell>{metricas ? (m?.leads ?? 0) : "—"}</TableCell>
+                  <TableCell>{t(l.enabled ? "Ativo" : "Desativado")}</TableCell>
+                  <TableCell>
                     <Button
                       variant="outline"
                       size="sm"
@@ -166,12 +167,12 @@ export function LinksRastreaveis({
                     >
                       {t("Editar")}
                     </Button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <p className="text-xs text-muted-foreground">
         {t(

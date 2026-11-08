@@ -31,17 +31,22 @@ export default async function LegalLayout({ children }: { children: React.ReactN
 
   return (
     <IdiomaProvider locale={idioma}>
-      <div className="min-h-screen bg-muted/40">
-        <header className="border-b bg-background">
-          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-6 py-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{marca.nome}</p>
-            <Link href="/login" className="text-sm underline underline-offset-2">
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
+            <p className="min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {marca.nome}
+            </p>
+            <Link
+              href="/login"
+              className="shrink-0 rounded-sm text-sm text-primary underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
               {traduzir("Voltar", idioma)}
             </Link>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-3xl px-6 py-10">
-          <article className="space-y-6 rounded-lg border bg-background p-8 text-sm leading-relaxed">
+        <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-6 sm:py-10">
+          <article className="space-y-6 rounded-xl border border-border bg-card p-5 text-sm leading-relaxed sm:p-8">
             {children}
           </article>
         </main>

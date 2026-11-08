@@ -24,7 +24,7 @@ const TabsList = React.forwardRef<
       // Aqui e não na tela do agente de propósito: TODA `TabsList` do app tem a
       // mesma fragilidade, e consertar só onde eu esbarrei deixaria as irmãs
       // quebradas com um álibi de "já foi tratado".
-      "inline-flex h-9 max-w-full items-center justify-center overflow-x-auto rounded-lg bg-muted p-1 text-muted-foreground",
+      "inline-flex h-11 max-w-full items-center justify-center overflow-x-auto border-b border-border bg-transparent p-0 text-text-muted",
       className,
     )}
     {...props}
@@ -56,7 +56,7 @@ const TabsTrigger = React.forwardRef<
       //
       // `lg:` é o mesmo corte que `components/ui/button.tsx` usa para separar
       // "quem aciona é dedo" de "quem aciona é cursor".
-      "inline-flex min-h-11 items-center justify-center rounded-md px-3 py-1 text-sm font-medium whitespace-nowrap ring-offset-background transition-[background-color,color,box-shadow] duration-fast focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm lg:min-h-0",
+      "inline-flex min-h-11 items-center justify-center rounded-t-lg border-b-2 border-transparent px-4 py-1 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color] duration-fast hover:text-text focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-500 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-accent data-[state=active]:text-accent lg:min-h-0 lg:py-2.5",
       className,
     )}
     {...props}

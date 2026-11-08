@@ -74,8 +74,8 @@ export function UsageCharts({ series }: UsageChartsProps) {
             >
               <defs>
                 <linearGradient id="colorMsg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-warning)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="var(--color-warning)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -99,14 +99,16 @@ export function UsageCharts({ series }: UsageChartsProps) {
                 labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
                 contentStyle={{
                   borderRadius: "8px",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text)",
                   fontSize: "12px",
-                  border: "1px solid hsl(var(--border))",
+                  border: "1px solid var(--color-border)",
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke="hsl(var(--accent))"
+                stroke="var(--color-warning)"
                 strokeWidth={2}
                 fill="url(#colorMsg)"
               />
@@ -127,8 +129,8 @@ export function UsageCharts({ series }: UsageChartsProps) {
             >
               <defs>
                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-2,142 76% 36%))" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="hsl(var(--chart-2,142 76% 36%))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -154,14 +156,16 @@ export function UsageCharts({ series }: UsageChartsProps) {
                 labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
                 contentStyle={{
                   borderRadius: "8px",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text)",
                   fontSize: "12px",
-                  border: "1px solid hsl(var(--border))",
+                  border: "1px solid var(--color-border)",
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="cents"
-                stroke="hsl(142 76% 36%)"
+                stroke="var(--color-success)"
                 strokeWidth={2}
                 fill="url(#colorCost)"
               />
@@ -183,8 +187,8 @@ export function UsageCharts({ series }: UsageChartsProps) {
               >
                 <defs>
                   <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--chart-3,262 83% 58%))" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="hsl(var(--chart-3,262 83% 58%))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-info)" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="var(--color-info)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -212,14 +216,16 @@ export function UsageCharts({ series }: UsageChartsProps) {
                   labelFormatter={(label) => formatDateTick(String(label), tagDoIdioma)}
                   contentStyle={{
                     borderRadius: "8px",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-text)",
                     fontSize: "12px",
-                    border: "1px solid hsl(var(--border))",
+                    border: "1px solid var(--color-border)",
                   }}
                 />
                 <Area
                   type="monotone"
                   dataKey="tokens"
-                  stroke="hsl(262 83% 58%)"
+                  stroke="var(--color-info)"
                   strokeWidth={2}
                   fill="url(#colorTokens)"
                 />
