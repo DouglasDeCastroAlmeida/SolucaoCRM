@@ -38,7 +38,7 @@ describe("mapa único de ícones: Material Symbols", () => {
   it("expõe os glifos abertos pelo mapa, desenhando um svg que herda a cor do texto", { timeout: 30_000 }, async () => {
     const mapa = (await import("@/lib/ui/icons")) as unknown as Record<string, Icone>;
     for (const nome of GLIFOS_ABERTOS) {
-      const Glifo = mapa[nome];
+      const Glifo = mapa[nome]!;
       expect(Glifo, nome).toBeTypeOf("function");
       const html = renderToStaticMarkup(createElement(Glifo, { size: 20, className: "x", "aria-hidden": true }));
       expect(html, nome).toContain("<svg");
@@ -52,7 +52,7 @@ describe("mapa único de ícones: Material Symbols", () => {
 
   it("aceita rótulo acessível e usa 1em quando não há tamanho (como o Phosphor)", { timeout: 30_000 }, async () => {
     const mapa = (await import("@/lib/ui/icons")) as unknown as Record<string, Icone>;
-    const html = renderToStaticMarkup(createElement(mapa.TickEntregue, { "aria-label": "Lida" }));
+    const html = renderToStaticMarkup(createElement(mapa.TickEntregue!, { "aria-label": "Lida" }));
     expect(html).toContain('aria-label="Lida"');
     expect(html).toContain('width="1em"');
   });
