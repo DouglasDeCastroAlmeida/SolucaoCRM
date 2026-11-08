@@ -26,7 +26,6 @@ function criarGlifo(nome: string, d: string) {
   function Glifo({ size = "1em", color = "currentColor", weight: _weight, ...resto }: PropsDoGlifoAberto) {
     return (
       <svg
-        xmlns="http://www.w3.org/2000/svg"
         viewBox="0 -960 960 960"
         width={size}
         height={size}
