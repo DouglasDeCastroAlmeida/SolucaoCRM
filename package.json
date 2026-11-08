@@ -93,7 +93,7 @@
     "mysql2": "3.24.5",
     "next": "^16.4.1",
     "next-themes": "^0.4.6",
-    "nodemailer": "10.1.2",
+    "nodemailer": "10.1.7",
     "pdfjs-dist": "^6.4.299",
     "pg": "^8.23.1",
     "qrcode": "^1.5.4",
@@ -104,7 +104,7 @@
     "recharts": "^3.10.1",
     "require-in-the-middle": "^8.0.1",
     "resend": "^6.33.0",
-    "sanitize-html": "2.17.7",
+    "sanitize-html": "2.18.1",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
     "web-push": "^3.6.7",
@@ -130,7 +130,7 @@
     "@types/sanitize-html": "2.16.2",
     "@types/web-push": "^3.6.4",
     "@types/ws": "^8.18.2",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
     "eslint": "^10.12.0",
     "eslint-config-next": "^16.2.10",
     "jsdom": "^30.1.2",
@@ -142,11 +142,11 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.4",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "packageManager": "pnpm@9.15.9",
   "pnpm": {
-    "//overrides": "Pisos de versão para dependência TRANSITIVA com advisory. Não é atalho: `pnpm update <pkg>` só casa o padrão contra o package.json (hono/js-yaml/nanoid não estão lá, e não se movem), e `pnpm update` sem alvo reescreve 29 ranges diretas e arrasta 139 pacotes. Override é a única ferramenta que move transitiva sem arrastar o mundo. Os seletores com `@<major>` são LOAD-BEARING: o lock tem duas árvores de brace-expansion (1.x e 5.x) e duas de path-to-regexp (6.x e 8.x); sem o escopo, o override rebaixa a árvore nova para a antiga — em silêncio, com `pnpm audit` ainda verde.",
+    "//overrides": "Pisos de versão para dependência TRANSITIVA com advisory. Não é atalho: `pnpm update <pkg>` só casa o padrão contra o package.json (hono/js-yaml/nanoid não estão lá, e não se movem), e `pnpm update` sem alvo reescreve 29 ranges diretas e arrasta 139 pacotes. Override é a única ferramenta que move transitiva sem arrastar o mundo. Os seletores com `@<major>` são LOAD-BEARING: o lock tem duas árvores de brace-expansion (1.x e 5.x) e duas de path-to-regexp (6.x e 8.x); sem o escopo, o override rebaixa a árvore nova para a antiga — em silêncio, com `pnpm audit` ainda verde. Rodada de 2026-11-07 (issue #104): quando o lock tem mais de uma árvore do mesmo pacote, o seletor leva o major (`undici@7`, `undici@8`, `body-parser@2`, `glob@13`, `minimatch@10`). `glob@13` e `minimatch@10` sobem de major (14 e 11) porque o advisory só tem correção ali; só quem os usa é build/lint (Sentry bundler-plugins e eslint). Registro por pacote em docs/alertas-de-seguranca-triados.md.",
     "overrides": {
       "postcss": "^8.5.30",
       "sharp": "^0.35.5",
@@ -155,13 +155,17 @@
       "brace-expansion@1": "^1.1.21",
       "brace-expansion@5": "^5.0.12",
       "path-to-regexp@6": "^6.3.0",
-      "fast-uri": "^3.1.8",
-      "ip-address@10": "^10.7.1",
-      "undici@8": "^8.10.2",
-      "qs": "^6.16.0",
+      "fast-uri": "^3.1.9",
+      "ip-address@10": "^10.7.4",
+      "undici@8": "^8.12.2",
+      "qs": "^6.16.1",
       "browserslist": "^4.28.8",
-      "seroval": "^1.6.3",
-      "source-map-js": "^1.2.2"
+      "seroval": "^1.6.11",
+      "source-map-js": "^1.2.2",
+      "undici@7": "^7.30.1",
+      "body-parser@2": "^2.4.0",
+      "glob@13": "^14.0.2",
+      "minimatch@10": "^11.0.1"
     },
     "patchedDependencies": {
       "@react-pdf/hyphenate": "patches/@react-pdf__hyphenate.patch"

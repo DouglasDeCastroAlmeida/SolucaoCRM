@@ -13,6 +13,44 @@ Complementa [`threat-model.md`](threat-model.md) (superfície de ataque do self-
 
 ---
 
+## Rodada de 2026-11-07 — 36 achados do `pnpm audit` (issue #104)
+
+Estado inicial medido em instalação limpa (`pnpm install --frozen-lockfile`): **4 low, 23 moderate, 9 high**.
+Estado final: `pnpm audit` responde **"No known vulnerabilities found"** (0/0/0). Não houve risco aceito: todos os
+achados foram corrigidos. Os 3 erros de `tsc` em `html-seguro.ts` eram só do ambiente local (o `node_modules`
+estava incompleto): na instalação limpa o `typecheck` passa sem erro.
+
+| Pacote           | Caminho                                | Gravidade      | Antes → depois   | Destino                                                                         |
+| ---------------- | -------------------------------------- | -------------- | ---------------- | ------------------------------------------------------------------------------- |
+| `sanitize-html`  | produção, direta                       | moderate, low  | 2.17.7 → 2.18.1  | atualização direta (versão fixa; override não alcança)                          |
+| `nodemailer`     | produção, direta                       | moderate       | 10.1.2 → 10.1.7  | atualização direta (10.1.7 já era a do `mailparser`: a árvore perdeu uma cópia) |
+| `body-parser`    | produção (SDK de MCP → express)        | high           | 2.3.0 → 2.4.0    | `overrides` `body-parser@2`                                                     |
+| `undici` 7       | produção (`@ai-sdk/anthropic`)         | high, moderate | 7.30.0 → 7.30.1  | `overrides` `undici@7`                                                          |
+| `qs`             | produção (SDK de MCP → express)        | moderate       | 6.16.0 → 6.17.1  | `overrides` (piso ^6.16.1)                                                      |
+| `ip-address`     | produção (`imapflow`, SDK de MCP)      | moderate       | 10.7.3 → 10.7.6  | `overrides` `ip-address@10`                                                     |
+| `fast-uri`       | produção (`@hookform/resolvers` → ajv) | moderate, low  | 3.1.8 → 3.1.9    | `overrides` (piso ^3.1.9)                                                       |
+| `seroval`        | devtools do react-query                | moderate       | 1.6.9 → 1.7.10   | `overrides` (piso ^1.6.11)                                                      |
+| `undici` 8       | desenvolvimento (`jsdom`/`vitest`)     | high, moderate | 8.11.2 → 8.12.4  | `overrides` `undici@8`                                                          |
+| `@vitest/mocker` | desenvolvimento                        | moderate       | 4.1.11 → 4.1.12  | atualização direta de `vitest` e `@vitest/coverage-v8` para ^4.1.12             |
+| `glob`           | build (Sentry bundler-plugins)         | moderate       | 13.0.6 → 14.0.4  | `overrides` `glob@13` (salto de major: a correção só existe no 14)              |
+| `minimatch`      | build e lint (Sentry, eslint)          | moderate       | 10.2.6 → 11.0.5  | `overrides` `minimatch@10` (salto de major: a correção só existe no 11)         |
+| `deepmerge`      | produção (via `sanitize-html`)         | low            | 4.3.1 → removido | some com o `sanitize-html` 2.18.1                                               |
+
+**Prova de que nada mudou:** `typecheck` e `lint` (0 erros); `next build` completo com o plugin do Sentry
+(exit 0, com `glob` 14 e `minimatch` 11); testes de e-mail, MCP e IA verdes.
+
+Falhas que existem igual na `main` pura (mesmos arquivos e mesmos testes, comparados lado a lado), portanto não
+são desta mudança:
+- projeto `produto`: `padrao-do-campo-na-api`, `manifest`, `agent-version-columns-drift` e
+  `rascunho-superado-nao-e-regravado`;
+- projeto `cercas`, rodado em série: 16 arquivos falharam na primeira passada; ao reexecutar, 12 (39 testes)
+  falham idênticos na `main` e 4 passam (as falhas eram de tempo limite da máquina).
+
+**Ressalva de método:** o `pnpm audit` 9.15.9 colapsa pacotes de mesmo nome; por isso as versões efetivas foram
+conferidas no `pnpm-lock.yaml` e não só pela auditoria.
+
+---
+
 ## Rodada de 2026-08-12 — 13 alertas (6 Dependabot + 7 CodeQL)
 
 Estado inicial medido: 6 alertas abertos do Dependabot e 7 do CodeQL. Doze foram
