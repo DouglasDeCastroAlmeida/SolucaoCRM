@@ -1,20 +1,26 @@
 "use client";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Clipe, FileText, ImageSquare, UserCircle } from "@/lib/ui/icons";
+import { Clipe, FileText, ImageSquare, Note, UserCircle } from "@/lib/ui/icons";
 
 interface Props {
   disabled?: boolean;
   onPick: (file: File) => void;
   onPickContact?: () => void;
+  /**
+   * "Nota interna" como opção do clipe (#118): o atalho que antes era a aba "Nota interna"
+   * acima do campo. Ausente = o menu não oferece (já está em nota: a volta é o botão "Responder").
+   */
+  onNotaInterna?: () => void;
 }
 
 /** Menu do clipe no composer (padrão de mensageiro): Fotos e vídeos / Documento / Contato. */
-export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
+export function AttachMenu({ disabled, onPick, onPickContact, onNotaInterna }: Props) {
   const t = useT();
+  const [aberto, setAberto] = useState(false);
   const mediaRef = useRef<HTMLInputElement | null>(null);
   const docRef = useRef<HTMLInputElement | null>(null);
 
@@ -26,13 +32,13 @@ export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
 
   return (
     <>
-      <Popover>
+      <Popover open={aberto} onOpenChange={setAberto}>
         <PopoverTrigger asChild>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-9 w-9 shrink-0"
+            className="size-10 shrink-0 rounded-full text-muted-foreground"
             aria-label={t("Anexar")}
             disabled={disabled}
           >
@@ -64,6 +70,19 @@ export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
             >
               <UserCircle size={18} weight="duotone" className="text-primary" aria-hidden />
               {t("Contato")}
+            </button>
+          )}
+          {onNotaInterna && (
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+              onClick={() => {
+                setAberto(false);
+                onNotaInterna();
+              }}
+            >
+              <Note size={18} weight="duotone" className="text-primary" aria-hidden />
+              {t("Nota interna")}
             </button>
           )}
         </PopoverContent>

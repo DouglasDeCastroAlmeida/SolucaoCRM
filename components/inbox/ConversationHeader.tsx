@@ -1,6 +1,7 @@
 "use client";
-import { useRef, useState, type RefObject } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
 import { MoreVertical, Search, UserRound } from "lucide-react";
+import { Voltar } from "@/lib/ui/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { JanelaSelo } from "@/components/inbox/JanelaSelo";
 import { ChannelLogo } from "@/components/inbox/ChannelLogo";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -68,6 +70,13 @@ interface Props {
   botaoBuscaRef?: RefObject<HTMLButtonElement | null>;
   /** Seleciona outra conversa no Inbox — a aba Número do Transferir abre a do outro número. */
   onAbrirConversa?: (id: string) => void;
+  /**
+   * Celular (#118): a seta de voltar à lista mora DENTRO do cabeçalho, à esquerda do avatar, como no
+   * WhatsApp. Só aparece abaixo do `md`; no computador a lista fica ao lado e não há para onde voltar.
+   */
+  aoVoltar?: () => void;
+  /** Celular (#118): a porta da ficha do contato, no lugar do ícone de contato (abaixo do `md`). */
+  acaoDaFicha?: ReactNode;
 }
 
 /**
@@ -109,6 +118,8 @@ export function ConversationHeader({
   onBuscar,
   buscaAberta,
   botaoBuscaRef,
+  aoVoltar,
+  acaoDaFicha,
 }: Props) {
   const t = useT();
   const { user, activeOrg } = useAuth();
@@ -264,6 +275,19 @@ export function ConversationHeader({
         data-testid="cabecalho-da-conversa"
         className="flex h-[60px] shrink-0 items-center gap-3 border-b border-border bg-card px-4"
       >
+        {aoVoltar && (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="-ml-2 size-10 shrink-0 rounded-full text-muted-foreground md:hidden"
+            aria-label={t("Voltar para as conversas")}
+            data-testid="voltar-para-as-conversas"
+            onClick={aoVoltar}
+          >
+            <Voltar size={24} aria-hidden />
+          </Button>
+        )}
         <span
           data-avatar
           data-testid="avatar-da-conversa"
@@ -324,8 +348,16 @@ export function ConversationHeader({
         </div>
 
         <div className="flex shrink-0 items-center">
+          {acaoDaFicha}
           {c?.id && (
-            <Button asChild size="icon" variant="ghost" className="size-10 rounded-full text-muted-foreground">
+            <Button
+              asChild
+              size="icon"
+              variant="ghost"
+              // No celular o ícone de contato abre a ficha por cima (`acaoDaFicha`), como no WhatsApp; a
+              // ficha traz o mesmo link "Ver contato" para a página completa.
+              className={cn("size-10 rounded-full text-muted-foreground", acaoDaFicha && "max-md:hidden")}
+            >
               <Link
                 href={`/app/contacts/${c.id}`}
                 aria-label={t("Ver contato")}

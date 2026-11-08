@@ -129,12 +129,13 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
       <Button
         type="button"
         size="icon"
-        className="h-9 w-9 shrink-0"
+        variant="ghost"
+        className="size-10 shrink-0 rounded-full text-muted-foreground"
         aria-label={t("Gravar áudio")}
         onClick={start}
         disabled={disabled}
       >
-        <Microfone size={20} aria-hidden />
+        <Microfone size={24} aria-hidden />
       </Button>
     );
   }
@@ -145,14 +146,14 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
         type="button"
         size="icon"
         variant="ghost"
-        className="h-9 w-9 shrink-0 text-destructive"
+        className="size-10 shrink-0 rounded-full text-destructive"
         aria-label={t("Cancelar gravação")}
         onClick={() => {
           discardRef.current = true;
           stopIfRecording();
         }}
       >
-        <Trash size={16} weight="regular" aria-hidden />
+        <Trash size={24} weight="regular" aria-hidden />
       </Button>
       <span className="flex items-center gap-1.5 text-sm text-destructive tabular-nums">
         <span className="h-2 w-2 animate-pulse rounded-full bg-destructive" aria-hidden />
@@ -161,11 +162,11 @@ export function AudioRecorder({ conversationId, disabled }: Props) {
       <Button
         type="button"
         size="icon"
-        className="h-9 w-9 shrink-0"
+        className="size-10 shrink-0 rounded-full"
         aria-label={t("Enviar áudio")}
         onClick={stopIfRecording}
       >
-        <PaperPlaneTilt size={16} weight="fill" aria-hidden />
+        <PaperPlaneTilt size={20} weight="fill" aria-hidden />
       </Button>
     </div>
   );

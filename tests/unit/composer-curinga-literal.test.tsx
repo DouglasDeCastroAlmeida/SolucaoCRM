@@ -36,6 +36,7 @@ vi.mock("@/hooks/inbox/useDraftReply", () => ({
   useDraftReply: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
+import { entrarEmNota } from "./_composer-nota";
 import { Composer } from "@/components/inbox/Composer";
 
 function renderComposer(props: Partial<ComponentProps<typeof Composer>> = {}) {
@@ -69,7 +70,7 @@ describe("Composer + curinga de nome literal (#2744)", () => {
 
   it("(b) o MESMO texto em nota interna passa: a nota vai para o time", () => {
     renderComposer({ contactName: null, contactDisplayName: null });
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
 
     const campo = screen.getByPlaceholderText(/nota interna/i);
     fireEvent.change(campo, { target: { value: "Cliente sem nome — {{nome}} ficou literal" } });

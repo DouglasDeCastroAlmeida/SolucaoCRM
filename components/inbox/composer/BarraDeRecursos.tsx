@@ -37,7 +37,7 @@ export function BarraDeRecursos({ recursos, onEscolher, disabled = false }: Prop
           data-recurso-tipo={ehRecursoDeAudio(recurso) ? "audio" : "texto"}
           onClick={() => onEscolher(recurso)}
           title={t("Prepara no compositor — você revisa e envia")}
-          className="rounded-full border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted disabled:opacity-50"
+          className="rounded-full bg-card px-3 py-1 text-xs font-medium shadow-sm transition-colors hover:bg-muted disabled:opacity-50"
         >
           {ehRecursoDeAudio(recurso) ? `🎧 ${recurso.title}` : recurso.title}
         </button>

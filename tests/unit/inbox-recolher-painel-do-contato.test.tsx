@@ -137,7 +137,13 @@ vi.mock("@/components/inbox/ConversationList", () => ({ ConversationList: () => 
 vi.mock("@/components/inbox/InboxFilters", () => ({ InboxFilters: () => null }));
 vi.mock("@/components/inbox/ChatThread", () => ({ ChatThread: () => null }));
 vi.mock("@/components/inbox/Composer", () => ({ Composer: () => null }));
-vi.mock("@/components/inbox/ConversationHeader", () => ({ ConversationHeader: () => null }));
+// O cabeçalho real tem teste próprio; aqui só o contrato com a tela: ela entrega a seta de voltar (#118).
+vi.mock("@/components/inbox/ConversationHeader", () => ({
+  ConversationHeader: ({ aoVoltar }: { aoVoltar?: () => void }) =>
+    aoVoltar ? (
+      <button type="button" aria-label="Voltar para as conversas" onClick={aoVoltar} />
+    ) : null,
+}));
 vi.mock("@/components/inbox/RetentionNotice", () => ({ RetentionNotice: () => null }));
 vi.mock("@/components/inbox/InboxKeyboardShortcuts", () => ({ InboxKeyboardShortcuts: () => null }));
 vi.mock("@/components/inbox/ShortcutsHelpDialog", () => ({ ShortcutsHelpDialog: () => null }));
@@ -162,7 +168,6 @@ vi.mock("@/hooks/contacts/useUpdateContact", () => ({
 vi.mock("@/components/contacts/RoteirosDoContato", () => ({ RoteirosDoContato: () => null }));
 
 import { InboxLayout } from "@/components/inbox/InboxLayout";
-import { Voltar } from "@/lib/ui/icons";
 
 beforeAll(() => {
   // A faixa `xl` é onde a ficha existe como coluna (`lg`/`md` não têm ficha).
@@ -323,13 +328,9 @@ describe("Inbox no formato de mensageiro (#90)", () => {
     expect(cabecalho).toContainElement(botaoRecolher());
   });
 
-  it("celular: a seta de voltar é o glifo Voltar do mapa único e tem nome acessível", async () => {
+  it("celular: a tela entrega ao cabeçalho a seta que volta para a lista (#118)", async () => {
     montar();
     await screen.findByTestId("inbox-demandas");
-    const voltar = screen.getByRole("button", { name: "Voltar para as conversas" });
-    const { container } = render(<Voltar />);
-    expect(voltar.querySelector("svg path")?.getAttribute("d")).toBe(
-      container.querySelector("path")?.getAttribute("d"),
-    );
+    expect(screen.getByRole("button", { name: "Voltar para as conversas" })).toBeInTheDocument();
   });
 });

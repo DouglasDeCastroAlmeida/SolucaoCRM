@@ -25,7 +25,7 @@ export function EmojiButton({ disabled, onPick }: Props) {
           type="button"
           size="icon"
           variant="ghost"
-          className="h-9 w-9 shrink-0"
+          className="size-10 shrink-0 rounded-full text-muted-foreground"
           aria-label={t("Emoji")}
           disabled={disabled}
         >
