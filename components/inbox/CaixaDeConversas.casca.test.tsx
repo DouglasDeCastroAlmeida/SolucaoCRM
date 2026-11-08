@@ -57,7 +57,9 @@ describe("AC-003.4: caixa de conversas da 004 na casca nova", () => {
     render(<MessageBubble message={msg({ direction: "inbound" })} />);
     const recebido = screen.getByTestId("message-bubble");
     expect(recebido.className).toContain("bg-card");
-    expect(recebido.className).toContain("border-border");
+    // Visual de mensageiro (#89): o recebido se separa do fundo pela sombra, sem moldura.
+    expect(recebido.className).toContain("shadow-sm");
+    expect(recebido.className).not.toContain("border-border");
     expect(recebido.className).not.toMatch(COR_FIXA);
   });
 
