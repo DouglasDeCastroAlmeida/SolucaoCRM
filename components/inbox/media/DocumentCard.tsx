@@ -18,6 +18,14 @@ interface Props {
 }
 
 /** Card de documento: nome original (ou PDF/MP4/…), tamanho e download. */
+/** "PDF", "DOCX"…: da extensão do nome, do caminho ou do mime. */
+function tipoDoDocumento(mime: string | null, storagePath: string | null, fileName?: string | null): string {
+  const ext = (fileName?.includes(".") ? fileName : storagePath)?.split(".").pop()?.toLowerCase();
+  if (ext && ext !== "bin" && /^[a-z0-9]{1,5}$/.test(ext)) return ext.toUpperCase();
+  const sub = mime?.split(";")[0]?.split("/")[1]?.toLowerCase();
+  return sub && !["octet-stream", "bin"].includes(sub) ? sub.toUpperCase().slice(0, 5) : "Arquivo";
+}
+
 export function DocumentCard({
   messageId,
   mime,
@@ -36,10 +44,10 @@ export function DocumentCard({
       rel="noreferrer"
       aria-label={`${t("Baixar")} ${label} (${formatBytes(sizeBytes)})`}
       className={cn(
-        "flex w-60 items-center gap-3 rounded-lg p-2 transition-colors",
+        "flex w-64 max-w-full items-center gap-3 rounded-md p-2.5 transition-colors",
         isOutbound
-          ? "bg-primary-foreground/10 hover:bg-primary-foreground/20"
-          : "bg-background/60 hover:bg-background",
+          ? "bg-primary-foreground/15 hover:bg-primary-foreground/25"
+          : "bg-foreground/5 hover:bg-foreground/10",
       )}
     >
       <span
@@ -54,7 +62,9 @@ export function DocumentCard({
         <span className="block truncate text-sm font-medium" title={label}>
           {label}
         </span>
-        <span className="block text-xs opacity-70">{formatBytes(sizeBytes)}</span>
+        <span data-testid="documento-detalhe" className="block text-xs opacity-80">
+          {tipoDoDocumento(mime, storagePath, fileName)} · {formatBytes(sizeBytes)}
+        </span>
       </span>
       <DownloadSimple size={18} className="shrink-0 opacity-70" aria-hidden />
     </a>
