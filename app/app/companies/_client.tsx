@@ -1,19 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Buildings, MagnifyingGlass, Plus } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { LinhaDeLista } from "@/components/ui/linha-de-lista";
 import {
   Dialog,
   DialogContent,
@@ -192,55 +183,39 @@ export function CompaniesListClient() {
         />
       </div>
 
-      <Card className="overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("Nome fantasia")}</TableHead>
-              <TableHead>{t("Razão social")}</TableHead>
-              <TableHead>CNPJ</TableHead>
-              <TableHead>{t("Cidade/UF")}</TableHead>
-              <TableHead>{t("Situação")}</TableHead>
-              <TableHead>{t("Atualizado")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground">
-                  {t("Carregando…")}
-                </TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                  <Buildings className="mx-auto mb-2 size-8 opacity-40" />
-                  {t("Nenhuma empresa ainda.")}
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <Link className="font-medium underline-offset-2 hover:underline" href={`/app/companies/${c.id}`}>
-                      {c.trade_name || c.legal_name || "—"}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{c.legal_name || "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">{c.cnpj || "—"}</TableCell>
-                  <TableCell>
-                    {[c.city, c.state].filter(Boolean).join("/") || "—"}
-                  </TableCell>
-                  <TableCell>{c.registration_status || c.enrichment_status}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {new Date(c.updated_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        {loading ? (
+          <p className="p-4 text-sm text-muted-foreground">{t("Carregando…")}</p>
+        ) : rows.length === 0 ? (
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            <Buildings className="mx-auto mb-2 size-8 opacity-40" />
+            {t("Nenhuma empresa ainda.")}
+          </div>
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {rows.map((c) => {
+              const nome = c.trade_name || c.legal_name || "—";
+              return (
+                <LinhaDeLista
+                  key={c.id}
+                  avatar={{ nome }}
+                  titulo={nome}
+                  href={`/app/companies/${c.id}`}
+                  direita={<span>{new Date(c.updated_at).toLocaleString()}</span>}
+                  previa={
+                    <>
+                      <span>{c.legal_name || "—"}</span>
+                      <span className="font-mono">{c.cnpj || "—"}</span>
+                      <span>{[c.city, c.state].filter(Boolean).join("/") || "—"}</span>
+                      <span>{c.registration_status || c.enrichment_status}</span>
+                    </>
+                  }
+                />
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
       <Dialog
         open={createOpen}
