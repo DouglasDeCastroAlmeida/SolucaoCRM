@@ -200,23 +200,38 @@ async function cercarContextoDaHomologacao(contexto: BrowserContext): Promise<vo
   });
 }
 
-/** Espera o conteúdo de verdade: rede ociosa e nenhum esqueleto/indicador de carregamento visível. */
-async function esperarOConteudo(page: Page): Promise<void> {
-  await page.waitForLoadState("networkidle", { timeout: 20_000 }).catch(() => undefined);
-  await page
-    .waitForFunction(
-      () =>
-        !Array.from(
-          document.querySelectorAll('[aria-busy="true"], .animate-pulse, [data-slot="skeleton"], [data-loading="true"]'),
-        ).some((el) => {
-          const r = (el as HTMLElement).getBoundingClientRect();
-          return r.width > 0 && r.height > 0;
-        }),
-      undefined,
-      { timeout: 20_000 },
-    )
-    .catch(() => undefined);
+/** Esqueletos de verdade na janela: dentro da área visível, com tamanho, visíveis e não transparentes. */
+function esqueletosNaJanela(): string[] {
+  const seletor = '[aria-busy="true"], .ds-esqueleto, .animate-pulse, [data-slot="skeleton"], [data-loading="true"]';
+  return Array.from(document.querySelectorAll(seletor))
+    .filter((el) => {
+      const r = (el as HTMLElement).getBoundingClientRect();
+      const estilo = getComputedStyle(el as HTMLElement);
+      return (
+        // Pontos de status que pulsam para sempre (ex.: o aviso na faixa de ícones) não são esqueleto.
+        (r.width >= 16 || r.height >= 16) &&
+        r.bottom > 0 &&
+        r.right > 0 &&
+        r.top < window.innerHeight &&
+        r.left < window.innerWidth &&
+        estilo.visibility !== 'hidden' &&
+        Number(estilo.opacity) > 0.05
+      );
+    })
+    .map((el) => el.tagName.toLowerCase() + '.' + String((el as HTMLElement).className).split(' ').slice(0, 3).join('.'));
+}
+
+/** Espera o conteúdo de verdade: rede ociosa e nenhum esqueleto visível na janela. Devolve o que sobrou. */
+async function esperarOConteudo(page: Page): Promise<string[]> {
+  await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => undefined);
+  const limite = Date.now() + 20_000;
+  let sobra = await page.evaluate(esqueletosNaJanela);
+  while (sobra.length > 0 && Date.now() < limite) {
+    await page.waitForTimeout(500);
+    sobra = await page.evaluate(esqueletosNaJanela);
+  }
   await page.waitForTimeout(800);
+  return page.evaluate(esqueletosNaJanela);
 }
 
 for (const etapa of ETAPAS_PEDIDAS) {
@@ -266,11 +281,13 @@ for (const etapa of ETAPAS_PEDIDAS) {
                 const resposta = await page.goto(tela.rota, { waitUntil: "domcontentloaded" });
                 const status = resposta?.status() ?? 0;
                 if (status === 0 || status >= 400) falhas.push(`${tela.rota} respondeu ${status}`);
-                await esperarOConteudo(page);
+                const esqueletos = await esperarOConteudo(page);
+                if (esqueletos.length > 0) falhas.push(`continuou em carregamento após 20 s (${esqueletos.length} esqueleto(s): ${esqueletos[0]})`);
                 const caminho = new URL(page.url()).pathname;
                 if (tela.acesso !== "publica" && /^\/login/.test(caminho)) {
                   falhas.push("voltou para o login (sessão não valeu)");
                 }
+                await page.waitForFunction((v) => document.documentElement.getAttribute("data-theme") === v, valor, { timeout: 5_000 }).catch(() => undefined);
                 if ((await page.locator("html").getAttribute("data-theme")) !== valor) {
                   falhas.push(`tema ${valor} não aplicado`);
                 }
