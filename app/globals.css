@@ -40,6 +40,8 @@
   --color-surface: #ffffff;
   --color-surface-elevated: #f0f2f4;
   --color-overlay: rgba(28, 26, 22, 0.42);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
   /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
      Para desligar o padrão: --chat-padrao: none. */
   --color-chat-bg: #ebe5d8;
@@ -278,6 +280,8 @@
   --color-surface: #ffffff;
   --color-surface-elevated: #f0f2f4;
   --color-overlay: rgba(28, 26, 22, 0.42);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
   /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
      Para desligar o padrão: --chat-padrao: none. */
   --color-chat-bg: #ebe5d8;
@@ -361,6 +365,8 @@
   --color-surface: #1a252c;
   --color-surface-elevated: #232f37;
   --color-overlay: rgba(0, 0, 0, 0.55);
+  /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
+  --color-qr-bg: #ffffff;
   /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
      Para desligar o padrão: --chat-padrao: none. */
   --color-chat-bg: #101b21;
@@ -495,6 +501,7 @@
   --color-surface-elevated: var(--color-surface-elevated);
   --color-chat-bg: var(--color-chat-bg);
   --color-overlay: var(--color-overlay);
+  --color-qr-bg: var(--color-qr-bg);
 
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
