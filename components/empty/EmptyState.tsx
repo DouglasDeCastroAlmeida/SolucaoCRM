@@ -55,8 +55,8 @@ export function EmptyState({
   const t = useT();
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon size={24} weight="duotone" />
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft text-accent">
+        <Icon size={32} weight="duotone" />
       </div>
       <h3 className="text-base font-semibold">{t(headline)}</h3>
       {subcopy ? (
