@@ -53,41 +53,46 @@ export function ConfiguracoesEmDuasColunas({ children }: { children: ReactNode }
           <h1 className="text-lg font-semibold tracking-tight">{t("Configurações")}</h1>
         </header>
         <nav aria-label={t("Seções de configurações")} className="pb-4">
-          {secoes.map(({ section, items }) => (
-            <div key={section}>
-              {section ? (
-                <h2 className="px-4 pt-3 pb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                  {section}
-                </h2>
-              ) : null}
-              <ul>
-                {items.map((item) => {
-                  const Icon = item.icon;
-                  const aqui = item.href === hrefAtual;
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={aqui ? "page" : undefined}
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-elevated focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:outline-hidden focus-visible:ring-inset",
-                          aqui ? "bg-surface-elevated font-medium text-foreground" : "text-foreground",
-                        )}
-                      >
-                        <Icon
-                          size={20}
-                          weight="regular"
-                          aria-hidden
-                          className="shrink-0 text-muted-foreground"
-                        />
-                        <span className="min-w-0 truncate">{t(item.label)}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+          {secoes.map((grupo) => {
+            const { section, items } = grupo;
+            return (
+              <div key={section}>
+                {section ? (
+                  <h2 className="px-4 pt-3 pb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+                    {t(grupo.section)}
+                  </h2>
+                ) : null}
+                <ul>
+                  {items.map((item) => {
+                    const Icon = item.icon;
+                    const aqui = item.href === hrefAtual;
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          aria-current={aqui ? "page" : undefined}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-surface-elevated focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:outline-hidden focus-visible:ring-inset",
+                            aqui
+                              ? "bg-surface-elevated font-medium text-foreground"
+                              : "text-foreground",
+                          )}
+                        >
+                          <Icon
+                            size={20}
+                            weight="regular"
+                            aria-hidden
+                            className="shrink-0 text-muted-foreground"
+                          />
+                          <span className="min-w-0 truncate">{t(item.label)}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </nav>
       </div>
 
