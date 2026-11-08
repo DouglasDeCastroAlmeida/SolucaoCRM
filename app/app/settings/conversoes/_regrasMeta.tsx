@@ -197,7 +197,7 @@ export function RegrasDeConversaoMeta({
                 <p
                   role="alert"
                   data-testid={`aviso-evento-fora-do-canal-${e.id}`}
-                  className="mt-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+                  className="mt-2 rounded-md border border-warning/40 bg-warning-bg p-3 text-sm"
                 >
                   {t(
                     "Este evento não sai pelo canal da conversa. Para esta etapa, escolha um destes",
