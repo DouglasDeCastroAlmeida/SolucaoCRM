@@ -32,8 +32,29 @@ describe("casca 009: marca e tokens", () => {
     const topo = lerArq("components/shell/TopBar.tsx");
     expect(topo).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(topo).not.toMatch(/\b(?:bg|text|border)-\[/);
-    expect(topo).toContain("bg-surface");
+    // Visual de mensageiro (#87): cabeçalho cinza-claro (o neutro "elevated" da
+    // paleta, medido >= 4,5:1 com texto abaixo), liso: sem blur nem sombra.
+    expect(topo).toContain("bg-surface-elevated");
     expect(topo).not.toMatch(/backdrop-blur|shadow-/);
+  });
+
+  it("#87: a busca do cabeçalho é uma pílula (cantos totalmente redondos, sem cor fixa)", () => {
+    const busca = lerArq("components/shell/SearchTrigger.tsx");
+    expect(busca).toContain("rounded-full");
+    expect(busca).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    expect(busca).not.toMatch(/(?:bg|text|border)-\[/);
+    // Continua abrindo a paleta de comandos e atendendo ao atalho.
+    expect(busca).toContain("CommandPalette");
+    expect(busca).toContain("mod+k");
+  });
+
+  it("#87: a barra de baixo do celular é lisa, com o item atual numa pílula, só no celular", () => {
+    const barra = lerArq("components/shell/BarraInferior.tsx");
+    expect(barra).not.toMatch(/backdrop-blur/);
+    expect(barra).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    expect(barra).toContain("bg-surface");
+    expect(barra).toContain("rounded-full bg-surface-elevated");
+    expect(barra).toContain("md:hidden");
   });
 
   it("AC-003.1: os cantos seguem a escala nova e os dois blocos de tema continuam espelhados", () => {
