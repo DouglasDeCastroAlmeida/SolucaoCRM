@@ -36,7 +36,7 @@ estava incompleto): na instalação limpa o `typecheck` passa sem erro.
 | `minimatch`      | build e lint (Sentry, eslint)          | moderate       | 10.2.6 → 11.0.5  | `overrides` `minimatch@10` (salto de major: a correção só existe no 11)         |
 | `deepmerge`      | produção (via `sanitize-html`)         | low            | 4.3.1 → removido | some com o `sanitize-html` 2.18.1                                               |
 
-**Prova de que nada mudou:** `typecheck` e `lint` (0 erros); testes de e-mail, MCP e IA verdes. Na suíte
+**Prova de que nada mudou:** `typecheck` e `lint` (0 erros); `next build` completo com o plugin do Sentry (exit 0, com `glob` 14 e `minimatch` 11); testes de e-mail, MCP e IA verdes. Na suíte
 completa há falhas que existem igual na `main` pura (mesmos arquivos e mesmos testes, comparados lado a lado), por
 isso não são desta mudança: `padrao-do-campo-na-api`, `manifest`, `agent-version-columns-drift` e
 `rascunho-superado-nao-e-regravado`.
