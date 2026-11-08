@@ -80,7 +80,7 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
       role="dialog"
       aria-modal="true"
       aria-labelledby="mfa-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
     >
       <div className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-xl">
         {step === "intro" && (
@@ -149,7 +149,7 @@ export function MfaEnrollModal({ motivo = "obrigatorio" }: { motivo?: "obrigator
                     alt={t("QR code para configurar autenticador")}
                     width={240}
                     height={240}
-                    className="rounded-md border border-border bg-white p-2"
+                    className="rounded-md border border-border bg-qr-bg p-2"
                   />
                 </div>
                 <details className="text-xs text-muted-foreground">
