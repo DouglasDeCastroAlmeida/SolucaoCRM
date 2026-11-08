@@ -4,16 +4,11 @@ import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
-import { cssDaMarca } from "@/lib/branding/css";
+import { registrarEstadoDaMarcaResolvida } from "@/lib/branding/estado-da-marca";
 import { iconeDaAba, sufixoDoIcone } from "@/lib/branding/icone";
 import { folhaPersonalizadaDaInstalacao } from "@/lib/branding/folha-personalizada";
 import { CABECALHO_SEM_CSS } from "@/lib/branding/sem-css-personalizado";
-import {
-  marcaDaInstalacao,
-  motivoDoFallback,
-  registrarEstadoDaMarca,
-  type LinhaDaMarca,
-} from "@/lib/branding/instalacao";
+import { marcaDaInstalacao, type LinhaDaMarca } from "@/lib/branding/instalacao";
 import { REGUA_DO_PRODUTO } from "@/lib/branding/regua-do-produto";
 import {
   camadaDaInstalacao,
@@ -24,7 +19,6 @@ import {
 import { camadaDaMarca } from "@/lib/branding/camada-de-marca";
 import { marcaDoPedido } from "@/lib/branding/marca-do-pedido";
 import { env } from "@/lib/env";
-import { logger } from "@/lib/logger";
 import { ThemeProvider } from "@/lib/theme";
 import { Providers } from "./providers";
 import { PublicEnvScript } from "./public-env-script";
@@ -160,7 +154,18 @@ const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('deskcomm-
  * A cor da MARCA não colore mais a interface (ADR 0008, issue #114): o verde de mensageiro e os
  * neutros são fixos e moram em `app/globals.css`. A marca da instalação continua em nome, logo,
  * favicon e e-mails; por isso este layout não injeta mais nenhum `<style>` de cor.
+ *
+ * O que NÃO se perdeu é o diagnóstico: esta peça não renderiza nada, só grava o estado da marca
+ * (`fallback_at`/motivos) que `/admin/marca` mostra. Ver `lib/branding/estado-da-marca.ts`.
  */
+async function RegistroDoEstadoDaMarca() {
+  // `await headers()` mantém o render dinâmico, como o `<PublicEnvScript/>`: estático congelaria
+  // o estado lido durante o `next build`.
+  await headers();
+  const { linha, marca } = await marcaResolvida();
+  registrarEstadoDaMarcaResolvida(linha, marca);
+  return null;
+}
 
 /**
  * CSS visual, escopado e validado do administrador da instalação. `?sem_css=1`
@@ -241,6 +246,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         {/* Primeiro de tudo: a cor da instalação, antes do CSS e do script de tema. */}
         <EstiloCssPersonalizado />
+        <RegistroDoEstadoDaMarca />
         {/* Config pública do Supabase + marca resolvida, em runtime (imagem
             genérica self-host). */}
         <MarcaNoNavegador />
