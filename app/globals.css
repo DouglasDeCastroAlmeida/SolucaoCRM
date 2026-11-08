@@ -91,6 +91,7 @@
   --color-error: #a94a3c;
   --color-error-bg: rgba(169, 74, 60, 0.12);
   --color-error-fg: #8a3a2e;
+  --color-on-error: #ffffff;
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
@@ -302,6 +303,7 @@
   --color-error: #a94a3c;
   --color-error-bg: rgba(169, 74, 60, 0.12);
   --color-error-fg: #8a3a2e;
+  --color-on-error: #ffffff;
   --color-info: #4a7a93;
   --color-info-bg: rgba(74, 122, 147, 0.12);
   --color-info-fg: #355d72;
@@ -401,6 +403,7 @@
   --color-warning-fg: #e0ad77;
   --color-error: #c87263;
   --color-error-bg: rgba(200, 114, 99, 0.18);
+  --color-on-error: #0e171d;
   --color-error-fg: #d99182;
   --color-info: #7da9bf;
   --color-info-bg: rgba(125, 169, 191, 0.18);
@@ -524,6 +527,7 @@
   --color-error: var(--color-error);
   --color-error-bg: var(--color-error-bg);
   --color-error-fg: var(--color-error-fg);
+  --color-on-error: var(--color-on-error);
   --color-info: var(--color-info);
   --color-info-bg: var(--color-info-bg);
   --color-info-fg: var(--color-info-fg);

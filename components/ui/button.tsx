@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   [
     "inline-flex items-center justify-center gap-2 whitespace-nowrap",
-    "rounded-sm font-medium",
+    "rounded-full font-medium",
     // `transform` SAIU da lista, e `translate` não entrou no lugar.
     //
     // O recuo do toque é `active:translate-y-px`, lá embaixo. No Tailwind 4 essa
@@ -48,7 +48,7 @@ const buttonVariants = cva(
         outline:
           "bg-transparent text-text border border-border hover:border-accent hover:text-accent",
         ghost: "bg-transparent text-text hover:bg-accent-soft hover:text-accent",
-        destructive: "bg-error text-white hover:brightness-95 shadow-xs",
+        destructive: "bg-error text-on-error hover:brightness-95 shadow-xs",
         link: "bg-transparent text-accent underline underline-offset-4 decoration-1 hover:decoration-2 h-auto p-0",
       },
       // Alturas de toque: abaixo de `lg` (mesmo corte que o resto da casca
