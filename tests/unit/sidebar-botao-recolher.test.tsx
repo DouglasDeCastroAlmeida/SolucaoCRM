@@ -18,7 +18,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { Sidebar } from "@/components/shell/Sidebar";
+import { SidebarContent } from "@/components/shell/Sidebar";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
@@ -69,7 +69,7 @@ afterEach(cleanup);
 describe("Sidebar — controle de recolher no alto (#2722)", () => {
   it("aberta: o botão vive na linha da logo, e o rodapé não o contém", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent collapsed={false} />);
     const botao = screen.getByRole("button", { name: "Recolher sidebar" });
     expect(linhaDaLogo()?.contains(botao)).toBe(true);
     expect(rodape()?.contains(botao)).toBe(false);
@@ -78,14 +78,14 @@ describe("Sidebar — controle de recolher no alto (#2722)", () => {
   it("aberta: clicar grava a preferência com o estado atual (false)", async () => {
     comoPapel("admin");
     const user = userEvent.setup();
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent collapsed={false} />);
     await user.click(screen.getByRole("button", { name: "Recolher sidebar" }));
     expect(vi.mocked(toggleSidebar)).toHaveBeenCalledWith(false);
   });
 
   it("recolhida: o «» existe fora da linha da logo, antes do menu", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={true} />);
+    render(<SidebarContent collapsed={true} />);
     const botao = screen.getByRole("button", { name: "Expandir sidebar" });
     expect(linhaDaLogo()?.contains(botao)).toBe(false);
     expect(rodape()?.contains(botao)).toBe(false);
@@ -109,7 +109,7 @@ describe("Sidebar — controle de recolher no alto (#2722)", () => {
 describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review #2723)", () => {
   it("aberta: o botão é só o ícone, mas mantém aria-label e ganha title", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent collapsed={false} />);
     const botao = screen.getByRole("button", { name: "Recolher sidebar" });
     // O rótulo deixa de ser texto visível: no review ele custava ~54px de uma
     // linha com ~207px úteis, e uma logo-palavra 5:1 (140px) já estourava.
@@ -124,14 +124,14 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
     // "Recolher sidebar", o trilho recolhido mostrava no hover o contrário do
     // que o botão faz.
     comoPapel("admin");
-    render(<Sidebar collapsed={true} />);
+    render(<SidebarContent collapsed={true} />);
     const botao = screen.getByRole("button", { name: "Expandir sidebar" });
     expect(botao).toHaveAttribute("title", "Expandir sidebar");
   });
 
   it("aberta: o wrapper do botão é shrink-0, para não ser o primeiro espremido", () => {
     comoPapel("admin");
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent collapsed={false} />);
     const botao = screen.getByRole("button", { name: "Recolher sidebar" });
     // O botão é o CONTROLE — se ele encolher, some o que o usuário clica.
     expect(botao.parentElement?.className).toContain("shrink-0");
@@ -145,7 +145,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       role: "admin",
       marca: { nome: "Clínica Sorriso Feliz", logoUrl: "https://marca/logo.png" },
     };
-    render(<Sidebar collapsed={false} />);
+    render(<SidebarContent collapsed={false} />);
     const img = document.querySelector("img")!;
     // O review provou a pegadinha: `max-w-full` + `max-w-[10rem]` disputam a
     // MESMA propriedade e só um vale. O teto tem de ser um único `min()`.
@@ -173,7 +173,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       <MarcaDaInstalacaoProvider
         marca={{ name: "Sistema do Revendedor", logoUrl: null, initial: "S" }}
       >
-        <Sidebar collapsed={false} />
+        <SidebarContent collapsed={false} />
       </MarcaDaInstalacaoProvider>,
     );
     // Medido no review: 3 linhas (72px) dentro de uma linha de 56px.
@@ -203,7 +203,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       <MarcaDaInstalacaoProvider
         marca={{ name: "Sistema do Revendedor", logoUrl: null, initial: "S" }}
       >
-        <Sidebar collapsed={false} />
+        <SidebarContent collapsed={false} />
       </MarcaDaInstalacaoProvider>,
     );
     const nome = screen.getByText("Clínica Odontológica Sorriso Feliz");

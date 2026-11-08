@@ -1,7 +1,8 @@
 /**
  * A barra lateral gruda — e quem a quebra não é ela.
  *
- * `components/shell/Sidebar.tsx` é `sticky top-0 h-screen`, com um comentário
+ * `components/shell/FaixaDeIcones.tsx` (a faixa de ícones, que sucedeu a barra
+ * larga no visual de mensageiro) é `sticky top-0 h-dvh`, com um comentário
  * longo explicando por que NÃO é `fixed` (duas medidas para a mesma coisa, e a
  * barra passando por cima da lista no dia em que discordaram). Mesmo assim ela
  * rolava com a página: sumia do alto e deixava faixa vazia embaixo.
@@ -61,7 +62,7 @@ describe("a rede contra scroll horizontal não pode matar o sticky", () => {
     // O outro lado do par. Se alguém trocar por `fixed` para "resolver", volta o
     // defeito que o comentário do Sidebar registra: barra por cima da lista.
     const sidebar = readFileSync(
-      join(__dirname, "..", "..", "components", "shell", "Sidebar.tsx"),
+      join(__dirname, "..", "..", "components", "shell", "FaixaDeIcones.tsx"),
       "utf8",
     );
     expect(sidebar).toContain("sticky top-0");
