@@ -218,3 +218,33 @@ describe("ConversationHeader — busca dentro da conversa (#1793)", () => {
     expect(arquivarMutate).not.toHaveBeenCalled();
   });
 });
+
+describe("ConversationHeader — visual de mensageiro (#89)", () => {
+  it("mostra o avatar redondo do contato com as iniciais, antes do nome", () => {
+    const atual = conversa("open");
+    atual.contacts = {
+      id: "contato-1",
+      display_name: "Raphael Souza",
+      name: "Raphael Souza",
+      phone_number: "+5511999999999",
+      tags: [],
+      is_blocked: false,
+      is_personal: false,
+      is_anonymized: false,
+    };
+    render(<ConversationHeader conversation={atual} />);
+    const avatar = screen.getByTestId("avatar-da-conversa");
+    expect(avatar.textContent).toBe("RS");
+    expect(avatar.className).toContain("rounded-full");
+    const nome = screen.getByRole("heading", { name: "Raphael Souza" });
+    expect(avatar.compareDocumentPosition(nome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("o cabecalho e cinza-claro (muted), nao o fundo da pagina, e separado por borda fina", () => {
+    render(<ConversationHeader conversation={conversa("open")} />);
+    const barra = screen.getByTestId("cabecalho-da-conversa");
+    expect(barra.className).toContain("bg-muted");
+    expect(barra.className).toContain("border-b");
+    expect(barra.className).not.toContain("bg-background");
+  });
+});

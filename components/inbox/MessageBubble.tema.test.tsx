@@ -1,9 +1,10 @@
 /**
- * Tema do inbox pelos tokens (REQ-003): o balao enviado usa a cor de destaque da
- * marca e o recebido e neutro. As cores nao sao fixas no codigo; o texto do
+ * Balao no visual de mensageiro (#89, ADR 0007), pelos tokens: o enviado fica a direita na cor de
+ * destaque da marca, o recebido a esquerda em balao claro; ambos levam a pontinha na primeira
+ * mensagem do grupo, e hora e ticks ficam DENTRO do balao. Nenhuma cor e fixa no codigo; o texto do
  * enviado vem de `--primary-foreground`, calculado pela marca com contraste.
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { MessageBubble } from "./MessageBubble";
@@ -42,20 +43,60 @@ function msg(over: Partial<Message> = {}): Message {
   };
 }
 
-describe("MessageBubble - tema pela marca", () => {
-  it("AC-003.1: o balao enviado usa a cor de destaque e o texto calculado da marca", () => {
-    render(<MessageBubble message={msg({ direction: "outbound" })} />);
+describe("MessageBubble - visual de mensageiro", () => {
+  it("a enviada fica a direita, na cor de destaque e com o texto calculado da marca", () => {
+    const { container } = render(<MessageBubble message={msg({ direction: "outbound" })} />);
     const balao = screen.getByTestId("message-bubble");
     expect(balao.className).toContain("bg-primary");
     expect(balao.className).toContain("text-primary-foreground");
+    expect(container.firstElementChild?.className).toContain("justify-end");
   });
 
-  it("AC-003.3: o balao recebido e neutro, com borda para se separar do fundo", () => {
-    render(<MessageBubble message={msg({ direction: "inbound" })} />);
+  it("a recebida fica a esquerda, em balao claro (card) sem moldura", () => {
+    const { container } = render(<MessageBubble message={msg({ direction: "inbound" })} />);
     const balao = screen.getByTestId("message-bubble");
     expect(balao.className).toContain("bg-card");
     expect(balao.className).toContain("text-foreground");
-    expect(balao.className).toContain("border-border");
+    expect(balao.className).not.toContain("border-border");
     expect(balao.className).not.toContain("bg-primary");
+    expect(container.firstElementChild?.className).toContain("justify-start");
+  });
+
+  it("o canto tem raio de balao do mensageiro (rounded-lg), nao o pilula antigo", () => {
+    render(<MessageBubble message={msg()} />);
+    const balao = screen.getByTestId("message-bubble");
+    expect(balao.className).toContain("rounded-lg");
+    expect(balao.className).not.toContain("rounded-2xl");
+  });
+
+  it("a primeira do grupo leva a pontinha do lado certo; a colada nao leva", () => {
+    const { rerender } = render(<MessageBubble message={msg({ direction: "outbound" })} colada={false} />);
+    expect(screen.getByTestId("balao-pontinha").getAttribute("data-lado")).toBe("direita");
+    rerender(<MessageBubble message={msg({ direction: "inbound" })} colada={false} />);
+    expect(screen.getByTestId("balao-pontinha").getAttribute("data-lado")).toBe("esquerda");
+    rerender(<MessageBubble message={msg({ direction: "inbound" })} colada />);
+    expect(screen.queryByTestId("balao-pontinha")).toBeNull();
+  });
+
+  it("a pontinha tem a mesma cor do balao (enviada: destaque; recebida: card)", () => {
+    const { rerender } = render(<MessageBubble message={msg({ direction: "outbound" })} />);
+    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-primary");
+    rerender(<MessageBubble message={msg({ direction: "inbound" })} />);
+    expect(screen.getByTestId("balao-pontinha").className).toContain("bg-card");
+  });
+
+  it("hora e ticks ficam dentro do balao, no rodape", () => {
+    render(<MessageBubble message={msg({ direction: "outbound", status: "delivered" })} fuso="UTC" />);
+    const balao = screen.getByTestId("message-bubble");
+    const rodape = within(balao).getByTestId("balao-rodape");
+    expect(within(rodape).getByText("12:00")).toBeTruthy();
+    expect(within(rodape).getByLabelText("Entregue")).toBeTruthy();
+  });
+
+  it("a recebida mostra a hora no rodape e nenhum tick", () => {
+    render(<MessageBubble message={msg({ direction: "inbound", status: "delivered" })} fuso="UTC" />);
+    const rodape = within(screen.getByTestId("message-bubble")).getByTestId("balao-rodape");
+    expect(within(rodape).getByText("12:00")).toBeTruthy();
+    expect(within(rodape).queryByLabelText("Entregue")).toBeNull();
   });
 });

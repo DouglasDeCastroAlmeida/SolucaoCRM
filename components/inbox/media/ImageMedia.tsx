@@ -43,7 +43,7 @@ export function ImageMedia({ messageId, alt, src: fonte }: Props) {
         disabled={state !== "ready"}
         aria-disabled={state !== "ready"}
         className={cn(
-          "relative block w-64 max-w-full aspect-[4/3] overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-ring",
+          "relative block w-64 max-w-full aspect-[4/3] overflow-hidden rounded-md focus-visible:outline-2 focus-visible:outline-ring",
           state === "ready" ? "cursor-zoom-in" : "cursor-not-allowed opacity-50",
         )}
       >
