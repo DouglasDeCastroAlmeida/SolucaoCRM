@@ -17,7 +17,11 @@ function fmt(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** Alturas (20 a 100%) da onda: a mesma para a mesma mensagem, sem depender do arquivo de áudio. */
+/**
+ * Alturas (20 a 100%) da onda: a mesma para a mesma mensagem, sem depender do arquivo de áudio.
+ * É DECORATIVA: inventada a partir do id, não representa o volume real do áudio (o arquivo não é
+ * analisado). Quem informa o progresso de verdade é o controle de busca e o par "atual / total".
+ */
 function alturasDaOnda(semente: string): number[] {
   let h = 2166136261;
   for (let i = 0; i < semente.length; i++) h = Math.imul(h ^ semente.charCodeAt(i), 16777619);
@@ -111,13 +115,13 @@ export function AudioPlayer({ messageId, isOutbound, src }: Props) {
         )}
       >
         {playing ? (
-          <Pause size={18} weight="fill" aria-hidden />
+          <Pause size={20} weight="fill" aria-hidden />
         ) : (
-          <Play size={18} weight="fill" aria-hidden />
+          <Play size={20} weight="fill" aria-hidden />
         )}
       </button>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="relative flex h-7 items-center gap-px">
+        <div className="relative flex h-7 items-center gap-px rounded-sm has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-current has-[input:focus-visible]:ring-offset-1 has-[input:focus-visible]:ring-offset-transparent">
           {barras.map((altura, i) => {
             const tocada = fracao > 0 && (i + 1) / barras.length <= fracao + 1 / barras.length / 2;
             return (
@@ -143,8 +147,8 @@ export function AudioPlayer({ messageId, isOutbound, src }: Props) {
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           />
         </div>
-        <span className="text-[11px] tabular-nums opacity-80">
-          {fmt(current > 0 ? current : safeDuration)}
+        <span className="text-xs tabular-nums opacity-80">
+          {fmt(current)} / {fmt(safeDuration)}
         </span>
       </div>
       <button
@@ -152,7 +156,7 @@ export function AudioPlayer({ messageId, isOutbound, src }: Props) {
         aria-label={`${t("Velocidade de reprodução")}: ${RATES[rateIdx]}x`}
         onClick={cycleRate}
         className={cn(
-          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums transition-colors",
+          "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums transition-colors",
           isOutbound
             ? "bg-primary-foreground/20 text-primary-foreground"
             : "bg-primary/10 text-primary",
