@@ -44,7 +44,7 @@ while IFS= read -r caminho || [ -n "$caminho" ]; do
     # Daqui para baixo, só arquivo da RAIZ: qualquer outro caminho com `/` alcança.
     */*) echo sim; exit 0 ;;
     # ↓ espelho do .dockerignore — os arquivos da raiz.
-    .env | .env.* | playwright.config.ts | *.png | *.log | *.tsbuildinfo) ;;
+    .env | .env.* | playwright.config.ts | playwright.visual-hml.config.ts | *.png | *.log | *.tsbuildinfo) ;;
     *.md) ;;
     *) echo sim; exit 0 ;;
   esac
