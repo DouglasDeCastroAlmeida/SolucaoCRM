@@ -38,6 +38,12 @@ import { expect, test, type BrowserContext, type Page } from "./helpers/test";
 
 import { lerCreds, loginComoAdmin, loginComoDono } from "./helpers/login-admin";
 import {
+  NOME_DO_CONTATO_DE_EXEMPLO,
+  acharConversaPeloNome,
+  decidirTelaDaConversa,
+  faseValida,
+} from "./helpers/visual-de-mensageiro-conversa";
+import {
   HOST_DA_HOMOLOGACAO,
   lerCredenciaisHml,
   montarIndice,
@@ -62,7 +68,7 @@ import {
 const ALVO = resolverAlvo(process.env);
 const HML = ALVO.modo === "hml";
 
-const FASE = process.env.VISUAL_FASE === "depois" ? "depois" : "antes";
+const FASE = faseValida(process.env.VISUAL_FASE);
 const PEDIDA = process.env.VISUAL_ETAPA ?? "1";
 const ETAPAS_PEDIDAS: Etapa[] =
   PEDIDA === "todas" ? [...ETAPAS] : ETAPAS.filter((e) => String(e) === PEDIDA);
@@ -113,7 +119,9 @@ function registrar(r: RegistroDeCaptura): void {
 async function loginNaHomologacao(page: Page): Promise<void> {
   const { email, senha } = CREDS_HML!;
   try {
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
+    // Espera a página hidratar antes de preencher: com "domcontentloaded" o clique em "Entrar" podia chegar antes do React
+    // e o formulário não saía de /login (visto em 08/11/2026, depois do deploy com dependências novas).
+    await page.goto("/login", { waitUntil: "networkidle" });
     await page.locator("#email").fill(email);
     await page.locator("#password").fill(senha);
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
@@ -240,6 +248,7 @@ for (const etapa of ETAPAS_PEDIDAS) {
       for (const tema of TEMAS) {
         test(`etapa ${etapa} · ${tela.slug} · ${vp.nome} · ${tema}`, async ({ browser, baseURL }) => {
           const base = { etapa, slug: tela.slug, viewport: vp.nome, tema };
+          if (!HML && tela.conversa) test.skip(true, "a conversa de exemplo so existe na homologacao");
           if (HML && tela.acesso === "plataforma" && plataformaPula) {
             registrar({ ...base, status: "pulada", observacao: plataformaPula });
             test.skip(true, plataformaPula);
@@ -291,6 +300,14 @@ for (const etapa of ETAPAS_PEDIDAS) {
                 if ((await page.locator("html").getAttribute("data-theme")) !== valor) {
                   falhas.push(`tema ${valor} não aplicado`);
                 }
+                if (tela.conversa && !/^\/login/.test(caminho)) {
+                  const prep = await prepararConversaDeExemplo(page, tela.conversa, vp.celular);
+                  if (prep.pulada) {
+                    registrar({ ...base, status: "pulada", capturada: false, observacao: prep.pulada });
+                    return;
+                  }
+                  falhas.push(...prep.falhas);
+                }
                 if (vp.celular) {
                   const estouro = await estouroHorizontal(page);
                   if (estouro > 0) falhas.push(`estouro horizontal de ${estouro}px no celular`);
@@ -328,6 +345,54 @@ for (const etapa of ETAPAS_PEDIDAS) {
       }
     }
   }
+}
+
+/**
+ * Telas do Inbox com a conversa de exemplo (issue #113). Só leitura: acha a conversa na lista pelo nome
+ * do contato (se preciso, digitando o nome na busca, que filtra no cliente/GET), abre com um clique e,
+ * para o painel do contato no celular, abre a ficha. Devolve o motivo de pular, ou as falhas.
+ */
+async function prepararConversaDeExemplo(
+  page: Page,
+  quer: NonNullable<TelaDoVisual["conversa"]>,
+  celular: boolean,
+): Promise<{ pulada?: string; falhas: string[] }> {
+  const lerItens = () =>
+    page
+      .locator("button[data-conversation-id]")
+      .evaluateAll((els) =>
+        els.map((el) => ({ id: el.getAttribute("data-conversation-id") ?? "", texto: (el as HTMLElement).innerText })),
+      );
+  let id = acharConversaPeloNome(await lerItens(), NOME_DO_CONTATO_DE_EXEMPLO);
+  if (!id) {
+    const busca = page.getByPlaceholder(/Buscar por nome/).first();
+    if ((await busca.count()) > 0) {
+      await busca.fill(NOME_DO_CONTATO_DE_EXEMPLO);
+      await page.waitForTimeout(1_500);
+      await esperarOConteudo(page);
+      id = acharConversaPeloNome(await lerItens(), NOME_DO_CONTATO_DE_EXEMPLO);
+    }
+  }
+  // A lista, sozinha, se captura mesmo sem a conversa de exemplo.
+  if (quer === "lista") return { falhas: [] };
+  const decisao = decidirTelaDaConversa(id);
+  if (!decisao.abrir) return { pulada: decisao.registro.observacao, falhas: [] };
+
+  await page.locator(`button[data-conversation-id="${decisao.id}"]`).first().click();
+  await page.waitForURL((u) => u.searchParams.get("id") === decisao.id, { timeout: 15_000 }).catch(() => undefined);
+  const sobra = await esperarOConteudo(page);
+  const falhas: string[] = [];
+  if (sobra.length > 0) falhas.push(`a conversa continuou em carregamento (${sobra[0]})`);
+  if (quer === "contato" && celular) {
+    const ficha = page.getByRole("button", { name: /^(Ficha|Ver contato|Dados do contato)$/ }).first();
+    if ((await ficha.count()) === 0) falhas.push("nao achei o botao que abre a ficha do contato no celular");
+    else {
+      await ficha.click();
+      await page.waitForTimeout(800);
+      await esperarOConteudo(page);
+    }
+  }
+  return { falhas };
 }
 
 function semSessao(tela: TelaDoVisual): boolean {

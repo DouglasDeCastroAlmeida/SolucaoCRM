@@ -15,6 +15,12 @@ export interface TelaDoVisual {
   slug: string;
   rota: string;
   acesso: Acesso;
+  /**
+   * Tela do Inbox que depende da conversa de exemplo da homologacao (issue #113): `lista` = lista de
+   * conversas, `aberta` = conversa aberta (cabecalho, bolhas, area de escrever), `contato` = painel
+   * do contato. So vale no modo homologacao; no modo local a tela e pulada.
+   */
+  conversa?: "lista" | "aberta" | "contato";
 }
 
 export const ETAPAS = [1, 2, 3, 4, 5] as const;
@@ -30,6 +36,9 @@ export const TELAS_POR_ETAPA: Record<Etapa, TelaDoVisual[]> = {
   // 2. Inbox completo.
   2: [
     { slug: "inbox-lista-e-conversa", rota: "/app/inbox", acesso: "app" },
+    { slug: "inbox-lista", rota: "/app/inbox", acesso: "app", conversa: "lista" },
+    { slug: "inbox-conversa", rota: "/app/inbox", acesso: "app", conversa: "aberta" },
+    { slug: "inbox-contato", rota: "/app/inbox", acesso: "app", conversa: "contato" },
   ],
   // 3. Contatos, Leads, Empresas, Pessoas, Pipeline, Agenda e Tarefas.
   3: [
