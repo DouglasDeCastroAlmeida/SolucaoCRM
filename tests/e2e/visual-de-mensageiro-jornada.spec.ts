@@ -365,6 +365,13 @@ async function prepararConversaDeExemplo(
       );
   let id = acharConversaPeloNome(await lerItens(), NOME_DO_CONTATO_DE_EXEMPLO);
   if (!id) {
+    // A aba padrão ("Fila") só lista conversa SEM dono; a de exemplo está atribuída ao atendente, então fica em
+    // "Minhas". Abrir a aba por `?filter=mine` é só uma leitura (GET) e não mexe em nada.
+    await page.goto("/app/inbox?filter=mine", { waitUntil: "networkidle" });
+    await esperarOConteudo(page);
+    id = acharConversaPeloNome(await lerItens(), NOME_DO_CONTATO_DE_EXEMPLO);
+  }
+  if (!id) {
     const busca = page.getByPlaceholder(/Buscar por nome/).first();
     if ((await busca.count()) > 0) {
       await busca.fill(NOME_DO_CONTATO_DE_EXEMPLO);
