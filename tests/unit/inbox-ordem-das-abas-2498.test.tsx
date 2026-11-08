@@ -68,13 +68,15 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("as seis abas, na ordem pedida pela #2498", () => {
-  it("Automático, Fila, Minhas, Todas, Fechadas, Arquivadas — nessa ordem", () => {
+  it("Todas, Minhas, Fila, Automático, Fechadas, Arquivadas — nessa ordem (protótipo, #116)", () => {
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    // #116: a ordem do protótipo aprovado (Todas primeiro), no lugar da "ordem do
+    // trabalho" da #2498. Os filtros "Não lidos" e "Grupos" não são abas.
     expect(abasRenderizadas()).toEqual([
-      "Automático",
-      "Fila",
-      "Minhas",
       "Todas",
+      "Minhas",
+      "Fila",
+      "Automático",
       "Fechadas",
       "Arquivadas",
     ]);
@@ -91,10 +93,10 @@ describe("as seis abas, na ordem pedida pela #2498", () => {
       ([, value, label]) => `${value}=${label}`,
     );
     expect(pares).toEqual([
-      "ai=Automático",
-      "unassigned=Fila",
-      "mine=Minhas",
       "all=Todas",
+      "mine=Minhas",
+      "unassigned=Fila",
+      "ai=Automático",
       "closed=Fechadas",
       "archived=Arquivadas",
     ]);
@@ -114,10 +116,10 @@ describe("as seis abas, na ordem pedida pela #2498", () => {
 describe("só a ordem muda — as permissões continuam quem eram", () => {
   it("manager vê as seis, com 'Todas' no meio", () => {
     expect(visibleInboxTabs("manager", "all")).toEqual([
-      "ai",
-      "unassigned",
-      "mine",
       "all",
+      "mine",
+      "unassigned",
+      "ai",
       "closed",
       "archived",
     ]);
@@ -127,9 +129,9 @@ describe("só a ordem muda — as permissões continuam quem eram", () => {
     // A regra de visão é filtrar, não reordenar: quem perde 'all' perde só ela,
     // e a ordem que sobra é a mesma que todo mundo vê.
     expect(visibleInboxTabs("agent", "own")).toEqual([
-      "ai",
-      "unassigned",
       "mine",
+      "unassigned",
+      "ai",
       "closed",
       "archived",
     ]);
@@ -137,10 +139,10 @@ describe("só a ordem muda — as permissões continuam quem eram", () => {
 
   it("agent com visibility 'all' tem as seis, 'Todas' na posição dela", () => {
     expect(visibleInboxTabs("agent", "all")).toEqual([
-      "ai",
-      "unassigned",
-      "mine",
       "all",
+      "mine",
+      "unassigned",
+      "ai",
       "closed",
       "archived",
     ]);
