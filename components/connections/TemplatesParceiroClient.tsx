@@ -65,10 +65,10 @@ interface TemplateParceiro {
 }
 
 const COR_DO_ESTADO: Record<string, string> = {
-  APPROVED: "text-emerald-700 dark:text-emerald-400",
-  PENDING: "text-amber-700 dark:text-amber-400",
+  APPROVED: "text-success-fg",
+  PENDING: "text-warning-fg",
   REJECTED: "text-destructive",
-  PAUSED: "text-amber-700 dark:text-amber-400",
+  PAUSED: "text-warning-fg",
   DISABLED: "text-muted-foreground",
 };
 
@@ -467,8 +467,8 @@ export function TemplatesParceiroClient({
                é recusada, e a recusa chega horas depois sem ninguém ligar uma
                coisa à outra. O formulário deixava digitar `{{1}}` e nunca
                pedia o exemplo. */
-            <div className="flex flex-col gap-1.5 rounded-md border border-amber-300 bg-amber-50/50 p-2 dark:border-amber-800/60 dark:bg-amber-950/20">
-              <p className="text-[11px] text-amber-900 dark:text-amber-200">
+            <div className="flex flex-col gap-1.5 rounded-md border border-warning/40 bg-warning-bg p-2">
+              <p className="text-[11px] text-warning-fg">
                 {t("A revisão exige um exemplo de cada valor. Sem eles o modelo é recusado.")}
               </p>
               {Array.from({ length: nVariaveis }, (_, i) => (
@@ -657,7 +657,7 @@ export function TemplatesParceiroClient({
             </AlertDialogDescription>
           </AlertDialogHeader>
           {apagando?.usos && apagando.usos.length > 0 && (
-            <div className="rounded-md border border-amber-300 bg-amber-50/50 p-2 text-sm dark:border-amber-800/60 dark:bg-amber-950/20">
+            <div className="rounded-md border border-warning/40 bg-warning-bg p-2 text-sm">
               <p className="font-medium">{t("Este modelo está em uso:")}</p>
               <ul className="mt-1 list-disc pl-5">
                 {apagando.usos.map((u) => (
