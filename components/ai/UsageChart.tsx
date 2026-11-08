@@ -162,7 +162,7 @@ export function UsageChart({ payload }: Props) {
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="var(--color-accent)"
+                stroke="var(--color-info)"
                 strokeWidth={2}
                 dot={false}
               />
@@ -216,7 +216,7 @@ export function UsageChart({ payload }: Props) {
                 type="monotone"
                 dataKey="p50"
                 name={t("a maioria responde em")}
-                stroke="var(--color-info)"
+                stroke="var(--color-text-muted)"
                 strokeWidth={2}
                 dot={false}
               />

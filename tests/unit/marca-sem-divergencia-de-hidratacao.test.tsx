@@ -55,7 +55,6 @@ import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/app/ai/agents" }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({ toggleSidebar: vi.fn() }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
 // Buscam estado do servidor e não falam de marca — fora do que se mede aqui.
 vi.mock("@/components/connections/ConnectionHealthDot", () => ({
@@ -127,8 +126,8 @@ afterEach(() => {
 
 describe("a marca não diverge entre o SSR e a hidratação", () => {
   it("a barra lateral renderiza IGUAL com e sem a marca no ambiente do navegador", () => {
-    const noServidor = renderComAmbiente(undefined, <SidebarContent collapsed={false} />);
-    const noNavegador = renderComAmbiente(PUBLIC_ENV_DO_NAVEGADOR, <SidebarContent collapsed={false} />);
+    const noServidor = renderComAmbiente(undefined, <SidebarContent />);
+    const noNavegador = renderComAmbiente(PUBLIC_ENV_DO_NAVEGADOR, <SidebarContent />);
 
     expect(
       noServidor,
@@ -154,7 +153,7 @@ describe("a marca não diverge entre o SSR e a hidratação", () => {
     // Sem este caso, os dois de cima passariam num componente que nunca mostra
     // logo nenhum — dois vazios são iguais. O que se afirma aqui é que a marca
     // do contexto ALCANÇA a tela: o `<img>` do banco está no HTML dos dois lados.
-    const noServidor = renderComAmbiente(undefined, <SidebarContent collapsed={false} />);
+    const noServidor = renderComAmbiente(undefined, <SidebarContent />);
 
     expect(noServidor).toContain(`src="${MARCA_DO_BANCO.logoUrl}"`);
     expect(noServidor).toContain(`alt="${MARCA_DO_BANCO.name}"`);

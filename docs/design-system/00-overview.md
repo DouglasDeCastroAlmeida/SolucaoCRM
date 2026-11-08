@@ -8,7 +8,7 @@ O DeskcommCRM é uma ferramenta operacional para **atendentes que ficam 8 horas 
 
 Por isso a direção é **soft-tech / calmo**:
 
-- **Soft** — neutros greige (warm-gray), nunca slate/zinc; acentos baixos em saturação; sombras em cor neutra, não preto puro.
+- **Soft** — neutros cinza azulado próprios (ADR 0007; o greige foi aposentado), nunca slate/zinc crus; acentos baixos em saturação; sombras em cor neutra, não preto puro.
 - **Tech** — tipografia precisa, dados em mono tabular, hierarquia disciplinada, microinterações com propósito.
 - **Calmo** — sem decoração, sem celebração, sem AI-sparkle, sem gradientes. Confiança vem de consistência, não de efeito.
 
@@ -21,7 +21,7 @@ Quando duas decisões parecem igualmente boas, esta lista é a tiebreaker:
 1. **Clarity > decoration.** Se um elemento não comunica, ele sai. Sombras decorativas, gradients, ícones que repetem o label — fora.
 2. **Calm > vibrant.** Saturação alta cansa; contraste calibrado é mais legível que contraste máximo. Nenhum accent passa de stop 600 em áreas grandes.
 3. **Consistency > novelty.** Uma escolha boa repetida 100 vezes é melhor que 100 escolhas únicas. Componentes têm variants finitos e nomeados.
-4. **Accessibility > aesthetic.** WCAG AA é piso, não teto. Atkinson Hyperlegible foi escolhida pela disambiguação de glifos. Focus rings sempre 2px visíveis.
+4. **Accessibility > aesthetic.** WCAG AA é piso, não teto. A fonte é a do sistema (ADR 0007); contraste e tamanho mínimo são garantidos por teste. Focus rings sempre 2px visíveis.
 5. **Intentional density.** Aerada é default; densidade só comprime quando o conteúdo justifica (tabela de dados). Whitespace não é desperdício, é respiração.
 
 ## Estrutura da documentação
@@ -38,7 +38,8 @@ Leia 00 → 09 sequencial uma vez. Depois consulte por demanda via tabela do `RE
 
 ## Versionamento
 
-- **v1.0 — locked em 2026-04-28.** As 5 escolhas (Sage, Atkinson, Aerada, Phosphor, IBM Plex Mono) estão fechadas até v2.0. PRs que tentem trocar uma delas precisam de RFC.
+- **v1.0 — locked em 2026-04-28.** As 5 escolhas (Sage, Atkinson, Aerada, Phosphor, IBM Plex Mono) estavam fechadas até v2.0.
+- **ADR 0007 (2026-11-07) supera esse "até v2.0" para três delas:** a fonte passa a ser a do sistema (no lugar da Atkinson), os neutros passam a cinza azulado (no lugar do greige) e os glifos do mapa único vêm dos Material Symbols, com Phosphor no resto. Decisão em `docs/adr/0007-visual-de-mensageiro-sem-arte-da-meta.md`. Sage (cor de destaque da marca), Aerada e IBM Plex Mono seguem como estavam.
 - Patches são aceitos para: novos ícones, novos exemplos de microcopy, ajustes de hex em ±2 pontos de luminosidade quando WCAG falhar, novos componentes derivados.
 - Histórico de mudanças vai em `CHANGELOG.md` quando houver primeira mudança.
 

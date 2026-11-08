@@ -25,7 +25,7 @@ export function ContadorDeCasos({ compacto }: { compacto: boolean }) {
       aria-label={rotulo}
       title={rotulo}
       className={cn(
-        "rounded-full bg-error text-[10px] font-semibold leading-none text-on-error tabular-nums",
+        "rounded-full bg-error text-xs font-semibold leading-none text-on-error tabular-nums",
         compacto ? "absolute top-1 right-1 h-2 w-2" : "ml-auto px-1.5 py-0.5",
       )}
     >

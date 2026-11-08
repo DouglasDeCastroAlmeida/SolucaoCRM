@@ -5,21 +5,19 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, CaretDown, Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { ConnectionHealthDot } from "@/components/connections/ConnectionHealthDot";
 import { ContadorDeCasos } from "@/components/shell/ContadorDeCasos";
 import { ContadorDaFila } from "@/components/shell/ContadorDaFila";
 import { VersionFooter } from "@/components/shell/VersionFooter";
-import { LogotipoDoProduto, SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
-import { marcaEhADoProduto } from "@/lib/branding";
-import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
+import { LogotipoDoProduto } from "@/components/branding/MarcaDoProduto";
+import { useMarcaDaCasca } from "@/components/shell/useMarcaDaCasca";
 import { GRUPO_NO_RODAPE, sidebarGroups } from "@/lib/navigation/registry";
 
 const CHAVE_GRUPOS_FECHADOS = "sidebar-grupos-fechados";
 
 interface SidebarContentProps {
-  collapsed: boolean;
   onNavigate?: () => void;
 }
 
@@ -31,10 +29,7 @@ interface SidebarContentProps {
  * itens e sete `usePermission()` viviam aqui — e divergiam do hub de
  * Configurações e das abas de IA, que mantinham suas próprias listas.
  */
-export function SidebarContent({
-  collapsed,
-  onNavigate,
-}: SidebarContentProps) {
+export function SidebarContent({ onNavigate }: SidebarContentProps) {
   // A barra lateral aparece em TODA tela — traduzi-la aqui é o que faz a
   // escolha de idioma virar algo visível no primeiro clique.
   const t = useT();
@@ -82,55 +77,13 @@ export function SidebarContent({
     });
   }
 
-  const brand = useMarcaDaInstalacao();
-  /**
-   * O CONSUMIDOR do nome por organização.
-   *
-   * Sem ele, `settings.branding.app_name` seria campo decorativo: medido, o nome
-   * da org não aparece em lugar nenhum da casca para o cliente típico de um
-   * revendedor — o único leitor é o `TenantSwitcher`, e ele devolve `null` com
-   * uma organização só.
-   *
-   * A marca da INSTALAÇÃO continua embaixo: a organização que não definiu nome
-   * vê exatamente o que via antes. O que mudou é POR ONDE ela chega — era
-   * `branding()`, que no navegador lê `window.__PUBLIC_ENV__` e no servidor lê
-   * `process.env`, e essas duas fontes passaram a divergir quando o layout raiz
-   * começou a injetar a marca do BANCO. Divergência entre SSR e cliente aqui não
-   * é detalhe: com logo no banco e `APP_LOGO_URL` vazio, o servidor desenhava o
-   * `<span>` de baixo e o cliente desenhava o `<img>` — React #418 em toda tela.
-   * Hoje a marca vem por PROP do servidor (`useMarcaDaInstalacao`), pela mesma
-   * rota de `activeOrg`, e os dois lados leem o mesmo objeto por construção.
-   */
-  const nome = activeOrg?.marca?.nome ?? brand.name;
-  /**
-   * O mesmo desenho para o LOGO — e é este par de linhas que fecha o caminho do
-   * `logo_url` gravado até a tela.
-   *
-   * `||` e não `??`: vazio é AUSÊNCIA de logo, não "logo em branco". É a regra
-   * que `resolveBranding` e `primeiroDefinido` já aplicam nas camadas de baixo, e
-   * com `??` um `""` vindo de cima apagaria o logo do revendedor em vez de
-   * descer para ele — que é o contrário do que a precedência por campo promete.
-   */
-  const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
-  const logoEscuro =
-    activeOrg?.marca?.logoDarkUrl !== undefined
-      ? activeOrg.marca.logoDarkUrl
-      : activeOrg?.marca?.logoUrl
-        ? null
-        : brand.logoDarkUrl;
-  // Só quando NINGUÉM — nem a instalação, nem a organização — pôs marca própria:
-  // é a condição de `lib/branding.ts`, avaliada sobre o que a barra vai mostrar.
-  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
+  // Nome, logo e a decisão "é a marca do produto?" vêm do mesmo lugar da faixa de ícones.
+  const { nome, logo, logoEscuro, marcaDoProduto } = useMarcaDaCasca();
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div
-        className={cn(
-          "flex h-14 items-center border-b px-4",
-          collapsed ? "justify-center" : "justify-start",
-        )}
-      >
-        {(logo || logoEscuro) && !collapsed ? (
+      <div className="flex h-14 items-center justify-start border-b px-4">
+        {logo || logoEscuro ? (
           // Sem arte própria para o escuro, preserva a proteção de contraste.
           <div
             className={cn(
@@ -186,28 +139,11 @@ export function SidebarContent({
             ) : null}
           </div>
         ) : marcaDoProduto ? (
-          // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`):
-          // logotipo com a barra aberta, só o símbolo com ela recolhida.
-          collapsed ? (
-            <SimboloDoProduto nome={nome} className="h-8 w-8" />
-          ) : (
-            <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
-          )
+          // O desenho do produto, inline (ver `components/branding/MarcaDoProduto.tsx`).
+          <LogotipoDoProduto nome={nome} className="h-8 w-auto" />
         ) : (
-          <span
-            className={cn("min-w-0 truncate font-semibold tracking-tight", collapsed && "sr-only")}
-            title={nome}
-          >
+          <span className="min-w-0 truncate font-semibold tracking-tight" title={nome}>
             {nome}
-          </span>
-        )}
-        {collapsed && !marcaDoProduto && (
-          <span aria-hidden className="text-lg font-bold text-primary">
-            {/* Spread e não `[0]`: nome começando com emoji ou acento composto
-                quebraria no meio do code point. Mesma regra de `resolveBranding`
-                — a inicial precisa acompanhar o nome que a barra mostra, senão
-                recolher o menu troca a marca. */}
-            {[...nome][0]?.toUpperCase() ?? brand.initial}
           </span>
         )}
       </div>
@@ -259,95 +195,71 @@ export function SidebarContent({
       <nav className="flex-1 space-y-2 overflow-y-auto p-2" aria-label={t("Navegação principal")}>
         {grupos.map(({ group, items }) => {
           const tituloId = `nav-grupo-${group.id}`;
-          // Recolhido o sidebar inteiro (rail de 64px), o grupo sempre mostra
-          // seus itens — não há onde desenhar cabeçalho nem seta para fechá-lo.
-          const aberto = collapsed || !gruposFechados.has(group.id);
+          const aberto = !gruposFechados.has(group.id);
           return (
             <div key={group.id} className="space-y-1">
-              {/* Colapsado, o sidebar tem 64px: seis rótulos ali seriam ilegíveis.
-                  Vira um filete separador, que preserva o agrupamento sem texto. */}
-              {collapsed ? (
-                <div aria-hidden className="mx-2 border-t first:hidden" />
-              ) : (
-                <h2 id={tituloId}>
-                  <button
-                    type="button"
-                    onClick={() => toggleGrupo(group.id)}
-                    aria-expanded={aberto}
-                    className="flex w-full items-center justify-between rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
-                  >
-                    {t(group.label)}
-                    <CaretDown
-                      size={12}
-                      weight="bold"
-                      className={cn(
-                        "shrink-0 text-text-subtle transition-transform",
-                        !aberto && "-rotate-90",
-                      )}
-                      aria-hidden
-                    />
-                  </button>
-                </h2>
-              )}
-              {aberto && (
-                <ul
-                  aria-labelledby={collapsed ? undefined : tituloId}
-                  aria-label={collapsed ? t(group.label) : undefined}
-                  className="space-y-1"
+              <h2 id={tituloId}>
+                <button
+                  type="button"
+                  onClick={() => toggleGrupo(group.id)}
+                  aria-expanded={aberto}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
                 >
+                  {t(group.label)}
+                  <CaretDown
+                    size={12}
+                    weight="bold"
+                    className={cn(
+                      "shrink-0 text-text-subtle transition-transform",
+                      !aberto && "-rotate-90",
+                    )}
+                    aria-hidden
+                  />
+                </button>
+              </h2>
+              {aberto && (
+                <ul aria-labelledby={tituloId} className="space-y-1">
                   {items.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     const Icon = item.icon;
                     return (
                       <li key={item.href}>
-                        <DicaRecolhida collapsed={collapsed} rotulo={t(item.label)}>
-                          <Link
-                            href={item.href}
-                            aria-label={collapsed ? t(item.label) : undefined}
-                            aria-current={isActive ? "page" : undefined}
-                            onClick={onNavigate}
-                            className={cn(
-                              "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                              isActive
-                                ? "bg-accent text-accent-foreground"
-                                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                              collapsed && "justify-center px-2",
-                            )}
-                          >
-                            <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
-                            {!collapsed && <span className="truncate">{t(item.label)}</span>}
-                            {item.healthDot && (
-                              <ConnectionHealthDot
-                                className={cn(collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}
-                              />
-                            )}
-                            {item.contador === "casos" && <ContadorDeCasos compacto={collapsed} />}
-                            {item.contador === "fila" && <ContadorDaFila compacto={collapsed} />}
-                          </Link>
-                        </DicaRecolhida>
+                        <Link
+                          href={item.href}
+                          aria-current={isActive ? "page" : undefined}
+                          onClick={onNavigate}
+                          className={cn(
+                            "relative flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                            isActive
+                              ? "bg-accent text-accent-foreground"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                          )}
+                        >
+                          <Icon size={18} weight={isActive ? "fill" : "regular"} aria-hidden />
+                          <span className="truncate">{t(item.label)}</span>
+                          {item.healthDot && <ConnectionHealthDot className="ml-auto" />}
+                          {item.contador === "casos" && <ContadorDeCasos compacto={false} />}
+                          {item.contador === "fila" && <ContadorDaFila compacto={false} />}
+                        </Link>
                       </li>
                     );
                   })}
                   {group.hub && (
                     <li>
-                      <DicaRecolhida collapsed={collapsed} rotulo={t(group.hub.label)}>
-                        <Link
-                          href={group.hub.href}
-                          aria-label={collapsed ? t(group.hub.label) : undefined}
-                          aria-current={pathname === group.hub.href ? "page" : undefined}
-                          onClick={onNavigate}
-                          className={cn(
-                            "flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                            pathname === group.hub.href
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                            collapsed && "justify-center px-2",
-                          )}
-                        >
-                          <ArrowRight size={18} aria-hidden />
-                          {!collapsed && <span className="truncate">{t(group.hub.label)}</span>}
-                        </Link>
-                      </DicaRecolhida>
+                      <Link
+                        href={group.hub.href}
+                        aria-current={pathname === group.hub.href ? "page" : undefined}
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+                          pathname === group.hub.href
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                        )}
+                      >
+                        <ArrowRight size={18} aria-hidden />
+                        <span className="truncate">{t(group.hub.label)}</span>
+                      </Link>
                     </li>
                   )}
                 </ul>
@@ -358,50 +270,23 @@ export function SidebarContent({
       </nav>
       <div className="border-t p-2">
         {rodape && (
-          <DicaRecolhida collapsed={collapsed} rotulo={t(rodape.label)}>
-            <Link
-              href={rodape.href}
-              aria-label={collapsed ? t(rodape.label) : undefined}
-              aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
-              onClick={onNavigate}
-              className={cn(
-                "mb-1 flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                pathname.startsWith(rodape.href)
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                collapsed && "justify-center px-2",
-              )}
-            >
-              <Gear size={18} aria-hidden />
-              {!collapsed && <span className="truncate">{t(rodape.label)}</span>}
-            </Link>
-          </DicaRecolhida>
+          <Link
+            href={rodape.href}
+            aria-current={pathname.startsWith(rodape.href) ? "page" : undefined}
+            onClick={onNavigate}
+            className={cn(
+              "mb-1 flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
+              pathname.startsWith(rodape.href)
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+            )}
+          >
+            <Gear size={18} aria-hidden />
+            <span className="truncate">{t(rodape.label)}</span>
+          </Link>
         )}
-        <VersionFooter collapsed={collapsed} onNavigate={onNavigate} />
+        <VersionFooter collapsed={false} onNavigate={onNavigate} />
       </div>
     </TooltipProvider>
-  );
-}
-
-/**
- * Recolhido, o nome do destino não cabe no trilho de 64px: aparece num balão ao
- * passar o mouse E ao focar por teclado (o Radix abre nos dois). O nome
- * acessível continua no `aria-label` do próprio link. Aberto, não envolve nada.
- */
-function DicaRecolhida({
-  collapsed,
-  rotulo,
-  children,
-}: {
-  collapsed: boolean;
-  rotulo: string;
-  children: React.ReactElement;
-}) {
-  if (!collapsed) return children;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side="right">{rotulo}</TooltipContent>
-    </Tooltip>
   );
 }

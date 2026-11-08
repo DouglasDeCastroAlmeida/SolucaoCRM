@@ -40,7 +40,7 @@ export function SuspendedBanner({ suspendedAt, reason }: SuspendedBannerProps) {
       className="sticky top-0 z-10 rounded-lg bg-bg"
     >
       <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-warning-fg">
-      <Warning size={18} weight="fill" className="mt-0.5 shrink-0 text-warning" aria-hidden />
+      <Warning size={20} weight="fill" className="mt-0.5 shrink-0 text-warning" aria-hidden />
       <p className="text-sm">
         <span className="font-semibold">{t("Tenant suspenso")}</span>{" "}
         {formatRelativePtBr(suspendedAt, t)}.{" "}

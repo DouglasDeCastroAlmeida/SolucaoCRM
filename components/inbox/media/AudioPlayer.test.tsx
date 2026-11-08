@@ -44,11 +44,25 @@ describe("AudioPlayer - formato do mensageiro", () => {
     const total = screen.getAllByTestId("barra-do-audio").length;
     expect(tocadas()).toBeGreaterThanOrEqual(Math.floor(total / 2) - 1);
     expect(tocadas()).toBeLessThanOrEqual(Math.ceil(total / 2) + 1);
-    expect(screen.getByText("0:05")).toBeTruthy();
+    expect(screen.getByText("0:05 / 0:10")).toBeTruthy();
   });
 
   it("o controle de busca continua acessivel", () => {
     render(<AudioPlayer messageId="m1" isOutbound={false} />);
     expect(screen.getByLabelText("Progresso do áudio")).toBeTruthy();
+  });
+
+  it("mostra o tempo atual e o total, os dois", () => {
+    const { container } = render(<AudioPlayer messageId="m1" isOutbound={false} />);
+    const audio = container.querySelector("audio")!;
+    Object.defineProperty(audio, "duration", { value: 75, configurable: true });
+    act(() => audio.dispatchEvent(new Event("loadedmetadata")));
+    expect(screen.getByText("0:00 / 1:15")).toBeTruthy();
+  });
+
+  it("o foco do teclado no controle de busca fica visível (anel no contêiner da onda)", () => {
+    render(<AudioPlayer messageId="m1" isOutbound={false} />);
+    const contenedor = screen.getByLabelText("Progresso do áudio").parentElement!;
+    expect(contenedor.className).toContain("has-[input:focus-visible]:ring-2");
   });
 });

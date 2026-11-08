@@ -1,8 +1,12 @@
 # 03 — Tipografia
 
-> **Source of truth:** `app/design/lib/fonts.ts` (`atkinson`, `plexMono`), `app/design/lib/tokens.ts` → `TYPOS.atkinson`
+> **Source of truth:** `app/globals.css` (`--font-sans`, `--font-mono`) e `app/layout.tsx` (fonte mono).
+>
+> **Atualização (ADR 0007, 07/11/2026):** a fonte do produto passou a ser a **fonte do sistema**, no lugar da Atkinson Hyperlegible, para seguir o visual de mensageiro. Esta decisão supera o "fechadas até v2.0" do `00-overview.md` para a fonte. Contraste e tamanho mínimo continuam garantidos por teste. As seções abaixo que citam Atkinson descrevem o desenho anterior (o laboratório `app/design/` ainda a usa) e valem só para os tamanhos e pesos; a pilha vigente está em "Stack completo".
 
-## Por que Atkinson Hyperlegible
+## Por que a fonte do sistema (ADR 0007) — e o que foi a Atkinson
+
+A pilha atual é a do sistema operacional (como o WhatsApp Web): leitura nativa, sem baixar fonte, e o visual que os clientes já conhecem. Abaixo, o racional da fonte anterior, mantido como histórico.
 
 A fonte de display + body do DeskcommCRM é **Atkinson Hyperlegible**, criada pelo Braille Institute em 2020 com um único objetivo: **maximizar a distinção entre caracteres similares** para usuários com baixa visão.
 
@@ -19,18 +23,14 @@ A fonte secundária para **dados monoespaçados** é **IBM Plex Mono** — escol
 ## Stack completo
 
 ```css
---ds-font-display: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
---ds-font-body:    var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
---ds-font-mono:    var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+/* app/globals.css — vigente */
+--font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+--font-mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
 ```
 
-`var(--font-atkinson)` é injetado por `next/font/google` via `app/design/lib/fonts.ts`.
+Não há arquivo de fonte para o texto: a pilha do sistema resolve no aparelho de quem usa. A monoespaçada segue por `next/font` em `app/layout.tsx`.
 
-**Pesos disponíveis** (Atkinson):
-- 400 — body, default UI
-- 700 — bold, headings, ênfase
-
-Itálico disponível em ambos. Não há 500/600 — quando precisar de "semibold", use 700 com tamanho menor, ou aceite que peso 400 é o body.
+**Pesos** (fonte do sistema): 400 (body), 500/600 (ênfase, `font-medium`/`font-semibold`) e 700 (títulos) existem na maioria das pilhas do sistema; use só esses.
 
 **Pesos disponíveis** (IBM Plex Mono):
 - 400 — default mono
@@ -130,12 +130,22 @@ Outro exemplo: **header de view**.
 
 ## Acessibilidade
 
-- **Tamanho mínimo:** 12px (`caption`). Abaixo disso só ícones com `aria-label`.
+- **Tamanho mínimo:** 12px (`caption`, `text-xs`). Abaixo disso só ícones com `aria-label`. As exceções estão listadas em "Exceções ao mínimo de 12px", com o motivo.
 - **Line-height mínimo:** 1.4 em prosa, 1.35 em UI compacta.
 - **Tracking:** já calibrado por escala. Não sobrescreva sem motivo (legível ou marketing).
-- **Peso mínimo de leitura:** 400 sempre. Light (300) não existe na escala — Atkinson não tem 300 carregado.
-- **Foco visual:** texto em `text-muted` (`#5d594f` light / `#8e8b7f` dark) só pra UI 14px+; nunca aplicar a prosa longa.
+- **Peso mínimo de leitura:** 400 sempre. Light (300) não existe na escala.
+- **Foco visual:** texto em `text-muted` (`--color-text-muted`: `#4f6069` claro / `#a2b2bb` escuro) só pra UI 14px+; nunca aplicar a prosa longa.
 - **Truncate:** sempre com `text-overflow: ellipsis` + `white-space: nowrap` + `min-width: 0`. Tooltip com texto completo no hover (`<Tooltip>` shadcn).
+
+## Exceções ao mínimo de 12px
+
+A regra é 12px. O teste `tests/unit/visual-de-mensageiro-neutros-e-fonte.test.ts` a cobra nas telas do mensageiro (balão, áudio, selos, avisos, lista de conversas, barra inferior, contadores) e só aceita o que estiver aqui. O resto do código ainda tem usos legados de `text-[10px]`/`text-[11px]`, vigiados por um piso de 10px até migrarem.
+
+| Onde | Tamanho | Motivo |
+|------|---------|--------|
+| `components/kanban/OwnerBadge.tsx` (iniciais do disco compacto, 16px) | 10px | O disco do cartão compacto do funil tem 16px; duas iniciais em 12px não cabem. O nome completo do responsável vai ao lado, em 12px, e o disco é `aria-hidden`. |
+
+Para o rodapé do balão (hora e recibo), o WhatsApp usa um corpo menor que 12px; aqui ele sobe para 12px porque o balão comporta, e o recibo ganha o mesmo tamanho.
 
 ## Como consumir em código
 

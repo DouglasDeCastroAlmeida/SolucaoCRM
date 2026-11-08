@@ -82,12 +82,12 @@ export function GavetaDeNavegacao({
         >
           {comoAba ? (
             <span className="flex h-7 w-12 items-center justify-center rounded-full">
-              <DotsThree size={22} aria-hidden />
+              <DotsThree size={24} aria-hidden />
             </span>
           ) : comoFaixa ? (
-            <DotsThree size={22} aria-hidden />
+            <DotsThree size={24} aria-hidden />
           ) : (
-            <List size={22} aria-hidden />
+            <List size={24} aria-hidden />
           )}
           {comoAba ? (
             <span className="w-full truncate text-center text-[10px] leading-tight">
@@ -113,10 +113,7 @@ export function GavetaDeNavegacao({
         className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 p-0 sm:max-w-xs"
       >
         <SheetTitle className="sr-only">{t("Navegação principal")}</SheetTitle>
-        <SidebarContent
-          collapsed={false}
-          onNavigate={() => setOpen(false)}
-        />
+        <SidebarContent onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

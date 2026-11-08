@@ -73,7 +73,7 @@ function StatCard({ label, value, warning }: { label: string; value: number; war
       <span className="text-2xl font-bold tabular-nums">{value.toLocaleString("pt-BR")}</span>
       <span className="text-xs text-muted-foreground leading-tight">{label}</span>
       {warning && value > 0 && (
-        <Warning size={14} weight="fill" className="text-warning mt-0.5" aria-label={t("Atenção")} />
+        <Warning size={16} weight="fill" className="text-warning mt-0.5" aria-label={t("Atenção")} />
       )}
     </div>
   );
@@ -182,7 +182,7 @@ export function TenantOverview({ organization, counts, integrations, cobrancaLig
                     {counts.lgpd_requests_pending}
                   </span>
                   {counts.lgpd_requests_pending > 0 && (
-                    <Warning size={14} weight="fill" className="text-warning" aria-label={t("Pendências LGPD")} />
+                    <Warning size={16} weight="fill" className="text-warning" aria-label={t("Pendências LGPD")} />
                   )}
                 </span>
               }

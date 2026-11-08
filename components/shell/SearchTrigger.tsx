@@ -26,7 +26,7 @@ export function SearchTrigger() {
       >
         <MagnifyingGlass size={16} aria-hidden />
         <span className="hidden min-w-0 flex-1 truncate text-left md:inline">{t("Buscar...")}</span>
-        <kbd className="ml-auto hidden rounded-full bg-surface-elevated px-2 py-0.5 text-[10px] md:inline">
+        <kbd className="ml-auto hidden rounded-full bg-surface-elevated px-2 py-0.5 text-xs md:inline">
           ⌘K
         </kbd>
       </button>

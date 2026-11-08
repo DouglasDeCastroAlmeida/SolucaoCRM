@@ -39,7 +39,7 @@
   --color-bg: #f7f8f9;
   --color-surface: #ffffff;
   --color-surface-elevated: #f0f2f4;
-  --color-overlay: rgba(28, 26, 22, 0.42);
+  --color-overlay: rgba(14, 23, 29, 0.42);
   /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
   --color-qr-bg: #ffffff;
   /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).
@@ -279,7 +279,7 @@
   --color-bg: #f7f8f9;
   --color-surface: #ffffff;
   --color-surface-elevated: #f0f2f4;
-  --color-overlay: rgba(28, 26, 22, 0.42);
+  --color-overlay: rgba(14, 23, 29, 0.42);
   /* Fundo de QR code: sempre claro, nos dois temas (leitor precisa de contraste claro/escuro fixo). */
   --color-qr-bg: #ffffff;
   /* Conversa do Inbox (#89): bege liso + padrão próprio e discreto (nunca o desenho do WhatsApp).

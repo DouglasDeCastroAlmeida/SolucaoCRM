@@ -39,7 +39,7 @@ function montar() {
 }
 
 function esperadas() {
-  return hubSections("organizacao", false, "admin", undefined, [], []).flatMap((s) => s.items);
+  return hubSections("organizacao", false, "admin", undefined, []).flatMap((s) => s.items);
 }
 
 describe("Configurações em duas colunas", () => {

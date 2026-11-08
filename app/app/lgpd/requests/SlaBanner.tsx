@@ -24,7 +24,7 @@ export function SlaBanner({ requests }: SlaBannerProps) {
         role="alert"
         className="flex items-center gap-3 rounded-lg border border-error/40 bg-error-bg px-4 py-3 text-sm text-error-fg"
       >
-        <Warning size={18} weight="fill" className="shrink-0 text-error-fg" aria-hidden />
+        <Warning size={20} weight="fill" className="shrink-0 text-error-fg" aria-hidden />
         <span>
           <strong>{critical.length}</strong>{" "}
           {t(critical.length === 1 ? "solicitação crítica" : "solicitações críticas")} —{" "}
@@ -40,7 +40,7 @@ export function SlaBanner({ requests }: SlaBannerProps) {
         role="alert"
         className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg"
       >
-        <Warning size={18} weight="fill" className="shrink-0 text-warning-fg" aria-hidden />
+        <Warning size={20} weight="fill" className="shrink-0 text-warning-fg" aria-hidden />
         <span>
           <strong>{warning.length}</strong>{" "}
           {t(warning.length === 1 ? "solicitação em alerta" : "solicitações em alerta")} —{" "}

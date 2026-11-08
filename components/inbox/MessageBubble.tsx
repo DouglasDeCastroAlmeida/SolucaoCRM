@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Message } from "@/lib/types/messaging";
+import { VISUAL_DO_RECIBO } from "@/lib/inbox/recibo-visual";
 import { horaNoFuso } from "@/lib/inbox/agrupar-mensagens";
 import type { ReacaoNoBalao } from "@/lib/inbox/reacoes-no-fio";
 import { lerRemetenteDeGrupo, rotuloDoRemetente } from "@/lib/messaging/remetente-de-grupo";
@@ -89,13 +90,13 @@ function AckIndicator({
     return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
   }
   if (status === "read") {
-    return <TickEntregue size={16} className="text-primary-foreground" aria-label={t("Lida")} />;
+    return <TickEntregue size={16} stroke="currentColor" strokeWidth={VISUAL_DO_RECIBO.lida.traco} className={VISUAL_DO_RECIBO.lida.classe} aria-label={t("Lida")} />;
   }
   if (status === "delivered") {
-    return <TickEntregue size={16} className="text-current/70" aria-label={t("Entregue")} />;
+    return <TickEntregue size={16} className={VISUAL_DO_RECIBO.entregue.classe} aria-label={t("Entregue")} />;
   }
   if (status === "sent") {
-    return <TickEnviado size={16} className="text-current/70" aria-label={t("Enviada")} />;
+    return <TickEnviado size={16} className={VISUAL_DO_RECIBO.enviada.classe} aria-label={t("Enviada")} />;
   }
   return null;
 }
@@ -432,12 +433,12 @@ export function MessageBubble({
           </div>
         )}
         {remetente && (
-          <p className="mb-0.5 text-[11px] font-medium text-muted-foreground">
+          <p className="mb-0.5 text-xs font-medium text-muted-foreground">
             {rotuloDoRemetente(remetente)}
           </p>
         )}
         {senderLabel && (
-          <div className="mb-0.5 flex items-center gap-1 text-[11px] font-semibold opacity-80">
+          <div className="mb-0.5 flex items-center gap-1 text-xs font-semibold opacity-80">
             {senderLabel === "IA" ? (
               <Robot size={10} weight="duotone" aria-hidden />
             ) : null}
@@ -472,7 +473,7 @@ export function MessageBubble({
                 interna. Não revelamos texto de uma mensagem apagada pelo cliente. */}
             {isOutbound && message.body && (
               <div className="border-t border-current/20 pt-1">
-                <p className="text-[10px] opacity-70">{t("Visível só aqui no CRM")}</p>
+                <p className="text-xs opacity-70">{t("Visível só aqui no CRM")}</p>
                 <p className="whitespace-pre-wrap wrap-anywhere leading-snug">{message.body}</p>
               </div>
             )}
@@ -516,7 +517,7 @@ export function MessageBubble({
         )}
 
         {adiamento && (
-          <p data-testid="aviso-de-adiamento" className="mt-1 text-[11px] leading-snug opacity-90">
+          <p data-testid="aviso-de-adiamento" className="mt-1 text-xs leading-snug opacity-90">
             {(adiamento.motivo === "teto_diario"
               ? t("Limite do dia da caixa atingido. Esta mensagem sai amanhã, a partir das {hora}.")
               : t("Aguardando o intervalo entre envios da caixa. Sai por volta das {hora}.")
@@ -527,7 +528,7 @@ export function MessageBubble({
         <div
           data-testid="balao-rodape"
           className={cn(
-            "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-[11px] leading-none",
+            "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-xs leading-none",
             isOutbound ? "text-primary-foreground" : "text-muted-foreground",
           )}
         >
@@ -565,7 +566,7 @@ export function MessageBubble({
         </div>
         {podeTentarDeNovo && (
           <div className="mt-1 flex justify-end">
-            <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" disabled={reenvioDisparado} onClick={dispararReenvio}>
+            <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-xs" disabled={reenvioDisparado} onClick={dispararReenvio}>
               {t("Tentar de novo")}
             </Button>
           </div>
@@ -583,7 +584,7 @@ export function MessageBubble({
             )}
           >
             {[...new Set(reacoes.map((r) => r.emoji))].join("")}
-            {reacoes.length > 1 && <span className="text-[10px] text-muted-foreground">{reacoes.length}</span>}
+            {reacoes.length > 1 && <span className="text-xs text-muted-foreground">{reacoes.length}</span>}
           </span>
         ) : null}
       </div>

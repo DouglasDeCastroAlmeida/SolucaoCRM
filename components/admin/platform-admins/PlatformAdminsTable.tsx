@@ -179,7 +179,7 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
 
                 {/* Scope */}
                 <TableCell>
-                  <Badge variant="outline" className="text-[10px] font-mono">
+                  <Badge variant="outline" className="text-xs font-mono">
                     {row.scope ?? "platform"}
                   </Badge>
                 </TableCell>
@@ -187,11 +187,11 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
                 {/* MFA Required */}
                 <TableCell>
                   {row.mfa_required ? (
-                    <Badge variant="default" className="text-[10px]">
+                    <Badge variant="default" className="text-xs">
                       {t("Sim")}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px]">
+                    <Badge variant="secondary" className="text-xs">
                       {t("Não")}
                     </Badge>
                   )}
@@ -200,13 +200,13 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
                 {/* Status */}
                 <TableCell>
                   {isRevoked ? (
-                    <Badge variant="destructive" className="text-[10px]">
+                    <Badge variant="destructive" className="text-xs">
                       {t("Revogado")}
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
-                      className="border-success text-[10px] text-success-fg"
+                      className="border-success text-xs text-success-fg"
                     >
                       {t("Ativo")}
                     </Badge>

@@ -66,7 +66,7 @@ export function DocumentCard({
           {tipoDoDocumento(mime, storagePath, fileName)} · {formatBytes(sizeBytes)}
         </span>
       </span>
-      <DownloadSimple size={18} className="shrink-0 opacity-70" aria-hidden />
+      <DownloadSimple size={20} className="shrink-0 opacity-70" aria-hidden />
     </a>
   );
 }

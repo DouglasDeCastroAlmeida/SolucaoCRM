@@ -383,12 +383,12 @@ export function ConversationListItem({
         {naFila && (
           <div className="mb-1 flex items-center gap-1.5">
             <span
-              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-[10px] font-medium tabular-nums text-accent"
+              className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-soft px-1 text-xs font-medium tabular-nums text-accent"
               aria-label={`${t("Posição")} ${queuePosition} ${t("na fila")}`}
             >
               {queuePosition}º
             </span>
-            <span className="text-[11px] text-text-muted">
+            <span className="text-xs text-text-muted">
               {waitingLabel(conversation, t, localeDaData)}
             </span>
           </div>
@@ -413,13 +413,13 @@ export function ConversationListItem({
               mandou cada mensagem dentro do grupo).
             */}
             {conversation.is_group && (
-              <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-[10px]">
+              <Badge variant="secondary" className="h-4 shrink-0 px-1.5 text-xs">
                 {t("Grupo")}
               </Badge>
             )}
           </span>
           <span
-            className="shrink-0 text-[11px] tabular-nums text-text-subtle"
+            className="shrink-0 text-xs tabular-nums text-text-subtle"
             // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
             // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
             // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
@@ -449,7 +449,7 @@ export function ConversationListItem({
             {truncated}
           </p>
           {unread > 0 && (
-            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold tabular-nums text-accent-foreground">
               {unread}
             </span>
           )}
@@ -465,17 +465,17 @@ export function ConversationListItem({
               <Badge
                 variant="outline"
                 data-testid="selo-exemplo-ia"
-                className="h-4 gap-1 px-1.5 text-[10px] font-normal text-accent"
+                className="h-4 gap-1 px-1.5 text-xs font-normal text-accent"
               >
                 <Sparkle size={10} weight="fill" aria-hidden />
                 {t("Exemplo para a IA")}
               </Badge>
             )}
             {visibleTags.map((t) => (
-              <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-[10px]" />
+              <ChipDeEtiqueta key={t} tag={t} className="h-4 px-1.5 text-xs" />
             ))}
             {overflow > 0 && (
-              <span className="text-[10px] text-text-muted">+{overflow}</span>
+              <span className="text-xs text-text-muted">+{overflow}</span>
             )}
             {mostrarAtendente && comando.quem === "humano" && (
               <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
@@ -488,19 +488,19 @@ export function ConversationListItem({
             {mostrarCanal && rotuloCanal && (
               <Badge
                 variant="outline"
-                className="h-4 min-w-0 max-w-[9rem] gap-1 truncate px-1.5 text-[10px] font-normal text-text-muted"
+                className="h-4 min-w-0 max-w-[9rem] gap-1 truncate px-1.5 text-xs font-normal text-text-muted"
                 title={`${t("Entrou por")} ${rotuloCanal}`}
               >
                 <span className="truncate">{rotuloCanal}</span>
               </Badge>
             )}
             {c?.is_blocked && (
-              <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="destructive" className="h-4 px-1.5 text-xs">
                 {t("Bloqueado")}
               </Badge>
             )}
             {c?.is_anonymized && (
-              <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+              <Badge variant="outline" className="h-4 px-1.5 text-xs">
                 {t("Anonimizado")}
               </Badge>
             )}

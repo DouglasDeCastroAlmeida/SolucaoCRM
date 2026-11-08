@@ -36,7 +36,7 @@ export function AttachMenu({ disabled, onPick, onPickContact }: Props) {
             aria-label={t("Anexar")}
             disabled={disabled}
           >
-            <Clipe size={22} aria-hidden />
+            <Clipe size={24} aria-hidden />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" side="top" className="w-52 p-1">
