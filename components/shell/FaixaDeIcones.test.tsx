@@ -26,7 +26,6 @@ vi.mock("@/hooks/auth/AuthProvider", () => ({
 }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (s: string) => s }));
 vi.mock("next/navigation", () => ({ usePathname: () => estado.caminho }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({ toggleSidebar: vi.fn() }));
 vi.mock("@/components/connections/ConnectionHealthDot", () => ({
   ConnectionHealthDot: () => null,
 }));

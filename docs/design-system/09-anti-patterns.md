@@ -8,15 +8,15 @@ Lista canônica do que **não fazer** no DeskcommCRM. Anti-patterns ficam aqui p
 
 ## 1. ❌ Inter como font family
 
-**Por quê:** ~70% dos SaaS atuais usam Inter. É correta, mas saturada. Diluição de marca.
-**✅ Sim:** Atkinson Hyperlegible (display + body) + IBM Plex Mono (dados). Ver `03-typography.md`.
+**Por quê:** a fonte do produto é a do sistema (ADR 0007), como no WhatsApp Web; baixar Inter ou outra web font vai contra isso e custa carga.
+**✅ Sim:** a pilha do sistema (`--font-sans` em `app/globals.css`) + IBM Plex Mono (dados). Ver `03-typography.md`.
 
 ---
 
 ## 2. ❌ Geist Sans, Space Grotesk, ou qualquer Vercel-default
 
 **Por quê:** mesma razão de Inter. Geist é a "nova Inter" de 2024–2025. Anti-genérico exige distância.
-**✅ Sim:** Atkinson.
+**✅ Sim:** a pilha do sistema. (A Atkinson Hyperlegible foi a fonte até o ADR 0007; não a reintroduza.)
 
 ---
 
@@ -29,8 +29,8 @@ Lista canônica do que **não fazer** no DeskcommCRM. Anti-patterns ficam aqui p
 
 ## 4. ❌ `bg-zinc-900` ou `bg-slate-900` em dark mode
 
-**Por quê:** zinc/slate são cool-gray geométricos. A paleta é warm (greige). Misturar quebra coerência.
-**✅ Sim:** `bg: #161510` (warm dark canônico). Ver `02-palette-sage.md`.
+**Por quê:** zinc/slate crus são cinzas fora da paleta. Os neutros do produto são cinza azulado próprios (ADR 0007); misturar quebra coerência.
+**✅ Sim:** `bg: #0e171d` (escuro) / `#f7f8f9` (claro), via tokens. Ver `02-palette-sage.md`. Não reintroduza o greige antigo (`#faf9f6`, `#161510`).
 
 ---
 
@@ -51,7 +51,7 @@ Lista canônica do que **não fazer** no DeskcommCRM. Anti-patterns ficam aqui p
 ## 7. ❌ Lucide Icons (default shadcn)
 
 **Por quê:** ~80% dos shadcn-based usam Lucide. Genérico por convergência.
-**✅ Sim:** Phosphor com peso `duotone` default. Ver `05-iconography-phosphor.md`.
+**✅ Sim:** Phosphor com peso `duotone` default; Material Symbols só para os glifos do mapa único (ADR 0007). Ver `05-iconography-phosphor.md`.
 
 ---
 
@@ -106,15 +106,15 @@ Lista canônica do que **não fazer** no DeskcommCRM. Anti-patterns ficam aqui p
 
 ## 15. ❌ Sombras com preto puro (`rgba(0,0,0,0.X)`)
 
-**Por quê:** preto puro contra warm-bg vibra (gera halo cinza). Quebra coerência.
-**✅ Sim:** `rgba(20, 18, 14, X)` — cor do texto neutro. Ver `01-foundation-tokens.md` § Shadow.
+**Por quê:** preto puro contra o fundo neutro vibra (gera halo cinza). Quebra coerência.
+**✅ Sim:** sombra na cor do texto neutro (`#17222b` com alfa), via token. Ver `01-foundation-tokens.md` § Shadow.
 
 ---
 
 ## 16. ❌ `#fff` puro como bg de página em light mode
 
 **Por quê:** branco puro reflete demais em sessão longa, causa fadiga.
-**✅ Sim:** `bg: #faf9f6` (offwhite warm). `surface` (cards) sim usa `#ffffff` puro pra contraste.
+**✅ Sim:** `bg: #f7f8f9` (neutro claro). `surface` (cards) sim usa `#ffffff` puro pra contraste.
 
 ---
 

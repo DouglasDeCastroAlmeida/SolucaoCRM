@@ -41,13 +41,15 @@ export function ContactCard({ message }: Props) {
 
   const contact = resolveSharedContact(message);
 
+  const isOutbound = message.direction === "outbound";
+
 
 
   if (!contact) {
 
     return (
 
-      <div className="rounded-lg border border-current/20 bg-background/10 px-3 py-2 text-xs opacity-80">
+      <div className={cn("rounded-md px-3 py-2 text-xs opacity-80", isOutbound ? "bg-primary-foreground/15" : "bg-foreground/5")}>
 
         {t("Contato")}
 
@@ -135,9 +137,13 @@ export function ContactCard({ message }: Props) {
 
       className={cn(
 
-        "flex max-w-[220px] items-center gap-2 rounded-lg border border-current/20 bg-background/10 px-2 py-2 text-left transition-colors",
+        // Mesmo molde do DocumentCard/LocationCard: largura w-64, raio rounded-md, fundo por token
+        // conforme o lado do balão (sem borda de cor solta).
+        "flex w-64 max-w-full items-center gap-3 rounded-md p-2.5 text-left transition-colors",
 
-        canOpen && "cursor-pointer hover:bg-background/20 disabled:cursor-wait disabled:opacity-70",
+        isOutbound ? "bg-primary-foreground/15" : "bg-foreground/5",
+
+        canOpen && (isOutbound ? "cursor-pointer hover:bg-primary-foreground/25" : "cursor-pointer hover:bg-foreground/10") + " disabled:cursor-wait disabled:opacity-70",
 
         !canOpen && "cursor-default opacity-90",
 
@@ -145,9 +151,9 @@ export function ContactCard({ message }: Props) {
 
     >
 
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background/20">
+      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", isOutbound ? "bg-primary-foreground/20" : "bg-primary/10 text-primary")}>
 
-        <UserCircle size={28} weight="duotone" aria-hidden />
+        <UserCircle size={24} weight="duotone" aria-hidden />
 
       </span>
 

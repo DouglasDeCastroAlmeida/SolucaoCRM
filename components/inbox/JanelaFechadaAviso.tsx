@@ -149,7 +149,7 @@ function Trecho({ texto }: { texto: string }) {
           <span
             key={i}
             data-testid="parametro-em-falta"
-            className="rounded-md bg-primary/10 px-1 py-0.5 font-mono text-[11px] font-medium text-primary ring-1 ring-primary/20"
+            className="rounded-md bg-primary/10 px-1 py-0.5 font-mono text-xs font-medium text-primary ring-1 ring-primary/20"
           >
             {parte}
           </span>
@@ -270,7 +270,7 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
       aria-label={t("Prévia da mensagem")}
       className="mt-2 flex flex-col gap-1.5 rounded-md border border-warning/40 bg-background/60 p-2.5"
     >
-      <span className="text-[10px] font-medium uppercase tracking-wide text-warning-fg">
+      <span className="text-xs font-medium uppercase tracking-wide text-warning-fg">
         {t("Prévia da mensagem")}
       </span>
 
@@ -279,7 +279,7 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
       {previa.rodape && (
         <p
           data-testid="previa-rodape"
-          className="text-[11px] text-warning-fg"
+          className="text-xs text-warning-fg"
         >
           {previa.rodape}
         </p>
@@ -292,7 +292,7 @@ function Previa({ previa }: { previa: PreviaDaMensagem }) {
           key={card.indice}
           className="flex flex-col gap-1.5 rounded-md border border-dashed border-warning/40 p-1.5"
         >
-          <span className="text-[10px] font-medium uppercase tracking-wide text-warning-fg">
+          <span className="text-xs font-medium uppercase tracking-wide text-warning-fg">
             {t("Item do carrossel")} {card.indice + 1}
           </span>
           <Bloco bloco={card} prefixo={`previa-card-${card.indice}-`} />
@@ -493,7 +493,7 @@ export function JanelaFechadaAviso({
         <div className="mt-2 flex flex-col gap-2">
           {slots.map((slot) => (
             <label key={slot.valueKey} className="flex flex-col gap-1">
-              <span className="text-[11px] text-warning-fg">
+              <span className="text-xs text-warning-fg">
                 {rotuloDoSlot(slot, t)}
               </span>
               <input
@@ -510,7 +510,7 @@ export function JanelaFechadaAviso({
                 )}
               />
               {ehMidia(slot) && atual?.savedValues !== undefined && (
-                <span className="flex items-center gap-1.5 text-[11px] text-warning-fg">
+                <span className="flex items-center gap-1.5 text-xs text-warning-fg">
                   <input
                     type="checkbox"
                     checked={salvar[slot.valueKey] ?? false}
@@ -531,7 +531,7 @@ export function JanelaFechadaAviso({
               parâmetro de novo, sempre — sem ele vem `132012 Format mismatch,
               expected IMAGE, received UNKNOWN`. */}
           {slots.some(ehMidia) && (
-            <p className="text-[11px] text-warning-fg">
+            <p className="text-xs text-warning-fg">
               {t("A mídia do modelo entra por link público — a plataforma baixa o arquivo na hora do envio.")}
             </p>
           )}

@@ -6,12 +6,11 @@ import { SimboloDoProduto } from "@/components/branding/MarcaDoProduto";
 import { ContadorDaFila } from "@/components/shell/ContadorDaFila";
 import { ContadorDeCasos } from "@/components/shell/ContadorDeCasos";
 import { GavetaDeNavegacao } from "@/components/shell/MobileSidebar";
+import { useMarcaDaCasca } from "@/components/shell/useMarcaDaCasca";
 import { VersionFooter } from "@/components/shell/VersionFooter";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useT } from "@/hooks/i18n/useT";
-import { marcaEhADoProduto } from "@/lib/branding";
-import { useMarcaDaInstalacao } from "@/lib/branding/contexto";
 import { GRUPO_NO_RODAPE, sidebarGroups, type NavDestination } from "@/lib/navigation/registry";
 import { Gear } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
@@ -88,7 +87,7 @@ export function FaixaDeIcones() {
                           : "text-muted-foreground hover:bg-surface/70 hover:text-foreground",
                       )}
                     >
-                      <Icon size={22} weight={aqui ? "fill" : "regular"} aria-hidden />
+                      <Icon size={24} weight={aqui ? "fill" : "regular"} aria-hidden />
                       {item.contador === "casos" && <ContadorDeCasos compacto />}
                       {item.contador === "fila" && <ContadorDaFila compacto />}
                     </Link>
@@ -115,7 +114,7 @@ export function FaixaDeIcones() {
                     : "text-muted-foreground hover:bg-surface/70 hover:text-foreground",
                 )}
               >
-                <Gear size={22} weight={estaEm(config.href) ? "fill" : "regular"} aria-hidden />
+                <Gear size={24} weight={estaEm(config.href) ? "fill" : "regular"} aria-hidden />
               </Link>
             </DicaDaFaixa>
           )}
@@ -141,17 +140,7 @@ function DicaDaFaixa({ rotulo, children }: { rotulo: string; children: React.Rea
  * personalizou. Mesma precedência da barra aberta (organização > instalação).
  */
 function MarcaDaFaixa() {
-  const brand = useMarcaDaInstalacao();
-  const { activeOrg } = useAuth();
-  const nome = activeOrg?.marca?.nome ?? brand.name;
-  const logo = activeOrg?.marca?.logoUrl || brand.logoUrl;
-  const logoEscuro =
-    activeOrg?.marca?.logoDarkUrl !== undefined
-      ? activeOrg.marca.logoDarkUrl
-      : activeOrg?.marca?.logoUrl
-        ? null
-        : brand.logoDarkUrl;
-  const marcaDoProduto = marcaEhADoProduto({ name: nome, logoUrl: logo ?? null });
+  const { nome, logo, logoEscuro, marcaDoProduto, inicial } = useMarcaDaCasca();
 
   if (marcaDoProduto) {
     return <SimboloDoProduto nome={nome} className="h-8 w-8" />;
@@ -191,7 +180,7 @@ function MarcaDaFaixa() {
       title={nome}
       className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground"
     >
-      {[...nome][0]?.toUpperCase() ?? brand.initial}
+      {inicial}
     </span>
   );
 }

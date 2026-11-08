@@ -246,15 +246,14 @@ export function InboxLayout({
    * que redistribui a largura, e o painel é só quem desenha o controle.
    *
    * Nasce do cookie lido no servidor (`painelRecolhidoInicial`); o clique grava
-   * pelo server action `togglePainelDoContato`, o mesmo caminho do recolher da
-   * esquerda (`toggleSidebar`). O estado local dá o retorno IMEDIATO do clique —
+   * pelo server action `togglePainelDoContato`. O estado local dá o retorno IMEDIATO do clique —
    * sem ele o painel só reagiria depois da volta ao servidor.
    */
   const [painelRecolhido, setPainelRecolhido] = useState(painelRecolhidoInicial);
   const alternarPainelDoContato = useCallback(() => {
     const proximo = !painelRecolhido;
     setPainelRecolhido(proximo);
-    // O action recebe o estado ATUAL, como o `toggleSidebar` do menu da esquerda.
+    // O action recebe o estado ATUAL, não o próximo.
     startTransition(() => {
       void togglePainelDoContato(painelRecolhido);
     });
@@ -821,7 +820,7 @@ export function InboxLayout({
               aria-label={t("Voltar para as conversas")}
               onClick={() => handleSelect(null)}
             >
-              <Voltar size={22} aria-hidden />
+              <Voltar size={24} aria-hidden />
               {t("Conversas")}
             </Button>
             <div className="flex-1" />

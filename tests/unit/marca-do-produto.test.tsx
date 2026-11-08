@@ -20,7 +20,6 @@ import { CORES_DA_MARCA } from "@/lib/branding/desenho";
  */
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/app/inbox" }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({ toggleSidebar: vi.fn() }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
 vi.mock("@/components/connections/ConnectionHealthDot", () => ({
   ConnectionHealthDot: () => null,
@@ -47,10 +46,10 @@ vi.mock("@/hooks/auth/AuthProvider", () => ({ useAuth: () => contexto }));
 
 const PADRAO: Branding = { name: DEFAULT_APP_NAME, logoUrl: null, initial: "D" };
 
-function renderSidebar(marca: Branding, collapsed: boolean) {
+function renderSidebar(marca: Branding) {
   return render(
     <MarcaDaInstalacaoProvider marca={marca}>
-      <SidebarContent collapsed={collapsed} />
+      <SidebarContent />
     </MarcaDaInstalacaoProvider>,
   );
 }
@@ -78,7 +77,7 @@ describe("marcaEhADoProduto", () => {
 
 describe("o desenho na barra lateral", () => {
   it("aberta e sem marca própria, mostra o logotipo do produto (SVG, não <img>)", () => {
-    renderSidebar(PADRAO, false);
+    renderSidebar(PADRAO);
     const logotipo = screen.getByRole("img", { name: DEFAULT_APP_NAME });
     expect(logotipo.tagName.toLowerCase()).toBe("svg");
     // O e2e `marca-logo.spec.ts` lê "barra sem <img>" como "sem logo do
@@ -88,27 +87,21 @@ describe("o desenho na barra lateral", () => {
     expect(screen.queryByText(DEFAULT_APP_NAME)).toBeNull();
   });
 
-  it("recolhida, mostra só o símbolo — e não a inicial em texto", () => {
-    renderSidebar(PADRAO, true);
-    expect(screen.getByRole("img", { name: DEFAULT_APP_NAME }).tagName.toLowerCase()).toBe("svg");
-    expect(screen.queryByText("D")).toBeNull();
-  });
-
   it("com nome da instalação, segue em texto — o desenho do produto não vaza", () => {
-    renderSidebar({ name: "Sistema do Revendedor", logoUrl: null, initial: "S" }, false);
+    renderSidebar({ name: "Sistema do Revendedor", logoUrl: null, initial: "S" });
     expect(screen.getByText("Sistema do Revendedor")).toBeTruthy();
     expect(document.querySelector("svg[role=img]")).toBeNull();
   });
 
   it("com nome da ORGANIZAÇÃO sobre a instalação padrão, o nome dela vence o desenho", () => {
     contexto = { user: usuario, activeOrg: { ...org, marca: { nome: "Loja da Ana" } } };
-    renderSidebar(PADRAO, false);
+    renderSidebar(PADRAO);
     expect(screen.getByText("Loja da Ana")).toBeTruthy();
     expect(document.querySelector("svg[role=img]")).toBeNull();
   });
 
   it("com logo da instalação, a imagem vence o desenho", () => {
-    renderSidebar({ ...PADRAO, logoUrl: "https://cdn.exemplo.test/logo.png" }, false);
+    renderSidebar({ ...PADRAO, logoUrl: "https://cdn.exemplo.test/logo.png" });
     expect(screen.getByRole("img").tagName.toLowerCase()).toBe("img");
   });
 });

@@ -38,9 +38,6 @@ vi.mock("@/components/shell/ContadorDeCasos", () => ({
 vi.mock("@/components/shell/ContadorDaFila", () => ({
   ContadorDaFila: () => null,
 }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({
-  toggleSidebar: vi.fn(),
-}));
 vi.mock("@/components/shell/VersionFooter", () => ({
   VersionFooter: () => null,
 }));
@@ -55,13 +52,13 @@ afterEach(cleanup);
 describe("Sidebar — sem controle de recolher (#99)", () => {
   it("aberta: nenhum botão de recolher na barra", () => {
     comoPapel("admin");
-    render(<SidebarContent collapsed={false} />);
+    render(<SidebarContent />);
     expect(screen.queryByRole("button", { name: /recolher sidebar/i })).toBeNull();
   });
 
-  it("recolhida: nenhum botão de expandir na barra", () => {
+  it("nenhum botão de expandir na barra", () => {
     comoPapel("admin");
-    render(<SidebarContent collapsed={true} />);
+    render(<SidebarContent />);
     expect(screen.queryByRole("button", { name: /expandir sidebar/i })).toBeNull();
   });
 });
@@ -84,7 +81,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       role: "admin",
       marca: { nome: "Clínica Sorriso Feliz", logoUrl: "https://marca/logo.png" },
     };
-    render(<SidebarContent collapsed={false} />);
+    render(<SidebarContent />);
     const img = document.querySelector("img")!;
     // O review provou a pegadinha: `max-w-full` + `max-w-[10rem]` disputam a
     // MESMA propriedade e só um vale. O teto tem de ser um único `min()`.
@@ -112,7 +109,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       <MarcaDaInstalacaoProvider
         marca={{ name: "Sistema do Revendedor", logoUrl: null, initial: "S" }}
       >
-        <SidebarContent collapsed={false} />
+        <SidebarContent />
       </MarcaDaInstalacaoProvider>,
     );
     // Medido no review: 3 linhas (72px) dentro de uma linha de 56px.
@@ -142,7 +139,7 @@ describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review 
       <MarcaDaInstalacaoProvider
         marca={{ name: "Sistema do Revendedor", logoUrl: null, initial: "S" }}
       >
-        <SidebarContent collapsed={false} />
+        <SidebarContent />
       </MarcaDaInstalacaoProvider>,
     );
     const nome = screen.getByText("Clínica Odontológica Sorriso Feliz");

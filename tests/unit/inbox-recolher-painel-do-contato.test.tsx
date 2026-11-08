@@ -240,8 +240,7 @@ describe("Inbox — recolher o painel do contato (#3004)", () => {
     // A grade devolve a largura: a trilha da ficha vira o trilho estreito.
     await waitFor(() => expect(grade().className).toContain(trilhaDoTrilho));
     expect(grade().className).not.toContain(trilhaDaFicha);
-    // E a preferência vai para o servidor — o mesmo caminho do recolher da
-    // esquerda (`toggleSidebar`), com o estado ATUAL.
+    // E a preferência vai para o servidor, com o estado ATUAL.
     expect(togglePainelDoContato).toHaveBeenCalledWith(false);
   });
 

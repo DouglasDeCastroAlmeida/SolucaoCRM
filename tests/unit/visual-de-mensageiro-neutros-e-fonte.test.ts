@@ -109,6 +109,38 @@ describe("tamanho mínimo de texto", () => {
     }
     expect(abaixo).toEqual([]);
   });
+  // A regra real é 12px (docs/design-system/03-typography.md). As telas refeitas no épico #82
+  // cumprem: nenhum texto fixo abaixo de 12px nelas. O piso de 10px acima segue valendo para o
+  // resto do código (legado, ainda por migrar). Exceções só com motivo escrito em 03-typography.md.
+  const SUPERFICIES_EM_12PX = [
+    "components/inbox/MessageBubble.tsx",
+    "components/inbox/media/AudioPlayer.tsx",
+    "components/inbox/JanelaFechadaAviso.tsx",
+    "components/inbox/JanelaSelo.tsx",
+    "components/inbox/ConversationListItem.tsx",
+    "components/inbox/InboxFilters.tsx",
+    "components/shell/BarraInferior.tsx",
+    "components/shell/ContadorDaFila.tsx",
+    "components/shell/ContadorDeCasos.tsx",
+    "components/shell/SearchTrigger.tsx",
+    "components/connections/TemplatesParceiroClient.tsx",
+    "components/admin/platform-admins/PlatformAdminsTable.tsx",
+    "components/kanban/OwnerBadge.tsx",
+  ];
+  /** Exceção registrada em 03-typography.md ("Exceções ao mínimo de 12px"): arquivo -> quantos usos. */
+  const EXCECOES_REGISTRADAS: Record<string, number> = {
+    // Iniciais dentro do disco de 16px do cartão compacto do funil: 12px não cabe no disco.
+    "components/kanban/OwnerBadge.tsx": 2,
+  };
+  it("as telas do mensageiro não têm texto fixo abaixo de 12px, salvo exceção registrada", () => {
+    const doc = fs.readFileSync(path.join(RAIZ, "docs/design-system/03-typography.md"), "utf8");
+    for (const f of SUPERFICIES_EM_12PX) {
+      const src = fs.readFileSync(path.join(RAIZ, f), "utf8");
+      const abaixo = [...src.matchAll(/text-\[(\d+(?:\.\d+)?)px\]/g)].filter((m) => Number(m[1]) < 12);
+      expect(abaixo.length, f).toBe(EXCECOES_REGISTRADAS[f] ?? 0);
+      if (abaixo.length) expect(doc, `${f} sem exceção em 03-typography.md`).toContain(f);
+    }
+  });
   it("nenhum font-size fixo abaixo de 10px no CSS global", () => {
     for (const m of css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)) {
       expect(Number(m[1]), m[0]).toBeGreaterThanOrEqual(10);

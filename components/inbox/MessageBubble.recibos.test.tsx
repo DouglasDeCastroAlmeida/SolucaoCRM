@@ -93,7 +93,7 @@ describe("MessageBubble - horario (AC-002.5)", () => {
   it("fica DENTRO do balao, pequeno, no fuso da organizacao", () => {
     render(<MessageBubble message={msg()} fuso="America/Sao_Paulo" />);
     const hora = within(screen.getByTestId("message-bubble")).getByText("12:05");
-    expect(hora.parentElement?.className).toContain("text-[11px]");
+    expect(hora.parentElement?.className).toContain("text-xs");
   });
 
   it("muda com o fuso da organizacao, nao com o do navegador", () => {

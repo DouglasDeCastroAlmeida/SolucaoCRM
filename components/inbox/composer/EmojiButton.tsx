@@ -29,7 +29,7 @@ export function EmojiButton({ disabled, onPick }: Props) {
           aria-label={t("Emoji")}
           disabled={disabled}
         >
-          <Emoji size={22} aria-hidden />
+          <Emoji size={24} aria-hidden />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" side="top" className="w-auto border-none p-0 shadow-lg">

@@ -654,11 +654,11 @@ function CamposDoFunil({
 /**
  * O CONTROLE DE RECOLHER O PAINEL INTEIRO (issue #3004).
  *
- * Mesmo ícone e mesmo vocabulário do recolher do menu da esquerda
- * (`BotaoDeRecolher` em `components/shell/Sidebar.tsx`): `CaretDoubleLeft` para
- * recolher, `CaretDoubleRight` para expandir, o verbo "Recolher"/"Expandir" no
- * rótulo. O que muda é o ALVO na frase: aqui há dois recolhedores na mesma tela,
- * e um leitor de tela que ouvisse "Recolher" nos dois não saberia qual. O
+ * `CaretDoubleLeft` para recolher, `CaretDoubleRight` para expandir, o verbo
+ * "Recolher"/"Expandir" no rótulo. (O menu da esquerda tinha um recolhedor com o
+ * mesmo vocabulário até o visual de mensageiro removê-lo.) O ALVO na frase ("painel
+ * do contato") deixa claro o que se recolhe, e um leitor de tela não ouve só
+ * "Recolher". O
  * alvo explícito ("painel do contato") é o que os distingue — o vocabulário
  * continua o mesmo.
  *
@@ -680,7 +680,6 @@ function BotaoDeRecolherDoPainel({
     <button
       type="button"
       onClick={onAlternar}
-      // Vocabulário e ícone iguais aos do menu da esquerda (`BotaoDeRecolher`).
       className={cn(
         "flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent/50 hover:text-foreground",
         recolhido && "justify-center",

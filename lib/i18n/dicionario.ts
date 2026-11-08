@@ -47,6 +47,7 @@ export const DICIONARIO: Traducoes = {
   "Seções de configurações": { es: "Secciones de configuración" },
   "Escolha uma seção para ver os detalhes.": { es: "Elige una sección para ver los detalles." },
   "Voltar para Configurações": { es: "Volver a Configuración" },
+  "Outra seção": { es: "Otra sección" },
   // Painel /admin/marcas (REQ-008)
   "Caminho do logo": { es: "Ruta del logo" },
   "Pacote padrão": { es: "Paquete predeterminado" },

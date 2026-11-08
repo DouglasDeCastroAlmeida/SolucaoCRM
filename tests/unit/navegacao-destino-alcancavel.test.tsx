@@ -27,7 +27,6 @@ vi.mock("@/hooks/auth/AuthProvider", () => ({
 }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (s: string) => s }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/app/inbox" }));
-vi.mock("@/app/actions/shell/toggleSidebar", () => ({ toggleSidebar: vi.fn() }));
 vi.mock("@/components/connections/ConnectionHealthDot", () => ({
   ConnectionHealthDot: () => null,
 }));
@@ -51,8 +50,8 @@ const SO_NA_PALETA: Record<string, string> = {
 
 const ADMIN_DE_PLATAFORMA = [true, "admin", undefined, [], []] as const;
 
-function hrefsRenderizados(collapsed: boolean): Set<string> {
-  const { container, unmount } = render(<SidebarContent collapsed={collapsed} />);
+function hrefsRenderizados(): Set<string> {
+  const { container, unmount } = render(<SidebarContent />);
   const hrefs = new Set(
     [...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href") as string),
   );
@@ -124,7 +123,7 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
 
   it("AC-006.3: todo destino só-na-paleta está de fato no ⌘K e não tem outra porta no menu", () => {
     const naPaleta = new Set(todos.map((d) => d.href));
-    const links = hrefsRenderizados(true);
+    const links = hrefsRenderizados();
     for (const [href, motivo] of Object.entries(SO_NA_PALETA)) {
       expect(motivo.trim().length).toBeGreaterThan(20);
       expect(naPaleta.has(href), `${href} saiu do ⌘K`).toBe(true);
@@ -132,10 +131,10 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
     }
   });
 
-  for (const recolhido of [true, false]) {
-    const quem = recolhido ? "menu recolhido" : "gaveta do celular";
+  {
+    const quem = "gaveta do celular";
     it(`AC-006.3: no ${quem}, nenhum destino fica sem porta (ícone, "Ver tudo" ou ⌘K)`, () => {
-      const links = hrefsRenderizados(recolhido);
+      const links = hrefsRenderizados();
       const porHub = new Set<string>();
       for (const { group } of sidebarGroups(...ADMIN_DE_PLATAFORMA)) {
         if (!group.hub || !links.has(group.hub.href)) continue;
@@ -157,7 +156,7 @@ describe("todo destino do catálogo é alcançável pelo menu desenhado", () => 
     });
 
     it(`AC-001.5: o ${quem} renderiza todo ícone e todo "Ver tudo" de sidebarGroups()`, () => {
-      const links = hrefsRenderizados(recolhido);
+      const links = hrefsRenderizados();
       const esperados = sidebarGroups(...ADMIN_DE_PLATAFORMA).flatMap(({ group, items }) => [
         ...items.map((i) => i.href),
         ...(group.hub ? [group.hub.href] : []),
