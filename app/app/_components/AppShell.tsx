@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
-import { Sidebar } from "@/components/shell/Sidebar";
+import { FaixaDeIcones } from "@/components/shell/FaixaDeIcones";
 import { TopBar } from "@/components/shell/TopBar";
 import { BarraInferior } from "@/components/shell/BarraInferior";
 import { BarraDeProgressoNavegacao } from "@/components/shell/BarraDeProgressoNavegacao";
@@ -13,7 +13,11 @@ import { ensureNotifyServiceWorker } from "@/lib/notifications/service_worker";
 import { estiloDaReserva, useOcupacaoDoRodape } from "@/lib/ui/rodape-ocupado";
 
 interface AppShellProps {
-  sidebarCollapsed: boolean;
+  /**
+   * Sem efeito desde o visual de mensageiro (#87): a faixa de ícones tem
+   * largura fixa de 64px. Fica na assinatura para o layout não mudar de forma.
+   */
+  sidebarCollapsed?: boolean;
   /**
    * A pessoa pode atender (agent+)? Vem do papel resolvido no layout, e não de
    * uma consulta desta casca.
@@ -26,7 +30,7 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellProps) {
+export function AppShell({ podeAtender, children }: AppShellProps) {
   useInboundMessageAlerts();
   useInboundCallAlerts();
   useCrmAlerts();
@@ -62,7 +66,7 @@ export function AppShell({ sidebarCollapsed, podeAtender, children }: AppShellPr
     <div className="flex min-h-dvh w-full bg-surface-elevated">
       <BarraDeProgressoNavegacao />
       <div className="hidden md:block">
-        <Sidebar collapsed={sidebarCollapsed} />
+        <FaixaDeIcones />
       </div>
       {/*
         `min-w-0` é o que permite a coluna de conteúdo ENCOLHER. Um flex item

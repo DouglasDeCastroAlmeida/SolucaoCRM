@@ -146,7 +146,7 @@ export function BarraInferior() {
         gaveta (`hidden md:block` no `AppShell`): acima de 768px a barra lateral
         já está na tela e uma segunda navegação seria redundante.
       */
-      className="ds-surge fixed inset-x-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
+      className="ds-surge fixed inset-x-0 z-40 border-t border-border bg-surface pb-[env(safe-area-inset-bottom,0px)] md:hidden"
     >
       <ul className="flex items-stretch justify-around py-1">
         {abas.map((aba) => {
@@ -164,10 +164,19 @@ export function BarraInferior() {
                 className={cn(
                   "relative flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-1",
                   "transition-[color,background-color] duration-fast",
-                  aqui ? "text-accent" : "text-muted-foreground",
+                  aqui ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                <Icone size={22} weight={aqui ? "fill" : "regular"} aria-hidden />
+                {/* Visual de mensageiro (#87): o ícone do item atual repousa numa
+                    pílula cinza-clara, como na barra do WhatsApp do telefone. */}
+                <span
+                  className={cn(
+                    "flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-fast",
+                    aqui && "rounded-full bg-surface-elevated",
+                  )}
+                >
+                  <Icone size={22} weight={aqui ? "fill" : "regular"} aria-hidden />
+                </span>
                 <span className="w-full truncate text-center text-[10px] leading-tight">
                   {t(aba.label)}
                 </span>

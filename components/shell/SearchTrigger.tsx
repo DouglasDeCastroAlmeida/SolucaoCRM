@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { MagnifyingGlass } from "@/lib/ui/icons";
-import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/i18n/useT";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 
@@ -16,16 +15,21 @@ export function SearchTrigger() {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-2 text-muted-foreground"
+      {/* Visual de mensageiro (#87): busca em PÍLULA sobre o cabeçalho cinza-claro,
+          como a do WhatsApp Web. Botão nativo (sem `components/ui`): o que muda
+          é só a forma; o clique e o ⌘K abrem a mesma paleta de comandos. */}
+      <button
+        type="button"
+        aria-label={t("Buscar...")}
+        className="flex h-9 w-full min-w-0 items-center gap-2 rounded-full bg-surface px-3 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden md:px-4"
         onClick={() => setOpen(true)}
       >
-        <MagnifyingGlass size={14} aria-hidden />
-        <span className="hidden md:inline">{t("Buscar...")}</span>
-        <kbd className="ml-2 hidden md:inline rounded-md border bg-muted px-1.5 py-0.5 text-[10px]">⌘K</kbd>
-      </Button>
+        <MagnifyingGlass size={16} aria-hidden />
+        <span className="hidden min-w-0 flex-1 truncate text-left md:inline">{t("Buscar...")}</span>
+        <kbd className="ml-auto hidden rounded-full bg-surface-elevated px-2 py-0.5 text-[10px] md:inline">
+          ⌘K
+        </kbd>
+      </button>
       <CommandPalette open={open} onOpenChange={setOpen} />
     </>
   );
