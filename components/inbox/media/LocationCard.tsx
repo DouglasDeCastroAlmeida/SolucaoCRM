@@ -1,7 +1,6 @@
 "use client";
 
 import { useT } from "@/hooks/i18n/useT";
-import { MapPin } from "@/lib/ui/icons";
 import { textoDoEnderecoAproximado } from "@/lib/mapas/geocodificacao";
 import { linkDoMapa, type Localizacao } from "@/lib/messaging/localizacao";
 
@@ -25,12 +24,34 @@ export function LocationCard({ localizacao }: { localizacao: Localizacao }) {
       href={linkDoMapa(localizacao)}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex max-w-[260px] items-center gap-2 rounded-lg border border-current/20 bg-background/10 px-2 py-2 text-left transition-colors hover:bg-background/20"
+      className="block w-64 max-w-full overflow-hidden rounded-md bg-foreground/5 text-left transition-colors hover:bg-foreground/10"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-background/20">
-        <MapPin size={24} weight="duotone" aria-hidden />
-      </span>
-      <span className="min-w-0 flex-1">
+      {/* Bloco de mapa desenhado aqui (ruas e quadras estilizadas): nada de arte de terceiros e
+          nenhuma chamada de rede so para mostrar o cartao. */}
+      <svg
+        data-testid="pino-mapa"
+        viewBox="0 0 256 112"
+        className="block h-28 w-full bg-surface-elevated"
+        role="img"
+        aria-label={t("Localização compartilhada")}
+      >
+        <g stroke="currentColor" strokeOpacity="0.18" strokeWidth="10" fill="none">
+          <path d="M-10 30 L270 50" />
+          <path d="M-10 86 L270 70" />
+          <path d="M60 -10 L80 130" />
+          <path d="M180 -10 L170 130" />
+        </g>
+        <g fill="currentColor" fillOpacity="0.08">
+          <rect x="92" y="6" width="68" height="34" rx="4" />
+          <rect x="190" y="60" width="56" height="40" rx="4" />
+          <rect x="8" y="58" width="44" height="30" rx="4" />
+        </g>
+        <g transform="translate(128 56)">
+          <path d="M0 22 C-14 4 -16 -2 -16 -8 a16 16 0 0 1 32 0 c0 6 -2 12 -16 30z" className="fill-destructive" />
+          <circle cx="0" cy="-8" r="6" className="fill-card" />
+        </g>
+      </svg>
+      <span className="block px-2.5 py-2">
         <span className="block truncate font-medium" title={detalhe || undefined} data-testid="pino-detalhe">
           {detalhe || t("Localização compartilhada")}
         </span>

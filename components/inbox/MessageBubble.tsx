@@ -89,7 +89,7 @@ function AckIndicator({
     return <Clock size={12} weight="bold" className="text-current/70" aria-label={t("Enviando")} />;
   }
   if (status === "read") {
-    return <TickEntregue size={16} className="text-blue-400" aria-label={t("Lida")} />;
+    return <TickEntregue size={16} className="text-primary-foreground" aria-label={t("Lida")} />;
   }
   if (status === "delivered") {
     return <TickEntregue size={16} className="text-current/70" aria-label={t("Entregue")} />;
@@ -305,11 +305,13 @@ export function MessageBubble({
           isBareSticker
             ? "px-0 py-0"
             : cn(
-                "rounded-2xl px-3 py-2 shadow-sm",
+                // Visual de mensageiro (#89): raio curto, sem moldura; a pontinha abaixo
+                // zera o canto de cima do lado de onde a mensagem sai.
+                "rounded-lg px-2.5 py-1.5 shadow-sm",
                 temMenu && "pr-8",
                 isOutbound
-                  ? cn("bg-primary text-primary-foreground", comCauda && "rounded-br-sm")
-                  : cn("border border-border/60 bg-card text-foreground", comCauda && "rounded-bl-sm"),
+                  ? cn("bg-primary text-primary-foreground", !colada && "rounded-tr-none")
+                  : cn("bg-card text-foreground", !colada && "rounded-tl-none"),
               ),
           isFailed && "border border-destructive",
           // A marca da busca é ANEL, não cor de fundo: o fundo já diz de quem é
@@ -320,6 +322,20 @@ export function MessageBubble({
           Boolean(reacoes?.length) && "mb-3",
         )}
       >
+        {!isBareSticker && !colada && (
+          // A pontinha: triangulo recortado, da cor exata do balao, colado ao canto zerado.
+          <span
+            aria-hidden
+            data-testid="balao-pontinha"
+            data-lado={isOutbound ? "direita" : "esquerda"}
+            className={cn(
+              "absolute top-0 h-3 w-2",
+              isOutbound
+                ? "-right-2 bg-primary [clip-path:polygon(0_0,0_100%,100%_0)]"
+                : "-left-2 bg-card [clip-path:polygon(100%_0,100%_100%,0_0)]",
+            )}
+          />
+        )}
         {temMenu && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -509,8 +525,9 @@ export function MessageBubble({
         )}
 
         <div
+          data-testid="balao-rodape"
           className={cn(
-            "mt-1 flex items-center justify-end gap-1 text-[10px]",
+            "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-[11px] leading-none",
             isOutbound ? "text-primary-foreground" : "text-muted-foreground",
           )}
         >
