@@ -39,8 +39,9 @@ describe("AC-003.4: caixa de conversas da 004 na casca nova", () => {
     );
     expect(screen.getByText("bom dia")).toBeInTheDocument();
     const html = container.innerHTML;
-    expect(html).toContain("bg-accent-soft");
-    expect(html).toContain("border-border");
+    // #116: a conversa aberta é cinza neutro (token `selected`), arredondada e sem divisória.
+    expect(html).toContain("bg-selected");
+    expect(html).toContain("rounded-lg");
     expect(html).toContain("bg-surface-elevated");
     expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(container.querySelector("[class]")?.className ?? "").not.toMatch(COR_FIXA);
