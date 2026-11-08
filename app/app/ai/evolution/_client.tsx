@@ -482,7 +482,7 @@ function Conteudo({ payload }: { payload: NonNullable<ReturnType<typeof useEvolu
               "Quantas vezes o agente puxou uma habilidade especializada para dar conta da conversa.",
             )}
             dados={activity.series.skill_activations}
-            cor="var(--color-accent)"
+            cor="var(--color-text-muted)"
             vazio={
               <Vazio
                 texto={t(
