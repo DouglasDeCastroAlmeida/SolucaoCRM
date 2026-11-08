@@ -805,18 +805,12 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
           />
         )}
         <div className="flex items-end gap-2">
-          {/* O "+" existe nos DOIS modos desde a F3 da #1863: em "Nota interna"
-              ele abre o mesmo menu, com as DUAS primeiras opções — foto/vídeo e
-              documento — porque a nota passou a aceitar anexo. A terceira
-              (Contato) some: cartão de contato é `type: "contact"`, uma MENSAGEM
-              para o cliente, e nota com cartão de contato não existe. O `disabled`
-              continua o de sempre: em modo nota `respostaBarrada` é só
-              `isDisabled`, e a janela fechada barra a resposta, não a nota. */}
-          <AttachMenu
-            disabled={respostaBarrada}
-            onPick={escolherArquivo}
-            onPickContact={mode === "reply" ? () => setContactPickerOpen(true) : undefined}
-          />
+         {/* A PÍLULA (#90): emoji e clipe DENTRO do campo, à esquerda, na ordem
+             dos mensageiros; o microfone (ou o enviar) fica fora, à direita. */}
+         <div
+          data-testid="campo-de-escrever"
+          className="flex min-w-0 flex-1 items-end gap-0.5 rounded-3xl border border-input bg-background px-1 focus-within:ring-1 focus-within:ring-ring"
+         >
           <EmojiButton
             disabled={isDisabled}
             onPick={(emoji) => {
@@ -835,6 +829,18 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 autoresize();
               });
             }}
+          />
+          {/* O clipe existe nos DOIS modos desde a F3 da #1863: em "Nota interna"
+              ele abre o mesmo menu, com as DUAS primeiras opções — foto/vídeo e
+              documento — porque a nota passou a aceitar anexo. A terceira
+              (Contato) some: cartão de contato é `type: "contact"`, uma MENSAGEM
+              para o cliente, e nota com cartão de contato não existe. O `disabled`
+              continua o de sempre: em modo nota `respostaBarrada` é só
+              `isDisabled`, e a janela fechada barra a resposta, não a nota. */}
+          <AttachMenu
+            disabled={respostaBarrada}
+            onPick={escolherArquivo}
+            onPickContact={mode === "reply" ? () => setContactPickerOpen(true) : undefined}
           />
           <textarea
             ref={taRef}
@@ -885,12 +891,13 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
                 : t("Enter envia · Shift+Enter quebra linha")
             }
             className={cn(
-              "max-h-40 min-h-9 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm",
-              "placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-hidden",
+              "max-h-40 min-h-9 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-sm",
+              "placeholder:text-muted-foreground focus:outline-hidden",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
             aria-label={t("Mensagem")}
           />
+         </div>
           {text.trim() || mode === "note" ? (
             <Button
               type="button"

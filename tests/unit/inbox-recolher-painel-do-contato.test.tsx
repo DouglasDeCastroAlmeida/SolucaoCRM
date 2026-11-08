@@ -162,6 +162,7 @@ vi.mock("@/hooks/contacts/useUpdateContact", () => ({
 vi.mock("@/components/contacts/RoteirosDoContato", () => ({ RoteirosDoContato: () => null }));
 
 import { InboxLayout } from "@/components/inbox/InboxLayout";
+import { Voltar } from "@/lib/ui/icons";
 
 beforeAll(() => {
   // A faixa `xl` é onde a ficha existe como coluna (`lg`/`md` não têm ficha).
@@ -310,5 +311,26 @@ describe("Inbox — recolher o painel do contato (#3004)", () => {
     } finally {
       window.innerWidth = 1440;
     }
+  });
+});
+
+describe("Inbox no formato de mensageiro (#90)", () => {
+  it("a ficha abre com o título 'Dados do contato' e o controle de recolher no mesmo cabeçalho", async () => {
+    montar();
+    await screen.findByTestId("inbox-demandas");
+    const titulo = screen.getByRole("heading", { name: "Dados do contato" });
+    const cabecalho = titulo.closest("[data-testid='inbox-painel-cabecalho']");
+    expect(cabecalho).not.toBeNull();
+    expect(cabecalho).toContainElement(botaoRecolher());
+  });
+
+  it("celular: a seta de voltar é o glifo Voltar do mapa único e tem nome acessível", async () => {
+    montar();
+    await screen.findByTestId("inbox-demandas");
+    const voltar = screen.getByRole("button", { name: "Voltar para as conversas" });
+    const { container } = render(<Voltar />);
+    expect(voltar.querySelector("svg path")?.getAttribute("d")).toBe(
+      container.querySelector("path")?.getAttribute("d"),
+    );
   });
 });

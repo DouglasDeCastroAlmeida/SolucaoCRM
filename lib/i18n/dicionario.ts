@@ -618,6 +618,8 @@ export const DICIONARIO: Traducoes = {
 
   "Mensagens rápidas": { es: "Mensajes rápidos" },
   "Voltar às conversas": { es: "Volver a las conversaciones" },
+  "Voltar para as conversas": { es: "Volver a las conversaciones" },
+  "Dados do contato": { es: "Datos del contacto" },
   "Minimizar mensagens": { es: "Minimizar mensajes" },
   "conversas não lidas": { es: "conversaciones no leídas" },
   "Não foi possível atualizar as mensagens.": { es: "No se pudieron actualizar los mensajes." },
