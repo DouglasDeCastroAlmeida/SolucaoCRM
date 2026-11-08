@@ -18,46 +18,22 @@ import { JANELA_DA_GRADE } from "./GradeDaAgenda";
  */
 export function AgendaCarregando() {
   const t = useT();
-  // `bg-neutral-400` em cada Skeleton, e não o default do primitivo.
-  //
-  // `components/ui/skeleton.tsx` usa `bg-primary/10` — a accent a 10% —, que dá
-  // contraste 1.146:1 sobre o branco: o esqueleto some, e a espera vira uma
-  // grade vazia em vez de promessa de conteúdo. Visto no screenshot, não no
-  // código.
-  //
-  // O primeiro conserto foi `bg-border`, e o maestro mediu que era insuficiente:
-  // 1.281:1, doze por cento melhor e ainda invisível. Ele também levantou o que
-  // ninguém tinha medido — o esqueleto PULSA (`animate-pulse` oscila a opacidade
-  // entre 1 e .5 a cada 2s), então ele vive entre DOIS contrastes e o olho lê o
-  // movimento entre eles. Medido, sobre superfície branca:
-  //
-  //     candidato          cheio    apagado   delta L*
-  //     bg-primary/10      1.146     1.067      2.81
-  //     bg-border          1.281     1.129      4.85
-  //     border-strong      1.588     1.249      8.82
-  //     neutral-400        2.512     1.525     16.77   <- escolhido
-  //
-  // `neutral-400` foi escolhido por ser quase SIMÉTRICO entre os temas (2.512 no
-  // claro, 2.622 no escuro): um esqueleto que aparece num tema e some no outro é
-  // o mesmo defeito resolvido pela metade. Fica abaixo do piso WCAG de 3:1 para
-  // gráfico não-textual — aceitável porque o esqueleto não carrega informação
-  // que se lê, e o pulso de 16.77 em L* o torna inequívoco.
-  //
-  // Não mexo no primitivo: 113 usos em 51 arquivos da main. A correção lá é item
-  // de produto, escalado pelo QAVivo, não drive-by no PR do calendário.
+  // O corpo do esqueleto (contraste medido, faixa que atravessa) vem do primitivo
+  // `components/ui/skeleton.tsx` e do bloco `.ds-esqueleto` do globals.css: aqui
+  // não se pinta cor nenhuma.
   const linhas = JANELA_DA_GRADE.ultima - JANELA_DA_GRADE.primeira + 1;
   return (
     <div
       data-testid="agenda-carregando"
       aria-busy="true"
       aria-label={t("Carregando a agenda")}
-      className="flex min-h-0 flex-1 overflow-hidden rounded-lg border border-border bg-surface"
+      className="flex min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-surface"
     >
       <div className="w-12 shrink-0 border-r border-border">
         <div className="h-8 border-b border-border" />
         {Array.from({ length: linhas }).map((_, i) => (
           <div key={i} className="flex h-12 items-start justify-end border-b border-border/50 p-1">
-            <Skeleton className="h-2.5 w-6 bg-neutral-400" />
+            <Skeleton className="h-2.5 w-6" />
           </div>
         ))}
       </div>
@@ -65,13 +41,13 @@ export function AgendaCarregando() {
         {Array.from({ length: 7 }).map((_, col) => (
           <div key={col} className="min-w-0 flex-1 border-r border-border last:border-r-0">
             <div className="flex h-8 items-center justify-center border-b border-border">
-              <Skeleton className="h-3 w-10 bg-neutral-400" />
+              <Skeleton className="h-3 w-10" />
             </div>
             <div className="space-y-2 p-1.5">
               {/* Alturas diferentes por coluna: um esqueleto perfeitamente
                   regular parece uma tabela, não uma agenda. */}
-              <Skeleton className="h-10 w-full bg-neutral-400" style={{ marginTop: (col % 3) * 28 }} />
-              {col % 2 === 0 && <Skeleton className="h-16 w-full bg-neutral-400" />}
+              <Skeleton className="h-10 w-full" style={{ marginTop: (col % 3) * 28 }} />
+              {col % 2 === 0 && <Skeleton className="h-16 w-full" />}
             </div>
           </div>
         ))}
