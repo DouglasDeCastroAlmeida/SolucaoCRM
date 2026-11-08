@@ -61,8 +61,8 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <IdiomaProvider locale={locale}>
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <div className="w-full max-w-sm space-y-6">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 sm:p-6">
+        <div className="w-full max-w-sm space-y-5">
           {marca.logoUrl || marca.logoDarkUrl ? (
             <div className="flex justify-center">
               {/*
@@ -85,7 +85,7 @@ export default async function PublicLayout({ children }: { children: React.React
                 className={
                   marca.logoDarkUrl
                     ? "rounded-md"
-                    : "rounded-md dark:bg-white dark:px-3 dark:py-2 dark:shadow-sm"
+                    : "rounded-md dark:bg-foreground dark:px-3 dark:py-2 dark:shadow-sm"
                 }
               >
                 {marca.logoUrl ? (
@@ -119,7 +119,7 @@ export default async function PublicLayout({ children }: { children: React.React
               <LogotipoDoProduto nome={marca.nome} className="h-12 w-auto" />
             </div>
           ) : null}
-          {children}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7">{children}</div>
         </div>
       </div>
     </IdiomaProvider>
