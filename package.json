@@ -146,7 +146,7 @@
   },
   "packageManager": "pnpm@9.15.9",
   "pnpm": {
-    "//overrides": "Pisos de versão para dependência TRANSITIVA com advisory. Não é atalho: `pnpm update <pkg>` só casa o padrão contra o package.json (hono/js-yaml/nanoid não estão lá, e não se movem), e `pnpm update` sem alvo reescreve 29 ranges diretas e arrasta 139 pacotes. Override é a única ferramenta que move transitiva sem arrastar o mundo. Os seletores com `@<major>` são LOAD-BEARING: o lock tem duas árvores de brace-expansion (1.x e 5.x) e duas de path-to-regexp (6.x e 8.x); sem o escopo, o override rebaixa a árvore nova para a antiga — em silêncio, com `pnpm audit` ainda verde.",
+    "//overrides": "Pisos de versão para dependência TRANSITIVA com advisory. Não é atalho: `pnpm update <pkg>` só casa o padrão contra o package.json (hono/js-yaml/nanoid não estão lá, e não se movem), e `pnpm update` sem alvo reescreve 29 ranges diretas e arrasta 139 pacotes. Override é a única ferramenta que move transitiva sem arrastar o mundo. Os seletores com `@<major>` são LOAD-BEARING: o lock tem duas árvores de brace-expansion (1.x e 5.x) e duas de path-to-regexp (6.x e 8.x); sem o escopo, o override rebaixa a árvore nova para a antiga — em silêncio, com `pnpm audit` ainda verde. Rodada de 2026-11-07 (issue #104): quando o lock tem mais de uma árvore do mesmo pacote, o seletor leva o major (`undici@7`, `undici@8`, `body-parser@2`, `glob@13`, `minimatch@10`). `glob@13` e `minimatch@10` sobem de major (14 e 11) porque o advisory só tem correção ali; só quem os usa é build/lint (Sentry bundler-plugins e eslint). Registro por pacote em docs/alertas-de-seguranca-triados.md.",
     "overrides": {
       "postcss": "^8.5.30",
       "sharp": "^0.35.5",

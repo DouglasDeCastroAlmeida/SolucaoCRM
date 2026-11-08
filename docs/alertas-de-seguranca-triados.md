@@ -13,6 +13,39 @@ Complementa [`threat-model.md`](threat-model.md) (superfície de ataque do self-
 
 ---
 
+## Rodada de 2026-11-07 — 36 achados do `pnpm audit` (issue #104)
+
+Estado inicial medido em instalação limpa (`pnpm install --frozen-lockfile`): **4 low, 23 moderate, 9 high**.
+Estado final: `pnpm audit` responde **"No known vulnerabilities found"** (0/0/0). Não houve risco aceito: todos os
+achados foram corrigidos. Os 3 erros de `tsc` em `html-seguro.ts` eram só do ambiente local (o `node_modules`
+estava incompleto): na instalação limpa o `typecheck` passa sem erro.
+
+| Pacote           | Caminho                                | Gravidade      | Antes → depois   | Destino                                                                         |
+| ---------------- | -------------------------------------- | -------------- | ---------------- | ------------------------------------------------------------------------------- |
+| `sanitize-html`  | produção, direta                       | moderate, low  | 2.17.7 → 2.18.1  | atualização direta (versão fixa; override não alcança)                          |
+| `nodemailer`     | produção, direta                       | moderate       | 10.1.2 → 10.1.7  | atualização direta (10.1.7 já era a do `mailparser`: a árvore perdeu uma cópia) |
+| `body-parser`    | produção (SDK de MCP → express)        | high           | 2.3.0 → 2.4.0    | `overrides` `body-parser@2`                                                     |
+| `undici` 7       | produção (`@ai-sdk/anthropic`)         | high, moderate | 7.30.0 → 7.30.1  | `overrides` `undici@7`                                                          |
+| `qs`             | produção (SDK de MCP → express)        | moderate       | 6.16.0 → 6.17.1  | `overrides` (piso ^6.16.1)                                                      |
+| `ip-address`     | produção (`imapflow`, SDK de MCP)      | moderate       | 10.7.3 → 10.7.6  | `overrides` `ip-address@10`                                                     |
+| `fast-uri`       | produção (`@hookform/resolvers` → ajv) | moderate, low  | 3.1.8 → 3.1.9    | `overrides` (piso ^3.1.9)                                                       |
+| `seroval`        | devtools do react-query                | moderate       | 1.6.9 → 1.7.10   | `overrides` (piso ^1.6.11)                                                      |
+| `undici` 8       | desenvolvimento (`jsdom`/`vitest`)     | high, moderate | 8.11.2 → 8.12.4  | `overrides` `undici@8`                                                          |
+| `@vitest/mocker` | desenvolvimento                        | moderate       | 4.1.11 → 4.1.12  | atualização direta de `vitest` e `@vitest/coverage-v8` para ^4.1.12             |
+| `glob`           | build (Sentry bundler-plugins)         | moderate       | 13.0.6 → 14.0.4  | `overrides` `glob@13` (salto de major: a correção só existe no 14)              |
+| `minimatch`      | build e lint (Sentry, eslint)          | moderate       | 10.2.6 → 11.0.5  | `overrides` `minimatch@10` (salto de major: a correção só existe no 11)         |
+| `deepmerge`      | produção (via `sanitize-html`)         | low            | 4.3.1 → removido | some com o `sanitize-html` 2.18.1                                               |
+
+**Prova de que nada mudou:** `typecheck` e `lint` (0 erros); testes de e-mail, MCP e IA verdes. Na suíte
+completa há falhas que existem igual na `main` pura (mesmos arquivos e mesmos testes, comparados lado a lado), por
+isso não são desta mudança: `padrao-do-campo-na-api`, `manifest`, `agent-version-columns-drift` e
+`rascunho-superado-nao-e-regravado`.
+
+**Ressalva de método:** o `pnpm audit` 9.15.9 colapsa pacotes de mesmo nome; por isso as versões efetivas foram
+conferidas no `pnpm-lock.yaml` e não só pela auditoria.
+
+---
+
 ## Rodada de 2026-08-12 — 13 alertas (6 Dependabot + 7 CodeQL)
 
 Estado inicial medido: 6 alertas abertos do Dependabot e 7 do CodeQL. Doze foram
@@ -21,11 +54,11 @@ classe achou **quatro** coisas que não estavam em alerta nenhum.
 
 ### Consertados
 
-| Alertas | O quê | Commit |
-|---|---|---|
-| #73, #76, #77, #78, #79, #80 (Dependabot) | 5 transitivas com advisory elevadas por `pnpm.overrides` | `fix(deps): eleva 5 transitivas com advisory` |
-| #6, #7 (CodeQL `js/polynomial-redos`) | `parseChatId` deixa de fazer backtracking quadrático sobre `payload.from` | `fix(waha): parseChatId deixa de ser ReDoS polinomial` |
-| #1, #2, #4, #9 (CodeQL `actions/missing-workflow-permissions`) | `permissions: contents: read` nos 3 workflows + gate no `verify` | `fix(ci): jobs declaram o privilegio do GITHUB_TOKEN` |
+| Alertas                                                        | O quê                                                                     | Commit                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| #73, #76, #77, #78, #79, #80 (Dependabot)                      | 5 transitivas com advisory elevadas por `pnpm.overrides`                  | `fix(deps): eleva 5 transitivas com advisory`          |
+| #6, #7 (CodeQL `js/polynomial-redos`)                          | `parseChatId` deixa de fazer backtracking quadrático sobre `payload.from` | `fix(waha): parseChatId deixa de ser ReDoS polinomial` |
+| #1, #2, #4, #9 (CodeQL `actions/missing-workflow-permissions`) | `permissions: contents: read` nos 3 workflows + gate no `verify`          | `fix(ci): jobs declaram o privilegio do GITHUB_TOKEN`  |
 
 ### Descartado — #5, `js/clear-text-logging` em `scripts/bootstrap-owner.ts:215`
 
@@ -55,7 +88,7 @@ herda a classificação do objeto todo.
 1. **O conserto não removeria um byte de exposição do produto.** O `install.sh` — o caminho
    que todo self-hoster roda — imprime o mesmo `${OWNER_EMAIL}` três vezes (linhas 1415,
    1552, 1562), e escolheu deliberadamente não imprimir a senha (`senha:  (a que você
-   definiu)`, linha 1553). O CodeQL não analisa shell: o `default-setup` cobre
+definiu)`, linha 1553). O CodeQL não analisa shell: o `default-setup` cobre
    `actions`/`javascript-typescript`, e não há analisador de bash. **O scanner flagrou a
    cópia que ninguém executa e é cego para a original que todo mundo executa** —
    `grep bootstrap-owner hostgator-setup-kit/` devolve zero ocorrências; o kit reimplementa
@@ -95,7 +128,7 @@ varrer a classe de cada alerta com um instrumento independente.
 ### 1. Dois advisories que o Dependabot auto-descartou — consertados
 
 `brace-expansion@1.1.16` carregava `GHSA-mh99-v99m-4gvg` e `GHSA-rgw5-rvv9-x895` (dois
-HIGH). O Dependabot auto-descartou os alertas #72/#75 e marcou #74 como *fixed* — porque a
+HIGH). O Dependabot auto-descartou os alertas #72/#75 e marcou #74 como _fixed_ — porque a
 **outra** árvore (`5.0.9`, via `@sentry/nextjs`) foi mesmo corrigida. A árvore `1.x`
 continuava vulnerável e sem dono.
 
@@ -136,14 +169,14 @@ Varredura dinâmica de 8.404 literais de regex em 1.909 arquivos (controle posit
 detector flagra `lib/waha/ingest.ts`), filtrada por crescimento quadrático confirmado em 3
 pontos **e** entrada externa verificada lendo o call site:
 
-| Local | Custo em 64 KB | Entrada |
-|---|---|---|
-| `lib/ai/anonymize/index.ts:26,59` | ~3,3 s | **A pior.** `anonymize(transcript)` roda sobre a concatenação dos `messages.body` da conversa — corpo de mensagem de WhatsApp, sem teto de tamanho antes |
-| `lib/sentry/scrub.ts:56` | ~3,2 s | Indireta (dado de evento Sentry) |
-| `lib/agent-engine/guardrails/vazamento-interno.ts:398` | ~4,5 s | Parcial — por token da saída do LLM; teto real de `max_tokens` **não medido** |
-| `lib/ai/skills/package.ts:84,85` | ~2,9 s | Autenticada (`requireRole("manager")`), mas o SKILL.md vem descompactado de zip — zip-bomb de espaços dá N grande com upload pequeno |
-| `lib/mcp/auth.ts:72` (a outra ocorrência, em `app/api/internal/agents/run/route.ts`, saiu com a rota) | ~160 ms | **Não autenticada** — é o próprio check de auth, e `/api/mcp` é rota pública. Limitada pelo teto de 16 KB de header do Node, mas ~6 req/s saturam um core |
-| `app/api/v1/channels/partner/route.ts:78` | ~166 ms | Header `origin`, controlado pelo cliente; atrás de `adminGate` |
+| Local                                                                                                 | Custo em 64 KB | Entrada                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/ai/anonymize/index.ts:26,59`                                                                     | ~3,3 s         | **A pior.** `anonymize(transcript)` roda sobre a concatenação dos `messages.body` da conversa — corpo de mensagem de WhatsApp, sem teto de tamanho antes  |
+| `lib/sentry/scrub.ts:56`                                                                              | ~3,2 s         | Indireta (dado de evento Sentry)                                                                                                                          |
+| `lib/agent-engine/guardrails/vazamento-interno.ts:398`                                                | ~4,5 s         | Parcial — por token da saída do LLM; teto real de `max_tokens` **não medido**                                                                             |
+| `lib/ai/skills/package.ts:84,85`                                                                      | ~2,9 s         | Autenticada (`requireRole("manager")`), mas o SKILL.md vem descompactado de zip — zip-bomb de espaços dá N grande com upload pequeno                      |
+| `lib/mcp/auth.ts:72` (a outra ocorrência, em `app/api/internal/agents/run/route.ts`, saiu com a rota) | ~160 ms        | **Não autenticada** — é o próprio check de auth, e `/api/mcp` é rota pública. Limitada pelo teto de 16 KB de header do Node, mas ~6 req/s saturam um core |
+| `app/api/v1/channels/partner/route.ts:78`                                                             | ~166 ms        | Header `origin`, controlado pelo cliente; atrás de `adminGate`                                                                                            |
 
 **Por que ficaram de fora desta rodada, e não é por serem menores:** quatro das seis são
 regex de **detecção de PII** ou de **autenticação**. Perder um match ali não degrada
@@ -163,7 +196,7 @@ corrida ou corta a entrada, então a regex nunca vê o caso ruim;
 ## Não medido nesta rodada
 
 - **Que os 12 alertas fecham de fato.** Isso exige uma varredura nova do CodeQL e uma do
-  Dependabot depois do merge. O que está medido é a *causa* de cada um removida: o
+  Dependabot depois do merge. O que está medido é a _causa_ de cada um removida: o
   predicado `jobHasPermissions` satisfeito, a regex quadrática substituída por varredura
   linear equivalente, e o OSV a zero sobre o lock.
 - **`allow: [{dependency-type: "all"}]` em `.github/dependabot.yml`.** O mecanismo que
