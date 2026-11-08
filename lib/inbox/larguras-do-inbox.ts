@@ -62,9 +62,9 @@ export const PASSO_TECLADO = 16;
 
 /** Da faixa maior para a menor: `find` devolve a primeira que cabe. */
 export const FAIXAS: readonly Faixa[] = [
-  { id: "2xl", min: 1536, lista: 300, ficha: 320, temFicha: true },
-  { id: "xl", min: 1280, lista: 272, ficha: 296, temFicha: true },
-  { id: "md", min: 768, lista: 300, ficha: 300, temFicha: false },
+  { id: "2xl", min: 1536, lista: 400, ficha: 320, temFicha: true },
+  { id: "xl", min: 1280, lista: 360, ficha: 296, temFicha: true },
+  { id: "md", min: 768, lista: 340, ficha: 300, temFicha: false },
 ];
 
 /** Abaixo do `md` o inbox é uma coluna por vez e não tem divisória nenhuma. */

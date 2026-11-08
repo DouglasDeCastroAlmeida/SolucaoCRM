@@ -137,6 +137,7 @@ export {
   ArrowCircleUp,
   // navegação agrupada (registro em lib/navigation/registry.ts)
   Funnel,
+  FunnelSimple,
   BookOpen,
   Key,
   UserCircle,

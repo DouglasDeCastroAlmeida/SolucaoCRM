@@ -3,6 +3,7 @@
 /** Edição dos campos da marca (AC-008.1) via PATCH /api/v1/admin/brands/{id}. */
 import { useEffect, useState } from "react";
 
+import { AvisoDaCorDaMarca } from "@/components/branding/AvisoDaCorDaMarca";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,7 @@ export function EditorDeMarca({ marca, aoSalvar }: { marca: MarcaEditavel; aoSal
       <div className="space-y-1">
         <Label htmlFor={id("ed-cor")}>Cor principal (#rrggbb)</Label>
         <Input id={id("ed-cor")} value={cor} onChange={(e) => setCor(e.target.value)} />
+        <AvisoDaCorDaMarca />
       </div>
       <div className="space-y-1">
         <Label htmlFor={id("ed-logo")}>{t("Caminho do logo")}</Label>

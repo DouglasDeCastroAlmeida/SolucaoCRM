@@ -125,7 +125,7 @@ describe("MessageBubble - texto longo (AC-006.2)", () => {
     const longo = Array.from({ length: 40 }, (_, i) => `linha ${i} ${"x".repeat(200)}`).join("\n");
     render(<MessageBubble message={msg({ body: longo })} />);
     const balao = screen.getByTestId("message-bubble");
-    expect(balao.className).toContain("max-w-[75%]");
+    expect(balao.className).toContain("max-w-[65%]");
     expect(balao.className).toContain("min-w-0");
     const corpo = balao.querySelector("p.whitespace-pre-wrap");
     expect(corpo?.className).toContain("wrap-anywhere");

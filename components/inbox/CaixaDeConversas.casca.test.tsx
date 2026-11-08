@@ -39,24 +39,25 @@ describe("AC-003.4: caixa de conversas da 004 na casca nova", () => {
     );
     expect(screen.getByText("bom dia")).toBeInTheDocument();
     const html = container.innerHTML;
-    expect(html).toContain("bg-accent-soft");
-    expect(html).toContain("border-border");
+    // #116: a conversa aberta é cinza neutro (token `selected`), arredondada e sem divisória.
+    expect(html).toContain("bg-selected");
+    expect(html).toContain("rounded-lg");
     expect(html).toContain("bg-surface-elevated");
     expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(container.querySelector("[class]")?.className ?? "").not.toMatch(COR_FIXA);
   });
 
-  it("o balão enviado mantém cor da marca e recibo; o recebido, neutro", () => {
+  it("o balão enviado tem o verde de mensageiro fixo e recibo; o recebido, neutro", () => {
     const { unmount } = render(<MessageBubble message={msg()} />);
     const enviado = screen.getByTestId("message-bubble");
-    expect(enviado.className).toContain("bg-primary");
+    expect(enviado.className).toContain("bg-bubble-out");
     expect(enviado.className).not.toMatch(COR_FIXA);
     expect(screen.getByLabelText("Enviada")).toBeInTheDocument();
     unmount();
 
     render(<MessageBubble message={msg({ direction: "inbound" })} />);
     const recebido = screen.getByTestId("message-bubble");
-    expect(recebido.className).toContain("bg-card");
+    expect(recebido.className).toContain("bg-bubble-in");
     // Visual de mensageiro (#89): o recebido se separa do fundo pela sombra, sem moldura.
     expect(recebido.className).toContain("shadow-sm");
     expect(recebido.className).not.toContain("border-border");

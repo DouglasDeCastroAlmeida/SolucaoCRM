@@ -1,5 +1,7 @@
 # 02 — Paleta Sage
 
+> **SUBSTITUÍDA (ADR 0008, `docs/adr/0008-verde-de-mensageiro-fixo-em-todo-o-app.md`).** A paleta Sage descrita abaixo não vale mais no produto: o destaque é o **verde de mensageiro**, fixo no app inteiro, e os neutros são cinzas próprios. Os valores atuais moram em `app/globals.css`. A cor da marca da instalação só vale para logo, nome, favicon e e-mails. Este arquivo fica como histórico da paleta anterior; não use os hex daqui em código novo.
+
 > **Source of truth:** `app/design/lib/tokens.ts` → `PALETTES.sage`
 
 ## Filosofia da paleta

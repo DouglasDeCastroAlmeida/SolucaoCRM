@@ -1,7 +1,8 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CaretLeft, CaretRight, MagnifyingGlass } from "@/lib/ui/icons";
+import { CaretLeft, CaretRight, FunnelSimple, MagnifyingGlass } from "@/lib/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -40,14 +41,14 @@ import { SeletorDeAtendente } from "@/components/inbox/SeletorDeAtendente";
 export type InboxTab = "unassigned" | "mine" | "all" | "closed" | "archived" | "ai";
 
 /**
- * A faixa na ORDEM DO TRABALHO (#2498): primeiro o que o robô conduz, depois o
- * que espera gente, depois o histórico. Antes "Automático" fechava a faixa,
- * depois de dois passados — o valor que o operador mais olha era o último.
+ * A faixa de chips na ORDEM DO PROTÓTIPO APROVADO (#116): Todas, Minhas, Fila,
+ * Automático, Fechadas, Arquivadas (com "Não lidos" depois de Todas e "Grupos" no
+ * fim, que são filtros e não abas). Era a "ordem do trabalho" (#2498), com
+ * Automático primeiro; o dono aprovou a ordem do mensageiro.
  *
  * Só a ordem mudou: mesmos `value`, mesmos rótulos, mesmas permissões
  * (`visibleInboxTabs` filtra sem reordenar) e mesmas contagens (`countFor` lê
- * por chave, e a chave não acompanha a posição). `moveTab` anda pelo MESMO
- * array, então as setas continuam vizinha a vizinha.
+ * por chave, e a chave não acompanha a posição).
  */
 const INBOX_TABS: { value: InboxTab; label: string }[] = [
   // "Automático", não "IA": a palavra deste ator já é contrato em quatro arquivos
@@ -55,10 +56,10 @@ const INBOX_TABS: { value: InboxTab; label: string }[] = [
   // para a IA" como a sabotagem que deve reprovar. O rótulo não mudou quando o
   // significado mudou (deixou de filtrar `ai_handling` e passou a perguntar a
   // régua do motor) — e a posição sim: ela era a última fora do padrão.
-  { value: "ai", label: "Automático" },
-  { value: "unassigned", label: "Fila" },
-  { value: "mine", label: "Minhas" },
   { value: "all", label: "Todas" },
+  { value: "mine", label: "Minhas" },
+  { value: "unassigned", label: "Fila" },
+  { value: "ai", label: "Automático" },
   { value: "closed", label: "Fechadas" },
   // "Arquivadas" fica ao lado de "Fechadas" porque as duas são passado — e
   // separada dela porque são passados diferentes (#923): fechada é atendimento
@@ -389,69 +390,163 @@ export function InboxFilters({ value, onChange }: Props) {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  return (
-    <div className="border-b border-border bg-background">
-      <div className="space-y-2 px-3 pt-3 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="relative min-w-0 flex-1">
-            <MagnifyingGlass
-              size={15}
-              weight="regular"
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-subtle"
-              aria-hidden
-            />
-            {/* "última mensagem", e não "mensagem": a busca alcança apenas
-                `conversations.last_message_preview` — a ÚLTIMA mensagem, truncada em 200
-                caracteres já na ingestão (`grep -rn 'slice(0, 200)' lib/channels/` mostra onde).
-                Medido numa conversa real de 32 mensagens: buscar o que o cliente pediu na
-                3ª devolve ZERO. Alcançar o histórico é projeto próprio (índice trigram +
-                retenção + LGPD); até lá, a tela não promete o que o backend não faz. */}
-            <Input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t("Buscar por nome, telefone ou última mensagem…")}
-              className="h-9 rounded-full border-transparent bg-surface-elevated pl-9 text-sm shadow-none focus-visible:border-border focus-visible:bg-background"
-              aria-label={t("Buscar conversas")}
-            />
-          </div>
-          {/* Botão pressionável em vez de Switch: o filtro vive na mesma linha
-              da busca, e o Switch com rótulo pedia uma linha inteira só para
-              si numa coluna de 280px. */}
-          <button
-            type="button"
-            aria-pressed={value.onlyUnread}
-            onClick={() => onChange({ ...value, onlyUnread: !value.onlyUnread })}
-            className={cn(
-              "h-9 shrink-0 rounded-full border px-3 text-xs font-medium transition-colors",
-              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              value.onlyUnread
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-transparent text-text-muted hover:bg-surface-elevated",
-            )}
-          >
-            {t("Não lidos")}
-          </button>
-          {/* MESMO PADRÃO do botão acima: filtro auxiliar pressionável, na
-              mesma linha. "Grupos" manda `is_group=true` na listagem — sem ele
-              a aba mostra tudo, individual e grupo misturados, como hoje. */}
-          <button
-            type="button"
-            aria-pressed={value.onlyGroups ?? false}
-            onClick={() => onChange({ ...value, onlyGroups: !value.onlyGroups })}
-            className={cn(
-              "h-9 shrink-0 rounded-full border px-3 text-xs font-medium transition-colors",
-              "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              value.onlyGroups
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border bg-transparent text-text-muted hover:bg-surface-elevated",
-            )}
-          >
-            {t("Grupos")}
-          </button>
-        </div>
+  const filtroDoMenuAtivo =
+    etiquetas.length > 0 || value.assigned_to != null || value.channel_session_id != null;
+  const temMenuDeFiltro = showChannelSwitch || mostrarSeletorDeTag || mostrarSeletorDeAtendente;
+  /** Chip no padrão do protótipo: neutro em repouso, tinta suave quando ativo. */
+  const chip = (ativo: boolean) =>
+    cn(
+      "min-h-0 shrink-0 gap-1 whitespace-nowrap rounded-full border px-3 py-1 text-[14px] font-normal leading-5 transition-colors lg:py-1",
+      "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+      ativo
+        ? "border-transparent bg-accent-soft font-medium text-accent"
+        : "border-border bg-background text-text-muted hover:bg-surface-elevated",
+    );
+  const chipsDaAba = new Map(
+    tabs.map((tab) => {
+      const meta = INBOX_TABS.find((x) => x.value === tab)!;
+      const count = countFor[tab];
+      // O nome da spec (AC-001.7) como dica, sem trocar o rótulo: "Fila" é
+      // contrato (posição "Nº na fila", ordem por espera, cinco arquivos de
+      // teste) e NÃO é sinônimo de "não atribuídas". `title` não muda o nome
+      // acessível da aba.
+      const dica =
+        tab === "unassigned"
+          ? t("Não atribuídas: esperando um atendente")
+          : tab === "ai"
+            ? t("IA: conduzidas pelo atendimento automático")
+            : undefined;
+      return [
+        tab,
+        <TabsTrigger
+          key={tab}
+          value={tab}
+          title={dica}
+          className={cn(
+            chip(false),
+            "data-[state=active]:border-transparent data-[state=active]:bg-accent-soft data-[state=active]:font-medium data-[state=active]:text-accent data-[state=active]:shadow-none",
+          )}
+        >
+          {t(meta.label)}
+          {typeof count === "number" && count > 0 && (
+            <span className="text-xs tabular-nums">{count}</span>
+          )}
+        </TabsTrigger>,
+      ] as const;
+    }),
+  );
+  const chipDaAba = (tab: InboxTab) => chipsDaAba.get(tab) ?? null;
 
-        {(showChannelSwitch || mostrarSeletorDeTag || mostrarSeletorDeAtendente) && (
-          <div className="flex gap-2">
+  return (
+    <div className="bg-card">
+      {/* A BUSCA SOZINHA NA LINHA, com a largura toda (#116): os filtros foram
+          para a linha de chips e para o menu do ícone de filtro. */}
+      <div data-testid="linha-da-busca" className="px-3 pb-2 pt-1">
+        <div className="relative">
+          <MagnifyingGlass
+            size={20}
+            weight="regular"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+            aria-hidden
+          />
+          {/* "última mensagem", e não "mensagem": a busca alcança apenas
+              `conversations.last_message_preview` — a ÚLTIMA mensagem, truncada em 200
+              caracteres já na ingestão. Alcançar o histórico é projeto próprio (índice
+              trigram + retenção + LGPD); até lá, a tela não promete o que o backend não faz. */}
+          <Input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={t("Buscar por nome, telefone ou última mensagem…")}
+            className="h-9 rounded-full border-transparent bg-muted pl-10 text-[15px] shadow-none focus-visible:border-border focus-visible:bg-background"
+            aria-label={t("Buscar conversas")}
+          />
+        </div>
+      </div>
+
+      {/* UMA LINHA DE CHIPS, rolável na horizontal (#116): as abas e os dois
+          filtros auxiliares (Não lidos, Grupos) na ordem do protótipo. A faixa é o
+          próprio `tablist`; os dois botões de filtro entram nela porque a ordem
+          visual e a ordem do DOM têm de ser a mesma. Só o LAYOUT mudou: `value.tab`,
+          `onChange`, `visibleInboxTabs` e `countFor` seguem como estavam. */}
+      <Tabs
+        value={value.tab}
+        onValueChange={(v) => onChange(comAba(value, v as InboxTab))}
+      >
+        <div className="flex items-center gap-1 pb-2 pl-3 pr-1">
+          <div className="group/chips relative min-w-0 flex-1">
+          {/* As setas existem para quem não tem rolagem horizontal (mouse comum):
+              aparecem só no hover da faixa e só quando há chip fora da vista. */}
+          {moreTabs.left && (
+            <button
+              type="button"
+              onClick={() => moveTab(-1)}
+              aria-label={t("Aba anterior")}
+              className="absolute left-0 top-0 z-10 hidden h-full w-7 items-center justify-start bg-linear-to-r from-background via-background to-transparent pl-0.5 text-text-muted hover:text-text group-hover/chips:flex focus-visible:flex focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <CaretLeft size={16} aria-hidden />
+            </button>
+          )}
+          <TabsList
+            ref={tabsListRef}
+            onScroll={updateMoreTabs}
+            data-testid="chips-da-lista"
+            className="h-auto w-full min-w-0 flex-nowrap justify-start border-b-0 gap-2 overflow-x-auto rounded-none bg-transparent p-0 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {chipDaAba("all")}
+            <button
+              type="button"
+              aria-pressed={value.onlyUnread}
+              onClick={() => onChange({ ...value, onlyUnread: !value.onlyUnread })}
+              className={chip(value.onlyUnread)}
+            >
+              {t("Não lidos")}
+            </button>
+            {chipDaAba("mine")}
+            {chipDaAba("unassigned")}
+            {chipDaAba("ai")}
+            {chipDaAba("closed")}
+            {chipDaAba("archived")}
+            {/* "Grupos" manda `is_group=true` na listagem — soma com a aba e a busca. */}
+            <button
+              type="button"
+              aria-pressed={value.onlyGroups ?? false}
+              onClick={() => onChange({ ...value, onlyGroups: !value.onlyGroups })}
+              className={chip(value.onlyGroups ?? false)}
+            >
+              {t("Grupos")}
+            </button>
+          </TabsList>
+          {moreTabs.right && (
+            <button
+              type="button"
+              onClick={() => moveTab(1)}
+              aria-label={t("Próxima aba")}
+              className="absolute right-0 top-0 z-10 hidden h-full w-7 items-center justify-end bg-linear-to-l from-background via-background to-transparent pr-0.5 text-text-muted hover:text-text group-hover/chips:flex focus-visible:flex focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <CaretRight size={16} aria-hidden />
+            </button>
+          )}
+          </div>
+          {temMenuDeFiltro && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t("Filtro")}
+                  title={t("Filtro")}
+                  className="relative flex size-9 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-elevated focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <FunnelSimple size={20} aria-hidden />
+                  {filtroDoMenuAtivo && (
+                    <span
+                      data-testid="filtro-ativo"
+                      className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent"
+                    />
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="flex w-72 flex-col gap-2 p-3">
+
             {showChannelSwitch && (
               <Select
                 value={value.channel_session_id ?? "all"}
@@ -625,98 +720,9 @@ export function InboxFilters({ value, onChange }: Props) {
                 onChange={(atendente) => onChange({ ...value, assigned_to: atendente })}
               />
             )}
-          </div>
-        )}
-      </div>
 
-      {/* As setas aparecem só quando há abas fora da área visível; a faixa e o
-          sublinhado continuam com a altura compacta do Inbox.
-
-          `flex-wrap` + `gap-x-1` (#2745) — A FAIXA QUEBRA EM VEZ DE ESCONDER.
-          Medido em browser real, com o CSS do produto compilado e a fonte
-          verdadeira (`tests/sonda-abas-inbox-1280.test.tsx`), as seis abas
-          somam 358px de rótulo+contagem e 378px com o gap de 4px; a coluna da
-          lista vale de 240 (mínimo do arraste, `LIMITES_LISTA`) a 520px, e o
-          padrão da faixa `xl` — a janela de 1280px da issue — é 272px. Sem
-          quebra, o `overflow-x-auto` rolava 191px na coluna de 272 e 13px na
-          de 450: "Fechadas" cortada e "Arquivadas" escondida atrás da seta,
-          que era exatamente o corte medido. Agora, na mesma medição: 2 linhas
-          (68px) em 272, 1 linha (30px) em 450, e as seis dentro da coluna em
-          toda a faixa — rolagem zero.
-
-          `shrink-0` + `whitespace-nowrap` seguem valendo: rótulo não encolhe
-          nem parte no meio. O `gap-x-1` só aperta onde não há folga (com
-          `justify-between` a sobra continua distribuída, então a faixa larga
-          não muda de figura) — e é o que leva 272px de 3 linhas para 2. A
-          seta de rolagem fica sendo o que sempre foi: reserva para o caso em
-          que UMA aba sozinha não cabe (zoom alto, coluna arrastada no mínimo).
-
-          Só o LAYOUT mudou: `value.tab`, `onChange`, `visibleInboxTabs` e
-          `countFor` estão byte a byte como estavam — a aba continua o mesmo
-          filtro com o mesmo rótulo, e "Automático" continua "Automático". */}
-      <Tabs
-        value={value.tab}
-        onValueChange={(v) => onChange(comAba(value, v as InboxTab))}
-        className="px-3"
-      >
-        <div className="flex items-center gap-1">
-          {moreTabs.left ? (
-            <button
-              type="button"
-              onClick={() => moveTab(-1)}
-              aria-label={t("Aba anterior")}
-              className="flex w-4 shrink-0 items-center justify-center text-text-muted hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <CaretLeft size={13} aria-hidden />
-            </button>
-          ) : (
-            <span className="w-4 shrink-0" aria-hidden />
-          )}
-          <TabsList
-            ref={tabsListRef}
-            onScroll={updateMoreTabs}
-            className="h-auto min-w-0 flex-1 flex-wrap justify-between gap-x-1 gap-y-2 rounded-none bg-transparent p-0 [scrollbar-width:none]"
-          >
-            {tabs.map((tab) => {
-              const meta = INBOX_TABS.find((t) => t.value === tab)!;
-              const count = countFor[tab];
-              // O nome da spec (AC-001.7) como dica, sem trocar o rótulo: "Fila" é
-              // contrato (posição "Nº na fila", ordem por espera, cinco arquivos de
-              // teste) e NÃO é sinônimo de "não atribuídas" — a Fila é quem espera
-              // um atendente; a conversa sem dono que o robô conduz está em
-              // "Automático". `title` não muda o nome acessível da aba.
-              const dica =
-                tab === "unassigned"
-                  ? t("Não atribuídas: esperando um atendente")
-                  : tab === "ai"
-                    ? t("IA: conduzidas pelo atendimento automático")
-                    : undefined;
-              return (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  title={dica}
-                  className="shrink-0 gap-1 rounded-full border border-transparent bg-surface-elevated px-3 py-1 text-xs font-medium text-text-muted data-[state=active]:border-accent data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
-                >
-                  {t(meta.label)}
-                  {typeof count === "number" && count > 0 && (
-                    <span className="text-xs tabular-nums">{count}</span>
-                  )}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-          {moreTabs.right ? (
-            <button
-              type="button"
-              onClick={() => moveTab(1)}
-              aria-label={t("Próxima aba")}
-              className="flex w-4 shrink-0 items-center justify-center text-text-muted hover:text-text focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <CaretRight size={13} aria-hidden />
-            </button>
-          ) : (
-            <span className="w-4 shrink-0" aria-hidden />
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </Tabs>

@@ -18,7 +18,13 @@ const PUBLICATION: Record<string, string> = { not_configured: "Somente no CRM", 
 const field = "rounded-md border border-border bg-surface-elevated p-2 text-sm w-full";
 
 /** Reserva pelo escritor normal. Não manda mensagem nem publica um agente. */
-export function ReservarServicoNaConversa({ contactId, conversationId, contactName }: { contactId: string; conversationId: string; contactName: string }) {
+export type AbrirReserva = { abrir: () => void };
+
+/**
+ * `semGatilho` tira o botão: o cabeçalho (#117) abre a reserva por um item do menu "Mais ações" e, como o
+ * conteúdo do menu desmonta ao fechar, a folha e o estado ficam AQUI, sempre montados, abertos pelo `ref`.
+ */
+export function ReservarServicoNaConversa({ contactId, conversationId, contactName, semGatilho = false, ref }: { contactId: string; conversationId: string; contactName: string; semGatilho?: boolean; ref?: React.Ref<AbrirReserva> }) {
   const t = useT(); const locale = useTagDeIdioma();
   const qc = useQueryClient();
   const peopleHint = React.useId();
@@ -43,10 +49,12 @@ export function ReservarServicoNaConversa({ contactId, conversationId, contactNa
     setZone(result.fuso_da_regra);
     setAvailability((result.servico?.availability ?? []).filter((row) => diaLocalISO(new Date(row.starts_at), result.fuso_da_regra) === day));
   }
-  return <><Button size="sm" variant="outline" onClick={() => { setOpen(true); void execute(async () => {
+  const abrir = () => { setOpen(true); void execute(async () => {
     const rows = (await apiClient.get<{ data: Service[] }>("/api/v1/agenda/tipos")).data;
     const valid = rows.filter((r) => r.service_enabled); setServices(valid); if (!typeId && valid[0]) setTypeId(valid[0].id);
-  }); }}>{t("Reservar serviço")}</Button>
+  }); };
+  React.useImperativeHandle(ref, () => ({ abrir }));
+  return <>{!semGatilho && <Button size="sm" variant="outline" onClick={abrir}>{t("Reservar serviço")}</Button>}
     <Sheet open={open} onOpenChange={setOpen}><SheetContent className="overflow-y-auto sm:max-w-lg"><SheetHeader><SheetTitle className="break-words">{services.find((s) => s.id === typeId)?.name ? <>{t("Agendar")} {services.find((s) => s.id === typeId)?.name}</> : t("Reservar serviço")}</SheetTitle></SheetHeader>
       <div className="space-y-4 py-4"><p>{t("Contato responsável:")} {contactName}</p><p className="text-sm text-text-muted">{t("Consultar não reserva. Reservar não envia mensagem nem comprova publicação Google.")}</p>
         {services.length === 0 ? <p>{t("Nenhum serviço com programação ativa. Configure em Configurações da Agenda.")}</p> : <>

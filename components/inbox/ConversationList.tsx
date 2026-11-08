@@ -5,6 +5,7 @@ import { useT } from "@/hooks/i18n/useT";
 import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { Check } from "@/lib/ui/icons";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
 
@@ -98,6 +99,7 @@ export function ConversationList({
   // Sem filtro de cliente: TODO filtro é parâmetro do schema e roda no banco.
   // `clientFilter` era o mecanismo que permitia um filtro existir fora do contrato
   // — e foi por ele que "Não lidos" virou ilha, fora da cerca que vigia os demais.
+  const modoDeSelecao = (selecionados?.size ?? 0) > 0;
   const items = useMemo(
     () => (q.data?.pages.flatMap((p) => p.data) ?? []) as ConversationWithContact[],
     [q.data],
@@ -229,7 +231,16 @@ export function ConversationList({
             está na tela. Some com a lista vazia — oferecer "selecionar todas"
             quando não há nenhuma é botão de mentira. */}
         {onAlternarSelecao && items.length > 0 && (
-          <div className="flex items-center gap-2 border-b border-border/70 px-3 py-1.5">
+          <div
+            data-testid="cabeca-da-selecao"
+            className={cn(
+              "items-center gap-2 border-b border-border/70 px-4 py-1.5",
+              // Fora do modo de seleção a cabeça só existe onde não há hover
+              // (celular): é por ela que o lote começa lá. No computador a caixa
+              // aparece no hover da linha.
+              modoDeSelecao ? "flex" : "hidden [@media(hover:none)]:flex",
+            )}
+          >
             <button
               type="button"
               role="checkbox"
@@ -265,6 +276,7 @@ export function ConversationList({
             fuso={fuso}
             selecionado={selecionados?.has(c.id)}
             onAlternarSelecao={onAlternarSelecao}
+            modoDeSelecao={modoDeSelecao}
             onAlternarExemplo={podeMarcarExemplo ? alternarExemplo : undefined}
           />
         ))}

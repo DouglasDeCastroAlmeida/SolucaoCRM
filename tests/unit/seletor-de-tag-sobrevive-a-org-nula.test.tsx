@@ -22,7 +22,7 @@
  * do menu durante a oscilação, e não há como desmarcá-la.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { InboxFilters, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
@@ -56,7 +56,15 @@ vi.mock("@/hooks/inbox/useConversationCounts", () => ({
 
 const GATILHO = "Filtrar por tag";
 /** O gatilho deixou de ser um `Select` (#1274): é botão com `aria-label`. */
-const gatilho = () => screen.queryByLabelText(GATILHO);
+/** Tag e atendente moram no menu do ícone de filtro (#116): abre antes de procurar (idempotente). */
+function abrirFiltros() {
+  const f = screen.queryByRole("button", { name: "Filtro", hidden: true });
+  if (f && f.getAttribute("aria-expanded") === "false") fireEvent.click(f);
+}
+const gatilho = () => {
+  abrirFiltros();
+  return screen.queryByLabelText(GATILHO);
+};
 const base: InboxFiltersValue = { tab: "unassigned", search: "", onlyUnread: false };
 
 beforeEach(() => {
@@ -103,6 +111,7 @@ describe("seletor de etiqueta x vocabulário voltando a undefined (dublês que r
     rerender(<InboxFilters value={{ ...comFiltro }} onChange={() => {}} />);
 
     const user = userEvent.setup({ delay: null });
+    await user.click(screen.getByRole("button", { name: "Filtro" }));
     await user.click(screen.getByRole("button", { name: GATILHO }));
     expect(screen.getByRole("menuitemcheckbox", { name: /apagada/ })).toBeInTheDocument();
   });

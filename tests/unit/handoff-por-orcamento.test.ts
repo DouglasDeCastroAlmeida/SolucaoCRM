@@ -549,10 +549,21 @@ describe("os textos do orçamento nomeiam botões que existem", () => {
    * também) ganhou suas próprias chamadas `t(...)` antes do texto visível, e
    * pegar a primeira ocorrência passou a capturar o tooltip em vez do rótulo.
    */
+  /**
+   * O corpo do controle da volta: do `data-testid` até o PRIMEIRO fechamento, seja `</Button>` ou
+   * `</DropdownMenuItem>` (desde a #117 a volta é um item do menu "Mais ações", não um botão solto;
+   * parar só em `</Button>` passava para o botão seguinte e lia o rótulo errado).
+   */
+  function corpoDoControleDeVolta(fonte: string): string {
+    const bloco = fonte.slice(fonte.indexOf('data-testid="devolver-ao-automatico"'));
+    const fechamentos = ["</Button>", "</DropdownMenuItem>"]
+      .map((marca) => bloco.indexOf(marca))
+      .filter((i) => i !== -1);
+    return fechamentos.length === 0 ? bloco : bloco.slice(0, Math.min(...fechamentos));
+  }
+
   function rotuloDoBotaoDeVolta(): string {
-    const bloco = fonteCabecalho.slice(fonteCabecalho.indexOf('data-testid="devolver-ao-automatico"'));
-    const fechamento = bloco.indexOf("</Button>");
-    const corpoDoBotao = fechamento === -1 ? bloco : bloco.slice(0, fechamento);
+    const corpoDoBotao = corpoDoControleDeVolta(fonteCabecalho);
     const ocorrencias = [...corpoDoBotao.matchAll(/t\("([^"]+)"\)/g)];
     const ultima = ocorrencias[ocorrencias.length - 1];
     if (ultima === undefined) {
@@ -588,10 +599,7 @@ describe("os textos do orçamento nomeiam botões que existem", () => {
       't("Voltar para a IA")',
     );
     expect(renomeado).not.toBe(fonteCabecalho);
-    const blocoRenomeado = renomeado.slice(renomeado.indexOf('data-testid="devolver-ao-automatico"'));
-    const fechamentoRenomeado = blocoRenomeado.indexOf("</Button>");
-    const corpoRenomeado =
-      fechamentoRenomeado === -1 ? blocoRenomeado : blocoRenomeado.slice(0, fechamentoRenomeado);
+    const corpoRenomeado = corpoDoControleDeVolta(renomeado);
     const ocorrenciasRenomeadas = [...corpoRenomeado.matchAll(/t\("([^"]+)"\)/g)];
     const novo = ocorrenciasRenomeadas[ocorrenciasRenomeadas.length - 1]?.[1];
     expect(novo).toBe("Voltar para a IA");

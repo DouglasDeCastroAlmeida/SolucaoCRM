@@ -24,6 +24,7 @@ vi.mock("@/lib/api/client", () => ({
   apiClient: { post: (...args: unknown[]) => postMock(...args) as Promise<unknown> },
 }));
 
+import { entrarEmNota } from "./_composer-nota";
 import { Composer } from "@/components/inbox/Composer";
 import type { AvisoDeRascunho } from "@/lib/inbox/rascunho-sugerido";
 
@@ -144,7 +145,7 @@ describe("Composer + rascunho sugerido", () => {
       rascunho: sugerido,
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    entrarEmNota();
     // Em modo nota a faixa some — e o consumo continua não tendo acontecido.
     expect(screen.queryByTestId("aviso-rascunho")).not.toBeInTheDocument();
     expect(postMock).not.toHaveBeenCalled();

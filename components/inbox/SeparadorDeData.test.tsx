@@ -12,7 +12,7 @@ describe("SeparadorDeData", () => {
   it("mostra o rotulo do dia centralizado em pilula", () => {
     const { container } = render(<SeparadorDeData rotulo="Hoje" />);
     const pilula = screen.getByText("Hoje");
-    expect(pilula.className).toContain("rounded-full");
+    expect(pilula.className).toContain("rounded-[8px]");
     expect(container.firstElementChild?.className).toContain("justify-center");
   });
 

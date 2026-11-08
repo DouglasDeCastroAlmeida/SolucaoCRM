@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConversationHeader } from "./ConversationHeader";
@@ -9,16 +10,11 @@ import type { ConversationWithContact } from "@/hooks/inbox/useConversationsReal
  *
  * ─── O que este arquivo prova, e o que ele NÃO prova ─────────────────────────
  *
- * A issue pede duas coisas: (1) menu "⋯" para as ações menos usadas e (2) guia
- * curta em cada botão. A (2) está aqui. A (1) NÃO foi implementada — e o motivo
- * é medido, não estético: `tests/unit/inbox-header-nao-trava.test.tsx` (do
- * mantenedor, commit `e079acf30`) afirma que as ações continuam TODAS na barra e
- * que um botão "Mais ações" **não pode existir**; o próprio JSX deste componente
- * diz por quê ("um menu 'mais' … esconderia ação de quem atende"). Esconder ação
- * da barra é regra de PRODUTO (`#1625`, `#1627`, `#2700` fechado sem merge em
- * 14/10 — e `#2810`, do mantenedor, merged no mesmo dia, nos MESMOS arquivos,
- * resolveu a mesma altura com uma fileira que rola). Quem muda essa regra é ele.
- * A paridade abaixo é o que garante que seguimos do lado certo dela.
+ * A #3003 pediu um menu "⋯" para as ações e uma guia curta em cada botão. A guia está aqui desde
+ * então; o menu só pôde existir quando o dono mudou a regra de produto: a spec #112 (cabeçalho de
+ * mensageiro, tarefa #117) tira as ações da barra — que fica com avatar, nome, subtítulo e três
+ * ícones — e as leva TODAS para "Mais ações". Esta paridade é a prova de que mover não é esconder:
+ * cada cenário abre o menu e o conjunto de ações é o mesmo de antes, por estado.
  *
  * ─── Por que a paridade é por CENÁRIO, e não uma lista só ────────────────────
  *
@@ -82,7 +78,7 @@ vi.mock("@/components/inbox/ChannelLogo", () => ({ ChannelLogo: () => null }));
 vi.mock("@/components/voice/DialButton", () => ({ DialButton: () => null }));
 vi.mock("@/components/inbox/VideoCallButton", () => ({ VideoCallButton: () => null }));
 vi.mock("@/components/inbox/SnoozeButton", () => ({
-  SnoozeButton: () => <button type="button">Lembrar</button>,
+  SnoozeButton: () => <div role="menuitem" title="Lembrar mais tarde">Lembrar</div>,
 }));
 
 /**
@@ -259,29 +255,32 @@ function montar(cenario: Cenario) {
   );
 }
 
-/** A barra de ações — ancorada por rótulo, nunca por índice fixo (contrato da catraca). */
-function barraDeAcoes(ancora: string): HTMLElement {
-  const botao = screen.getByText(ancora).closest("button");
-  expect(botao, `a âncora "${ancora}" não renderizou um botão`).toBeTruthy();
-  const barra = (botao as HTMLElement).parentElement;
-  expect(barra, "a barra de ações não renderizou").toBeTruthy();
-  return barra as HTMLElement;
+/**
+ * #117: as ações moram no menu "Mais ações". Abre o menu e devolve a região onde a barra E o menu
+ * (que o Radix leva para o body) estão. A âncora prova que o menu do cenário abriu com o que se espera.
+ */
+async function barraDeAcoes(ancora: string): Promise<HTMLElement> {
+  await userEvent.setup().click(screen.getByRole("button", { name: "Mais ações" }));
+  await screen.findByRole("menu");
+  expect(screen.getByText(ancora), `a âncora "${ancora}" não apareceu no menu`).toBeTruthy();
+  return document.body;
 }
 
 /** "Esta ação está alcançável nesta barra?" — por texto (botão) ou por nome acessível (ícone). */
 function naBarra(barra: HTMLElement, rotulo: string): boolean {
   return (
     within(barra).queryAllByText(rotulo).length > 0 ||
-    within(barra).queryByRole("button", { name: rotulo }) !== null ||
-    within(barra).queryByRole("link", { name: rotulo }) !== null
+    within(barra).queryByRole("button", { name: rotulo, hidden: true }) !== null ||
+    within(barra).queryByRole("menuitem", { name: rotulo, hidden: true }) !== null ||
+    within(barra).queryByRole("link", { name: rotulo, hidden: true }) !== null
   );
 }
 
 describe("#3003 — paridade: nenhuma ação da barra desaparece", () => {
   for (const cenario of CENARIOS) {
-    it(`${cenario.nome}: continua oferecendo exatamente ${cenario.esperadas.length} ações`, () => {
+    it(`${cenario.nome}: continua oferecendo exatamente ${cenario.esperadas.length} ações`, async () => {
       montar(cenario);
-      const barra = barraDeAcoes(cenario.ancora);
+      const barra = await barraDeAcoes(cenario.ancora);
 
       const presentes = INVENTARIO.filter((rotulo) => naBarra(barra, rotulo));
       expect(
@@ -291,11 +290,11 @@ describe("#3003 — paridade: nenhuma ação da barra desaparece", () => {
     });
   }
 
-  it("a união dos cenários cobre TODA ação do inventário — é aqui que a ação removida do componente reprova", () => {
+  it("a união dos cenários cobre TODA ação do inventário — é aqui que a ação removida do componente reprova", async () => {
     const vistas = new Set<string>();
     for (const cenario of CENARIOS) {
       const { unmount } = montar(cenario);
-      const barra = barraDeAcoes(cenario.ancora);
+      const barra = await barraDeAcoes(cenario.ancora);
       for (const rotulo of INVENTARIO) if (naBarra(barra, rotulo)) vistas.add(rotulo);
       unmount();
     }
@@ -311,11 +310,11 @@ describe("#3003 — paridade: nenhuma ação da barra desaparece", () => {
 
 describe("#3003 — guia curta: todo botão da barra diz o que faz", () => {
   for (const cenario of CENARIOS) {
-    it(`${cenario.nome}: nome acessível e guia, em cada botão`, () => {
+    it(`${cenario.nome}: nome acessível e guia, em cada botão`, async () => {
       montar(cenario);
-      const barra = barraDeAcoes(cenario.ancora);
+      const barra = await barraDeAcoes(cenario.ancora);
 
-      const alvos = Array.from(barra.querySelectorAll<HTMLElement>("button, a[href]"));
+      const alvos = Array.from(barra.querySelectorAll<HTMLElement>("button, a[href], [role=menuitem]"));
       expect(alvos.length, "a barra não renderizou botão nenhum").toBeGreaterThan(0);
 
       for (const el of alvos) {
@@ -336,11 +335,11 @@ describe("#3003 — guia curta: todo botão da barra diz o que faz", () => {
     });
   }
 
-  it("a guia não renomeou nenhum botão — o nome acessível continua sendo o rótulo visível", () => {
+  it("a guia não renomeou nenhum item — o nome acessível continua sendo o rótulo visível", async () => {
     montar(CENARIO_MAIS_COMPLETO);
-    const barra = barraDeAcoes("Liberar");
+    const barra = await barraDeAcoes("Liberar");
     for (const rotulo of ["Assumir", "Liberar", "Devolver ao automático", "Transferir", "Fechar"]) {
-      const botao = within(barra).getByRole("button", { name: rotulo });
+      const botao = within(barra).getByRole("menuitem", { name: rotulo });
       expect(botao.textContent?.trim()).toBe(rotulo);
     }
   });
@@ -375,9 +374,10 @@ describe("#3003 — a guia de Liberar não promete o automático quando ele não
   ];
 
   for (const caso of casos) {
-    it(caso.nome, () => {
+    it(caso.nome, async () => {
       montar({ nome: caso.nome, ancora: "Liberar", esperadas: [], ...caso.cenario });
-      expect(screen.getByRole("button", { name: "Liberar" }).getAttribute("title")).toBe(caso.guia);
+      await barraDeAcoes("Liberar");
+      expect(screen.getByRole("menuitem", { name: "Liberar" }).getAttribute("title")).toBe(caso.guia);
     });
   }
 });

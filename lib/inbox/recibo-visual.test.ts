@@ -1,42 +1,47 @@
 /**
- * O recibo do balão enviado: "lida" tem de se distinguir de "entregue" sem depender de cor fixa
- * (o balão leva a cor da MARCA) e o glifo esmaecido continua legível (piso de componente, 3:1).
+ * O recibo do balão enviado (paleta fixa, ADR 0008): "lida" é azul, traço grosso e opaca; entregue e
+ * enviada continuam legíveis esmaecidas (piso de componente, 3:1) sobre a bolha enviada de cada tema.
  */
 import fs from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { derivarMarca, extrairRegua, PISOS, razaoDeContraste } from "@/lib/branding/contraste";
+import { PISOS, razaoDeContraste } from "@/lib/branding/contraste";
 import { VISUAL_DO_RECIBO } from "./recibo-visual";
 
-const REGUA = extrairRegua(fs.readFileSync(path.join(process.cwd(), "app/globals.css"), "utf8"));
-const CORES = ["#ffffff", "#000000", "#f5c518", "#ffff00", "#0f172a", "#506d48", "#7f7f7f", "#767676", "#e11d48", "#25d366", "#abcdef"];
+const CSS = fs.readFileSync(path.join(process.cwd(), "app/globals.css"), "utf8");
+const BLOCOS = { claro: "\n:root {", escuro: '\n[data-theme="dark"] {' } as const;
+
+function token(tema: keyof typeof BLOCOS, nome: string): string {
+  const ini = CSS.indexOf(BLOCOS[tema]);
+  const m = new RegExp(`${nome}:\\s*(#[0-9a-fA-F]{6})\\b`).exec(CSS.slice(ini));
+  if (!m) throw new Error(`${nome} ausente`);
+  return m[1]!;
+}
 
 function misturar(frente: string, fundo: string, alfa: number): string {
-  const c = (h: string, i: number) => parseInt(h.replace("#", "").padEnd(6, "0").slice(i, i + 2), 16);
+  const c = (h: string, i: number) => parseInt(h.replace("#", "").slice(i, i + 2), 16);
   const canal = (i: number) =>
     Math.round(c(frente, i) * alfa + c(fundo, i) * (1 - alfa)).toString(16).padStart(2, "0");
-  return `#${canal(1)}${canal(3)}${canal(5)}`;
+  return `#${canal(0)}${canal(2)}${canal(4)}`;
 }
 
 describe("recibo visual", () => {
-  it("lida difere de entregue por traço e por opacidade, não por cor", () => {
+  it("lida difere de entregue por traço e por opacidade, e leva a cor dos tiques de leitura", () => {
     const { lida, entregue } = VISUAL_DO_RECIBO;
     expect(lida.traco).toBeGreaterThan(entregue.traco);
     expect(lida.opacidade).toBe(1);
     expect(entregue.opacidade).toBeLessThan(lida.opacidade);
+    expect(lida.classe).toContain("text-tick-read");
   });
 
-  it("o recibo esmaecido passa de 3:1 sobre o balão de qualquer cor de marca, nos dois temas", () => {
-    for (const cor of CORES) {
-      const marca = derivarMarca(cor, REGUA);
-      for (const tema of ["claro", "escuro"] as const) {
-        const { accent, accentFg } = marca[tema];
-        for (const [nome, v] of Object.entries(VISUAL_DO_RECIBO)) {
-          const visto = misturar(accentFg, accent, v.opacidade);
-          expect(razaoDeContraste(visto, accent), `${cor}/${tema}/${nome}`).toBeGreaterThanOrEqual(PISOS.componente);
-        }
+  it("entregue e enviada, esmaecidas na cor da hora, passam de 3:1 sobre a bolha enviada nos dois temas", () => {
+    for (const tema of ["claro", "escuro"] as const) {
+      const bolha = token(tema, "--color-bubble-out");
+      for (const nome of ["entregue", "enviada"] as const) {
+        const visto = misturar(token(tema, "--color-bubble-out-meta"), bolha, VISUAL_DO_RECIBO[nome].opacidade);
+        expect(razaoDeContraste(visto, bolha), `${tema}/${nome}`).toBeGreaterThanOrEqual(PISOS.componente);
       }
     }
   });

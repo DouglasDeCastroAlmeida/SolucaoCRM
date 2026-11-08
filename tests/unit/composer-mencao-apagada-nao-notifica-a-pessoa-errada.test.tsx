@@ -50,6 +50,7 @@ vi.mock("@/hooks/inbox/useAssignableMembers", () => ({
   useAssignableMembers: () => ({ data: membros, isLoading: false }),
 }));
 
+import { entrarEmNota } from "./_composer-nota";
 import { Composer } from "@/components/inbox/Composer";
 
 function abrirModoNota() {
@@ -59,7 +60,7 @@ function abrirModoNota() {
       <Composer conversationId="conv-1" />
     </QueryClientProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+  entrarEmNota();
   return screen.getByLabelText(/mensagem/i);
 }
 

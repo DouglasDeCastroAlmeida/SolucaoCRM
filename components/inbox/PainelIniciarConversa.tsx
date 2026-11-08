@@ -68,7 +68,7 @@ import { ApiError } from "@/lib/api/types";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { normalizePhoneBR, phoneForDisplay, samePhone } from "@/lib/channels/phone-variants";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
-import { ChatCircle, UserCircle, Users } from "@/lib/ui/icons";
+import { ChatCircle, Plus, UserCircle, Users } from "@/lib/ui/icons";
 import { useAuth, usePermission } from "@/hooks/auth/AuthProvider";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
 import { useContactList } from "@/hooks/contacts/useContactList";
@@ -404,22 +404,26 @@ export function BotaoIniciarConversa() {
   const podeIniciar = usePermission("inbox.claim");
   const [aberto, setAberto] = useState(false);
 
-  if (!podeIniciar) return null;
-
+  // Cabeçalho da lista no padrão de mensageiro (#116): título em verde e o botão
+  // de nova conversa como círculo verde com "+". É o MESMO botão e a mesma
+  // função de antes ("Iniciar conversa" segue sendo o nome acessível).
   return (
     <>
-      <div className="px-3 pt-3">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-center gap-2"
-          onClick={() => setAberto(true)}
-        >
-          <ChatCircle size={16} weight="regular" aria-hidden />
-          {t("Iniciar conversa")}
-        </Button>
+      <div className="flex h-[60px] shrink-0 items-center justify-between px-4">
+        <h2 className="text-[22px] font-semibold leading-7 text-accent">{t("Conversas")}</h2>
+        {podeIniciar && (
+          <button
+            type="button"
+            aria-label={t("Iniciar conversa")}
+            title={t("Iniciar conversa")}
+            onClick={() => setAberto(true)}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-icon-on-accent transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Plus size={24} weight="bold" aria-hidden />
+          </button>
+        )}
       </div>
-      <IniciarConversaDialog open={aberto} onOpenChange={setAberto} />
+      {podeIniciar && <IniciarConversaDialog open={aberto} onOpenChange={setAberto} />}
     </>
   );
 }

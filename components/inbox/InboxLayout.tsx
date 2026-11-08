@@ -34,7 +34,8 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { ChatCircle, IdentificationCard, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
+import { UserRound } from "lucide-react";
+import { ChatCircle, MagnifyingGlass, Voltar, X } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -258,6 +259,24 @@ export function InboxLayout({
       void togglePainelDoContato(painelRecolhido);
     });
   }, [painelRecolhido]);
+  /**
+   * "Ver contato" no cabeçalho abre o PAINEL (rodada 2): no `xl` a coluna ao lado (abre/recolhe),
+   * abaixo dele a ficha deslizante, que é a mesma do celular. Nada leva a pessoa para fora do Inbox.
+   */
+  const [ehXl, setEhXl] = useState(false);
+  useEffect(() => {
+    // Só decide o gesto do clique e o `aria-pressed`; o layout em si segue em CSS (sem piscar).
+    const mq = window.matchMedia?.("(min-width: 1280px)");
+    if (!mq) return;
+    const atualizar = () => setEhXl(mq.matches);
+    atualizar();
+    mq.addEventListener("change", atualizar);
+    return () => mq.removeEventListener("change", atualizar);
+  }, []);
+  const abrirContato = useCallback(() => {
+    if (window.matchMedia?.("(min-width: 1280px)").matches) alternarPainelDoContato();
+    else setFichaAberta((aberta) => !aberta);
+  }, [alternarPainelDoContato]);
   /**
    * A busca dentro da conversa (#1793) pertence à CONVERSA em que foi aberta.
    * Guardar o id junto fecha a busca em qualquer troca — clique, atalho j/k,
@@ -696,14 +715,14 @@ export function InboxLayout({
     <div
       ref={gradeRef}
       className={cn(
-        "grid relative h-[calc(100dvh-3.5rem-var(--space-6)-max(var(--space-6),var(--rodape-ocupado,0px)))] w-full grid-cols-1 md:grid-cols-[300px_1fr]",
+        "grid relative h-[calc(100dvh-3.5rem-var(--space-6)-max(var(--space-6),var(--rodape-ocupado,0px)))] w-full grid-cols-1 md:grid-cols-[340px_1fr]",
         // Recolhido (issue #3004), a terceira trilha vira o trilho estreito do
         // botão de expandir e a conversa fica com o que era da ficha. Duas
         // listas em vez de uma classe com valor em variável: o Tailwind precisa
         // do literal para gerar o CSS.
         painelRecolhido
-          ? "xl:grid-cols-[272px_1fr_2.75rem] 2xl:grid-cols-[300px_1fr_2.75rem]"
-          : "xl:grid-cols-[272px_1fr_296px] 2xl:grid-cols-[300px_1fr_320px]",
+          ? "xl:grid-cols-[360px_1fr_2.75rem] 2xl:grid-cols-[400px_1fr_2.75rem]"
+          : "xl:grid-cols-[360px_1fr_296px] 2xl:grid-cols-[400px_1fr_320px]",
       )}
       style={estiloDaGrade}
       /*
@@ -811,33 +830,20 @@ export function InboxLayout({
           que ele é a única saída. A porta da ficha, essa sim, depende da
           conversa, e só aparece quando há uma.
         */}
-        {selectedId && (
-          <div className="flex items-center gap-1 border-b border-border px-1 py-1 md:hidden">
+        {/* Sem conversa carregada (carregando ou fora do acesso) não há cabeçalho onde pôr a seta:
+            a barra mínima abaixo garante a saída. Com a conversa carregada, a seta e a porta da
+            ficha moram DENTRO do cabeçalho (#118), como no WhatsApp. */}
+        {selectedId && !selectedConversation && (
+          <div className="flex h-[60px] items-center gap-1 border-b border-border bg-card px-2 md:hidden">
             <Button
               variant="ghost"
-              size="sm"
-              className="h-9 gap-1 px-2"
+              size="icon"
+              className="size-10 rounded-full text-muted-foreground"
               aria-label={t("Voltar para as conversas")}
               onClick={() => handleSelect(null)}
             >
               <Voltar size={24} aria-hidden />
-              {t("Conversas")}
             </Button>
-            <div className="flex-1" />
-            {selectedConversation && (
-              <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 xl:hidden">
-                    <IdentificationCard size={16} />
-                    {t("Ficha")}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[min(22rem,90vw)] overflow-y-auto p-0">
-                  <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
-                  <CRMSidePanel conversation={selectedConversation} />
-                </SheetContent>
-              </Sheet>
-            )}
           </div>
         )}
         {selectedConversation ? (
@@ -848,6 +854,27 @@ export function InboxLayout({
               key={selectedConversation.id}
               conversation={selectedConversation}
               onAbrirConversa={handleSelect}
+              aoVoltar={() => handleSelect(null)}
+              aoAbrirContato={abrirContato}
+              contatoAberto={ehXl ? !painelRecolhido : fichaAberta}
+              acaoDaFicha={
+                <Sheet open={fichaAberta} onOpenChange={setFichaAberta}>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-9 rounded-full text-muted-foreground md:hidden"
+                      aria-label={t("Ficha")}
+                    >
+                      <UserRound className="size-5" aria-hidden />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-sm">
+                    <SheetTitle className="sr-only">{t("Ficha do contato")}</SheetTitle>
+                    <CRMSidePanel conversation={selectedConversation} />
+                  </SheetContent>
+                </Sheet>
+              }
               onBuscar={() =>
                 buscaAberta
                   ? fecharBusca()

@@ -17,6 +17,7 @@ import { horaNoFuso } from "@/lib/inbox/agrupar-mensagens";
 import type { ReacaoNoBalao } from "@/lib/inbox/reacoes-no-fio";
 import { lerRemetenteDeGrupo, rotuloDoRemetente } from "@/lib/messaging/remetente-de-grupo";
 import { CitationButton } from "@/components/ai/CitationButton";
+import { TextoComLinks } from "@/components/inbox/TextoComLinks";
 import { MediaRenderer } from "@/components/inbox/media/MediaRenderer";
 import { MediaUnavailable } from "@/components/inbox/media/MediaUnavailable";
 import { ContactCard } from "@/components/inbox/media/ContactCard";
@@ -302,17 +303,17 @@ export function MessageBubble({
         data-testid="message-bubble"
         data-cauda={comCauda}
         className={cn(
-          "relative max-w-[75%] min-w-0 text-sm",
+          "relative max-w-[85%] min-w-0 text-sm md:max-w-[65%]",
           isBareSticker
             ? "px-0 py-0"
             : cn(
                 // Visual de mensageiro (#89): raio curto, sem moldura; a pontinha abaixo
                 // zera o canto de cima do lado de onde a mensagem sai.
-                "rounded-lg px-2.5 py-1.5 shadow-sm",
+                "rounded-[8px] px-2.5 py-1.5 shadow-sm",
                 temMenu && "pr-8",
                 isOutbound
-                  ? cn("bg-primary text-primary-foreground", !colada && "rounded-tr-none")
-                  : cn("bg-card text-foreground", !colada && "rounded-tl-none"),
+                  ? cn("bg-bubble-out text-bubble-out-fg", !colada && "rounded-tr-none")
+                  : cn("bg-bubble-in text-foreground", !colada && "rounded-tl-none"),
               ),
           isFailed && "border border-destructive",
           // A marca da busca é ANEL, não cor de fundo: o fundo já diz de quem é
@@ -332,8 +333,8 @@ export function MessageBubble({
             className={cn(
               "absolute top-0 h-3 w-2",
               isOutbound
-                ? "-right-2 bg-primary [clip-path:polygon(0_0,0_100%,100%_0)]"
-                : "-left-2 bg-card [clip-path:polygon(100%_0,100%_100%,0_0)]",
+                ? "-right-2 bg-bubble-out [clip-path:polygon(0_0,0_100%,100%_0)]"
+                : "-left-2 bg-bubble-in [clip-path:polygon(100%_0,100%_100%,0_0)]",
             )}
           />
         )}
@@ -344,7 +345,7 @@ export function MessageBubble({
                 className={cn(
                   "absolute right-1 top-1 z-10 rounded-md p-0.5 transition-opacity focus-visible:outline-2 focus-visible:outline-offset-1",
                   "opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100",
-                  isOutbound ? "text-primary-foreground hover:bg-primary-foreground/15" : "text-muted-foreground hover:bg-background/70",
+                  isOutbound ? "text-bubble-out-fg hover:bg-bubble-out-fg/15" : "text-muted-foreground hover:bg-background/70",
                 )}>
                 <CaretDown size={16} weight="bold" aria-hidden />
               </button>
@@ -404,7 +405,7 @@ export function MessageBubble({
             className={cn(
               "mb-1 rounded-md border-l-2 px-2 py-1 text-xs",
               isOutbound
-                ? "border-primary-foreground/50 bg-primary-foreground/10"
+                ? "border-bubble-out-fg/50 bg-bubble-out-fg/10"
                 : "border-primary bg-background/60",
             )}
           >
@@ -509,7 +510,7 @@ export function MessageBubble({
             {localizacao && <LocationCard localizacao={localizacao} />}
 
             {message.body && !isContact && !localizacao && (
-              <p className="whitespace-pre-wrap wrap-anywhere leading-snug">{message.body}</p>
+              <p className="whitespace-pre-wrap wrap-anywhere leading-snug"><TextoComLinks texto={message.body} /></p>
             )}
 
             {email && <RodapeDoEmail email={email} mensagemId={message.id} />}
@@ -529,7 +530,7 @@ export function MessageBubble({
           data-testid="balao-rodape"
           className={cn(
             "-mb-0.5 mt-0.5 flex items-center justify-end gap-1 text-xs leading-none",
-            isOutbound ? "text-primary-foreground" : "text-muted-foreground",
+            isOutbound ? "text-bubble-out-meta" : "text-muted-foreground",
           )}
         >
           {editada && (

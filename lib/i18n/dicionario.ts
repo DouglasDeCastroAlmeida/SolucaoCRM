@@ -5725,6 +5725,9 @@ export const DICIONARIO: Traducoes = {
     es: "Déjalo en blanco para volver al nombre predeterminado. Este nombre ya aparece en el título de la pestaña del navegador, en la pantalla de inicio de sesión, en los menús laterales, en los correos que envía el sistema (para las empresas que no definieron un nombre propio), en la app de verificación en dos pasos y en el archivo de códigos de recuperación que descarga el usuario. Todavía NO llega a las pantallas de registro ni a las de configuración inicial: esas siguen con el nombre escrito en el archivo de instalación del servidor hasta la próxima actualización del stack.",
   },
   "Cor da marca": { es: "Color de la marca" },
+  "A cor da marca vale só para o logo, o nome, o ícone da aba e os e-mails. A interface usa sempre o verde padrão do sistema.": {
+    es: "El color de la marca vale solo para el logo, el nombre, el ícono de la pestaña y los correos. La interfaz usa siempre el verde predeterminado del sistema.",
+  },
   "Escolher a cor visualmente": { es: "Elegir el color visualmente" },
   "Use um código de cor como #7a5cd6.": { es: "Usa un código de color como #7a5cd6." },
   "Deixe em branco para voltar à cor padrão do sistema.": {
@@ -7649,6 +7652,7 @@ export const DICIONARIO: Traducoes = {
     es: "Cuando el agente avanza en la atención, la tarjeta del cliente puede moverse sola por tu embudo. Elige a qué etapa va en cada momento. Dejarlo en «no mover» también es válido: la tarjeta se queda donde está y el agente sigue trabajando.",
   },
   "Ir para as etapas do funil": { es: "Ir a las etapas del embudo" },
+  "Ir para o fim da conversa": { es: "Ir al final de la conversación" },
   "Etapa para": { es: "Etapa para" },
   "Não mover o card": { es: "No mover la tarjeta" },
   "As escolhas voltaram para o que está gravado agora — confira e escolha de novo.": {
@@ -7964,6 +7968,7 @@ export const DICIONARIO: Traducoes = {
     es: "Guarda la conversación en la pestaña Archivadas. Si todavía está abierta, la atención se cierra.",
   },
   "Abre a ficha completa deste contato.": { es: "Abre la ficha completa de este contacto." },
+  "Abre os dados deste contato.": { es: "Abre los datos de este contacto." },
   Automático: { es: "Automático" },
   Alguém: { es: "Alguien" },
   "Nota interna · só o time vê": { es: "Nota interna · solo la ve el equipo" },

@@ -1,39 +1,19 @@
 /**
- * CATRACA — as 6 abas da Inbox não podem voltar a ser cortadas na coluna (#2745).
+ * CATRACA — as abas da Inbox continuam TODAS alcançáveis na faixa de chips (#2745, reescrita na #116).
  *
- * ## O defeito, medido
+ * ## O defeito original, e o que mudou
  *
- * A faixa de abas do Inbox é `overflow-x-auto` com gatilhos `shrink-0` e
- * `whitespace-nowrap`: rótulo não encolhe, então quando as seis não cabem na
- * coluna a faixa ROLA — e quem está na ponta direita fica atrás da seta. Em
- * browser real, com o CSS do produto compilado e a fonte verdadeira, medido
- * contra a largura da coluna (`tests/sonda-abas-inbox-1280.test.tsx`):
+ * Em 2745 as seis abas eram cortadas na coluna (`overflow-x-auto` + `shrink-0`
+ * rolava 191px em 272px) e a correção foi QUEBRAR a faixa em linhas
+ * (`flex-wrap`). O protótipo aprovado na rodada 2 (#116) pede o contrário, de
+ * propósito: UMA linha de chips rolável na horizontal, como no mensageiro. Então
+ * o que esta catraca vigia agora é o outro lado do mesmo risco: a rolagem não pode
+ * esconder aba SEM porta — todas as seis estão na faixa, com o rótulo inteiro, o
+ * chip ativo é levado para a vista (centralizado ao trocar de aba) e a faixa não
+ * volta a quebrar em linhas.
  *
- *   coluna 272px (padrão da faixa `xl`, janela de 1280) → rolava 191px
- *   coluna 380px → rolava  83px  ("Fechadas" cortada)
- *   coluna 450px → rolava  13px  ("Arquivadas" atrás da seta)
- *
- * 272px é o padrão do Inbox em 1280px de janela (`LIMITES_LISTA` e
- * `largurasPadrao`, em `lib/inbox/larguras-do-inbox.ts`: a coluna da lista é
- * arrastável entre 240 e 520). Ou seja: na resolução comum, três das seis
- * abas só existiam para quem rolava a faixa no escuro.
- *
- * ## Por que este teste é o que é (e o que ele NÃO é)
- *
- * Este teste olha CLASSE, não pixel — e isso é limitação declarada, não
- * descuido: largura de rótulo e quebra de flex são cálculo de layout, e o
- * jsdom não tem engine de layout. Medir largura aqui devolveria zero em tudo
- * e passaria feliz: verde por ausência de motor, o pior falso verde que
- * existe. A medição de verdade é a sonda acima, que roda em Chromium e afere
- * as seis larguras da faixa de arraste.
- *
- * Esta catraca existe porque aquela sonda NÃO roda no CI (precisa de browser e
- * compila o Tailwind inteiro), e a regressão específica — alguém tirar
- * `flex-wrap` da faixa "para voltar ao visual de uma linha só" — é textual e
- * barata de pegar. O segundo bloco vigia o outro lado do mesmo defeito: a
- * saída fácil seria encurtar rótulo ou tirar aba, e "Automático" é contrato
- * (comentário em `InboxFilters.tsx`) — a largura não se paga mudando o
- * significado do filtro.
+ * Esta catraca olha CLASSE, não pixel (o jsdom não calcula layout). A medida em
+ * navegador está nas capturas da tarefa #116.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -71,39 +51,27 @@ const VALUE: InboxFiltersValue = { tab: "ai", search: "", onlyUnread: false };
 
 afterEach(cleanup);
 
+
+afterEach(cleanup);
+
 function faixa(): HTMLElement {
-  const list = screen.getByRole("tablist");
-  expect(list, "a faixa de abas não renderizou").toBeTruthy();
+  const list = screen.getByTestId("chips-da-lista");
+  expect(list, "a faixa de chips não renderizou").toBeTruthy();
   return list;
 }
 
-describe("faixa da Inbox — quebra em vez de esconder aba (#2745)", () => {
-  it("a faixa tem `flex-wrap` — sem ele ela ROLA e a ponta direita fica atrás da seta", () => {
+describe("faixa de chips da Inbox — uma linha rolável (#116)", () => {
+  it("rola na horizontal e NÃO quebra em linhas", () => {
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    // A regressão que esta catraca existe para pegar: `flex-wrap` removido
-    // devolve o corte medido — 191px de rolagem na coluna de 272px, com
-    // "Fechadas" cortada e "Arquivadas" escondida.
-    expect(
-      faixa().className.split(/\s+/),
-      "`flex-wrap` sumiu da faixa: as abas voltam a rolar para fora da coluna em 1280px (#2745)",
-    ).toContain("flex-wrap");
+    const classes = faixa().className.split(/\s+/);
+    expect(classes).toContain("overflow-x-auto");
+    expect(classes).toContain("flex-nowrap");
+    expect(classes).not.toContain("flex-wrap");
   });
 
-  it("`gap-x-1` acompanha — é o que deixa 272px em 2 linhas em vez de 3", () => {
+  it("a faixa é o próprio tablist e as SEIS abas estão nela, com os rótulos inteiros", () => {
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    // Sem a folga de 4px, a coluna de 272px (o PADRÃO em 1280) quebra em 3
-    // linhas / 106px; com ela, 2 linhas / 68px. Medido na sonda.
-    expect(
-      faixa().className.split(/\s+/),
-      "`gap-x-1` sumiu: a faixa padrão em 1280px ganha uma terceira linha de abas (#2745)",
-    ).toContain("gap-x-1");
-  });
-
-  it("as SEIS abas estão na faixa, com os rótulos inteiros", () => {
-    render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    // Guarda de vacuidade do caso acima e defesa do outro lado do defeito:
-    // a saída fácil para \"não cabe\" é encurtar rótulo ou tirar aba, e aí a
-    // catraca de classe continua verde com a tela errada.
+    expect(faixa()).toHaveAttribute("role", "tablist");
     const abas = screen.getAllByRole("tab");
     expect(abas).toHaveLength(6);
     for (const rotulo of ["Automático", "Fila", "Minhas", "Todas", "Fechadas", "Arquivadas"]) {
@@ -114,32 +82,38 @@ describe("faixa da Inbox — quebra em vez de esconder aba (#2745)", () => {
     }
   });
 
-  it("quebrar a linha não muda o FILTRO: clicar em Arquivadas manda tab=archived", () => {
+  it("cada chip não encolhe nem parte o rótulo", () => {
+    render(<InboxFilters value={VALUE} onChange={() => {}} />);
+    for (const aba of screen.getAllByRole("tab")) {
+      const classes = aba.className.split(/\s+/);
+      expect(classes).toContain("shrink-0");
+      expect(classes).toContain("whitespace-nowrap");
+    }
+  });
+
+  it("clicar em Arquivadas manda tab=archived (o contrato do filtro não mudou)", () => {
     const onChange = vi.fn();
     render(<InboxFilters value={VALUE} onChange={onChange} />);
-    // A quebra é de layout; o valor continua o MESMO contrato de antes.
     // O Radix `TabsTrigger` aciona no `mousedown`, não no `click`.
     fireEvent.mouseDown(screen.getByRole("tab", { name: /Arquivadas/ }));
     expect(onChange).toHaveBeenCalledWith({ ...VALUE, tab: "archived" });
   });
 
-  it("a ordem e os valores das abas não mudaram (#2498)", () => {
+  it("a ordem e os valores das abas seguem o protótipo aprovado", () => {
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    // `visibleInboxTabs` é a fonte da ORDEM do trabalho; a largura não se paga
-    // reordenando nem renomeando.
     expect(visibleInboxTabs("manager", "all")).toEqual([
-      "ai",
-      "unassigned",
-      "mine",
       "all",
+      "mine",
+      "unassigned",
+      "ai",
       "closed",
       "archived",
     ]);
     expect(screen.getAllByRole("tab").map((a) => a.textContent?.replace(/\s+/g, ""))).toEqual([
-      "Automático12",
-      "Fila47",
-      "Minhas8",
       "Todas130",
+      "Minhas8",
+      "Fila47",
+      "Automático12",
       "Fechadas25",
       "Arquivadas9",
     ]);

@@ -20,7 +20,7 @@
  * sua válvula.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { InboxFilters, type InboxFiltersValue } from "@/components/inbox/InboxFilters";
@@ -67,8 +67,15 @@ const GATILHO = "Filtrar por tag";
  * — o rótulo não mudou, e mudar o rótulo quebraria quem procura o controle
  * (e a tradução no dicionário).
  */
-const gatilho = (comMenuAberto = false) =>
-  screen.queryByRole("button", { name: GATILHO, ...(comMenuAberto ? { hidden: true } : {}) });
+/** Tag e atendente moram no menu do ícone de filtro (#116): abre antes de procurar (idempotente). */
+function abrirFiltros() {
+  const f = screen.queryByRole("button", { name: "Filtro", hidden: true });
+  if (f && f.getAttribute("aria-expanded") === "false") fireEvent.click(f);
+}
+const gatilho = (comMenuAberto = false) => {
+  abrirFiltros();
+  return screen.queryByRole("button", { name: GATILHO, ...(comMenuAberto ? { hidden: true } : {}) });
+};
 
 beforeEach(() => {
   // Radix Select em jsdom: o gatilho usa captura de ponteiro e o conteúdo rola
@@ -90,6 +97,7 @@ async function abreOMenu() {
   // vermelho que não ensina nada.
   const user = userEvent.setup({ delay: null });
   const tela = render(<InboxFilters value={VALUE} onChange={() => {}} />);
+  await user.click(screen.getByRole("button", { name: "Filtro" }));
   await user.click(screen.getByRole("button", { name: GATILHO }));
   expect(screen.getByRole("menuitemcheckbox", { name: /vip/ })).toBeInTheDocument();
   expect(screen.getByRole("menuitemcheckbox", { name: /retorno/ })).toBeInTheDocument();
@@ -177,6 +185,7 @@ describe("o modo E/OU marca só o modo ativo (#1274)", () => {
     render(
       <InboxFilters value={{ ...VALUE, tag: ["vip", "retorno"], tagMode }} onChange={() => {}} />,
     );
+    await user.click(screen.getByRole("button", { name: "Filtro" }));
     await user.click(screen.getByRole("button", { name: GATILHO }));
     return {
       e: screen.getByRole("menuitemradio", { name: "Todas (E)" }),

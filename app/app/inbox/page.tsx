@@ -44,7 +44,8 @@ export default async function InboxPage({
   // mesmo motivo do `sidebar_collapsed_<userId>` (`app/app/layout.tsx`): sem isto o
   // primeiro render traz o painel aberto e a grade só se ajusta depois da
   // hidratação — a conversa nasce estreita e pula para larga.
-  const painelRecolhido = (await cookies()).get("inbox_painel_recolhido")?.value === "1";
+  // Recolhido por padrão (#116): só abre quem escolheu abrir (cookie "0").
+  const painelRecolhido = (await cookies()).get("inbox_painel_recolhido")?.value !== "0";
   // ?rascunho= é a ponta da caixa de entrada da issue #1611: o texto mora no
   // servidor, e a URL só carrega o ID. Aqui a leitura acontece com a SESSÃO do
   // atendente (RLS), então um rascunho de outra organização vira

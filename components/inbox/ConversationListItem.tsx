@@ -91,6 +91,12 @@ interface Props {
    */
   onAlternarSelecao?: (id: string) => void;
   /**
+   * Modo de seleção (#116): há conversas marcadas no lote, então a caixa de
+   * TODAS as linhas fica à vista. Fora dele a caixa só aparece no hover, como no
+   * mensageiro: a lista de repouso é só avatar, nome, prévia, hora e contador.
+   */
+  modoDeSelecao?: boolean;
+  /**
    * Marca (ou desmarca) ESTA conversa como exemplo para o agente aprender
    * (#3006). Presente = a linha monta o controle; AUSENTE = a linha é
    * exatamente a que era, sem controle nenhum e sem selo — é o que mantém os
@@ -183,6 +189,7 @@ export function ConversationListItem({
   automaticoDaOrg,
   selecionado = false,
   onAlternarSelecao,
+  modoDeSelecao = false,
   onAlternarExemplo,
   fuso,
 }: Props) {
@@ -287,6 +294,9 @@ export function ConversationListItem({
     ? t("Deixar de usar como exemplo")
     : t("Usar como exemplo para a IA");
 
+  /** Selos, estado do comando e canal: hover, conversa aberta ou modo de seleção. */
+  const selosVisiveis = isSelected || modoDeSelecao || selecionado;
+
   const temSelos =
     visibleTags.length > 0 ||
     exemploMarcado ||
@@ -298,8 +308,13 @@ export function ConversationListItem({
   return (
     <div
       className={cn(
-        "relative flex w-full items-start border-b border-border/70",
-        selecionado && "bg-accent-soft",
+        // `group/linha`: o hover da LINHA inteira (botão da linha + controles
+        // irmãos) revela selos, caixa de lote e sugestão. O divisor é inset: começa
+        // depois do avatar (16 + 49 + 12 = 77px), como no mensageiro.
+        // Sem divisória entre linhas e a selecionada é um retângulo de cantos
+        // arredondados com margem lateral (print do WhatsApp Web do dono).
+        "group/linha relative mx-2 flex w-auto items-start rounded-lg",
+        selecionado && "bg-selected",
       )}
     >
       {/*
@@ -317,7 +332,12 @@ export function ConversationListItem({
           data-testid={`selecao-em-lote-${conversation.id}`}
           onClick={() => onAlternarSelecao(conversation.id)}
           className={cn(
-            "mt-3 ml-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-colors",
+            // Por cima do canto do avatar, e não ao lado dele: aparecer no hover não
+            // pode empurrar a linha (a coluna do avatar fica parada).
+            "absolute left-2 top-2 z-10 h-5 w-5 items-center justify-center rounded-sm border transition-colors",
+            modoDeSelecao || selecionado
+              ? "flex"
+              : "hidden group-hover/linha:flex group-focus-within/linha:flex",
             "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
             selecionado
               ? "border-accent bg-accent text-accent-foreground"
@@ -332,13 +352,12 @@ export function ConversationListItem({
         data-conversation-id={conversation.id}
         onClick={() => onSelect(conversation.id)}
         className={cn(
-          "group relative flex min-w-0 flex-1 items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-elevated",
+          "group relative flex min-w-0 flex-1 items-start gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-surface-elevated",
           "focus-visible:outline-hidden focus-visible:bg-surface-elevated",
           // Foco de teclado SE VÊ (AC-007.1): anel por dentro, que a lista rolável não corta.
           "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
-          // `accent-soft`, e não um degrau fixo da rampa: os degraus têm o MESMO
-          // hex nos dois temas, e o `accent-50` (quase branco) no escuro deixava o
-          // nome — `text-text`, claro no escuro — branco sobre branco.
+          // A conversa aberta é CINZA NEUTRO (`bg-selected`, token fixo dos dois
+          // temas): o verde fica para o que pede atenção (contador, hora, chip).
           // Marcada no lote, quem pinta é o wrapper: no escuro o `accent-soft` é
           // translúcido, e pintar os dois o somava (prévia a 3,2:1). O botão fica
           // transparente também no hover/foco, senão o cinza do hover cobria só ele
@@ -346,12 +365,12 @@ export function ConversationListItem({
           isSelected &&
             (selecionado
               ? "hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
-              : "bg-accent-soft hover:bg-accent-soft"),
+              : "bg-selected hover:bg-selected"),
         )}
         aria-current={isSelected ? "true" : undefined}
       >
       <div className="relative shrink-0">
-        <Avatar className="h-12 w-12 rounded-full">
+        <Avatar className="h-[49px] w-[49px] rounded-full">
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
               foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
@@ -363,20 +382,30 @@ export function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-sm font-medium text-text-muted">
+          <AvatarFallback className="bg-surface-elevated text-[17px] font-medium text-text-muted">
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
         <span
           className={cn(
             "absolute -bottom-0.5 -left-0.5 h-3 w-3 rounded-full border-2 border-background",
+            // Estado de comando e canal são selos: só no hover, na conversa aberta
+            // ou em modo de seleção (a leitura continua no `title` e no leitor).
+            selosVisiveis ? "block" : "hidden group-hover/linha:block",
             dot,
           )}
           role="img"
           aria-label={rotuloDoComando}
           title={rotuloDoComando}
         />
-        <ChannelLogo channel={canal} size={16} className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background ring-2 ring-background" />
+        <ChannelLogo
+          channel={canal}
+          size={16}
+          className={cn(
+            "absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background ring-2 ring-background",
+            !selosVisiveis && "hidden group-hover/linha:block",
+          )}
+        />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -397,8 +426,8 @@ export function ConversationListItem({
           <span className="flex min-w-0 items-center gap-1.5">
             <span
               className={cn(
-                "truncate text-[15px]",
-                unread > 0 ? "font-semibold text-text" : "font-medium text-text",
+                "truncate text-[17px] leading-6 text-text",
+                unread > 0 && "font-medium",
                 c?.is_anonymized && "font-normal italic text-text-muted",
               )}
             >
@@ -419,7 +448,12 @@ export function ConversationListItem({
             )}
           </span>
           <span
-            className="shrink-0 text-xs tabular-nums text-text-subtle"
+            data-testid="hora-da-linha"
+            className={cn(
+              "shrink-0 text-[12px] tabular-nums",
+              // Hora em verde quando há não lidas, como o contador ao lado.
+              unread > 0 ? "text-accent" : "text-text-muted",
+            )}
             // O mesmo lugar da tela mostra duas coisas diferentes conforme a aba:
             // na Fila é "desde quando o cliente ESPERA" (a mensagem mais antiga sem
             // resposta — #990), nas outras é "há quanto tempo a conversa mexeu". O
@@ -433,10 +467,9 @@ export function ConversationListItem({
         <div className="mt-0.5 flex items-center justify-between gap-2">
           <p
             className={cn(
-              "min-w-0 truncate text-[13px]",
-              // Na aberta, `text-text`: `text-muted` sobre o `accent-soft` do
-              // escuro dá 4,2:1, abaixo do AA (medido em selecionada-legivel-no-escuro.test).
-              unread > 0 || isSelected ? "text-text" : "text-text-muted",
+              "min-w-0 truncate text-[14px]",
+              // Na aberta, `text-text`: contraste máximo sobre o cinza da seleção.
+              isSelected ? "text-text" : "text-text-muted",
             )}
           >
             {isAi && mostrarAutomatico ? (
@@ -449,14 +482,20 @@ export function ConversationListItem({
             {truncated}
           </p>
           {unread > 0 && (
-            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-xs font-semibold tabular-nums text-accent-foreground">
+            <span className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[12px] font-medium tabular-nums text-accent-foreground">
               {unread}
             </span>
           )}
         </div>
 
         {temSelos && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-1">
+          <div
+            data-testid="selos-da-linha"
+            className={cn(
+              "mt-1.5 flex-wrap items-center gap-1",
+              selosVisiveis ? "flex" : "hidden group-hover/linha:flex group-focus-within/linha:flex",
+            )}
+          >
             {/* O SELO DO EXEMPLO vem ANTES das etiquetas de propósito: a faixa
                 mostra no máximo 2 etiquetas e as que sobram viram "+N". Um
                 estado que decide se a conversa entra na base de conhecimento
@@ -514,10 +553,10 @@ export function ConversationListItem({
         interativo dentro de `<button>` é HTML inválido, e marcar não pode abrir
         a conversa. O gesto de marcar é separado do gesto de abrir.
 
-        Fica sempre visível, e não só no hover: o defeito que esta issue
-        conserta é justamente um recurso que ninguém achava. Um ícone que só
-        aparece sob o cursor continuaria escondido no celular, onde não há
-        hover — e o alvo de toque é maior do que o desenho sugere.
+        Aparece no hover, na conversa aberta e em modo de seleção (#116, padrão
+        de mensageiro: a lista de repouso é limpa). No celular, onde não há
+        hover, o controle está na conversa aberta; a marcação em lote começa
+        pelo "Selecionar todas" do topo da lista (ver `ConversationList`).
 
         Desmarcado usa `text-text-muted`, não `text-text-subtle`: é componente
         gráfico e precisa de 3:1 contra o fundo da linha. Medido na prova de
@@ -534,7 +573,9 @@ export function ConversationListItem({
           title={rotuloExemplo}
           onClick={() => onAlternarExemplo(conversation.id, !exemploMarcado)}
           className={cn(
-            "mr-1 mt-2.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-sm transition-colors",
+            // Sobreposto ao canto da linha: aparecer no hover não empurra o texto.
+            "absolute bottom-1.5 right-3 z-10 h-6 w-6 items-center justify-center rounded-sm bg-card transition-colors",
+            selosVisiveis ? "flex" : "hidden group-hover/linha:flex group-focus-within/linha:flex",
             "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent",
             exemploMarcado
               ? "text-accent hover:bg-accent-soft"

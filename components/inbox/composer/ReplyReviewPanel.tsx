@@ -20,9 +20,16 @@ type Draft = {
 export function ReplyReviewPanel({
   conversationId,
   disabled,
+  pedidoDeSugestao = 0,
 }: {
   conversationId: string;
   disabled?: boolean;
+  /**
+   * Contador de pedidos do botão "Sugerir resposta" (que mora na linha de escrever, fora daqui).
+   * Cada clique o incrementa, e o aviso antigo some NA HORA, como sumia quando o botão morava neste
+   * painel, e não só quando outro rascunho chega.
+   */
+  pedidoDeSugestao?: number;
 }) {
   const t = useT(),
     qc = useQueryClient(),
@@ -44,25 +51,21 @@ export function ReplyReviewPanel({
       message: string;
       kind: "success" | "error";
     } | null>(null);
+  const [pedidoVisto, setPedidoVisto] = useState(pedidoDeSugestao);
+  if (pedidoDeSugestao !== pedidoVisto) {
+    setPedidoVisto(pedidoDeSugestao);
+    setNotice(null);
+  }
   // Antes: `drafts[0]`, o mais recente, QUALQUER que fosse o estado dele — então
   // uma sugestão rejeitada ficava na tela para sempre, sem botão de fechar.
   const draft = sugestaoParaMostrar(query.data?.data.drafts);
+  // Uma sugestão NOVA apaga o aviso da anterior (antes quem apagava era o botão "Sugerir resposta",
+  // que morava aqui dentro): sem isto o aviso velho voltaria quando a nova saísse da tela.
+  if (draft && notice && notice.draftId !== draft.id) setNotice(null);
   const body = draft ? (edits[draft.id] ?? draft.edited_body ?? draft.original_body ?? "") : "";
   // A causa do veto, em linguagem de quem opera (issue #2975): sem código
   // conhecido, a frase genérica de sempre continua sendo a verdade.
   const motivo = draft ? motivoDoVeto(draft.error_code) : null;
-  async function generate() {
-    setNotice(null);
-    setBusy(true);
-    try {
-      await apiClient.post(`/api/v1/conversations/${conversationId}/draft-reply`, {});
-      await qc.invalidateQueries({ queryKey: key });
-    } catch (e) {
-      showApiError(e);
-    } finally {
-      setBusy(false);
-    }
-  }
   async function decide(action: "approve" | "reject") {
     if (!draft) return;
     setBusy(true);
@@ -107,24 +110,24 @@ export function ReplyReviewPanel({
     stale: "Sugestão obsoleta: a conversa mudou",
     failed: "Não foi possível concluir a sugestão ou o envio",
   };
+  // A faixa só existe quando há algo a dizer (#118): sem sugestão e sem aviso ela ocupava a
+  // tela à toa. "Sugerir resposta" virou o ícone da linha de escrever (`BotaoSugerirResposta`).
+  const temAviso =
+    !!notice &&
+    (!draft ||
+      (notice.draftId === draft.id &&
+        (notice.kind === "error" ||
+          ["approved", "sending", "sent", "dismissed"].includes(draft.status))));
+  if (!draft && !temAviso) return null;
   return (
     <section
-      className="mb-3 space-y-2 rounded-md border bg-muted/30 p-3"
+      className="mb-2 space-y-2 rounded-lg bg-card p-3 shadow-sm"
       aria-label={t("Assistência do agente")}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium">
           {t(draft ? (statuses[draft.status] ?? "Assistência do agente") : "Assistência do agente")}
         </p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled || busy}
-          onClick={generate}
-        >
-          {t(busy ? "Preparando…" : "Sugerir resposta")}
-        </Button>
       </div>
       {draft && (
         <>
@@ -199,15 +202,11 @@ export function ReplyReviewPanel({
         pessoa clicaria em Rejeitar e a tela apenas esvaziaria, sem dizer nada.
         Quando ainda há sugestão, o aviso continua amarrado a ela.
       */}
-      {notice &&
-        (!draft ||
-          (notice.draftId === draft.id &&
-            (notice.kind === "error" ||
-              ["approved", "sending", "sent", "dismissed"].includes(draft.status)))) && (
-          <p role="status" className="text-xs">
-            {notice.message}
-          </p>
-        )}
+      {notice && temAviso && (
+        <p role="status" className="text-xs">
+          {notice.message}
+        </p>
+      )}
     </section>
   );
 }

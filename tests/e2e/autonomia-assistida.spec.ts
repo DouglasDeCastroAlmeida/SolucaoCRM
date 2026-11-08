@@ -216,7 +216,8 @@ async function generate(page: Page) {
   const response = page.waitForResponse(
     (r) => r.url().endsWith("/draft-reply") && r.request().method() === "POST",
   );
-  await panel(page).getByRole("button", { name: "Sugerir resposta", exact: true }).click();
+  // #118: "Sugerir resposta" é o ícone da linha de escrever, fora da faixa de revisão.
+  await page.getByRole("button", { name: "Sugerir resposta", exact: true }).click();
   const r = await response;
   expect(r.status(), await r.text()).toBe(200);
   await expect(panel(page).getByText("Sugestão para revisar", { exact: true })).toBeVisible();
@@ -383,7 +384,8 @@ test("testa sem enviar, pausa preserva publicação e duas aprovações entregam
     // Os três rótulos de `statuses` cobertos por esse conjunto (`sent`, `stale`,
     // `dismissed`) são hoje código inalcançável no componente. Está anotado; o
     // teste não é o lugar de decidir se eles voltam a aparecer.
-    await expect(panel(page).getByText("Assistência do agente", { exact: true })).toBeVisible();
+    // #118: sem sugestão e sem aviso a faixa nem existe (só aparece quando há algo a dizer).
+    await expect(panel(page)).toHaveCount(0);
     await expect(panel(page).getByRole("button", { name: "Aprovar e enviar" })).toHaveCount(0);
     await expect(panel(page).getByText("Resposta aprovada. Acompanhe o envio aqui.", { exact: true })).toHaveCount(0);
     await page.setViewportSize({ width: 390, height: 844 });
