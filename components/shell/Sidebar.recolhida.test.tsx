@@ -2,8 +2,7 @@
  * Menu lateral RECOLHIDO (mudança 009, Fatia 2).
  *
  * jsdom não mede pixel; aqui se prova a regra: o nome do destino aparece no
- * hover e no foco, o item atual anuncia a página, o botão de expandir está
- * sempre presente e rotulado, e nenhum destino de `sidebarGroups()` some.
+ * hover e no foco, o item atual anuncia a página, e nenhum destino de `sidebarGroups()` some.
  * `sidebarGroups` entra SEM mock: mockar a projeção provaria a fiação, e não
  * a herança.
  */
@@ -95,12 +94,5 @@ describe("menu recolhido", () => {
     expect(esperados.length).toBeGreaterThan(10);
     const faltando = esperados.filter((r) => !nomes.includes(r));
     expect(faltando).toEqual([]);
-  });
-
-  it("AC-001.5: o botão de expandir está sempre visível e rotulado", () => {
-    montar();
-    const botao = screen.getByRole("button", { name: "Expandir sidebar" });
-    expect(botao).toBeTruthy();
-    expect(botao.className).not.toMatch(/\b(hidden|sr-only|opacity-0)\b/);
   });
 });

@@ -1,26 +1,20 @@
 /**
- * Issue #2722 — o controle de recolher mora no ALTO, não no rodapé.
+ * Limpeza final do visual de mensageiro (#99): o conteúdo da barra lateral não
+ * tem mais controle de recolher.
  *
- * O que estes testes protegem:
+ * O desktop desenha a faixa de ícones (`FaixaDeIcones`), que tem o seu próprio
+ * controle; `SidebarContent` só é montado, aberto, dentro da gaveta do celular
+ * (`MobileSidebar`), onde o botão já vinha desligado. O botão e a prop
+ * `showCollapseControl` eram código sem caminho de produção.
  *
- *  - aberta, o botão está DENTRO da linha da logo (`.h-14`) e o rodapé
- *    (`border-t`) não o contém mais — é o regressor que impede o controle
- *    de voltar para baixo por um refactor;
- *  - recolhida, ele existe como faixa sob a marca, fora da linha `.h-14`
- *    (os 64px do trilho não comportam botão ao lado do símbolo);
- *  - clicar continua gravando a preferência (`toggleSidebar` com o estado
- *    ATUAL, a mesma semântica do botão antigo).
- *
- * A lógica de persistência é do server action e mora em outro teste; aqui é
- * a SUPERFÍCIE — onde o botão vive.
+ * Os casos de baixo seguem protegendo o que ainda vale: a marca não estoura a
+ * linha da logo (#2722 / review #2723).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 
 import { SidebarContent } from "@/components/shell/Sidebar";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
-import { toggleSidebar } from "@/app/actions/shell/toggleSidebar";
 import type { ActiveOrg, AuthUser } from "@/lib/auth/types";
 
 const authRef: { user: Pick<AuthUser, "is_platform_admin">; activeOrg: ActiveOrg | null } = {
@@ -56,44 +50,19 @@ function comoPapel(role: ActiveOrg["role"]) {
   authRef.activeOrg = { orgId: "org-1", name: "Org", role };
 }
 
-function linhaDaLogo(): Element | null {
-  return document.querySelector(".h-14");
-}
-
-function rodape(): Element | null {
-  return document.querySelector(".border-t");
-}
-
 afterEach(cleanup);
 
-describe("Sidebar — controle de recolher no alto (#2722)", () => {
-  it("aberta: o botão vive na linha da logo, e o rodapé não o contém", () => {
+describe("Sidebar — sem controle de recolher (#99)", () => {
+  it("aberta: nenhum botão de recolher na barra", () => {
     comoPapel("admin");
     render(<SidebarContent collapsed={false} />);
-    const botao = screen.getByRole("button", { name: "Recolher sidebar" });
-    expect(linhaDaLogo()?.contains(botao)).toBe(true);
-    expect(rodape()?.contains(botao)).toBe(false);
+    expect(screen.queryByRole("button", { name: /recolher sidebar/i })).toBeNull();
   });
 
-  it("aberta: clicar grava a preferência com o estado atual (false)", async () => {
-    comoPapel("admin");
-    const user = userEvent.setup();
-    render(<SidebarContent collapsed={false} />);
-    await user.click(screen.getByRole("button", { name: "Recolher sidebar" }));
-    expect(vi.mocked(toggleSidebar)).toHaveBeenCalledWith(false);
-  });
-
-  it("recolhida: o «» existe fora da linha da logo, antes do menu", () => {
+  it("recolhida: nenhum botão de expandir na barra", () => {
     comoPapel("admin");
     render(<SidebarContent collapsed={true} />);
-    const botao = screen.getByRole("button", { name: "Expandir sidebar" });
-    expect(linhaDaLogo()?.contains(botao)).toBe(false);
-    expect(rodape()?.contains(botao)).toBe(false);
-    // Antes do menu, não depois: o controle é o primeiro thing do alto.
-    const menu = document.querySelector("nav")!;
-    expect(
-      menu.compareDocumentPosition(botao) & Node.DOCUMENT_POSITION_PRECEDING,
-    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /expandir sidebar/i })).toBeNull();
   });
 });
 
@@ -107,36 +76,6 @@ describe("Sidebar — controle de recolher no alto (#2722)", () => {
  * mesmo sem ninguém ter aberto a tela.
  */
 describe("Sidebar — a marca não disputa a barra com o botão (#2722 / review #2723)", () => {
-  it("aberta: o botão é só o ícone, mas mantém aria-label e ganha title", () => {
-    comoPapel("admin");
-    render(<SidebarContent collapsed={false} />);
-    const botao = screen.getByRole("button", { name: "Recolher sidebar" });
-    // O rótulo deixa de ser texto visível: no review ele custava ~54px de uma
-    // linha com ~207px úteis, e uma logo-palavra 5:1 (140px) já estourava.
-    expect(screen.queryByText("Recolher")).toBeNull();
-    // Acessibilidade intacta: mesmo nome para leitor de tela, tooltip no hover.
-    expect(botao.getAttribute("aria-label")).toBe("Recolher sidebar");
-    expect(botao).toHaveAttribute("title", "Recolher sidebar");
-  });
-
-  it("recolhida: o tooltip diz o que o clique faz — Expandir, não Recolher", () => {
-    // O `title` e o `aria-label` nomeiam a MESMA ação. Com o title preso em
-    // "Recolher sidebar", o trilho recolhido mostrava no hover o contrário do
-    // que o botão faz.
-    comoPapel("admin");
-    render(<SidebarContent collapsed={true} />);
-    const botao = screen.getByRole("button", { name: "Expandir sidebar" });
-    expect(botao).toHaveAttribute("title", "Expandir sidebar");
-  });
-
-  it("aberta: o wrapper do botão é shrink-0, para não ser o primeiro espremido", () => {
-    comoPapel("admin");
-    render(<SidebarContent collapsed={false} />);
-    const botao = screen.getByRole("button", { name: "Recolher sidebar" });
-    // O botão é o CONTROLE — se ele encolher, some o que o usuário clica.
-    expect(botao.parentElement?.className).toContain("shrink-0");
-  });
-
   it("com marca própria: a imagem tem teto que encolhe, e o wrapper é min-w-0", () => {
     authRef.user = { is_platform_admin: false };
     authRef.activeOrg = {
