@@ -129,7 +129,14 @@ function celula(texto: string): string {
   return texto.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
 }
 
-/** O `README.md` da fase: cada captura, a data e o host. Todo texto livre passa por `redigir`. */
+/**
+ * O `README.md` da fase: cada captura, a data e o host.
+ *
+ * A captura é citada pelo caminho em crase, relativo a `evidence/`, e não por link
+ * relativo ao README: a cerca `evidence-citada` só entende caminho dentro de
+ * `evidence/` e reprovaria `etapa-1/x.png` como arquivo fora do versionamento.
+ */
+/** Todo texto livre passa por `redigir`. */
 export function montarIndice(opcoes: {
   fase: string;
   host: string;
@@ -141,7 +148,7 @@ export function montarIndice(opcoes: {
   const total = (s: StatusDaCaptura) => registros.filter((r) => r.status === s).length;
   const linhas = registros.map((r) => {
     const arquivo =
-      (r.capturada ?? r.status === "ok") ? `[${nomeDaCaptura(r)}](etapa-${r.etapa}/${nomeDaCaptura(r)})` : "";
+      (r.capturada ?? r.status === "ok") ? `\`visual-de-mensageiro/${fase}/etapa-${r.etapa}/${nomeDaCaptura(r)}\`` : "";
     const obs = celula(redigir(r.observacao ?? "", segredos));
     return `| ${r.etapa} | ${r.slug} | ${r.viewport} | ${r.tema} | ${r.status} | ${arquivo} | ${obs} |`;
   });
