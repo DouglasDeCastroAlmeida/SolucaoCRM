@@ -21,7 +21,7 @@ const GLIFOS_ABERTOS = [
   "Status",
 ] as const;
 
-type Icone = React.ComponentType<Record<string, unknown>>;
+type Icone = React.ComponentType<import("@/lib/ui/material-symbols").PropsDoGlifoAberto>;
 
 function arquivosDeCodigo(pasta: string): string[] {
   const achados: string[] = [];
