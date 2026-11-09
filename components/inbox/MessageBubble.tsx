@@ -17,7 +17,6 @@ import { horaNoFuso } from "@/lib/inbox/agrupar-mensagens";
 import type { ReacaoNoBalao } from "@/lib/inbox/reacoes-no-fio";
 import { lerRemetenteDeGrupo, rotuloDoRemetente } from "@/lib/messaging/remetente-de-grupo";
 import { CitationButton } from "@/components/ai/CitationButton";
-import { TextoComLinks } from "@/components/inbox/TextoComLinks";
 import { MediaRenderer } from "@/components/inbox/media/MediaRenderer";
 import { MediaUnavailable } from "@/components/inbox/media/MediaUnavailable";
 import { ContactCard } from "@/components/inbox/media/ContactCard";
@@ -510,7 +509,7 @@ export function MessageBubble({
             {localizacao && <LocationCard localizacao={localizacao} />}
 
             {message.body && !isContact && !localizacao && (
-              <p className="whitespace-pre-wrap wrap-anywhere leading-snug"><TextoComLinks texto={message.body} /></p>
+              <p className="whitespace-pre-wrap wrap-anywhere leading-snug">{message.body}</p>
             )}
 
             {email && <RodapeDoEmail email={email} mensagemId={message.id} />}
