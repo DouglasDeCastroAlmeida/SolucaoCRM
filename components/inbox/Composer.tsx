@@ -894,6 +894,15 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             className={cn(
               "max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] leading-5",
               "placeholder:text-muted-foreground focus:outline-hidden",
+              // Placeholder em UMA linha (#127): o campo tem `rows={1}` e 40 px de
+              // altura; sem isto a frase quebrava em duas no celular e a segunda
+              // era cortada pela borda. No `<textarea>` o placeholder é um bloco
+              // de várias linhas, então precisa dos três juntos: não quebrar,
+              // esconder o excesso e terminar em reticências. Medido no
+              // Chromium: sem o `text-ellipsis` NO PRÓPRIO campo, o placeholder
+              // só é cortado no meio da letra, sem reticências. O texto digitado
+              // continua quebrando linha (o `nowrap` é só do placeholder).
+              "text-ellipsis placeholder:overflow-hidden placeholder:text-ellipsis placeholder:whitespace-nowrap",
             )}
             disabled={mode === "note" ? isDisabled : respostaBarrada}
             aria-label={t("Mensagem")}
