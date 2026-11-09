@@ -390,13 +390,20 @@ async function prepararConversaDeExemplo(
   const sobra = await esperarOConteudo(page);
   const falhas: string[] = [];
   if (sobra.length > 0) falhas.push(`a conversa continuou em carregamento (${sobra[0]})`);
-  if (quer === "contato" && celular) {
-    const ficha = page.getByRole("button", { name: /^(Ficha|Ver contato|Dados do contato)$/ }).first();
-    if ((await ficha.count()) === 0) falhas.push("nao achei o botao que abre a ficha do contato no celular");
+  if (quer === "contato") {
+    // Celular: o ícone "Ficha" abre a ficha deslizante. Computador: o ícone "Ver contato" do cabeçalho
+    // (a lateral direita) abre/recolhe o painel; só clica se o painel estiver fechado (aria-pressed
+    // "false"), para não fechar o que já veio aberto. Os dois são só visuais (nada é gravado além do
+    // cookie de painel recolhido, que o app já usa).
+    const nome = celular ? /^Ficha$/ : /^Ver contato$/;
+    const ficha = page.getByRole("button", { name: nome }).first();
+    if ((await ficha.count()) === 0) falhas.push("nao achei o botao que abre o painel do contato");
     else {
-      await ficha.click();
+      if ((await ficha.getAttribute("aria-pressed")) !== "true") await ficha.click();
       await page.waitForTimeout(800);
       await esperarOConteudo(page);
+      const titulo = page.getByRole("heading", { name: "Dados do contato" }).first();
+      if (!(await titulo.isVisible().catch(() => false))) falhas.push("o painel do contato nao ficou visivel");
     }
   }
   return { falhas };

@@ -303,7 +303,7 @@ export function ConversationHeader({
           data-avatar
           data-testid="avatar-da-conversa"
           aria-hidden
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[15px] font-medium text-muted-foreground max-md:size-9"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-avatar text-[15px] font-medium text-avatar-fg max-md:size-9"
         >
           {iniciaisDe(displayName)}
         </span>
