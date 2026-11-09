@@ -85,6 +85,9 @@
   --color-bubble-in: #ffffff;
   --color-tick-read: #1587c0;
   --color-selected: #eff2f3;
+  /* Círculo do avatar sem foto (#123): cinza neutro próprio, distinto da lista e da linha selecionada. */
+  --color-avatar: #d1d8dc;
+  --color-avatar-fg: #17222b;
 
   /* Neutrals — greige (11 stops, light) */
   --color-neutral-50: #f7f8f9;
@@ -319,6 +322,8 @@
   --color-bubble-in: #ffffff;
   --color-tick-read: #1587c0;
   --color-selected: #eff2f3;
+  --color-avatar: #d1d8dc;
+  --color-avatar-fg: #17222b;
   --color-neutral-50: #f7f8f9;
   --color-neutral-100: #eef0f2;
   --color-neutral-200: #e3e7ea;
@@ -433,6 +438,8 @@
   --color-bubble-in: #1f2f31;
   --color-tick-read: #5cc4f0;
   --color-selected: #263538;
+  --color-avatar: #44545d;
+  --color-avatar-fg: #e7ecef;
 
   /* Neutrals — greige (11 stops, dark) */
   --color-neutral-50: #e7ecef;
@@ -555,6 +562,8 @@
   --color-bubble-in: var(--color-bubble-in);
   --color-tick-read: var(--color-tick-read);
   --color-selected: var(--color-selected);
+  --color-avatar: var(--color-avatar);
+  --color-avatar-fg: var(--color-avatar-fg);
   --color-accent-50: var(--color-accent-50);
   --color-accent-100: var(--color-accent-100);
   --color-accent-200: var(--color-accent-200);

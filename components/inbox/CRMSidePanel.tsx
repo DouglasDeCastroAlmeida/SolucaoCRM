@@ -973,7 +973,7 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
             <span
               aria-hidden
               data-testid="avatar-do-painel"
-              className="flex size-24 items-center justify-center rounded-full bg-muted text-[34px] font-medium text-muted-foreground"
+              className="flex size-24 items-center justify-center rounded-full bg-avatar text-[34px] font-medium text-avatar-fg"
             >
               {iniciaisDoPainel(displayName)}
             </span>
@@ -990,7 +990,11 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
             </div>
           )}
           <div className="flex flex-wrap gap-2 pt-1">
-            {contactId&&conversation?<Link className="underline" href={`/app/agenda?contato=${contactId}&conversa=${conversation.id}`}>{t("Marcar compromisso")}</Link>:null}
+            {contactId && conversation ? (
+              <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
+                <Link href={`/app/agenda?contato=${contactId}&conversa=${conversation.id}`}>{t("Marcar compromisso")}</Link>
+              </Button>
+            ) : null}
             <Button
               size="sm"
               variant="outline"
@@ -1012,7 +1016,7 @@ export function CRMSidePanel({ conversation, recolhido = false, onAlternarRecolh
               {leadDialogOpen && defaultPipeline.isLoading ? t("Carregando…") : t("Novo Lead")}
             </Button>
             {contactId && (
-              <Button asChild size="sm" variant="ghost" className="h-7 px-2 text-xs">
+              <Button asChild size="sm" variant="outline" className="h-7 px-2 text-xs">
                 <Link href={`/app/contacts/${contactId}`}>
                   {t("Ver contato")}
                   <ArrowRight size={12} className="ml-1" weight="regular" aria-hidden />

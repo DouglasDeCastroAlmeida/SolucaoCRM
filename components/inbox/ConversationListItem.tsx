@@ -382,7 +382,7 @@ export function ConversationListItem({
               className="object-cover"
             />
           ) : null}
-          <AvatarFallback className="bg-surface-elevated text-[17px] font-medium text-text-muted">
+          <AvatarFallback className="bg-avatar text-[17px] font-medium text-avatar-fg">
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
         </Avatar>
