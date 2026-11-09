@@ -316,3 +316,38 @@ describe("o que o conserto NÃO muda (preservado, medido)", () => {
     expect(sendMutate.mock.calls[0]![0]).toMatchObject({ conversation_id: "conv-2", body: "Oi Ana" });
   });
 });
+
+describe("placeholder do campo em uma linha só (#127)", () => {
+  // O jsdom não faz layout, então a prova de que ficou em uma linha com reticências
+  // é a captura em 390 px (evidência do PR). Aqui fica a cerca: as regras que,
+  // JUNTAS, fazem o `<textarea>` cortar o placeholder com reticências no Chromium
+  // (sem o `text-ellipsis` no próprio campo, ele corta no meio da letra).
+  const regras = [
+    "text-ellipsis",
+    "placeholder:whitespace-nowrap",
+    "placeholder:overflow-hidden",
+    "placeholder:text-ellipsis",
+  ];
+
+  it("resposta: o campo carrega as regras de uma linha com reticências", () => {
+    renderComposer();
+    const classes = screen.getByRole("textbox").className.split(/\s+/);
+    for (const regra of regras) expect(classes).toContain(regra);
+  });
+
+  it("nota interna: mesmas regras, o texto do placeholder não muda", async () => {
+    renderComposer();
+    await userEvent.click(screen.getByRole("button", { name: /nota interna/i }));
+    const campo = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(campo.placeholder).toBe("Escreva uma nota interna… (só o time vê)");
+    const classes = campo.className.split(/\s+/);
+    for (const regra of regras) expect(classes).toContain(regra);
+  });
+
+  it("o texto digitado continua quebrando linha (o campo não ganha nowrap)", () => {
+    renderComposer();
+    const classes = screen.getByRole("textbox").className.split(/\s+/);
+    expect(classes).not.toContain("whitespace-nowrap");
+    expect(classes).not.toContain("truncate");
+  });
+});
