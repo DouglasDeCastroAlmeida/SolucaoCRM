@@ -7,8 +7,8 @@ import type { Message } from "@/lib/types/messaging";
 
 /**
  * BOLHAS E SEPARADOR DE MENSAGEIRO (#117, protótipo aprovado + print do WhatsApp Web do dono):
- * raio de ~8 px, largura máxima de ~65%, hora pequena e esmaecida dentro da bolha, link no texto em
- * verde sublinhado, separador de data em pílula de raio ~8 px.
+ * raio de ~8 px, largura máxima de ~65%, hora pequena e esmaecida dentro da bolha,
+ * separador de data em pílula de raio ~8 px; o texto da mensagem é texto simples (#125).
  */
 
 function msg(over: Partial<Message> = {}): Message {
@@ -68,20 +68,10 @@ describe("bolha de mensageiro", () => {
     expect(screen.getByTestId("message-bubble").contains(rodape)).toBe(true);
   });
 
-  it("link no texto vira verde sublinhado, abre em outra aba e não vaza o opener", () => {
+  it("URL no texto fica como texto simples, sem virar link", () => {
     render(<MessageBubble message={msg({ body: "veja https://exemplo.com/planta e me diga" })} />);
-    const link = screen.getByRole("link", { name: "https://exemplo.com/planta" });
-    expect(link.getAttribute("href")).toBe("https://exemplo.com/planta");
-    expect(link.getAttribute("target")).toBe("_blank");
-    expect(link.getAttribute("rel")).toContain("noopener");
-    expect(link.className).toContain("underline");
-    expect(link.className).toContain("text-accent");
-  });
-
-  it("texto sem link continua sendo só texto, e javascript: nunca vira link", () => {
-    render(<MessageBubble message={msg({ body: "clique javascript:alert(1) agora" })} />);
     expect(screen.queryByRole("link")).toBeNull();
-    expect(screen.getByText("clique javascript:alert(1) agora")).toBeTruthy();
+    expect(screen.getByText("veja https://exemplo.com/planta e me diga")).toBeTruthy();
   });
 });
 
